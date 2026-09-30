@@ -1,0 +1,29 @@
+/* Polygon: network-core layer */
+.net-hud{position:fixed;left:1.1rem;bottom:1.1rem;z-index:50;width:232px;padding:.7rem .8rem;background:rgba(7,10,18,.82);border:1px solid rgba(0,212,232,.22);backdrop-filter:blur(10px);font:.56rem/1.7 var(--font-mono);letter-spacing:.1em;color:var(--text-dim)}
+.net-hud.off{display:none}
+.net-hud::before{content:'';position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan)}
+.net-hud h4{font:600 .58rem var(--font-display);letter-spacing:.14em;color:var(--cyan);margin-bottom:.35rem}
+.net-hud .r{display:flex;justify-content:space-between}.net-hud .r b{color:var(--text);font-weight:500}
+.net-hud .bar{height:2px;background:rgba(0,212,232,.12);margin:.4rem 0 .55rem}.net-hud .bar i{display:block;height:100%;width:0;background:var(--cyan);box-shadow:0 0 8px var(--cyan);transition:width .3s}
+.net-tabs{display:grid;grid-template-columns:1fr 1fr;gap:.3rem}
+.net-tabs button,.net-hud .pl{font:inherit;letter-spacing:.1em;padding:.3rem .2rem;background:transparent;color:var(--text-dim);border:1px solid rgba(0,212,232,.2);cursor:pointer;transition:.2s}
+.net-tabs button:hover,.net-hud .pl:hover{color:var(--cyan);border-color:var(--cyan)}
+.net-tabs button.on{background:rgba(0,212,232,.14);color:var(--cyan);border-color:var(--cyan);box-shadow:0 0 12px rgba(0,212,232,.2)}
+.net-hud .pl{width:100%;margin-top:.3rem;color:var(--pink);border-color:rgba(224,26,111,.35)}
+@media(max-width:900px){.net-hud{display:none}}
+.node-tip{position:fixed;left:0;top:0;z-index:60;pointer-events:none;opacity:0;padding:.45rem .6rem;background:rgba(3,5,10,.92);border:1px solid var(--cyan);font:.58rem/1.6 var(--font-mono);letter-spacing:.08em;display:flex;flex-direction:column;transition:opacity .15s;box-shadow:0 0 18px rgba(0,212,232,.25)}
+.node-tip.on{opacity:1}.node-tip b{color:var(--cyan)}.node-tip span{color:var(--amber)}.node-tip i{color:var(--text-dim);font-style:normal}
+.net-console{background:linear-gradient(165deg,rgba(10,14,24,.92),rgba(6,9,16,.9));border:1px solid rgba(0,212,232,.16);margin-bottom:2rem;backdrop-filter:blur(6px)}
+.net-console .cout{height:150px;overflow-y:auto;padding:.7rem 1.05rem;font:.68rem/1.7 var(--font-mono);color:var(--text-dim)}
+.net-console .cl.hi{color:var(--cyan)}.net-console .cl.ok{color:var(--green)}.net-console .cl.bad{color:var(--red)}.net-console .cl.dim{color:var(--text-muted)}
+.net-console .cin{display:flex;gap:.5rem;align-items:center;padding:.55rem 1.05rem;border-top:1px solid rgba(0,212,232,.1);font:.72rem var(--font-mono);color:var(--cyan)}
+.net-console input{flex:1;background:none;border:0;outline:0;color:var(--text);font:inherit;caret-color:var(--cyan)}
+/* glass panels so the 3D graph reads through content */
+.poly-hero{background:linear-gradient(160deg,rgba(10,15,26,.55),rgba(6,9,18,.35) 50%,rgba(12,18,31,.55))!important;backdrop-filter:blur(2px)}
+.module-card,.road-item,.feed-panel{background:linear-gradient(165deg,rgba(12,16,28,.74),rgba(6,9,16,.66))!important;backdrop-filter:blur(6px)}
+/* tilt + spotlight */
+.scene-prev,.module-card,.road-item{--rx:0deg;--ry:0deg;transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry))}
+.scene-prev:hover{transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-6px)}
+.module-card:hover,.road-item:hover{transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-4px)}
+.module-card::after,.road-item::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(0,212,232,.12),transparent 65%)}
+.module-card:hover::after,.road-item:hover::after{opacity:1}

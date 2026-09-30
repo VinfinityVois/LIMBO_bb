@@ -7,6 +7,7 @@ import { createHeroMesh, type HeroHandle } from './HeroMesh';
 import { bindCursor3D } from './Cursor3D';
 import { bindScrollCam } from './ScrollCam';
 import { createParticles } from './Particles';
+import { createNetworkField, type NetworkFieldHandle } from './NetworkField';
 
 export type CoreHandle = {
   renderer: THREE.WebGLRenderer;
@@ -14,6 +15,7 @@ export type CoreHandle = {
   camera: THREE.PerspectiveCamera;
   composer: EffectComposer;
   hero: HeroHandle;
+  network: NetworkFieldHandle;
   dispose: () => void;
 };
 
@@ -21,7 +23,7 @@ const GrainShader = {
   uniforms: {
     tDiffuse: { value: null as THREE.Texture | null },
     uTime: { value: 0 },
-    uStrength: { value: 0.055 },
+    uStrength: { value: 0.032 },
   },
   vertexShader: /* glsl */ `
     varying vec2 vUv;
@@ -39,7 +41,7 @@ const GrainShader = {
     }
     void main() {
       vec2 uv = vUv;
-      float ca = 0.0012;
+      float ca = 0.0010;
       float r = texture2D(tDiffuse, uv + vec2(ca, 0.0)).r;
       float g = texture2D(tDiffuse, uv).g;
       float b = texture2D(tDiffuse, uv - vec2(ca, 0.0)).b;
@@ -61,57 +63,54 @@ export function createCore(container: HTMLElement): CoreHandle | null {
 
   const w0 = container.clientWidth || window.innerWidth;
   const h0 = container.clientHeight || window.innerHeight;
-
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
     powerPreference: 'high-performance',
   });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65));
   renderer.setSize(w0, h0);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.0;
   container.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x03050a, 0.038);
+  scene.fog = new THREE.FogExp2(0x03050a, 0.026);
 
-  const camera = new THREE.PerspectiveCamera(45, w0 / h0, 0.1, 100);
-  camera.position.set(0, 0.35, 5.5);
+  const camera = new THREE.PerspectiveCamera(46, w0 / h0, 0.1, 100);
+  camera.position.set(0, 0.3, 5.7);
 
-  const key = new THREE.DirectionalLight(0xb8f0ff, 1.15);
+  scene.add(new THREE.AmbientLight(0x0e1628, 0.72));
+  const key = new THREE.DirectionalLight(0xb9f5ff, 1.1);
   key.position.set(3, 4, 5);
   scene.add(key);
-  scene.add(new THREE.AmbientLight(0x1a2030, 0.4));
-  const rim = new THREE.PointLight(0x00d4e8, 2.2, 14);
-  rim.position.set(-2, 1.2, 3);
-  scene.add(rim);
+  const cyan = new THREE.PointLight(0x00d4e8, 2.2, 12);
+  cyan.position.set(-2.8, 1.2, 3.0);
+  scene.add(cyan);
+  const violet = new THREE.PointLight(0xb646ff, 1.2, 10);
+  violet.position.set(2.5, -1.3, 1.5);
+  scene.add(violet);
 
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0x00d4e8,
-    transparent: true,
-    opacity: 0.12,
-    wireframe: true,
-  });
-  const ring1 = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.01, 8, 64), ringMat);
-  ring1.rotation.x = Math.PI * 0.5;
-  scene.add(ring1);
-  const ring2 = new THREE.Mesh(
-    new THREE.TorusGeometry(3.2, 0.008, 8, 64),
-    ringMat.clone()
-  );
-  (ring2.material as THREE.MeshBasicMaterial).opacity = 0.07;
-  ring2.rotation.x = Math.PI * 0.4;
-  scene.add(ring2);
+  const floor = new THREE.GridHelper(22, 28, 0x00d4e8, 0x143346);
+  floor.position.set(0, -2.1, -1.2);
+  floor.rotation.x = 0;
+  const floorMaterials = Array.isArray(floor.material) ? floor.material : [floor.material];
+  for (const m of floorMaterials) {
+    m.transparent = true;
+    m.opacity = 0.075;
+    m.depthWrite = false;
+  }
+  scene.add(floor);
 
   const hero = createHeroMesh(scene);
-  const particles = createParticles(scene, 6500);
+  const network = createNetworkField(scene, 150);
+  const particles = createParticles(scene, 4200);
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(w0, h0), 0.5, 0.55, 0.82);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(w0, h0), 0.34, 0.6, 0.84);
   composer.addPass(bloom);
   const grainPass = new ShaderPass(GrainShader);
   composer.addPass(grainPass);
@@ -124,19 +123,25 @@ export function createCore(container: HTMLElement): CoreHandle | null {
   window.addEventListener('pointermove', onPtr, { passive: true });
 
   const unbindCursor = bindCursor3D({ camera, hero });
-  const st = bindScrollCam({ camera, hero, bloom });
+  const scroll = bindScrollCam({ camera, hero, bloom });
 
   const clock = new THREE.Clock();
   let raf = 0;
   const tick = () => {
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const dt = Math.min(clock.getDelta(), 0.035);
     const t = clock.elapsedTime;
+
+    scroll.update(dt);
+    const scrollT = scroll.getProgress();
     hero.uniforms.uTime.value = t;
-    grainPass.uniforms.uTime.value = t * 0.15;
-    hero.mesh.rotation.y = t * 0.08;
-    ring1.rotation.z = t * 0.05;
-    ring2.rotation.z = -t * 0.03;
+    grainPass.uniforms.uTime.value = t * 0.11;
+
+    hero.mesh.rotation.y = t * 0.06;
+    hero.mesh.rotation.x = Math.sin(t * 0.25) * 0.045;
+
+    network.update(dt, t, scrollT, mouseNDC);
     particles.update(dt, mouseNDC, camera);
+
     composer.render();
     raf = requestAnimationFrame(tick);
   };
@@ -149,7 +154,7 @@ export function createCore(container: HTMLElement): CoreHandle | null {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     composer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.65));
   };
   window.addEventListener('resize', onResize);
 
@@ -158,13 +163,16 @@ export function createCore(container: HTMLElement): CoreHandle | null {
     window.removeEventListener('resize', onResize);
     window.removeEventListener('pointermove', onPtr);
     unbindCursor();
-    st.kill();
+    scroll.kill();
+    network.dispose();
     particles.dispose();
+    hero.mesh.geometry.dispose();
+    hero.mesh.material.dispose();
     renderer.dispose();
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
     }
   };
 
-  return { renderer, scene, camera, composer, hero, dispose };
+  return { renderer, scene, camera, composer, hero, network, dispose };
 }

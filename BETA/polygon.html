@@ -3,39 +3,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>П.Р.И.Н.Ц. // Полигон · Симуляция</title>
+  <title>П.Р.И.Н.Ц. // Полигон · Нейросетевая Симуляция</title>
   <link rel="stylesheet" href="css/system.css">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+  <!-- 3D & Motion Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
   <style>
+    :root {
+      --bg-color: #02040a;
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.25);
+      --purple: #7000ff;
+      --pink: #ff0055;
+      --amber: #ffb700;
+      --green: #00ff66;
+      --red: #ff2a55;
+      --text-main: #e2e8f0;
+      --text-dim: #64748b;
+      --text-muted: #334155;
+      --glass-bg: rgba(6, 10, 20, 0.78);
+      --glass-border: rgba(0, 240, 255, 0.15);
+      --font-mono: 'Fira Code', monospace;
+      --font-display: 'Orbitron', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+      selection-background-color: var(--cyan);
+      selection-color: #000;
+    }
+
+    /* ═══ 3D & MATRIX CANVAS BACKGROUNDS ═══ */
+    #webgl-root {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.85; /* Слегка приглушаем яркость всей 3D сцены */
+    }
+
+    #matrix-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      opacity: 0.04; /* Едва заметный, темный фон Матрицы */
+      pointer-events: none;
+    }
+
     /* ═══ COMPLEX POLY LAYER ═══ */
-    .poly-page { position: relative; }
+    .poly-page {
+      position: relative;
+      z-index: 2;
+      padding-top: 1.5rem;
+    }
+
+    /* System Topbar glass style override */
+    .sys-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(2, 4, 10, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--glass-border);
+    }
 
     .poly-hero {
       position: relative;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(0,212,232,0.18);
-      background: linear-gradient(160deg, #0a0f1a 0%, #060912 50%, #0c121f 100%);
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--glass-border);
+      background: rgba(5, 8, 18, 0.82);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 240, 255, 0.03);
       overflow: hidden;
-      min-height: 280px;
+      border-radius: 4px;
+      min-height: 260px;
     }
     .poly-hero::after {
       content: '';
       position: absolute; inset: 0; pointer-events: none;
-      background:
-        linear-gradient(90deg, transparent 0%, rgba(0,212,232,0.03) 50%, transparent 100%);
-      animation: heroScan 6s ease-in-out infinite;
+      background: linear-gradient(90deg, transparent 0%, rgba(0,240,255,0.04) 50%, transparent 100%);
+      animation: heroScan 7s ease-in-out infinite;
     }
     @keyframes heroScan {
-      0%, 100% { transform: translateX(-30%); opacity: 0; }
+      0%, 100% { transform: translateX(-50%); opacity: 0; }
       40% { opacity: 1; }
-      70% { transform: translateX(30%); opacity: 0; }
+      70% { transform: translateX(50%); opacity: 0; }
     }
     .poly-hero-grid {
-      position: absolute; inset: 0; opacity: 0.3;
+      position: absolute; inset: 0; opacity: 0.12;
       background-image:
-        linear-gradient(rgba(0,212,232,0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,212,232,0.07) 1px, transparent 1px);
+        linear-gradient(rgba(0,240,255,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,240,255,0.1) 1px, transparent 1px);
       background-size: 32px 32px;
-      animation: gridDrift 24s linear infinite;
+      animation: gridDrift 28s linear infinite;
       mask-image: radial-gradient(ellipse at 60% 40%, #000 20%, transparent 75%);
     }
     @keyframes gridDrift {
@@ -44,10 +119,10 @@
     }
     .poly-hero-inner {
       position: relative; z-index: 1;
-      padding: 1.75rem 1.6rem 1.6rem;
+      padding: 2rem 1.8rem;
       display: grid;
       grid-template-columns: 1.45fr 0.9fr;
-      gap: 1.75rem;
+      gap: 2rem;
       align-items: center;
     }
     @media (max-width: 960px) {
@@ -56,37 +131,41 @@
     .poly-stat-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0.55rem;
-      margin-top: 1.15rem;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
     }
     @media (max-width: 700px) {
       .poly-stat-row { grid-template-columns: 1fr 1fr; }
     }
     .poly-stat {
       position: relative;
-      padding: 0.65rem 0.75rem;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid rgba(0,212,232,0.14);
-      font-family: var(--font-mono); font-size: 0.55rem;
-      letter-spacing: 0.1em; color: var(--text-muted);
+      padding: 0.85rem 0.95rem;
+      background: rgba(2, 4, 10, 0.7);
+      border: 1px solid rgba(0,240,255,0.12);
+      border-radius: 3px;
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.1em; color: var(--text-dim);
       overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
     }
     .poly-stat:hover {
-      border-color: rgba(0,212,232,0.4);
-      box-shadow: 0 0 20px rgba(0,212,232,0.08);
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(0,240,255,0.12);
+      transform: translateY(-2px);
     }
     .poly-stat::after {
       content: '';
       position: absolute; bottom: 0; left: 0; height: 2px; width: 0;
       background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
       transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
     }
     .poly-stat.lit::after { width: 100%; }
     .poly-stat b {
-      display: block; margin-top: 0.25rem;
-      font-size: 1.05rem; color: var(--cyan); letter-spacing: 0.03em;
+      display: block; margin-top: 0.35rem;
+      font-size: 1.15rem; color: var(--cyan); letter-spacing: 0.03em;
       font-variant-numeric: tabular-nums;
+      font-family: var(--font-display);
     }
     .poly-stat b.amber { color: var(--amber); }
     .poly-stat b.green { color: var(--green); }
@@ -99,10 +178,10 @@
       width: 180px; height: 180px;
       position: relative;
     }
-    .poly-radar svg { width: 100%; height: 100%; filter: drop-shadow(0 0 12px rgba(0,212,232,0.15)); }
+    .poly-radar svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(0,240,255,0.15)); }
     .radar-sweep {
       transform-origin: 50% 50%;
-      animation: sweep 3.6s linear infinite;
+      animation: sweep 4s linear infinite;
     }
     @keyframes sweep {
       from { transform: rotate(0deg); }
@@ -112,30 +191,32 @@
       animation: blip 2.2s ease-in-out infinite;
     }
     @keyframes blip {
-      0%, 100% { opacity: 0.3; r: 1.2; }
+      0%, 100% { opacity: 0.2; r: 1.2; }
       50% { opacity: 1; }
     }
     .radar-label {
-      font-family: var(--font-mono); font-size: 0.55rem;
-      letter-spacing: 0.14em; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.14em; color: var(--text-dim);
     }
 
-    /* SCENE PREVIEWS — denser cinematic cards */
+    /* SCENE PREVIEWS — Elegant Dark Cyber Cards */
     .scene-prev-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.9rem;
-      margin-bottom: 2rem;
+      gap: 1.25rem;
+      margin-bottom: 3rem;
     }
     @media (max-width: 900px) {
       .scene-prev-grid { grid-template-columns: 1fr; }
     }
     .scene-prev {
       position: relative;
-      border: 1px solid rgba(0,212,232,0.12);
-      background: #070b14;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border-radius: 4px;
       overflow: hidden;
-      min-height: 230px;
+      min-height: 250px;
       text-decoration: none;
       color: inherit;
       display: block;
@@ -144,34 +225,33 @@
     .scene-prev::before {
       content: '';
       position: absolute; inset: -1px; z-index: 4; pointer-events: none;
-      background: linear-gradient(135deg, rgba(0,212,232,0.25), transparent 40%, transparent 60%, rgba(224,26,111,0.15));
+      background: linear-gradient(135deg, rgba(0,240,255,0.2), transparent 40%, transparent 60%, rgba(255,0,85,0.15));
       opacity: 0;
       transition: opacity 0.4s;
     }
     .scene-prev:hover {
-      border-color: rgba(0,212,232,0.5);
+      border-color: rgba(0, 240, 255, 0.4);
       transform: translateY(-6px) scale(1.01);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,232,0.12);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 25px rgba(0,240,255,0.12);
     }
     .scene-prev:hover::before { opacity: 1; }
     .scene-prev img {
-      width: 100%; height: 230px; object-fit: cover; display: block;
+      width: 100%; height: 250px; object-fit: cover; display: block;
       transition: transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.45s;
-      filter: saturate(0.75) brightness(0.7) contrast(1.05);
+      filter: saturate(0.6) brightness(0.6) contrast(1.1);
     }
     .scene-prev:hover img {
-      transform: scale(1.08);
-      filter: saturate(1.05) brightness(0.85) contrast(1.08);
+      transform: scale(1.06);
+      filter: saturate(1) brightness(0.8) contrast(1.1);
     }
     .scene-prev .shade {
       position: absolute; inset: 0; z-index: 1;
-      background:
-        linear-gradient(180deg, rgba(3,5,10,0.2) 0%, transparent 30%, rgba(3,5,10,0.55) 55%, rgba(3,5,10,0.97) 100%);
+      background: linear-gradient(180deg, rgba(2,4,10,0.1) 0%, transparent 30%, rgba(2,4,10,0.7) 60%, rgba(2,4,10,0.98) 100%);
       pointer-events: none;
     }
     .scene-prev .scan {
       position: absolute; left: 0; right: 0; height: 35%; z-index: 2; pointer-events: none;
-      background: linear-gradient(180deg, transparent, rgba(0,212,232,0.06), transparent);
+      background: linear-gradient(180deg, transparent, rgba(0,240,255,0.06), transparent);
       animation: cardScan 5s linear infinite;
       opacity: 0;
       transition: opacity 0.3s;
@@ -183,20 +263,20 @@
     }
     .scene-prev .meta {
       position: absolute; left: 0; right: 0; bottom: 0;
-      padding: 1rem 1rem 0.95rem;
+      padding: 1.2rem;
       z-index: 3;
     }
     .scene-prev .code {
-      font-family: var(--font-mono); font-size: 0.52rem;
-      letter-spacing: 0.14em; color: var(--cyan); margin-bottom: 0.3rem;
+      font-family: var(--font-mono); font-size: 0.54rem;
+      letter-spacing: 0.14em; color: var(--cyan); margin-bottom: 0.35rem;
     }
     .scene-prev h3 {
-      font-family: var(--font-display); font-size: 1.1rem;
-      letter-spacing: 0.04em; margin: 0 0 0.25rem;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.8);
+      font-family: var(--font-display); font-size: 1.15rem;
+      letter-spacing: 0.04em; margin: 0 0 0.28rem;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.9);
     }
     .scene-prev .st {
-      font-family: var(--font-mono); font-size: 0.58rem;
+      font-family: var(--font-mono); font-size: 0.6rem;
       letter-spacing: 0.1em;
     }
     .st.ok { color: var(--green); }
@@ -204,21 +284,20 @@
     .st.warn { color: var(--amber); }
     .st.bad { color: var(--red); }
     .scene-prev .badge {
-      position: absolute; top: 0.6rem; left: 0.6rem; z-index: 5;
-      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.12em;
-      padding: 0.25rem 0.5rem;
-      background: rgba(3,5,10,0.85); border: 1px solid rgba(0,212,232,0.35);
-      color: var(--cyan); backdrop-filter: blur(6px);
+      position: absolute; top: 0.8rem; left: 0.8rem; z-index: 5;
+      font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.12em;
+      padding: 0.28rem 0.55rem;
+      background: rgba(2,4,10,0.85); border: 1px solid var(--glass-border);
+      color: var(--cyan); backdrop-filter: blur(8px);
+      border-radius: 2px;
     }
     .scene-prev .pct-ring {
-      position: absolute; top: 0.55rem; right: 0.55rem; z-index: 5;
+      position: absolute; top: 0.75rem; right: 0.75rem; z-index: 5;
       width: 36px; height: 36px;
     }
     .scene-prev .pct-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-    .scene-prev .pct-ring circle {
-      fill: none; stroke-width: 2.5;
-    }
-    .scene-prev .pct-ring .bg { stroke: rgba(0,212,232,0.15); }
+    .scene-prev .pct-ring circle { fill: none; stroke-width: 2.8; }
+    .scene-prev .pct-ring .bg { stroke: rgba(0,240,255,0.1); }
     .scene-prev .pct-ring .fg {
       stroke: var(--cyan);
       stroke-dasharray: 100;
@@ -230,124 +309,128 @@
     .module-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.9rem;
-      margin-bottom: 2rem;
+      gap: 1.25rem;
+      margin-bottom: 3rem;
     }
     @media (max-width: 800px) { .module-grid { grid-template-columns: 1fr; } }
     .module-card {
       position: relative;
-      background: linear-gradient(165deg, rgba(12,16,28,0.98), rgba(6,9,16,0.96));
-      border: 1px solid rgba(0,212,232,0.12);
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
       padding: 0;
       overflow: hidden;
       transition: border-color 0.35s, transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s;
-      cursor: default;
     }
     .module-card::before {
       content: '';
-      position: absolute; top: 0; left: 0; width: 3px; height: 100%;
-      background: linear-gradient(180deg, var(--cyan), transparent 75%);
-      opacity: 0.55;
-      transition: opacity 0.3s, height 0.5s;
+      position: absolute; top: 0; left: 0; width: 2px; height: 100%;
+      background: linear-gradient(180deg, var(--cyan), transparent 85%);
+      opacity: 0.4;
+      transition: opacity 0.3s;
     }
     .module-card:hover {
-      border-color: rgba(0,212,232,0.42);
+      border-color: rgba(0,240,255,0.35);
       transform: translateY(-4px);
-      box-shadow: 0 14px 40px rgba(0,0,0,0.4), 0 0 30px rgba(0,212,232,0.06);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 20px rgba(0,240,255,0.08);
     }
     .module-card:hover::before { opacity: 1; }
     .module-card .mh {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.8rem 1.05rem 0.6rem;
-      border-bottom: 1px solid rgba(0,212,232,0.1);
-      background: rgba(0,212,232,0.025);
+      padding: 1rem 1.25rem 0.8rem;
+      border-bottom: 1px solid rgba(0,240,255,0.08);
+      background: rgba(0,240,255,0.02);
     }
     .module-card .mh h3 {
-      font-family: var(--font-display); font-size: 0.85rem;
+      font-family: var(--font-display); font-size: 0.9rem;
       letter-spacing: 0.06em; color: var(--cyan); margin: 0;
     }
     .module-card .mh .num {
-      font-family: var(--font-mono); font-size: 0.52rem;
-      letter-spacing: 0.14em; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.54rem;
+      letter-spacing: 0.14em; color: var(--text-dim);
     }
     .module-card .mb {
-      padding: 0.9rem 1.05rem 1.05rem;
-      font-size: 0.86rem; color: var(--text-dim); line-height: 1.6;
+      padding: 1.15rem 1.25rem;
+      font-size: 0.86rem; color: var(--text-main); line-height: 1.65;
     }
     .module-card .tags {
-      display: flex; flex-wrap: wrap; gap: 0.35rem;
-      margin-top: 0.8rem;
+      display: flex; flex-wrap: wrap; gap: 0.45rem;
+      margin-top: 1rem;
     }
     .module-card .tag {
-      font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em;
-      padding: 0.22rem 0.48rem;
-      border: 1px solid rgba(0,212,232,0.22);
-      color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.1em;
+      padding: 0.24rem 0.52rem;
+      border: 1px solid rgba(0,240,255,0.18);
+      border-radius: 2px;
+      color: var(--text-dim);
       transition: border-color 0.25s, color 0.25s, background 0.25s;
     }
     .module-card:hover .tag {
-      border-color: rgba(0,212,232,0.4);
+      border-color: var(--cyan);
       color: var(--cyan);
-      background: rgba(0,212,232,0.05);
+      background: rgba(0,240,255,0.05);
     }
 
-    /* ROADMAP — complex progress */
+    /* ROADMAP — Complex sleek progress */
     .roadmap {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.9rem;
-      margin-bottom: 2rem;
+      gap: 1.25rem;
+      margin-bottom: 3rem;
     }
     @media (max-width: 900px) { .roadmap { grid-template-columns: 1fr; } }
     .road-item {
-      background: linear-gradient(165deg, rgba(12,16,28,0.98), rgba(6,9,16,0.96));
-      border: 1px solid rgba(0,212,232,0.12);
-      padding: 1.25rem 1.2rem 1.3rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      padding: 1.4rem 1.35rem 1.5rem;
       position: relative;
       overflow: hidden;
       transition: border-color 0.35s, transform 0.35s;
     }
     .road-item:hover {
-      border-color: rgba(0,212,232,0.4);
+      border-color: rgba(0,240,255,0.35);
       transform: translateY(-3px);
     }
     .road-item .phase {
-      position: absolute; top: 0.75rem; right: 0.8rem;
-      font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 0.12em;
-      color: var(--text-muted);
+      position: absolute; top: 0.9rem; right: 0.95rem;
+      font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.12em;
+      color: var(--text-dim);
     }
     .road-item .pct-row {
       display: flex; align-items: baseline; justify-content: space-between;
-      margin-bottom: 0.45rem;
+      margin-bottom: 0.5rem;
     }
     .road-item .pct-label {
-      font-family: var(--font-mono); font-size: 0.55rem;
-      letter-spacing: 0.1em; color: var(--text-muted);
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.1em; color: var(--text-dim);
     }
     .road-item .pct-val {
-      font-family: var(--font-mono); font-size: 1.15rem;
-      font-weight: 600; color: var(--cyan);
+      font-family: var(--font-display); font-size: 1.25rem;
+      font-weight: 700; color: var(--cyan);
       font-variant-numeric: tabular-nums;
     }
     .road-item h4 {
-      font-family: var(--font-display); font-size: 0.92rem;
+      font-family: var(--font-display); font-size: 0.95rem;
       letter-spacing: 0.03em; margin: 0 0 0.5rem;
     }
     .road-item p {
-      font-size: 0.82rem; color: var(--text-dim); line-height: 1.55; margin: 0 0 1rem;
+      font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; margin: 0 0 1.2rem;
     }
 
     /* Multi-layer progress bar */
     .bar-complex {
       position: relative;
-      height: 8px;
-      background: rgba(0,212,232,0.08);
+      height: 6px;
+      background: rgba(0,240,255,0.06);
       border-radius: 2px;
       overflow: hidden;
     }
     .bar-complex .track-glow {
       position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(0,212,232,0.05), transparent);
+      background: linear-gradient(90deg, transparent, rgba(0,240,255,0.08), transparent);
       animation: trackShimmer 2.5s ease infinite;
     }
     @keyframes trackShimmer {
@@ -357,51 +440,45 @@
     .bar-complex .fill {
       position: absolute; left: 0; top: 0; bottom: 0;
       width: 0%;
-      background: linear-gradient(90deg, #007a88, #00d4e8 60%, #7ef0ff);
-      box-shadow: 0 0 12px rgba(0,212,232,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+      background: linear-gradient(90deg, #005f6a, #00d4e8 60%, #7ef0ff);
+      box-shadow: 0 0 10px rgba(0,240,255,0.5);
       border-radius: 2px;
       transition: width 1.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .bar-complex .fill::after {
-      content: '';
-      position: absolute; right: 0; top: -2px; bottom: -2px; width: 10px;
-      background: #fff;
-      opacity: 0.55;
-      filter: blur(4px);
-      border-radius: 50%;
-    }
     .bar-complex .seg {
       position: absolute; top: 0; bottom: 0; width: 1px;
-      background: rgba(3,5,10,0.5);
+      background: rgba(2,4,10,0.8);
       z-index: 2;
     }
     .bar-ticks {
       display: flex; justify-content: space-between;
-      margin-top: 0.35rem;
-      font-family: var(--font-mono); font-size: 0.48rem;
+      margin-top: 0.45rem;
+      font-family: var(--font-mono); font-size: 0.5rem;
       letter-spacing: 0.06em; color: var(--text-muted);
     }
 
-    /* FEED */
+    /* FEED & TERMINAL PANEL */
     .feed-panel {
-      background: linear-gradient(165deg, rgba(10,14,24,0.98), rgba(6,9,16,0.95));
-      border: 1px solid rgba(0,212,232,0.14);
-      margin-bottom: 2rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      margin-bottom: 3rem;
       overflow: hidden;
     }
     .feed-head {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.75rem 1.05rem;
-      border-bottom: 1px solid rgba(0,212,232,0.1);
-      background: rgba(0,212,232,0.03);
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid rgba(0,240,255,0.08);
+      background: rgba(0,240,255,0.02);
     }
     .feed-head h3 {
-      font-family: var(--font-display); font-size: 0.78rem;
+      font-family: var(--font-display); font-size: 0.82rem;
       letter-spacing: 0.1em; color: var(--cyan); margin: 0;
     }
     .feed-live {
-      display: inline-flex; align-items: center; gap: 0.35rem;
-      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.12em;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.12em;
       color: var(--green);
     }
     .feed-live .d {
@@ -414,10 +491,10 @@
       50% { opacity: 0.3; transform: scale(0.8); }
     }
     .feed-body {
-      max-height: 200px; overflow: hidden;
-      font-family: var(--font-mono); font-size: 0.68rem;
-      line-height: 1.75; padding: 0.8rem 1.05rem;
-      color: var(--text-dim);
+      max-height: 220px; overflow-y: auto;
+      font-family: var(--font-mono); font-size: 0.7rem;
+      line-height: 1.8; padding: 1rem 1.25rem;
+      color: var(--text-main);
     }
     .feed-body .line {
       opacity: 0;
@@ -426,84 +503,117 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .feed-body .line .ts { color: var(--text-muted); margin-right: 0.55rem; }
+    .feed-body .line .ts { color: var(--text-muted); margin-right: 0.6rem; }
     .feed-body .line .hi { color: var(--cyan); }
     .feed-body .line .ok { color: var(--green); }
     .feed-body .line .bad { color: var(--red); }
     @keyframes feedIn {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: none; }
+    }
+
+    /* Interactive Terminal Console */
+    .poly-terminal-box {
+      padding: 0.9rem 1.25rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 1px solid rgba(0, 240, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .btn-ping {
+      background: linear-gradient(135deg, rgba(0,240,255,0.15), rgba(112,0,255,0.2));
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: 2px;
+      color: var(--text-main);
+      padding: 0.45rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-ping:hover {
+      background: var(--cyan);
+      color: #000;
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px var(--cyan-glow);
     }
 
     /* CTA */
     .cta-box {
       position: relative;
       text-align: center;
-      padding: 2.2rem 1.5rem;
-      background: linear-gradient(135deg, rgba(0,212,232,0.1), rgba(8,12,22,0.95) 50%, rgba(224,26,111,0.06));
-      border: 1px solid rgba(0,212,232,0.3);
+      padding: 2.8rem 1.5rem;
+      background: linear-gradient(135deg, rgba(0,240,255,0.06), rgba(4,7,16,0.92) 50%, rgba(255,0,85,0.04));
+      border: 1px solid rgba(0,240,255,0.22);
+      border-radius: 4px;
+      backdrop-filter: blur(20px);
       overflow: hidden;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.7);
     }
     .cta-box::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(0,212,232,0.08), transparent);
-      animation: ctaShine 3.5s ease infinite;
+      background: linear-gradient(90deg, transparent, rgba(0,240,255,0.05), transparent);
+      animation: ctaShine 4s ease infinite;
     }
     @keyframes ctaShine {
       0%, 100% { transform: translateX(-120%); }
       50% { transform: translateX(120%); }
     }
     .cta-box h3 {
-      font-family: var(--font-display); font-size: 1.25rem;
-      letter-spacing: 0.04em; margin: 0 0 0.55rem; position: relative;
+      font-family: var(--font-display); font-size: 1.35rem;
+      letter-spacing: 0.04em; margin: 0 0 0.6rem; position: relative;
     }
     .cta-box p {
-      color: var(--text-dim); font-size: 0.88rem; margin: 0 auto 1.3rem;
-      position: relative; max-width: 520px; line-height: 1.55;
+      color: var(--text-dim); font-size: 0.88rem; margin: 0 auto 1.5rem;
+      position: relative; max-width: 520px; line-height: 1.6;
     }
     .cta-box .btn {
       position: relative;
-      display: inline-flex; align-items: center; gap: 0.55rem;
-      padding: 0.8rem 1.5rem;
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.85rem 1.6rem;
       font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
-      background: var(--cyan); color: #03050a; border: none;
+      background: var(--cyan); color: #02040a; border: none;
+      border-radius: 2px;
       transition: box-shadow 0.3s, transform 0.3s, filter 0.2s;
       cursor: pointer;
     }
     .cta-box .btn:hover {
-      box-shadow: 0 0 32px rgba(0,212,232,0.5);
-      transform: translateY(-3px);
-      filter: brightness(1.08);
+      box-shadow: 0 0 30px rgba(0,240,255,0.5);
+      transform: translateY(-2px);
+      filter: brightness(1.1);
     }
 
     .sec-label {
-      font-family: var(--font-mono); font-size: 0.55rem;
-      letter-spacing: 0.16em; color: var(--text-muted);
-      margin-bottom: 0.3rem;
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.16em; color: var(--text-dim);
+      margin-bottom: 0.35rem;
     }
     .sec-title {
-      font-family: var(--font-display); font-size: 1.08rem;
-      letter-spacing: 0.04em; margin: 0 0 1.1rem;
+      font-family: var(--font-display); font-size: 1.15rem;
+      letter-spacing: 0.04em; margin: 0 0 1.25rem;
     }
 
     /* Audio toggle */
     .sfx-toggle {
-      position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 50;
-      display: flex; align-items: center; gap: 0.4rem;
-      padding: 0.45rem 0.75rem;
-      background: rgba(7,10,18,0.9); border: 1px solid rgba(0,212,232,0.3);
-      font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.12em;
+      position: fixed; bottom: 1.2rem; right: 1.2rem; z-index: 50;
+      display: flex; align-items: center; gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      background: rgba(4,7,16,0.9); border: 1px solid rgba(0,240,255,0.25);
+      border-radius: 2px;
+      font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.12em;
       color: var(--cyan); cursor: pointer;
-      backdrop-filter: blur(10px);
-      transition: background 0.25s, border-color 0.25s;
+      backdrop-filter: blur(12px);
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
     }
-    .sfx-toggle:hover { background: rgba(0,212,232,0.1); border-color: var(--cyan); }
-    .sfx-toggle.off { color: var(--text-muted); border-color: var(--border); }
+    .sfx-toggle:hover { background: rgba(0,240,255,0.1); border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,240,255,0.15); }
+    .sfx-toggle.off { color: var(--text-dim); border-color: var(--border); }
 
     .reveal {
-      opacity: 0; transform: translateY(22px);
+      opacity: 0; transform: translateY(20px);
       transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
     }
     .reveal.in { opacity: 1; transform: none; }
@@ -513,7 +623,11 @@
   </style>
 </head>
 <body>
+
+  <!-- Matrix Canvas & WebGL 3D Core Layer -->
+  <canvas id="matrix-canvas"></canvas>
   <div id="webgl-root" aria-hidden="true"></div>
+
   <div class="noise"></div>
   <div class="scanlines"></div>
   <div class="vignette"></div>
@@ -551,8 +665,8 @@
           <h2 style="font-family:var(--font-display);font-size:1.3rem;letter-spacing:0.04em;margin:0 0 0.5rem;">
             Контур разработки тома 1
           </h2>
-          <p style="font-size:0.88rem;color:var(--text-dim);line-height:1.55;margin:0;max-width:500px;">
-            Полигон связывает архив сцен, протоколы Смотрящих и будущий 3D-слой.
+          <p style="font-size:0.86rem;color:var(--text-dim);line-height:1.6;margin:0;max-width:500px;">
+            Полигон связывает архив сцен, протоколы Смотрящих и распределенное 3D-сетевое ядро.
             Текущий фокус — ветвящиеся симуляции и стабильность кластера 8.
           </p>
           <div class="poly-stat-row">
@@ -567,25 +681,25 @@
             <svg viewBox="0 0 100 100">
               <defs>
                 <radialGradient id="rg" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="rgba(0,212,232,0.15)"/>
-                  <stop offset="100%" stop-color="rgba(0,212,232,0)"/>
+                  <stop offset="0%" stop-color="rgba(0,240,255,0.15)"/>
+                  <stop offset="100%" stop-color="rgba(0,240,255,0)"/>
                 </radialGradient>
               </defs>
               <circle cx="50" cy="50" r="48" fill="url(#rg)"/>
-              <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,212,232,0.2)" stroke-width="0.5"/>
-              <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(0,212,232,0.14)" stroke-width="0.5"/>
-              <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(0,212,232,0.12)" stroke-width="0.5"/>
-              <circle cx="50" cy="50" r="10" fill="none" stroke="rgba(0,212,232,0.18)" stroke-width="0.5"/>
-              <line x1="50" y1="2" x2="50" y2="98" stroke="rgba(0,212,232,0.1)" stroke-width="0.35"/>
-              <line x1="2" y1="50" x2="98" y2="50" stroke="rgba(0,212,232,0.1)" stroke-width="0.35"/>
+              <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,240,255,0.18)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(0,240,255,0.12)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(0,240,255,0.08)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="10" fill="none" stroke="rgba(0,240,255,0.12)" stroke-width="0.5"/>
+              <line x1="50" y1="2" x2="50" y2="98" stroke="rgba(0,240,255,0.08)" stroke-width="0.35"/>
+              <line x1="2" y1="50" x2="98" y2="50" stroke="rgba(0,240,255,0.08)" stroke-width="0.35"/>
               <path class="radar-sweep" d="M50 50 L50 4 A46 46 0 0 1 90 26 Z"
-                    fill="rgba(0,212,232,0.14)" stroke="rgba(0,212,232,0.4)" stroke-width="0.4"/>
-              <circle class="radar-blip" cx="68" cy="30" r="1.6" fill="#00d4e8"/>
-              <circle class="radar-blip" cx="36" cy="64" r="1.3" fill="#e01a6f" style="animation-delay:0.7s"/>
-              <circle class="radar-blip" cx="74" cy="72" r="1.1" fill="#1ec99a" style="animation-delay:1.3s"/>
+                    fill="rgba(0,240,255,0.1)" stroke="rgba(0,240,255,0.3)" stroke-width="0.4"/>
+              <circle class="radar-blip" cx="68" cy="30" r="1.6" fill="#00f0ff"/>
+              <circle class="radar-blip" cx="36" cy="64" r="1.3" fill="#ff0055" style="animation-delay:0.7s"/>
+              <circle class="radar-blip" cx="74" cy="72" r="1.1" fill="#00ff66" style="animation-delay:1.3s"/>
             </svg>
           </div>
-          <div class="radar-label">SCAN · POLY_NODE</div>
+          <div class="radar-label">SCAN · MESH_CORE</div>
         </div>
       </div>
     </div>
@@ -601,8 +715,7 @@
             <circle class="fg" cx="18" cy="18" r="15.5" data-pct="90" stroke-dasharray="97.4" pathLength="100"/>
           </svg>
         </div>
-        <img src="img/0_0 - 2025-05-25T173143.588.png" alt="Рёкан"
-             onerror="this.src='img/cam03_ryokan_map.jpg'">
+        <img src="img/0_0 - 2025-05-25T173143.588.png" alt="Рёкан" onerror="this.src='img/cam03_ryokan_map.jpg'">
         <div class="shade"></div>
         <div class="scan"></div>
         <div class="meta">
@@ -619,8 +732,7 @@
             <circle class="fg" cx="18" cy="18" r="15.5" data-pct="55" stroke-dasharray="97.4" pathLength="100"/>
           </svg>
         </div>
-        <img src="img/cam19_shanghai.png" alt="Шанхай"
-             onerror="this.src='img/gorod/b1.png'">
+        <img src="img/cam19_shanghai.png" alt="Шанхай" onerror="this.src='img/gorod/b1.png'">
         <div class="shade"></div>
         <div class="scan"></div>
         <div class="meta">
@@ -637,8 +749,7 @@
             <circle class="fg" cx="18" cy="18" r="15.5" data-pct="20" stroke-dasharray="97.4" pathLength="100"/>
           </svg>
         </div>
-        <img src="img/0_0 - 2025-05-25T172416.372.png" alt="Тихое место"
-             onerror="this.src='img/tixiy/t0.jpg'">
+        <img src="img/0_0 - 2025-05-25T172416.372.png" alt="Тихое место" onerror="this.src='img/tixiy/t0.jpg'">
         <div class="shade"></div>
         <div class="scan"></div>
         <div class="meta">
@@ -738,12 +849,18 @@
       </div>
     </div>
 
+    <!-- Feed & Interactive Terminal Box -->
     <div class="feed-panel reveal">
       <div class="feed-head">
-        <h3>// ТЕЛЕМЕТРИЯ ПОЛИГОНА</h3>
+        <h3>// ТЕЛЕМЕТРИЯ ПОЛИГОНА И СЕТЕВОЕ ЯДРО</h3>
         <span class="feed-live"><span class="d"></span> LIVE</span>
       </div>
       <div class="feed-body" id="feedBody"></div>
+      
+      <div class="poly-terminal-box">
+        <button class="btn-ping" id="btnPingNode" data-sfx="click">PING MESH NODE</button>
+        <span style="font-size:0.65rem; color:var(--text-dim);" id="termStatusMsg">> Команда готова к исполнению</span>
+      </div>
     </div>
 
     <div class="cta-box reveal">
@@ -758,20 +875,188 @@
 
   <footer class="sys-footer">
     <span>П.Р.И.Н.Ц. ПРОТОКОЛ // ПОЛИГОН НЕЙРОСЛОЙ</span>
-    <span>ВЕРСИЯ 0.85 · BUILD Q3 2025–2026</span>
+    <span>ВЕРСИЯ 0.95 · BUILD Q3 2026</span>
   </footer>
 
   <button type="button" class="sfx-toggle" id="sfxToggle" title="Звуки интерфейса">SFX · ON</button>
 
   <script type="module" src="/src/main-polygon.ts"></script>
   <script src="js/system.js"></script>
+
+  <!-- Darker & Smoother 3D Network Core + Page Logic -->
   <script>
   (function () {
     'use strict';
+
+    /* ── 1. DARKER MATRIX BACKGROUND CANVAS ── */
+    const matrixCanvas = document.getElementById('matrix-canvas');
+    if (matrixCanvas) {
+      const mCtx = matrixCanvas.getContext('2d');
+      const resizeM = () => {
+        matrixCanvas.width = window.innerWidth;
+        matrixCanvas.height = window.innerHeight;
+      };
+      resizeM();
+      window.addEventListener('resize', resizeM);
+
+      const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ<>[]{}/*=+#$_';
+      const fontSize = 12;
+      let drops = new Array(Math.floor(window.innerWidth / fontSize)).fill(1);
+
+      setInterval(() => {
+        mCtx.fillStyle = 'rgba(2, 4, 10, 0.15)';
+        mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        mCtx.fillStyle = '#00f0ff';
+        mCtx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars.charAt(Math.floor(Math.random() * chars.length));
+          mCtx.fillText(text, i * fontSize, drops[i] * fontSize);
+          if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.98) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }, 45);
+    }
+
+    /* ── 2. THREE.JS NETWORK CORE (Subtle Dark Ambient Node Network) ── */
+    const container3d = document.getElementById('webgl-root');
+    if (container3d && typeof THREE !== 'undefined') {
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x02040a, 0.04);
+
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 24;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container3d.appendChild(renderer.domElement);
+
+      const networkGroup = new THREE.Group();
+      scene.add(networkGroup);
+
+      // Nodes & Edges Generation
+      const nodeCount = 90;
+      const nodePositions = [];
+      const geometryNodes = new THREE.BufferGeometry();
+      const positions = new Float32Array(nodeCount * 3);
+
+      for (let i = 0; i < nodeCount; i++) {
+        const x = (Math.random() - 0.5) * 22;
+        const y = (Math.random() - 0.5) * 22;
+        const z = (Math.random() - 0.5) * 22;
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+        nodePositions.push(new THREE.Vector3(x, y, z));
+      }
+
+      geometryNodes.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const pointsMat = new THREE.PointsMaterial({
+        color: 0x00f0ff,
+        size: 0.32,
+        transparent: true,
+        opacity: 0.45
+      });
+      const pointsMesh = new THREE.Points(geometryNodes, pointsMat);
+      networkGroup.add(pointsMesh);
+
+      // Connecting Edges
+      const lineMaterial = new THREE.LineBasicMaterial({
+        color: 0x7000ff,
+        transparent: true,
+        opacity: 0.15
+      });
+      const linePositions = [];
+      for (let i = 0; i < nodeCount; i++) {
+        for (let j = i + 1; j < nodeCount; j++) {
+          if (nodePositions[i].distanceTo(nodePositions[j]) < 5.5) {
+            linePositions.push(nodePositions[i].x, nodePositions[i].y, nodePositions[i].z);
+            linePositions.push(nodePositions[j].x, nodePositions[j].y, nodePositions[j].z);
+          }
+        }
+      }
+      const lineGeometry = new THREE.BufferGeometry();
+      lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+      const linesMesh = new THREE.LineSegments(lineGeometry, lineMaterial);
+      networkGroup.add(linesMesh);
+
+      // Torus Data Rings
+      const ringGeo = new THREE.TorusGeometry(8.5, 0.015, 16, 100);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.2 });
+      const ring1 = new THREE.Mesh(ringGeo, ringMat);
+      const ring2 = new THREE.Mesh(ringGeo, ringMat);
+      ring2.rotation.x = Math.PI / 2;
+      networkGroup.add(ring1);
+      networkGroup.add(ring2);
+
+      // Outer Wireframe Sphere
+      const outerSphere = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(12.5, 2),
+        new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.03 })
+      );
+      networkGroup.add(outerSphere);
+
+      // Mouse Parallax (LERP)
+      let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
+        mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
+      });
+
+      // Smooth GSAP ScrollTrigger Integration
+      if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.to(networkGroup.rotation, {
+          y: Math.PI * 1.2,
+          x: Math.PI * 0.3,
+          scrollTrigger: {
+            trigger: ".poly-page",
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1.5
+          }
+        });
+      }
+
+      // Render Loop
+      function animate3D() {
+        requestAnimationFrame(animate3D);
+        networkGroup.rotation.y += 0.0012;
+        ring1.rotation.z += 0.0025;
+        ring2.rotation.y += 0.0025;
+        outerSphere.rotation.x -= 0.0005;
+
+        targetX += (mouseX - targetX) * 0.04;
+        targetY += (mouseY - targetY) * 0.04;
+        networkGroup.rotation.x += targetY * 0.08;
+        camera.position.x += (targetX * 5 - camera.position.x) * 0.04;
+
+        renderer.render(scene, camera);
+      }
+      animate3D();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Flash trigger for interactive Ping
+      window.flash3DCore = function() {
+        if (typeof gsap !== 'undefined') {
+          gsap.to(lineMaterial, { opacity: 0.6, duration: 0.15, yoyo: true, repeat: 1 });
+          gsap.to(pointsMat, { opacity: 0.9, duration: 0.15, yoyo: true, repeat: 1 });
+        }
+      };
+    }
+
+    /* ── 3. PAGE INTERACTION & AUDIO LOGIC ── */
     const KEY = 'limbo_scene_progress';
     const progress = parseInt(localStorage.getItem(KEY) || '0', 10);
 
-    /* ── Web Audio SFX ── */
     const sfx = {
       ctx: null,
       muted: localStorage.getItem('poly_sfx_mute') === '1',
@@ -790,25 +1075,25 @@
         o.type = type || 'square';
         o.frequency.setValueAtTime(freq, t0);
         if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + dur);
-        g.gain.setValueAtTime(vol || 0.04, t0);
+        g.gain.setValueAtTime(vol || 0.03, t0);
         g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
         o.connect(g); g.connect(this.ctx.destination);
         o.start(t0); o.stop(t0 + dur + 0.02);
       },
-      hover() { this.tone(880, 0.05, 'sine', 0.025); },
+      hover() { this.tone(880, 0.04, 'sine', 0.02); },
       click() {
-        this.tone(420, 0.06, 'square', 0.04, 180);
-        setTimeout(() => this.tone(620, 0.04, 'sine', 0.02), 40);
+        this.tone(420, 0.05, 'square', 0.035, 180);
+        setTimeout(() => this.tone(620, 0.04, 'sine', 0.018), 40);
       },
-      tick() { this.tone(1200, 0.03, 'triangle', 0.018); },
-      fill() { this.tone(220, 0.12, 'sawtooth', 0.02, 440); },
+      tick() { this.tone(1200, 0.025, 'triangle', 0.015); },
+      fill() { this.tone(220, 0.1, 'sawtooth', 0.015, 440); },
       lock() {
-        this.tone(180, 0.1, 'square', 0.035);
-        setTimeout(() => this.tone(120, 0.12, 'square', 0.03), 80);
+        this.tone(180, 0.08, 'square', 0.03);
+        setTimeout(() => this.tone(120, 0.1, 'square', 0.025), 80);
       },
       boot() {
-        this.tone(200, 0.08, 'sine', 0.03, 400);
-        setTimeout(() => this.tone(400, 0.1, 'sine', 0.025, 800), 100);
+        this.tone(200, 0.08, 'sine', 0.025, 400);
+        setTimeout(() => this.tone(400, 0.1, 'sine', 0.02, 800), 100);
       }
     };
 
@@ -829,7 +1114,6 @@
       });
     }
 
-    // unlock audio on first gesture
     const unlock = () => { sfx.init(); if (!sfx.muted) sfx.boot(); };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
@@ -844,7 +1128,7 @@
       el.addEventListener('mouseenter', () => { sfx.init(); sfx.tick(); });
     });
 
-    /* ── progress UI ── */
+    /* Progress UI Sync */
     const stat = document.getElementById('statScenes');
     if (stat) stat.textContent = Math.min(progress, 3) + ' / 3';
 
@@ -867,13 +1151,13 @@
         a.addEventListener('click', e => {
           e.preventDefault();
           sfx.init(); sfx.lock();
-          a.style.boxShadow = '0 0 0 1px rgba(224,40,72,0.55)';
+          a.style.boxShadow = '0 0 0 1px rgba(255,42,85,0.7)';
           setTimeout(() => { a.style.boxShadow = ''; }, 500);
         });
       }
     });
 
-    /* ── animated counters + bars ── */
+    /* Animated Counters and Bars */
     function animateCount(el, target, suffix) {
       const dur = 1100;
       const t0 = performance.now();
@@ -909,14 +1193,12 @@
     }, { threshold: 0.35 });
     document.querySelectorAll('.bar-complex[data-w]').forEach(b => barObs.observe(b));
 
-    // circular rings on scene cards
     const ringObs = new IntersectionObserver(entries => {
       entries.forEach(en => {
         if (!en.isIntersecting) return;
         const fg = en.target.querySelector('.fg[data-pct]');
         if (fg) {
           const pct = parseFloat(fg.getAttribute('data-pct') || '0');
-          // pathLength 100 → offset = 100 - pct
           fg.style.strokeDashoffset = String(100 - pct);
         }
         ringObs.unobserve(en.target);
@@ -924,7 +1206,6 @@
     }, { threshold: 0.3 });
     document.querySelectorAll('.pct-ring').forEach(r => ringObs.observe(r));
 
-    // base % counter
     const baseEl = document.getElementById('statBase');
     if (baseEl) {
       setTimeout(() => {
@@ -935,7 +1216,6 @@
       }, 400);
     }
 
-    /* ── reveal ── */
     const revObs = new IntersectionObserver(entries => {
       entries.forEach(en => {
         if (en.isIntersecting) {
@@ -946,46 +1226,52 @@
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
 
-    /* ── latency ── */
     setInterval(() => {
       const el = document.getElementById('statLat');
-      if (el) el.textContent = (12 + (Math.random() * 28 | 0)) + ' ms';
+      if (el) el.textContent = (10 + (Math.random() * 22 | 0)) + ' ms';
     }, 1500);
 
-    /* ── live feed ── */
+    /* Live Feed & Ping Console */
     const lines = [
       { c: 'hi', t: 'POLY_NODE handshake OK' },
       { c: 'ok', t: 'scene_01 ryokan link stable' },
-      { c: '', t: 'cluster_8 load 0.42 · thermal nominal' },
+      { c: '', t: 'cluster_8 load 0.38 · thermal nominal' },
       { c: 'hi', t: 'watcher channel A-55 authenticated' },
-      { c: '', t: 'novel_state sync · localStorage' },
+      { c: '', t: '3D mesh topology stream active' },
       { c: 'bad', t: 'QP-BRK residual corruption detected' },
       { c: 'ok', t: 'archive progress mirror updated' },
-      { c: '', t: 'render pipeline idle · waiting operator' },
-      { c: 'hi', t: 'devlog buffer flushed to dossier' },
-      { c: '', t: 'latency probe cycle' },
-      { c: 'ok', t: 'bar_fill animation checkpoint' },
-      { c: 'hi', t: 'sfx layer online · poly_audio' }
+      { c: '', t: 'render pipeline online · GLSL active' }
     ];
     const body = document.getElementById('feedBody');
     let fi = 0;
-    function pushFeed() {
+    function pushFeed(customText) {
       if (!body) return;
-      const L = lines[fi % lines.length];
+      const L = customText ? { c: 'hi', t: customText } : lines[fi % lines.length];
       fi++;
       const d = document.createElement('div');
       d.className = 'line';
       const ts = new Date().toTimeString().slice(0, 8);
-      const extra = L.t.indexOf('latency') >= 0 ? (' ' + (12 + (Math.random() * 20 | 0)) + 'ms') : '';
-      d.innerHTML = '<span class="ts">[' + ts + ']</span><span class="' + L.c + '">' + L.t + extra + '</span>';
+      d.innerHTML = '<span class="ts">[' + ts + ']</span><span class="' + L.c + '">' + L.t + '</span>';
       body.appendChild(d);
-      while (body.children.length > 9) body.removeChild(body.firstChild);
-      if (!sfx.muted && fi % 4 === 0) { sfx.init(); sfx.tick(); }
+      body.scrollTop = body.scrollHeight;
+      while (body.children.length > 10) body.removeChild(body.firstChild);
     }
     pushFeed();
-    setInterval(pushFeed, 2100);
+    setInterval(() => pushFeed(), 2400);
+
+    const btnPing = document.getElementById('btnPingNode');
+    const statusMsg = document.getElementById('termStatusMsg');
+    if (btnPing) {
+      btnPing.addEventListener('click', () => {
+        const ms = (8 + (Math.random() * 15 | 0));
+        pushFeed('PING MESH CORE -> RESPONSE ' + ms + 'ms [OK]');
+        if (statusMsg) statusMsg.textContent = '> Ping узла: ' + ms + 'ms (пакеты доставлены)';
+        if (window.flash3DCore) window.flash3DCore();
+      });
+    }
+
   })();
   </script>
-  <script type="module" src="/src/main-INDEX.ts"></script>
+  <script type="module" src="/src/main-polygon.ts"></script>
 </body>
 </html>

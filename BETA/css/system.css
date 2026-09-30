@@ -1942,3 +1942,36 @@
     position: relative;
     z-index: 1;
   }
+
+  .scanner-bg {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 60%; /* Растягиваем на всю правую половину или больше */
+    
+    /* Фоновое изображение или SVG сканера */
+    background: radial-gradient(circle at center, rgba(0, 229, 255, 0.15) 0%, transparent 70%),
+                url('scanner-lines.svg') center/contain no-repeat;
+  
+    /* Градиентная маска: скрывает элемент сглаженно слева и снизу */
+    -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%),
+                        linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  
+    pointer-events: none;
+  }
+
+  .scan-container {
+    position: absolute;
+    right: -5%;
+    top: -20%;
+    width: 120%; /* Масштабируем на всю ширину ячейки */
+    height: 140%;
+    opacity: 0.8;
+    
+    /* Маска, плавно растворяющая скан в сторону текста */
+    mask-image: radial-gradient(circle at 85% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
+    -webkit-mask-image: radial-gradient(circle at 85% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
+  }
