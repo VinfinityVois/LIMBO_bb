@@ -21,4 +21,4 @@ if (root) {
   createCore(root);
 } else {
   console.warn('[LIMBO] #webgl-root missing in polygon.html');
-}
+} 

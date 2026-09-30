@@ -837,12 +837,13 @@
   const branch = document.getElementById('branchId');
 
   function complete() {
-    let p = parseInt(localStorage.getItem(KEY) || '0', 10);
-    if (p < SCENE_ID) localStorage.setItem(KEY, String(SCENE_ID));
-    localStorage.setItem(KEY + '_done_' + SCENE_ID, '1');
-    if (doneBanner) doneBanner.classList.remove('is-hidden');
-    if (nextBtn) nextBtn.classList.remove('is-hidden');
-    if (lockNext) lockNext.classList.add('is-hidden');
+  let p = parseInt(localStorage.getItem(KEY) || '0', 10);
+  if (p < SCENE_ID) localStorage.setItem(KEY, String(SCENE_ID));
+  localStorage.setItem(KEY + '_done_' + SCENE_ID, '1');
+  if (doneBanner) doneBanner.classList.remove('is-hidden');
+  if (nextBtn) nextBtn.classList.remove('is-hidden');
+  if (lockNext) lockNext.classList.add('is-hidden');
+  try { if (window.LIMBO && window.LIMBO.markDone) window.LIMBO.markDone(); } catch (e) {}
   }
 
   function show(key) {
