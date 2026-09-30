@@ -1,9 +1,8 @@
 import { bootPage } from './core/boot';
-import { bindAudioUnlock, bindSfxUi, bindMuteToggle } from './core/audio';
+import { bindAudioUnlock, bindSfxUi } from './core/audio';
 import { bindReveals } from './ui/reveal';
 
-bootPage('terminal');
+bootPage('dossier');
 bindAudioUnlock();
 bindSfxUi();
-bindMuteToggle();
 bindReveals();

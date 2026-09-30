@@ -513,6 +513,7 @@
   </style>
 </head>
 <body>
+  <div id="webgl-root" aria-hidden="true"></div>
   <div class="noise"></div>
   <div class="scanlines"></div>
   <div class="vignette"></div>
@@ -761,7 +762,8 @@
   </footer>
 
   <button type="button" class="sfx-toggle" id="sfxToggle" title="Звуки интерфейса">SFX · ON</button>
-
+  
+  <script type="module" src="/src/main-polygon.ts"></script>
   <script src="js/system.js"></script>
   <script>
   (function () {
