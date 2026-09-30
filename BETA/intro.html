@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html class="dark" lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>П.Р.И.Н.Ц. // ЛИМБО — ТАКТИЧЕСКИЙ ТЕРМИНАЛ</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Space+Grotesk:wght@300..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "void-base": "#030408",
+        "void-surface": "#070913",
+        "surface-container-lowest": "#05060d",
+        "surface-container": "#0c1020",
+        "surface-container-high": "#141a33",
+        "neon-cyan": "#00f0ff",
+        "neon-magenta": "#b026ff",
+        "signal-amber": "#ffb800",
+        "corruption-red": "#ff2a55",
+        "terminal-dim": "#4f637f",
+        "terminal-text": "#d8e7ff"
+      },
+      fontFamily: {
+        headline: ["Space Grotesk", "sans-serif"],
+        terminal: ["JetBrains Mono", "monospace"],
+        body: ["Geist", "sans-serif"]
+      }
+    }
+  }
+};
+</script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #030408; }
+  ::-webkit-scrollbar { display: none; }
+  .scanline-crt {
+    background: linear-gradient(rgba(18,18,32,0) 50%, rgba(0,0,0,0.28) 50%),
+                linear-gradient(90deg, rgba(0,240,255,0.015), transparent, rgba(255,42,85,0.015));
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+  }
+  .hud-border {
+    border: 1px solid rgba(0,240,255,0.22);
+    box-shadow: 0 0 15px rgba(0,240,255,0.05), inset 0 0 15px rgba(0,0,0,0.65);
+  }
+  .radar-sweep {
+    background: conic-gradient(from 0deg, rgba(0,240,255,0.25) 0deg, rgba(0,240,255,0) 60deg);
+    animation: radarSpin 4s linear infinite;
+  }
+  @keyframes radarSpin { to { transform: rotate(360deg); } }
+  .tech-corner { position: relative; }
+  .tech-corner::before, .tech-corner::after { content: ''; position: absolute; width: 8px; height: 8px; }
+  .tech-corner::before { top: -1px; left: -1px; border-top: 2px solid #00f0ff; border-left: 2px solid #00f0ff; }
+  .tech-corner::after { bottom: -1px; right: -1px; border-bottom: 2px solid #00f0ff; border-right: 2px solid #00f0ff; }
+  #glitch-canvas { mix-blend-mode: screen; }
+  #toast-interaction { max-width: min(520px, 92vw); }
+  #toast-interaction .lore { display: block; margin-top: 0.35rem; font-size: 10px; color: #4f637f; font-weight: 400; line-height: 1.4; }
+  #hud-tasks { box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 20px rgba(0,240,255,0.06); }
+  #danger-alert { letter-spacing: 0.08em; backdrop-filter: blur(4px); }
+  main .hud-border {
+    box-shadow: 0 0 0 1px rgba(0,240,255,0.12), 0 0 40px rgba(0,240,255,0.06), inset 0 0 80px rgba(0,0,0,0.45);
+  }
+  footer kbd, .key-hint { border: 1px solid rgba(0,240,255,0.25); padding: 0 4px; border-radius: 2px; color: #00f0ff; }
+  #bios-boot { letter-spacing: 0.04em; }
+  #bios-log .ok { color: #00f0ff; }
+  #bios-log .warn { color: #ffb800; }
+  #bios-log .err { color: #ff2a55; }
+  #bios-log .dim { color: #4f637f; }
+  .enemy-hl { filter: drop-shadow(0 0 6px #ff2a55); }
+
+  /* ═══ NEW: MISSION INTRO ═══ */
+  #mission-intro {
+    position: fixed; inset: 0; z-index: 190;
+    background: radial-gradient(circle at center, #050a15 0%, #01020a 100%);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.6s;
+  }
+  #mission-intro.show { opacity: 1; }
+  #mission-intro.hide { opacity: 0; pointer-events: none; }
+  .intro-panel {
+    max-width: 640px; width: 92vw;
+    background: linear-gradient(135deg, rgba(7,9,19,0.98), rgba(3,4,8,0.99));
+    border: 1px solid rgba(0,240,255,0.35);
+    box-shadow: 0 0 80px rgba(0,240,255,0.15), inset 0 0 60px rgba(0,240,255,0.03);
+    padding: 32px 36px;
+    position: relative;
+    transform: translateY(20px); transition: transform 0.6s cubic-bezier(.22,1,.36,1);
+  }
+  #mission-intro.show .intro-panel { transform: translateY(0); }
+  .intro-panel::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+    animation: introScan 3s ease infinite;
+  }
+  @keyframes introScan {
+    0%, 100% { opacity: 0.4; transform: scaleX(0.6); }
+    50% { opacity: 1; transform: scaleX(1); }
+  }
+  .intro-step { display: none; animation: introFade 0.5s ease; }
+  .intro-step.active { display: block; }
+  @keyframes introFade {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .intro-progress {
+    display: flex; gap: 6px; margin-top: 22px;
+  }
+  .intro-progress span {
+    flex: 1; height: 3px; background: rgba(0,240,255,0.15); border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .intro-progress span.done { background: #00f0ff; box-shadow: 0 0 8px #00f0ff; }
+  .intro-progress span.current { background: #ffb800; box-shadow: 0 0 8px #ffb800; animation: introPulse 1.4s ease infinite; }
+  @keyframes introPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .intro-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 12px; }
+  .intro-btn {
+    padding: 10px 22px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+    border-radius: 3px; cursor: pointer; transition: all 0.25s;
+    text-transform: uppercase;
+  }
+  .intro-btn-skip {
+    background: transparent; border: 1px solid rgba(255,255,255,0.15);
+    color: #4f637f;
+  }
+  .intro-btn-skip:hover { color: #ff2a55; border-color: rgba(255,42,85,0.4); }
+  .intro-btn-next {
+    background: #00f0ff; border: 1px solid #00f0ff; color: #030408;
+    box-shadow: 0 0 20px rgba(0,240,255,0.5);
+  }
+  .intro-btn-next:hover { box-shadow: 0 0 32px rgba(0,240,255,0.8); transform: translateY(-1px); }
+
+  /* ═══ NEW: VICTORY SCREEN ═══ */
+  #victory-screen {
+    position: fixed; inset: 0; z-index: 195;
+    background: radial-gradient(circle at center, #041e1a 0%, #010608 100%);
+    display: none; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.8s;
+  }
+  #victory-screen.show { display: flex; opacity: 1; }
+  #victory-screen::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at center, rgba(0,240,255,0.12), transparent 60%);
+    animation: vicGlow 3s ease-in-out infinite;
+  }
+  @keyframes vicGlow {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+  .victory-panel {
+    position: relative; z-index: 2;
+    max-width: 640px; width: 92vw;
+    background: linear-gradient(135deg, rgba(3,20,18,0.98), rgba(3,4,8,0.99));
+    border: 1px solid rgba(0,240,255,0.55);
+    box-shadow: 0 0 100px rgba(0,240,255,0.25), inset 0 0 60px rgba(0,240,255,0.05);
+    padding: 40px 44px;
+    transform: scale(0.92); transition: transform 0.7s cubic-bezier(.22,1,.36,1);
+  }
+  #victory-screen.show .victory-panel { transform: scale(1); }
+  .victory-panel::before {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+    animation: introScan 2s ease infinite;
+  }
+  .victory-badge {
+    width: 90px; height: 90px; margin: 0 auto 20px;
+    border-radius: 50%; background: rgba(0,240,255,0.1);
+    border: 2px solid #00f0ff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(0,240,255,0.6), inset 0 0 20px rgba(0,240,255,0.2);
+    animation: victoryPulse 2s ease-in-out infinite;
+    position: relative;
+  }
+  @keyframes victoryPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(0,240,255,0.6), inset 0 0 20px rgba(0,240,255,0.2); }
+    50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(0,240,255,0.9), inset 0 0 30px rgba(0,240,255,0.3); }
+  }
+  .victory-badge .material-symbols-outlined {
+    font-size: 48px; color: #00f0ff;
+    filter: drop-shadow(0 0 12px #00f0ff);
+  }
+  .victory-rank {
+    display: inline-block; padding: 6px 18px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 900; letter-spacing: 0.15em;
+    border: 2px solid; border-radius: 4px; margin-top: 8px;
+  }
+  .victory-rank.S { color: #ffb800; border-color: #ffb800; box-shadow: 0 0 20px rgba(255,184,0,0.4); text-shadow: 0 0 15px #ffb800; }
+  .victory-rank.A { color: #00f0ff; border-color: #00f0ff; box-shadow: 0 0 20px rgba(0,240,255,0.4); text-shadow: 0 0 15px #00f0ff; }
+  .victory-rank.B { color: #b026ff; border-color: #b026ff; box-shadow: 0 0 20px rgba(176,38,255,0.4); text-shadow: 0 0 15px #b026ff; }
+  .victory-rank.C { color: #4f637f; border-color: #4f637f; }
+  .victory-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(0,240,255,0.08);
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  }
+  .victory-stat:last-child { border-bottom: none; }
+  .victory-stat .lbl { color: #4f637f; letter-spacing: 0.08em; }
+  .victory-stat .val { color: #00f0ff; font-weight: 700; }
+  .victory-stat .val.amber { color: #ffb800; }
+  .victory-stat .val.pink { color: #b026ff; }
+  .victory-btn {
+    display: block; width: 100%; padding: 14px;
+    margin-top: 24px;
+    background: #00f0ff; color: #030408;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.12em; border: none; border-radius: 3px; cursor: pointer;
+    box-shadow: 0 0 24px rgba(0,240,255,0.5);
+    transition: all 0.25s;
+    text-transform: uppercase;
+  }
+  .victory-btn:hover { box-shadow: 0 0 40px rgba(0,240,255,0.8); transform: translateY(-2px); }
+</style>
+</head>
+<body class="bg-void-base font-body text-terminal-text h-screen w-screen flex flex-col selection:bg-neon-cyan selection:text-void-base select-none">
+
+<!-- BIOS BOOT -->
+<div id="bios-boot" class="fixed inset-0 z-[200] bg-[#02040a] font-terminal text-[12px] text-[#00f0ff] overflow-hidden flex flex-col">
+  <div class="scanline-crt absolute inset-0 opacity-40 pointer-events-none"></div>
+  <div class="relative z-10 p-4 sm:p-6 md:p-8 max-w-3xl mx-auto w-full flex-1 flex flex-col">
+    <div class="text-[10px] text-terminal-dim tracking-widest mb-3">П.Р.И.Н.Ц. // FIRMWARE v4.03 · NODE LMB-T1</div>
+    <pre id="bios-logo" class="text-neon-cyan text-[11px] leading-tight mb-4 opacity-90" style="text-shadow:0 0 12px rgba(0,240,255,0.35)"></pre>
+    <div id="bios-log" class="space-y-1 text-[11px] sm:text-[12px] flex-1 overflow-hidden min-h-[200px]"></div>
+    <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <button type="button" id="btn-bios-enter" class="px-5 py-2.5 bg-neon-cyan text-void-base font-bold tracking-widest text-xs rounded shadow-[0_0_20px_rgba(0,240,255,0.4)] hover:brightness-110">
+        ПРИНЯТЬ КАНАЛ · ВОЙТИ В SUB-04 [ENTER]
+      </button>
+      <span class="text-[10px] text-terminal-dim">WASD ход · SPACE стелс · E сонар · F терминал</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW: MISSION INTRO ═══ -->
+<div id="mission-intro" class="show">
+  <div class="intro-panel tech-corner">
+    <div class="intro-step active" data-step="0">
+      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">ВХОДЯЩАЯ ПЕРЕДАЧА · ЗАШИФРОВАННЫЙ КАНАЛ // ПРОТОКОЛ «НЕКО-4»</div>
+      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ВСТУПЛЕНИЕ</div>
+      <p class="text-sm text-terminal-text leading-relaxed mb-3">
+        Голос в наушнике хрипит, будто сквозь века:
+      </p>
+      <div class="bg-void-surface/70 border-l-2 border-neon-cyan p-4 my-4 italic text-[13px] text-terminal-text/90 leading-relaxed">
+        «Мо. Слышишь? Это Хэ. Смотрящий A-55. Мне нужен кто-то, кого система не отследит. Кто-то маленький. Кто-то быстрый. Кто-то… с четырьмя лапами.»
+      </div>
+      <p class="text-[12px] text-terminal-dim leading-relaxed">
+        Ты — МО, цифровой кот-взломщик, загруженный в SUB-04 за 4 секунды до активации триггера. У тебя ровно одна попытка.
+      </p>
+    </div>
+
+    <div class="intro-step" data-step="1">
+      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">ЗАДАЧА · ПРИОРИТЕТ ВЫСОКИЙ</div>
+      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ЧТО НУЖНО СДЕЛАТЬ</div>
+      <div class="space-y-3 text-[13px]">
+        <div class="flex gap-3 items-start">
+          <span class="text-neon-cyan font-bold shrink-0">01.</span>
+          <div><span class="text-terminal-text font-bold">Собрать 5 байт памяти</span><br><span class="text-terminal-dim text-[11px]">Каждый байт — фрагмент журнала. Пять байт = один ключ шлюза.</span></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-signal-amber font-bold shrink-0">02.</span>
+          <div><span class="text-terminal-text font-bold">Считать 3 терминала [F]</span><br><span class="text-terminal-dim text-[11px]">Дампим данные штаба в канал Смотрящего. Необязательно, но полезно.</span></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-neon-magenta font-bold shrink-0">03.</span>
+          <div><span class="text-terminal-text font-bold">Открыть шлюз Alpha</span><br><span class="text-terminal-dim text-[11px]">После 5 байт возвращайся к двери [1,16]. Дверь откроется.</span></div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="text-corruption-red font-bold shrink-0">04.</span>
+          <div><span class="text-terminal-text font-bold">Эвакуироваться</span><br><span class="text-terminal-dim text-[11px]">Перейти к терминалу П.Р.И.Н.Ц. Живым.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-step" data-step="2">
+      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">УГРОЗЫ · SUB-04</div>
+      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">КОГО ОПАСАТЬСЯ</div>
+      <div class="space-y-3 text-[13px]">
+        <div class="flex gap-3 items-start">
+          <span class="w-8 h-8 shrink-0 rounded border border-signal-amber/50 flex items-center justify-center text-signal-amber text-[14px] font-bold">V</span>
+          <div>
+            <span class="text-signal-amber font-bold">ВИРУСЫ · Мальварь-патрули</span><br>
+            <span class="text-terminal-dim text-[11px]">Ходят по коридорам. При виде света — переходят в агрессивный режим. Не касайся.</span>
+          </div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="w-8 h-8 shrink-0 rounded border border-corruption-red/60 flex items-center justify-center text-corruption-red text-[14px] font-bold">H</span>
+          <div>
+            <span class="text-corruption-red font-bold">СИГНАТУРА ХАКЕРА · Смотрящий</span><br>
+            <span class="text-terminal-dim text-[11px]">Твой главный враг. Идёт по BFS-пути прямо за тобой. В стелсе теряет след за ~8 секунд.</span>
+          </div>
+        </div>
+        <div class="flex gap-3 items-start">
+          <span class="w-8 h-8 shrink-0 rounded border border-neon-magenta/50 flex items-center justify-center text-neon-magenta text-[14px] font-bold">!</span>
+          <div>
+            <span class="text-neon-magenta font-bold">МАСКИРОВКА = ЖИЗНЬ</span><br>
+            <span class="text-terminal-dim text-[11px]">[ПРОБЕЛ] — гасит фонарь. В темноте ты почти невидим. Сонар [E] тратит 10% энергии.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-step" data-step="3">
+      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">КАНАЛ ОТКРЫТ · СИНХРОНИЗАЦИЯ 100%</div>
+      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ГОТОВ К ВНЕДРЕНИЮ</div>
+      <p class="text-sm text-terminal-text leading-relaxed mb-4">
+        Голос Хэ становится тише, будто он уже далеко:
+      </p>
+      <div class="bg-void-surface/70 border-l-2 border-neon-cyan p-4 mb-4 italic text-[13px] text-terminal-text/90 leading-relaxed">
+        «Не задерживайся. Если увидишь Смотрящего — не смотри ему в глаза. Он не человек. Он уже давно не человек.»
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-[11px] font-terminal">
+        <div class="bg-void-surface/60 border border-neon-cyan/20 p-3">
+          <div class="text-terminal-dim mb-1">АВТОНОМНОСТЬ</div>
+          <div class="text-neon-cyan font-bold">4 СЕК · ПОЛНАЯ</div>
+        </div>
+        <div class="bg-void-surface/60 border border-neon-cyan/20 p-3">
+          <div class="text-terminal-dim mb-1">ВЕРОЯТНОСТЬ ОТХОДА</div>
+          <div class="text-signal-amber font-bold">47% · ПЕРЕСЧИТАТЬ</div>
+        </div>
+      </div>
+      <p class="text-[11px] text-terminal-dim mt-4 text-center">Нажми ENTER, когда будешь готов. Обратной дороги нет.</p>
+    </div>
+
+    <div class="intro-progress" id="introProgress">
+      <span class="current"></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="intro-actions">
+      <button class="intro-btn intro-btn-skip" id="intro-skip">Пропустить</button>
+      <button class="intro-btn intro-btn-next" id="intro-next">Далее →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW: VICTORY SCREEN ═══ -->
+<div id="victory-screen">
+  <div class="victory-panel tech-corner">
+    <div class="victory-badge">
+      <span class="material-symbols-outlined">task_alt</span>
+    </div>
+
+    <div class="text-center mb-6">
+      <div class="text-[10px] text-neon-cyan tracking-widest mb-2">МИССИЯ SUB-04 ЗАВЕРШЕНА · КАНАЛ ПЕРЕДАН</div>
+      <div class="text-neon-cyan font-headline font-bold text-3xl tracking-wider mb-3">ЭВАКУАЦИЯ УСПЕШНА</div>
+      <div class="text-[12px] text-terminal-dim mb-4 max-w-md mx-auto leading-relaxed">
+        Шлюз Alpha закрылся за твоей спиной. МО добрался до терминала П.Р.И.Н.Ц.
+        Хэ Ючоу устанавливает канал. Ты в системе.
+      </div>
+      <div class="text-[11px] text-terminal-dim tracking-widest mb-2">ОЦЕНКА ОПЕРАЦИИ</div>
+      <div class="victory-rank" id="victoryRank">A</div>
+    </div>
+
+    <div class="bg-void-surface/60 border border-neon-cyan/20 mb-4">
+      <div class="victory-stat">
+        <span class="lbl">БАЙТЫ ПАМЯТИ</span>
+        <span class="val" id="vs-bytes">5 / 5</span>
+      </div>
+      <div class="victory-stat">
+        <span class="lbl">ТЕРМИНАЛЫ СЧИТАНЫ</span>
+        <span class="val amber" id="vs-terminals">3 / 3</span>
+      </div>
+      <div class="victory-stat">
+        <span class="lbl">ВРЕМЯ МИССИИ</span>
+        <span class="val pink" id="vs-time">--:--</span>
+      </div>
+      <div class="victory-stat">
+        <span class="lbl">ИСПОЛЬЗОВАНО СТЕЛСА</span>
+        <span class="val" id="vs-stealth">0 раз</span>
+      </div>
+      <div class="victory-stat">
+        <span class="lbl">СОНАРОВ ВЫПУЩЕНО</span>
+        <span class="val amber" id="vs-sonars">0</span>
+      </div>
+      <div class="victory-stat">
+        <span class="lbl">ОСТАЛОСЬ ЭНЕРГИИ</span>
+        <span class="val" id="vs-power">100%</span>
+      </div>
+    </div>
+
+    <div class="bg-void-surface/60 border-l-2 border-neon-cyan p-3 mb-4">
+      <div class="text-[10px] text-terminal-dim tracking-widest mb-1">ПОСЛЕДНЕЕ СООБЩЕНИЕ ОТ А-55</div>
+      <div class="text-[12px] text-terminal-text/90 italic leading-relaxed" id="victoryQuote">
+        «Хороший кот. Теперь у нас есть шанс.»
+      </div>
+    </div>
+
+    <button class="victory-btn" id="victory-continue">
+      ▶ ПЕРЕЙТИ В ТЕРМИНАЛ П.Р.И.Н.Ц.
+    </button>
+    <div class="text-center text-[10px] text-terminal-dim mt-3">
+      Автоматический переход через <span id="victoryCountdown" class="text-neon-cyan font-bold">8</span> сек
+    </div>
+  </div>
+</div>
+
+<div class="fixed inset-0 scanline-crt z-50 pointer-events-none opacity-45"></div>
+
+<header class="w-full bg-[#04060f]/95 border-b border-neon-cyan/20 px-3 sm:px-5 py-2 flex items-center justify-between text-xs font-terminal z-40 backdrop-blur-md shrink-0">
+  <div class="flex items-center gap-3">
+    <span class="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_#00f0ff] animate-pulse"></span>
+    <span class="font-headline font-bold text-sm tracking-wider text-neon-cyan">П.Р.И.Н.Ц.</span>
+    <span class="text-terminal-dim text-[11px]">// ЛИМБО</span>
+    <span class="text-[10px] px-1.5 py-0.5 rounded bg-surface-container-high/60 text-terminal-dim hidden lg:inline border border-white/5">SUB-04 · CRYPTO_VAULT</span>
+    <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neon-cyan/10 border border-neon-cyan/30 text-[10px] text-neon-cyan">
+      <span class="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping"></span>
+      <span>ЯДРО СИНХРОНИЗИРОВАНО</span>
+    </div>
+  </div>
+  <nav class="hidden md:flex items-center gap-1 text-[11px]">
+    <a href="terminal.html" class="px-3 py-1 bg-neon-cyan text-void-base font-bold rounded-sm shadow-[0_0_10px_rgba(0,240,255,0.4)]">ТЕРМИНАЛ</a>
+    <a href="dossier.html" class="px-3 py-1 text-terminal-dim hover:text-terminal-text">ДОСЬЕ</a>
+    <a href="scenes.html" class="px-3 py-1 text-terminal-dim hover:text-terminal-text">АРХИВ СЦЕН</a>
+    <a href="polygon.html" class="px-3 py-1 text-terminal-dim hover:text-terminal-text">ПОЛИГОН</a>
+  </nav>
+  <div class="flex items-center gap-2 sm:gap-3">
+    <div class="hidden xl:flex items-center gap-3 text-[11px] text-terminal-dim border-r border-white/10 pr-3">
+      <span>УГРОЗА: <strong class="text-neon-cyan" id="ui-threat-badge">НОРМА</strong></span>
+      <span>PWR: <strong class="text-signal-amber" id="ui-power-val">100%</strong></span>
+    </div>
+    <div class="px-2 py-0.5 rounded bg-surface-container-high/80 border border-neon-cyan/30 text-[10px] text-neon-cyan">
+      <span class="font-bold">SEC:LVL_5</span>
+      <span class="text-terminal-dim">|</span>
+      <span class="text-terminal-text">A-55</span>
+    </div>
+    <button type="button" class="flex items-center gap-1 px-2 py-1 rounded bg-surface-container border border-white/10 text-[11px] hover:text-neon-cyan" id="btn-audio-toggle">
+      <span class="material-symbols-outlined text-[15px]" id="audio-icon">volume_up</span>
+      <span class="hidden sm:inline font-bold" id="audio-label">SFX</span>
+    </button>
+  </div>
+</header>
+
+<main class="relative flex-1 w-full min-h-0 overflow-hidden flex items-center justify-center p-2 sm:p-3">
+  <div class="relative w-full h-full max-w-[1720px] max-h-full bg-[#020307] rounded-lg overflow-hidden hud-border flex items-center justify-center tech-corner">
+
+    <div class="absolute top-2.5 left-3 z-30 pointer-events-none flex flex-col gap-1 font-terminal text-[11px]">
+      <div class="flex items-center gap-2 text-neon-cyan font-bold">
+        <span class="material-symbols-outlined text-[14px]">terminal</span>
+        <span id="crt-room-id">ROOM: ШЛЮЗ АЛЬФА</span>
+      </div>
+      <div class="flex items-center gap-3 text-terminal-dim text-[10px]">
+        <span>MODE: <span class="text-neon-cyan" id="crt-mode-state">ПАТРУЛЬ</span></span>
+        <span class="hidden sm:inline">СТЕЛС: <span id="crt-stealth-pct">0%</span></span>
+      </div>
+      <div class="hidden sm:flex items-center gap-2 mt-1 bg-void-surface/80 px-2 py-1 rounded border border-neon-cyan/20">
+        <div class="relative w-6 h-6 rounded-full border border-neon-cyan/40 overflow-hidden flex items-center justify-center">
+          <div class="absolute inset-0 radar-sweep"></div>
+          <div class="w-1 h-1 bg-neon-cyan rounded-full z-10"></div>
+        </div>
+        <div class="text-[9px] leading-tight">
+          <div class="text-neon-cyan font-bold">РАДАР</div>
+          <div class="text-terminal-dim" id="radar-subtext">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute top-2.5 right-3 z-30 w-72 sm:w-80 bg-void-surface/90 backdrop-blur-md rounded border border-neon-cyan/30 shadow-lg p-3 text-xs font-terminal" id="hud-tasks">
+      <div class="flex items-center justify-between border-b border-neon-cyan/20 pb-1.5 mb-2">
+        <div class="flex items-center gap-1.5 text-neon-cyan font-bold tracking-wide uppercase text-[11px]">
+          <span>//</span><span>Задания сектора</span>
+        </div>
+        <span class="text-[10px] text-neon-cyan font-bold bg-neon-cyan/10 px-1.5 py-0.5 rounded" id="task-counter">1 / 4</span>
+      </div>
+      <ul class="space-y-1.5 text-[11px]" id="task-list">
+        <li class="flex items-center gap-2" id="task-fishes">
+          <span class="w-4 h-4 rounded-sm border border-neon-cyan/40 bg-surface-container flex items-center justify-center text-[10px] text-neon-cyan font-bold" id="task-icon-1">✓</span>
+          <span class="flex-1" id="task-title-1">Собрать 5 байт памяти</span>
+          <span class="text-[10px] text-neon-cyan font-bold" id="task-shards-num">1/5</span>
+        </li>
+        <li class="flex items-center gap-2" id="task-terminals">
+          <span class="w-4 h-4 rounded-sm border border-white/20 bg-surface-container flex items-center justify-center text-[10px]" id="task-icon-2"></span>
+          <span class="flex-1">Считать 3 терминала [F]</span>
+          <span class="text-[10px] text-signal-amber font-bold" id="task-term-num">0/3</span>
+        </li>
+        <li class="flex items-center gap-2 text-terminal-dim" id="task-gate">
+          <span class="w-4 h-4 rounded-sm border border-white/20 bg-surface-container flex items-center justify-center text-[10px]" id="task-icon-3"></span>
+          <span class="flex-1">Открыть шлюз Alpha</span>
+          <span class="text-[10px] text-corruption-red font-bold" id="task-gate-status">БЛОК</span>
+        </li>
+        <li class="flex items-center gap-2 text-terminal-dim" id="task-exit">
+          <span class="w-4 h-4 rounded-sm border border-white/20 bg-surface-container flex items-center justify-center text-[10px]" id="task-icon-4"></span>
+          <span class="flex-1">Эвакуация</span>
+          <span class="text-[10px] text-terminal-dim">ЖДЁТ</span>
+        </li>
+      </ul>
+      <div class="mt-2 pt-1.5 border-t border-white/5 flex items-center justify-between text-[10px] text-terminal-dim">
+        <span>Угрозы: вирус · баг · хакер-сигнатура</span>
+        <button type="button" class="text-neon-cyan hover:underline" id="btn-toggle-hud">[СВЕРНУТЬ]</button>
+      </div>
+    </div>
+
+    <canvas id="game-canvas" width="1280" height="720" class="w-full h-full object-contain cursor-crosshair relative z-10"></canvas>
+    <canvas id="glitch-canvas" width="320" height="180" class="absolute inset-0 w-full h-full pointer-events-none opacity-0 transition-opacity duration-150 z-20"></canvas>
+
+    <div class="absolute top-14 left-1/2 -translate-x-1/2 pointer-events-none opacity-0 -translate-y-2 transition-all duration-200 z-40 bg-void-surface/95 border border-neon-cyan/60 text-neon-cyan px-4 py-2.5 rounded-lg font-terminal text-xs shadow-[0_0_20px_rgba(0,240,255,0.35)] backdrop-blur-md max-w-[min(480px,90vw)]" id="toast-interaction">
+      <div class="flex items-start gap-2">
+        <span class="material-symbols-outlined text-[18px] text-signal-amber shrink-0">memory</span>
+        <div>
+          <span class="font-bold tracking-wide block" id="toast-message">—</span>
+          <span class="lore" id="toast-lore"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hidden absolute top-3 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-corruption-red/90 text-white rounded font-terminal text-[11px] font-bold tracking-wider z-30 flex items-center gap-2 shadow-[0_0_16px_#ff2a55]" id="danger-alert">
+      <span class="material-symbols-outlined text-[16px]">warning</span>
+      <span>СИГНАТУРА РЯДОМ — СТЕЛС [ПРОБЕЛ]</span>
+    </div>
+
+    <div class="hidden absolute inset-0 bg-void-base/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="game-status-card">
+      <div class="bg-void-surface border border-neon-cyan/50 rounded-lg p-6 max-w-md w-full text-center tech-corner shadow-[0_0_30px_rgba(0,240,255,0.25)]">
+        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-neon-cyan/20 border border-neon-cyan flex items-center justify-center text-neon-cyan" id="status-card-icon">
+          <span class="material-symbols-outlined text-[28px]">lock_open</span>
+        </div>
+        <h2 class="font-headline font-bold text-xl text-neon-cyan tracking-wide uppercase" id="status-card-title">—</h2>
+        <p class="font-terminal text-xs text-terminal-text mt-2 mb-5 leading-relaxed" id="status-card-desc"></p>
+        <button type="button" class="px-5 py-2 bg-neon-cyan text-void-base font-terminal font-bold text-xs rounded shadow-[0_0_12px_rgba(0,240,255,0.4)]" id="btn-modal-restart">ПРОДОЛЖИТЬ [ENTER]</button>
+      </div>
+    </div>
+
+    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-void-surface/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-neon-cyan/25">
+      <span class="text-[10px] font-terminal text-terminal-dim mr-1 hidden sm:inline">БАЙТЫ:</span>
+      <div class="w-11 h-7 rounded border border-neon-cyan/40 bg-neon-cyan/15 text-neon-cyan font-terminal text-[11px] font-bold flex items-center justify-center" id="byte-slot-0">0x7F</div>
+      <div class="w-11 h-7 rounded border border-white/10 bg-surface-container text-terminal-dim font-terminal text-[11px] flex items-center justify-center" id="byte-slot-1">··</div>
+      <div class="w-11 h-7 rounded border border-white/10 bg-surface-container text-terminal-dim font-terminal text-[11px] flex items-center justify-center" id="byte-slot-2">··</div>
+      <div class="w-11 h-7 rounded border border-white/10 bg-surface-container text-terminal-dim font-terminal text-[11px] flex items-center justify-center" id="byte-slot-3">··</div>
+      <div class="w-11 h-7 rounded border border-white/10 bg-surface-container text-terminal-dim font-terminal text-[11px] flex items-center justify-center" id="byte-slot-4">··</div>
+    </div>
+
+    <div class="absolute bottom-3 right-3 z-30 hidden sm:flex items-center gap-2 font-terminal text-[10px]">
+      <button type="button" class="px-2.5 py-1.5 bg-surface-container border border-signal-amber/40 text-signal-amber rounded flex items-center gap-1.5" id="btn-stealth-action">
+        <span class="material-symbols-outlined text-[15px]">visibility_off</span>
+        <span class="font-bold">СТЕЛС</span>
+      </button>
+      <button type="button" class="px-2.5 py-1.5 bg-surface-container border border-neon-cyan/40 text-neon-cyan rounded flex items-center gap-1.5" id="btn-sonar-action">
+        <span class="material-symbols-outlined text-[15px]">sensors</span>
+        <span class="font-bold">СОНАР</span>
+      </button>
+    </div>
+  </div>
+</main>
+
+<footer class="w-full bg-[#04060f] border-t border-neon-cyan/20 px-3 sm:px-5 py-1.5 flex flex-wrap items-center justify-between text-[11px] font-terminal text-terminal-dim z-40 shrink-0">
+  <div class="flex items-center gap-3">
+    <span>STATUS: <span class="text-neon-cyan font-bold" id="footer-status-pill">ПАТРУЛЬ</span></span>
+    <span>СВЕТ: <span class="text-signal-amber font-bold" id="footer-light-pill">ВКЛ</span></span>
+    <span>ШЛЮЗ: <span class="text-corruption-red font-bold" id="footer-gate-pill">ЗАКРЫТ</span></span>
+    <span class="hidden md:inline">ТЕРМ: <span class="text-neon-cyan font-bold" id="footer-term-pill">0 / 3</span></span>
+  </div>
+  <div class="hidden lg:flex items-center gap-2 text-[10px]">
+    <span>WASD</span><span class="text-terminal-text">ход</span>
+    <span>·</span>
+    <span class="text-signal-amber">SPACE</span><span>стелс</span>
+    <span>·</span>
+    <span class="text-neon-cyan">E</span><span>сонар</span>
+    <span>·</span>
+    <span class="text-neon-magenta">F</span><span>терминал</span>
+  </div>
+  <span class="text-neon-cyan font-bold text-[10px]">NODE LMB-T1 · A-55</span>
+</footer>
+
+<script>
+(() => {
+  const LORE = {
+    '0x7F': 'Фрагмент журнала Смотрящего. Сбой коллизий, Шанхай.',
+    '0x9A': 'Сигнатура протокола «Цефей». Нужна для ключа шлюза.',
+    '0x1C': 'Снимок памяти субъекта из капсулы. Сцена ещё жива.',
+    '0x4E': 'Ключ маршрутизации штаба. Обход карантина SUB-04.',
+    '0x00': 'Нулевой байт. Аномалия ZERO. Соберите и уходите.'
+  };
+
+  // ═══ NEW: Mission stats ═══
+  const missionStats = {
+    startTime: 0,
+    stealthUses: 0,
+    sonarsUsed: 0,
+    deaths: 0
+  };
+
+  class CyberAudio {
+    constructor() { this.ctx = null; this.muted = false; this.drone = null; }
+    init() {
+      if (this.ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      const f = this.ctx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.value = 42;
+      f.type = 'lowpass'; f.frequency.value = 140;
+      g.gain.value = 0.015;
+      o.connect(f); f.connect(g); g.connect(this.ctx.destination);
+      o.start(); this.drone = g;
+    }
+    tone(freq, dur, type, vol) {
+      if (!this.ctx || this.muted) return;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type || 'triangle'; o.frequency.value = freq;
+      g.gain.value = vol || 0.04;
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(); o.stop(this.ctx.currentTime + dur);
+    }
+    playStep() { this.tone(100 + Math.random()*30, 0.05, 'triangle', 0.025); }
+    playPickup() { [523,659,784,1046].forEach((f,i) => setTimeout(() => this.tone(f, 0.08, 'square', 0.04), i*45)); }
+    playHack() { [330,440,550].forEach((f,i) => setTimeout(() => this.tone(f, 0.09, 'sawtooth', 0.05), i*60)); }
+    playSonar() { this.tone(90, 0.4, 'sine', 0.05); this.tone(180, 0.25, 'triangle', 0.03); }
+    playDeath() { this.tone(200, 0.5, 'sawtooth', 0.08); }
+    playVictory() { // ═══ NEW ═══
+      [523, 659, 784, 1046, 1318].forEach((f, i) =>
+        setTimeout(() => this.tone(f, 0.25, 'sine', 0.06), i * 120));
+    }
+    toggleMute() {
+      this.muted = !this.muted;
+      if (this.ctx) this.muted ? this.ctx.suspend() : this.ctx.resume();
+      return this.muted;
+    }
+  }
+  const sfx = new CyberAudio();
+
+  const canvas = document.getElementById('game-canvas');
+  const ctx = canvas.getContext('2d');
+  const glitchCanvas = document.getElementById('glitch-canvas');
+  const glitchCtx = glitchCanvas.getContext('2d');
+  const fogCanvas = document.createElement('canvas');
+  fogCanvas.width = canvas.width;
+  fogCanvas.height = canvas.height;
+  const fctx = fogCanvas.getContext('2d');
+
+  const COLS = 32, ROWS = 18, TILE = 40;
+  const MAP = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,6,0,0,0,1,0,0,3,0,0,0,1,0,0,6,0,0,0,0,4,0,1,0,0,0,6,0,0,1],
+    [1,0,3,3,0,4,0,1,0,3,3,3,0,0,1,0,4,0,0,5,3,3,0,0,1,0,4,0,3,3,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,1,7,1,1,0,1,1,1,1,0,1,1,7,1,1,1,0,1,1,1,0,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,5,0,0,0,3,0,0,5,0,6,0,0,1,0,0,0,0,0,0,5,0,0,0,3,0,0,0,4,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,0,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,4,0,0,3,3,0,0,4,0,0,3,0,6,0,0,3,0,0,4,0,0,3,3,0,0,4,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,1,0,1,1,1,0,1,1,1],
+    [1,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,1],
+    [1,0,3,3,0,0,4,0,0,3,3,0,0,0,0,0,4,4,0,0,0,3,3,0,0,4,0,0,3,3,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ];
+
+  let memoryFish = [
+    { x: 3, y: 2, code: '0x7F', collected: true },
+    { x: 12, y: 2, code: '0x9A', collected: false },
+    { x: 28, y: 3, code: '0x1C', collected: false },
+    { x: 8, y: 14, code: '0x4E', collected: false },
+    { x: 24, y: 14, code: '0x00', collected: false }
+  ];
+  let terminals = [
+    { x: 2, y: 6, hacked: false, label: 'TERM-01' },
+    { x: 9, y: 6, hacked: false, label: 'TERM-02' },
+    { x: 21, y: 6, hacked: false, label: 'TERM-03' }
+  ];
+  let watcher = { x: 26, y: 10, timer: 0 };
+  let viruses = [
+    { x: 10, y: 3, dir: 1, timer: 0 },
+    { x: 18, y: 13, dir: -1, timer: 0 }
+  ];
+
+  const state = {
+    player: { x: 3, y: 15, dirX: 1, dirY: 0, stealth: false, flashlight: true, sonarActive: 0, anim: 0, highlightT: 0 },
+    power: 100, collectedFish: 1, hackedTerms: 0,
+    gateUnlocked: false, escaped: false, dead: false, hudCollapsed: false,
+    introDone: false
+  };
+
+  const $ = id => document.getElementById(id);
+  function showToast(msg, lore) {
+    const box = $('toast-interaction');
+    $('toast-message').textContent = msg;
+    const l = $('toast-lore');
+    if (l) l.textContent = lore || '';
+    box.classList.remove('opacity-0', '-translate-y-2');
+    box.classList.add('opacity-100', 'translate-y-0');
+    clearTimeout(box._t);
+    box._t = setTimeout(() => {
+      box.classList.add('opacity-0', '-translate-y-2');
+      box.classList.remove('opacity-100', 'translate-y-0');
+    }, 3200);
+  }
+
+  function isSolid(x, y) {
+    if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return true;
+    const t = MAP[y][x];
+    if (t === 1 || t === 3 || t === 4) return true;
+    if (t === 2 && !state.gateUnlocked) return true;
+    return false;
+  }
+
+  function drawWorld() {
+    ctx.fillStyle = '#020307';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = 'rgba(0,240,255,0.035)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += TILE) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+    for (let y = 0; y < canvas.height; y += TILE) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const val = MAP[r][c], tx = c * TILE, ty = r * TILE;
+        if (val === 1) {
+          ctx.fillStyle = '#0a1220';
+          ctx.fillRect(tx, ty, TILE, TILE);
+          ctx.fillStyle = '#121c30';
+          ctx.fillRect(tx + 3, ty + 3, TILE - 6, TILE - 6);
+          ctx.strokeStyle = 'rgba(0,240,255,0.12)';
+          ctx.strokeRect(tx + 0.5, ty + 0.5, TILE - 1, TILE - 1);
+        } else if (val === 2) {
+          ctx.fillStyle = state.gateUnlocked ? '#00f0ff' : '#ff2a55';
+          ctx.fillRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          ctx.fillStyle = '#050711';
+          ctx.fillRect(tx + 5, ty + 5, TILE - 10, TILE - 10);
+          ctx.fillStyle = state.gateUnlocked ? '#00f0ff' : '#ff2a55';
+          ctx.font = 'bold 9px monospace';
+          ctx.fillText(state.gateUnlocked ? 'OPEN' : 'GATE', tx + 7, ty + 24);
+        } else if (val === 3) {
+          ctx.fillStyle = '#0d1222';
+          ctx.fillRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          ctx.strokeStyle = 'rgba(0,240,255,0.28)';
+          ctx.strokeRect(tx + 2, ty + 2, TILE - 4, TILE - 4);
+          const blink = (Date.now() + c * 100) % 600 > 300;
+          ctx.fillStyle = blink ? '#00f0ff' : '#004455';
+          ctx.fillRect(tx + 6, ty + 8, 8, 4);
+          ctx.fillStyle = '#ffb800';
+          ctx.fillRect(tx + 18, ty + 8, 6, 4);
+          ctx.fillStyle = '#1c243a';
+          ctx.fillRect(tx + 6, ty + 18, TILE - 12, 14);
+        } else if (val === 4) {
+          ctx.fillStyle = '#081220';
+          ctx.fillRect(tx + 5, ty + 4, TILE - 10, TILE - 8);
+          ctx.strokeStyle = 'rgba(0,240,255,0.25)';
+          ctx.strokeRect(tx + 5, ty + 4, TILE - 10, TILE - 8);
+          ctx.fillStyle = 'rgba(0,240,255,0.1)';
+          ctx.fillRect(tx + 9, ty + 8, TILE - 18, TILE - 16);
+        } else if (val === 5) {
+          const term = terminals.find(t => t.x === c && t.y === r);
+          const ok = term && term.hacked;
+          ctx.fillStyle = ok ? '#0d2822' : '#1a1428';
+          ctx.fillRect(tx + 4, ty + 6, TILE - 8, TILE - 12);
+          ctx.strokeStyle = ok ? '#00f0ff' : '#ffb800';
+          ctx.strokeRect(tx + 4, ty + 6, TILE - 8, TILE - 12);
+          ctx.fillStyle = ok ? '#00f0ff' : '#ffb800';
+          ctx.font = 'bold 9px monospace';
+          ctx.fillText(ok ? 'OK' : '[F]', tx + 12, ty + 22);
+        } else if (val === 6) {
+          ctx.fillStyle = 'rgba(0,30,45,0.35)';
+          ctx.fillRect(tx, ty, TILE, TILE);
+          ctx.strokeStyle = 'rgba(0,240,255,0.35)';
+          ctx.beginPath(); ctx.moveTo(tx + 4, ty + TILE / 2); ctx.lineTo(tx + TILE - 4, ty + TILE / 2); ctx.stroke();
+          ctx.fillStyle = '#00f0ff';
+          ctx.fillRect(tx + TILE / 2 - 2, ty + TILE / 2 - 2, 4, 4);
+        } else if (val === 7) {
+          ctx.fillStyle = 'rgba(255,42,85,0.08)';
+          ctx.fillRect(tx, ty, TILE, TILE);
+          ctx.fillStyle = 'rgba(255,184,0,0.25)';
+          for (let i = 0; i < TILE; i += 8) ctx.fillRect(tx + i, ty + 2, 4, TILE - 4);
+        } else if ((c + r) % 2 === 0) {
+          ctx.fillStyle = 'rgba(0,40,55,0.12)';
+          ctx.fillRect(tx, ty, TILE, TILE);
+        }
+      }
+    }
+
+    memoryFish.forEach(fish => {
+      if (fish.collected) return;
+      const fx = fish.x * TILE + 8;
+      const fy = fish.y * TILE + 10 + Math.sin(Date.now() / 220) * 3;
+      const g = ctx.createRadialGradient(fx + 12, fy + 8, 2, fx + 12, fy + 8, 16);
+      g.addColorStop(0, 'rgba(0,240,255,0.45)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(fx + 12, fy + 8, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#00f0ff';
+      ctx.beginPath(); ctx.ellipse(fx + 10, fy + 8, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e02885';
+      ctx.beginPath(); ctx.moveTo(fx + 18, fy + 8); ctx.lineTo(fx + 24, fy + 3); ctx.lineTo(fx + 24, fy + 13); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(fx + 4, fy + 6, 3, 3);
+    });
+
+    const hl = state.player.highlightT > 0;
+    if (state.player.highlightT > 0) state.player.highlightT--;
+
+    viruses.forEach((v, vi) => {
+      const vx = v.x * TILE, vy = v.y * TILE;
+      const flk = Math.sin(Date.now() / 90 + vi) > 0;
+      if (hl) {
+        ctx.strokeStyle = 'rgba(255,42,85,0.9)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(vx + 2, vy + 2, TILE - 4, TILE - 4);
+        ctx.fillStyle = 'rgba(255,42,85,0.15)';
+        ctx.fillRect(vx + 2, vy + 2, TILE - 4, TILE - 4);
+        ctx.lineWidth = 1;
+      }
+      if (vi % 2 === 0) {
+        ctx.fillStyle = flk ? '#ff2a55' : '#c01840';
+        ctx.fillRect(vx + 10, vy + 8, 20, 20);
+        ctx.fillStyle = '#b026ff';
+        ctx.fillRect(vx + 6, vy + 14, 6, 8);
+        ctx.fillRect(vx + 28, vy + 14, 6, 8);
+        ctx.fillRect(vx + 16, vy + 4, 8, 6);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(vx + 16, vy + 14, 5, 5);
+      } else {
+        ctx.strokeStyle = flk ? '#ffb800' : '#ff2a55';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(vx + 20, vy + 20, 12, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#ff2a55';
+        ctx.beginPath(); ctx.arc(vx + 20, vy + 20, 5, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+
+    const wx = watcher.x * TILE, wy = watcher.y * TILE;
+    if (hl) {
+      ctx.strokeStyle = 'rgba(255,42,85,0.95)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(wx + 1, wy + 1, TILE - 2, TILE - 2);
+      ctx.fillStyle = 'rgba(255,42,85,0.12)';
+      ctx.fillRect(wx + 1, wy + 1, TILE - 2, TILE - 2);
+      ctx.lineWidth = 1;
+    }
+    ctx.fillStyle = '#0a0208';
+    ctx.fillRect(wx + 4, wy + 2, 32, 36);
+    ctx.strokeStyle = '#ff2a55';
+    ctx.strokeRect(wx + 6, wy + 4, 28, 32);
+    ctx.strokeStyle = 'rgba(176,38,255,0.5)';
+    ctx.strokeRect(wx + 8, wy + 6, 24, 28);
+    const eyePulse = 0.7 + Math.sin(Date.now() / 180) * 0.3;
+    ctx.fillStyle = `rgba(255,42,85,${eyePulse})`;
+    ctx.fillRect(wx + 12, wy + 12, 16, 10);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(wx + 18, wy + 14, 4, 6);
+    ctx.fillStyle = 'rgba(0,240,255,0.25)';
+    ctx.fillRect(wx + 8, wy + 26 + (Date.now() / 80 % 8), 24, 1);
+  }
+
+  function drawPlayer() {
+    const p = state.player;
+    const cx = p.x * TILE, cy = p.y * TILE;
+    p.anim += 0.2;
+    const wag = Math.sin(p.anim) * 5;
+    if (p.stealth) {
+      ctx.fillStyle = 'rgba(10,13,24,0.85)';
+      ctx.beginPath(); ctx.ellipse(cx + 20, cy + 24, 14, 9, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#00f0ff';
+      ctx.beginPath(); ctx.moveTo(cx+12,cy+18); ctx.lineTo(cx+16,cy+11); ctx.lineTo(cx+19,cy+18); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx+21,cy+18); ctx.lineTo(cx+24,cy+11); ctx.lineTo(cx+28,cy+18); ctx.fill();
+      return;
+    }
+    ctx.fillStyle = '#0a0d18';
+    ctx.beginPath(); ctx.ellipse(cx + 20, cy + 22, 12, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#00f0ff';
+    ctx.fillRect(cx + 14, cy + 16, 12, 2.5);
+    ctx.fillStyle = Math.sin(Date.now() / 200) > 0 ? '#fff' : '#00f0ff';
+    ctx.fillRect(cx + 18, cy + 15, 3, 3);
+    ctx.fillStyle = '#060810';
+    ctx.beginPath(); ctx.arc(cx + 20, cy + 13, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+12,cy+12); ctx.lineTo(cx+15,cy+4); ctx.lineTo(cx+18,cy+12); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+22,cy+12); ctx.lineTo(cx+25,cy+4); ctx.lineTo(cx+28,cy+12); ctx.fill();
+    ctx.fillStyle = '#e02885';
+    ctx.fillRect(cx+14,cy+7,2,4); ctx.fillRect(cx+24,cy+7,2,4);
+    ctx.fillStyle = '#00f0ff';
+    const look = p.dirX >= 0 ? 1 : -1;
+    ctx.fillRect(cx+18+look*3, cy+12, 3, 2);
+    ctx.fillRect(cx+22+look*3, cy+12, 3, 2);
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + (p.dirX >= 0 ? 11 : 29), cy + 24);
+    ctx.quadraticCurveTo(cx + (p.dirX >= 0 ? 4 : 36), cy + 16 + wag, cx + (p.dirX >= 0 ? 2 : 38), cy + 8 + wag);
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
+  function drawLighting() {
+    const p = state.player;
+    const px = p.x * TILE + TILE / 2, py = p.y * TILE + TILE / 2;
+    fctx.fillStyle = 'rgba(2,3,8,0.82)';
+    fctx.fillRect(0, 0, fogCanvas.width, fogCanvas.height);
+    fctx.save();
+    fctx.globalCompositeOperation = 'destination-out';
+    if (p.flashlight && !p.stealth) {
+      const angle = Math.atan2(p.dirY, p.dirX || 0.001);
+      const cg = fctx.createRadialGradient(px, py, 5, px, py, 80);
+      cg.addColorStop(0, 'rgba(0,0,0,1)');
+      cg.addColorStop(1, 'rgba(0,0,0,0)');
+      fctx.fillStyle = cg;
+      fctx.beginPath(); fctx.arc(px, py, 80, 0, Math.PI * 2); fctx.fill();
+      fctx.beginPath();
+      fctx.moveTo(px, py);
+      fctx.arc(px, py, 360, angle - Math.PI / 3.1, angle + Math.PI / 3.1);
+      fctx.closePath();
+      fctx.fillStyle = 'rgba(0,0,0,1)';
+      fctx.fill();
+    } else {
+      const sg = fctx.createRadialGradient(px, py, 4, px, py, 52);
+      sg.addColorStop(0, 'rgba(0,0,0,0.95)');
+      sg.addColorStop(1, 'rgba(0,0,0,0)');
+      fctx.fillStyle = sg;
+      fctx.beginPath(); fctx.arc(px, py, 52, 0, Math.PI * 2); fctx.fill();
+    }
+    if (p.sonarActive > 0) {
+      fctx.beginPath();
+      fctx.arc(px, py, (1 - p.sonarActive) * 580, 0, Math.PI * 2);
+      fctx.fillStyle = 'rgba(0,0,0,' + (p.sonarActive * 0.85) + ')';
+      fctx.fill();
+      p.sonarActive -= 0.014;
+    }
+    fctx.restore();
+    ctx.drawImage(fogCanvas, 0, 0);
+
+    const dist = Math.hypot(p.x - watcher.x, p.y - watcher.y);
+    let minV = 99;
+    viruses.forEach(v => { minV = Math.min(minV, Math.hypot(p.x - v.x, p.y - v.y)); });
+    const minD = Math.min(dist, minV);
+    $('radar-subtext').textContent = 'БЛИЖ: ' + (minD * 3.2).toFixed(1) + 'm';
+
+    if (minD < 7) {
+      const intensity = Math.pow(1 - minD / 7, 1.4);
+      $('danger-alert').classList.remove('hidden');
+      $('danger-alert').querySelector('span:last-child').textContent =
+        minD < 1.8 ? 'КОНТАКТ! УХОДИТЕ В ТЕНЬ' :
+        minD < 3.5 ? 'СИГНАТУРА ОЧЕНЬ БЛИЗКО' : 'СИГНАТУРА РЯДОМ — СТЕЛС [ПРОБЕЛ]';
+      $('ui-threat-badge').textContent = minD < 2 ? 'КРИТИЧНО' : (minD < 4 ? 'СЛЕЖЕНИЕ' : 'ВНИМАНИЕ');
+      $('ui-threat-badge').className = 'text-corruption-red font-bold';
+      glitchCanvas.style.opacity = Math.min(0.72, intensity * 0.75).toFixed(2);
+      renderGlitch(intensity);
+    } else {
+      $('danger-alert').classList.add('hidden');
+      $('ui-threat-badge').textContent = 'НОРМА';
+      $('ui-threat-badge').className = 'text-neon-cyan font-bold';
+      glitchCanvas.style.opacity = '0';
+    }
+  }
+
+  function renderGlitch(intensity) {
+    intensity = intensity == null ? 0.3 : intensity;
+    const w = glitchCanvas.width, h = glitchCanvas.height;
+    const img = glitchCtx.createImageData(w, h);
+    const buf = new Uint32Array(img.data.buffer);
+    const threshCyan = 0.92 - intensity * 0.35;
+    const threshRed = 0.97 - intensity * 0.25;
+    for (let i = 0; i < buf.length; i++) {
+      const r = Math.random();
+      if (r > threshCyan) buf[i] = intensity > 0.55 ? 0xaa00f0ff : 0x6600f0ff;
+      else if (r > threshRed) buf[i] = intensity > 0.55 ? 0xccff2a55 : 0x55ff2a55;
+    }
+    if (intensity > 0.45) {
+      for (let y = 0; y < h; y += 3 + ((Math.random() * 4) | 0)) {
+        if (Math.random() > 0.4) continue;
+        for (let x = 0; x < w; x++) {
+          const i = y * w + x;
+          if (i < buf.length) buf[i] = Math.random() > 0.5 ? 0x88ff2a55 : 0x5500f0ff;
+        }
+      }
+    }
+    glitchCtx.putImageData(img, 0, 0);
+  }
+
+  function movePlayer(dx, dy) {
+    if (state.dead || state.escaped) return;
+    sfx.init();
+    if (state.player.stealth) toggleStealth();
+    state.player.dirX = dx; state.player.dirY = dy;
+    const nx = state.player.x + dx, ny = state.player.y + dy;
+    if (isSolid(nx, ny)) return;
+    state.player.x = nx; state.player.y = ny;
+    sfx.playStep();
+    memoryFish.forEach((f, idx) => {
+      if (!f.collected && f.x === nx && f.y === ny) {
+        f.collected = true;
+        state.collectedFish++;
+        sfx.playPickup();
+        showToast('[✓] БАЙТ ' + f.code, LORE[f.code] || '');
+        const slot = $('byte-slot-' + idx);
+        if (slot) {
+          slot.textContent = f.code;
+          slot.className = 'w-11 h-7 rounded border border-neon-cyan/60 bg-neon-cyan/20 text-neon-cyan font-terminal text-[11px] font-bold flex items-center justify-center shadow-[0_0_12px_rgba(0,240,255,0.35)]';
+        }
+        $('task-shards-num').textContent = state.collectedFish + '/5';
+        if (state.collectedFish >= 5) {
+          state.gateUnlocked = true;
+          $('task-icon-1').textContent = '✓';
+          $('task-gate-status').textContent = 'ОТКРЫТ';
+          $('task-gate-status').className = 'text-[10px] text-neon-cyan font-bold';
+          $('footer-gate-pill').textContent = 'ОТКРЫТ';
+          $('footer-gate-pill').className = 'text-neon-cyan font-bold';
+          $('task-icon-3').textContent = '✓';
+          $('task-counter').textContent = '3 / 4';
+          showToast('⚡ ШЛЮЗ ALPHA РАЗБЛОКИРОВАН', 'Все 5 байт собраны. Идите к GATE.');
+        }
+      }
+    });
+    if (state.gateUnlocked && ny === 16 && (nx === 1 || nx === 2)) triggerVictory();
+  }
+
+  function hackTerminal() {
+    if (state.dead || state.escaped) return;
+    sfx.init();
+    const p = state.player;
+    const term = terminals.find(t => Math.abs(t.x - p.x) <= 1 && Math.abs(t.y - p.y) <= 1);
+    if (term && !term.hacked) {
+      term.hacked = true;
+      state.hackedTerms++;
+      sfx.playHack();
+      showToast('[F] ' + term.label + ' СЧИТАН', 'Служебный дамп записан в журнал Смотрящего.');
+      $('task-term-num').textContent = state.hackedTerms + '/3';
+      $('footer-term-pill').textContent = state.hackedTerms + ' / 3';
+      if (state.hackedTerms >= 3) {
+        $('task-icon-2').textContent = '✓';
+        $('task-icon-2').className = 'w-4 h-4 rounded-sm border border-neon-cyan bg-neon-cyan/20 flex items-center justify-center text-[10px] text-neon-cyan font-bold';
+      }
+    } else if (term && term.hacked) showToast('Терминал уже считан');
+    else showToast('Нет терминала рядом');
+  }
+
+  function toggleStealth() {
+    if (state.dead || state.escaped) return;
+    sfx.init();
+    if (!state.player.stealth) missionStats.stealthUses++; // ═══ NEW
+    state.player.stealth = !state.player.stealth;
+    state.player.flashlight = !state.player.stealth;
+    if (state.player.stealth) {
+      $('crt-mode-state').textContent = 'МАСКИРОВКА';
+      $('crt-stealth-pct').textContent = '100%';
+      $('footer-status-pill').textContent = 'СТЕЛС';
+      $('footer-light-pill').textContent = 'ВЫКЛ';
+      showToast('МАСКИРОВКА · СВЕТ ВЫКЛ');
+    } else {
+      $('crt-mode-state').textContent = 'ПАТРУЛЬ';
+      $('crt-stealth-pct').textContent = '0%';
+      $('footer-status-pill').textContent = 'ПАТРУЛЬ';
+      $('footer-light-pill').textContent = 'ВКЛ';
+    }
+  }
+
+  function triggerSonar() {
+    if (state.dead || state.escaped) return;
+    sfx.init();
+    if (state.power < 10) { showToast('Мало энергии'); return; }
+    state.power -= 10;
+    missionStats.sonarsUsed++; // ═══ NEW
+    $('ui-power-val').textContent = state.power + '%';
+    state.player.sonarActive = 1;
+    state.player.highlightT = 180;
+    sfx.playSonar();
+    showToast('[E] СОНАР · КАРТА И УГРОЗЫ ПОДСВЕЧЕНЫ', 'Подсветка врагов ~3 с. Туман ослаблен дольше.');
+  }
+
+  function triggerDeath(reason) {
+    if (state.dead || state.escaped) return;
+    state.dead = true;
+    missionStats.deaths++; // ═══ NEW
+    sfx.playDeath();
+    $('status-card-title').textContent = 'КАНАЛ СКОМПРОМЕТИРОВАН';
+    $('status-card-title').className = 'font-headline font-bold text-xl text-corruption-red tracking-wide uppercase';
+    $('status-card-desc').textContent = reason;
+    $('btn-modal-restart').textContent = 'ПЕРЕЗАПУСК [ENTER]';
+    $('game-status-card').classList.remove('hidden');
+  }
+
+  // ═══ NEW: FULL VICTORY SCREEN ═══
+  function triggerVictory() {
+    if (state.escaped) return;
+    state.escaped = true;
+    sfx.playVictory();
+
+    // Calculate stats
+    const elapsed = Math.floor((Date.now() - missionStats.startTime) / 1000);
+    const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const ss = String(elapsed % 60).padStart(2, '0');
+
+    // Rank calculation
+    let score = 100;
+    score -= missionStats.deaths * 15;
+    score -= (5 - state.collectedFish) * 8; // if somehow not all
+    score -= (3 - state.hackedTerms) * 5;
+    if (missionStats.sonarsUsed > 3) score -= (missionStats.sonarsUsed - 3) * 3;
+    if (missionStats.stealthUses < 3) score -= 5; // used stealth too little
+    score += Math.min(10, missionStats.stealthUses); // bonus for stealth usage
+    if (elapsed < 90) score += 10;
+    else if (elapsed > 240) score -= 10;
+
+    let rank = 'C';
+    if (score >= 95) rank = 'S';
+    else if (score >= 80) rank = 'A';
+    else if (score >= 60) rank = 'B';
+    else rank = 'C';
+
+    // Fill UI
+    $('vs-bytes').textContent = state.collectedFish + ' / 5';
+    $('vs-terminals').textContent = state.hackedTerms + ' / 3';
+    $('vs-time').textContent = mm + ':' + ss;
+    $('vs-stealth').textContent = missionStats.stealthUses + ' раз';
+    $('vs-sonars').textContent = missionStats.sonarsUsed;
+    $('vs-power').textContent = state.power + '%';
+    const rankEl = $('victoryRank');
+    rankEl.textContent = rank;
+    rankEl.className = 'victory-rank ' + rank;
+
+    // Quote by rank
+    const quotes = {
+      S: '«Идеально. Ты даже не дышал лишний раз. Так держать, кот.»',
+      A: '«Хороший кот. Теперь у нас есть шанс.»',
+      B: '«Прошли. Не без шума, но прошли. Дальше тише.»',
+      C: '«Чудом живой. В следующий раз слушай меня внимательнее.»'
+    };
+    $('victoryQuote').textContent = quotes[rank] || quotes.A;
+
+    // Show screen
+    const vs = $('victory-screen');
+    vs.classList.add('show');
+
+    // Countdown
+    let cd = 8;
+    const cdEl = $('victoryCountdown');
+    cdEl.textContent = cd;
+    const cdInterval = setInterval(() => {
+      cd--;
+      if (cd <= 0) {
+        clearInterval(cdInterval);
+        goToTerminal();
+      } else {
+        cdEl.textContent = cd;
+      }
+    }, 1000);
+
+    window._victoryCdInterval = cdInterval;
+  }
+
+  function goToTerminal() {
+    if (window._victoryCdInterval) clearInterval(window._victoryCdInterval);
+    try { location.href = 'terminal.html'; } catch (e) {
+      $('victoryCountdown').textContent = '—';
+      $('victoryCountdown').parentElement.innerHTML = 'Автоматический переход недоступен. Нажми кнопку ниже.';
+    }
+  }
+
+  function restartMission() {
+    if (state.escaped) { location.href = 'terminal.html'; return; }
+    state.player = { x: 3, y: 15, dirX: 1, dirY: 0, stealth: false, flashlight: true, sonarActive: 0, anim: 0, highlightT: 0 };
+    state.power = 100; state.collectedFish = 1; state.hackedTerms = 0;
+    state.gateUnlocked = false; state.escaped = false; state.dead = false;
+    memoryFish = [
+      { x: 3, y: 2, code: '0x7F', collected: true },
+      { x: 12, y: 2, code: '0x9A', collected: false },
+      { x: 28, y: 3, code: '0x1C', collected: false },
+      { x: 8, y: 14, code: '0x4E', collected: false },
+      { x: 24, y: 14, code: '0x00', collected: false }
+    ];
+    terminals.forEach(t => t.hacked = false);
+    watcher = { x: 26, y: 10, timer: 0 };
+    viruses = [{ x: 10, y: 3, dir: 1, timer: 0 }, { x: 18, y: 13, dir: -1, timer: 0 }];
+    for (let i = 1; i < 5; i++) {
+      const s = $('byte-slot-' + i);
+      if (s) { s.textContent = '··'; s.className = 'w-11 h-7 rounded border border-white/10 bg-surface-container text-terminal-dim font-terminal text-[11px] flex items-center justify-center'; }
+    }
+    $('task-shards-num').textContent = '1/5';
+    $('task-term-num').textContent = '0/3';
+    $('task-gate-status').textContent = 'БЛОК';
+    $('task-gate-status').className = 'text-[10px] text-corruption-red font-bold';
+    $('task-icon-2').textContent = ''; $('task-icon-3').textContent = ''; $('task-icon-4').textContent = '';
+    $('task-counter').textContent = '1 / 4';
+    $('ui-power-val').textContent = '100%';
+    $('footer-gate-pill').textContent = 'ЗАКРЫТ';
+    $('footer-gate-pill').className = 'text-corruption-red font-bold';
+    $('footer-term-pill').textContent = '0 / 3';
+    $('game-status-card').classList.add('hidden');
+    glitchCanvas.style.opacity = '0';
+    // ═══ NEW: reset stats ═══
+    missionStats.startTime = Date.now();
+    missionStats.stealthUses = 0;
+    missionStats.sonarsUsed = 0;
+  }
+
+  function nextStepToward(sx, sy, tx, ty) {
+    if (sx === tx && sy === ty) return [0, 0];
+    const key = (x, y) => x + ',' + y;
+    const q = [[sx, sy]];
+    const came = new Map();
+    came.set(key(sx, sy), null);
+    let found = null;
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    for (let i = dirs.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      const t = dirs[i]; dirs[i] = dirs[j]; dirs[j] = t;
+    }
+    while (q.length && !found) {
+      const [cx, cy] = q.shift();
+      if (cx === tx && cy === ty) { found = [cx, cy]; break; }
+      for (const [dx, dy] of dirs) {
+        const nx = cx + dx, ny = cy + dy;
+        const k = key(nx, ny);
+        if (came.has(k)) continue;
+        if (isSolid(nx, ny) && !(nx === tx && ny === ty)) continue;
+        came.set(k, [cx, cy]);
+        q.push([nx, ny]);
+      }
+      if (came.size > 280) break;
+    }
+    if (!found) {
+      const dx = Math.sign(tx - sx), dy = Math.sign(ty - sy);
+      if (!isSolid(sx + dx, sy)) return [dx, 0];
+      if (!isSolid(sx, sy + dy)) return [0, dy];
+      return [0, 0];
+    }
+    let cur = found;
+    let prev = came.get(key(cur[0], cur[1]));
+    while (prev && !(prev[0] === sx && prev[1] === sy)) {
+      cur = prev;
+      prev = came.get(key(cur[0], cur[1]));
+    }
+    return [cur[0] - sx, cur[1] - sy];
+  }
+
+  setInterval(() => {
+    if (state.dead || state.escaped) return;
+    const p = state.player;
+
+    viruses.forEach(v => {
+      v.timer++;
+      const dist = Math.hypot(p.x - v.x, p.y - v.y);
+      const alert = !p.stealth && p.flashlight && dist < 9;
+      if (v.timer % (alert ? 2 : 3) === 0) {
+        if (alert) {
+          const [sx, sy] = nextStepToward(v.x, v.y, p.x, p.y);
+          if (sx || sy) { v.x += sx; v.y += sy; }
+        } else {
+          if (!isSolid(v.x + v.dir, v.y)) v.x += v.dir;
+          else {
+            v.dir *= -1;
+            if (!isSolid(v.x, v.y + 1)) v.y += 1;
+            else if (!isSolid(v.x, v.y - 1)) v.y -= 1;
+          }
+        }
+      }
+      if (v.x === p.x && v.y === p.y && !p.stealth)
+        triggerDeath('Вирусный кластер перехватил канал.');
+    });
+
+    watcher.timer++;
+    if (!watcher.lost) watcher.lost = 0;
+    if (p.stealth) {
+      watcher.lost = Math.min(8, watcher.lost + 1);
+    } else {
+      watcher.lost = Math.max(0, watcher.lost - 2);
+      watcher.lastX = p.x;
+      watcher.lastY = p.y;
+    }
+    const chaseX = watcher.lost > 5 ? (watcher.lastX || 16) : p.x;
+    const chaseY = watcher.lost > 5 ? (watcher.lastY || 8) : p.y;
+    const speed = p.stealth ? 4 : (p.flashlight ? 2 : 3);
+    if (watcher.timer % speed === 0) {
+      const [sx, sy] = nextStepToward(watcher.x, watcher.y, chaseX, chaseY);
+      if (sx || sy) { watcher.x += sx; watcher.y += sy; }
+      else {
+        const opts = [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy]) => !isSolid(watcher.x+dx, watcher.y+dy));
+        if (opts.length) {
+          const [dx, dy] = opts[(Math.random() * opts.length) | 0];
+          watcher.x += dx; watcher.y += dy;
+        }
+      }
+    }
+    if (Math.hypot(p.x - watcher.x, p.y - watcher.y) < 1.15 && !p.stealth)
+      triggerDeath('Хакер-сигнатура зафиксировала аватар. Канал сброшен.');
+  }, 380);
+
+  window.addEventListener('keydown', e => {
+    // Skip mission intro
+    if ($('mission-intro') && $('mission-intro').classList.contains('show')) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        nextIntroStep();
+      }
+      return;
+    }
+    // Victory screen handling
+    if (state.escaped) {
+      if (e.key === 'Enter') goToTerminal();
+      return;
+    }
+    const code = e.code;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD','KeyE','KeyF'].includes(code)) {
+      e.preventDefault();
+    }
+    if (state.dead) {
+      if (code === 'Enter' || e.key === 'Enter') restartMission();
+      return;
+    }
+    switch (code) {
+      case 'KeyW': case 'ArrowUp': movePlayer(0, -1); break;
+      case 'KeyS': case 'ArrowDown': movePlayer(0, 1); break;
+      case 'KeyA': case 'ArrowLeft': movePlayer(-1, 0); break;
+      case 'KeyD': case 'ArrowRight': movePlayer(1, 0); break;
+      case 'Space': toggleStealth(); break;
+      case 'KeyE': triggerSonar(); break;
+      case 'KeyF': hackTerminal(); break;
+    }
+  });
+
+  $('btn-stealth-action').onclick = toggleStealth;
+  $('btn-sonar-action').onclick = triggerSonar;
+  $('btn-modal-restart').onclick = restartMission;
+  $('victory-continue').onclick = goToTerminal; // ═══ NEW
+  $('btn-toggle-hud').onclick = () => {
+    state.hudCollapsed = !state.hudCollapsed;
+    const list = $('task-list');
+    if (state.hudCollapsed) { list.classList.add('hidden'); $('btn-toggle-hud').textContent = '[РАЗВЕРНУТЬ]'; }
+    else { list.classList.remove('hidden'); $('btn-toggle-hud').textContent = '[СВЕРНУТЬ]'; }
+  };
+  $('btn-audio-toggle').onclick = () => {
+    sfx.init();
+    const m = sfx.toggleMute();
+    $('audio-icon').textContent = m ? 'volume_off' : 'volume_up';
+    $('audio-label').textContent = m ? 'MUTE' : 'SFX';
+  };
+
+  function loop() {
+    drawWorld();
+    drawPlayer();
+    drawLighting();
+    requestAnimationFrame(loop);
+  }
+
+  // ═══ MISSION INTRO ═══
+  let introStepIdx = 0;
+  const introSteps = document.querySelectorAll('.intro-step');
+  const introProgress = document.querySelectorAll('#introProgress span');
+
+  function updateIntroUI() {
+    introSteps.forEach((s, i) => s.classList.toggle('active', i === introStepIdx));
+    introProgress.forEach((p, i) => {
+      p.classList.remove('done', 'current');
+      if (i < introStepIdx) p.classList.add('done');
+      else if (i === introStepIdx) p.classList.add('current');
+    });
+    const nextBtn = $('intro-next');
+    if (introStepIdx === introSteps.length - 1) {
+      nextBtn.textContent = 'Начать внедрение ✓';
+    } else {
+      nextBtn.textContent = 'Далее →';
+    }
+  }
+
+  function nextIntroStep() {
+    if (introStepIdx >= introSteps.length - 1) {
+      closeIntro();
+      return;
+    }
+    introStepIdx++;
+    updateIntroUI();
+  }
+
+  function closeIntro() {
+    const intro = $('mission-intro');
+    if (!intro) return;
+    intro.classList.add('hide');
+    intro.classList.remove('show');
+    setTimeout(() => {
+      intro.style.display = 'none';
+      state.introDone = true;
+      missionStats.startTime = Date.now(); // Start timer
+    }, 650);
+  }
+
+  $('intro-next').onclick = nextIntroStep;
+  $('intro-skip').onclick = closeIntro;
+  updateIntroUI();
+
+  // BIOS boot sequence
+  (function bootBios() {
+    const boot = document.getElementById('bios-boot');
+    if (!boot) return;
+    const logo = document.getElementById('bios-logo');
+    const log = document.getElementById('bios-log');
+    if (logo) logo.textContent =
+` ██████╗ ██████╗ ██╗███╗   ██╗ ██████╗
+ ██╔══██╗██╔══██╗██║████╗  ██║██╔════╝
+ ██████╔╝██████╔╝██║██╔██╗ ██║██║     
+ ██╔═══╝ ██╔══██╗██║██║╚██╗██║██║     
+ ██║     ██║  ██║██║██║ ╚████║╚██████╗
+ ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝
+        Л И М Б О   ·   SUB-04`;
+    const lines = [
+      { t: 'POST · checking neural bus…', c: 'dim' },
+      { t: 'CPU: SYNAPSE-8  [OK]', c: 'ok' },
+      { t: 'MEM: 64T quantum-pool  [OK]', c: 'ok' },
+      { t: 'AUTH: operator A-55 · Хэ Ючоу', c: 'ok' },
+      { t: 'ROLE: СМОТРЯЩИЙ  (not subject)', c: 'ok' },
+      { t: 'WARN: quarantine SUB-04 soft-open', c: 'warn' },
+      { t: 'THREAT: virus / bug / hacker-signature online', c: 'err' },
+      { t: 'OBJ: 5 memory bytes + 3 terminals → gate Alpha', c: 'ok' },
+      { t: 'CTRL: WASD · SPACE cloak · E sonar · F terminal', c: 'dim' },
+      { t: 'CHANNEL READY. Awaiting confirmation…', c: 'ok' }
+    ];
+    let i = 0;
+    function push() {
+      if (!log || i >= lines.length) return;
+      const d = document.createElement('div');
+      d.className = lines[i].c;
+      d.textContent = '> ' + lines[i].t;
+      log.appendChild(d);
+      i++;
+      if (i < lines.length) setTimeout(push, 180 + Math.random() * 120);
+    }
+    setTimeout(push, 200);
+    function close() {
+      boot.style.opacity = '0';
+      boot.style.transition = 'opacity 0.55s';
+      setTimeout(() => boot.remove(), 560);
+      try { sfx.init(); } catch (e) {}
+    }
+    document.getElementById('btn-bios-enter').onclick = close;
+    window.addEventListener('keydown', function biosKey(e) {
+      if (!document.getElementById('bios-boot')) return;
+      if (e.key === 'Enter' || e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        close();
+        window.removeEventListener('keydown', biosKey);
+      }
+    });
+  })();
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

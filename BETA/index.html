@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>П.Р.И.Н.Ц. // BREACH PROTOCOL</title>
+<link rel="stylesheet" href="css/system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+</head>
+<body class="breach-mode">
+<!-- ═══ OVERLAYS ═══ -->
+<div class="noise"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="ambient-grid"></div>
+<canvas id="matrixCanvas"></canvas>
+<div class="rgb-split" id="rgbSplit"></div>
+<div class="glitch-overlay" id="glitchOverlay"></div>
+<div class="glitch-flash" id="glitchFlash"></div>
+<div class="scan-beam" id="scanBeam"></div>
+<div class="chroma" id="chroma"></div>
+<div class="breach-flash" id="breachFlash"></div>
+
+<!-- ═══ CURSOR ═══ -->
+<div class="cursor" id="cursor"><div class="cursor-cross c1"></div><div class="cursor-cross c2"></div></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- ═══ HUD ═══ -->
+<div class="hud hud-tl">
+  <span class="hud-line">P.R.I.N.C. // CORE NODE</span>
+  <span class="hud-line dim" id="hudNode">NODE: UNKNOWN</span>
+  <span class="hud-line dim" id="hudGeo">GEO: --.--/--.--</span>
+</div>
+<div class="hud hud-tr">
+  <span class="hud-line">SECURITY: <b id="hudSec">LOCKED</b></span>
+  <span class="hud-line dim">TRACE: <span id="trace">STANDBY</span></span>
+  <span class="hud-line dim">INTRUSION: <span id="hudIntrusion">0%</span></span>
+</div>
+<div class="hud hud-bl">
+  <span class="hud-line">LATENCY <span id="latency">--</span> ms</span>
+  <span class="hud-line dim">PACKETS <span id="packets">0000</span></span>
+  <span class="hud-line dim">THROUGHPUT <span id="throughput">0.0</span> Gb/s</span>
+</div>
+<div class="hud hud-br">
+  <span class="hud-line">BUILD 3.0.0 // LIMBO</span>
+  <span class="hud-line dim" id="hudClock">T+00:00:00</span>
+</div>
+
+<!-- ═══ SIDE DATA STREAMS ═══ -->
+<div class="side-stream left" id="sideStreamLeft"></div>
+<div class="side-stream right" id="sideStreamRight"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 0 — SIGNAL ACQUISITION
+     ═══════════════════════════════════════════ -->
+<section class="scene active" id="scene0">
+  <div class="signal-noise"></div>
+  <div class="wave-grid">
+    <div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div>
+  </div>
+  <div class="boot-core">
+    <div class="core-rings">
+      <div class="core-ring ring-a"></div>
+      <div class="core-ring ring-b"></div>
+      <div class="core-ring ring-c"></div>
+      <div class="core-ring ring-d"></div>
+      <div class="ring-pulse"></div>
+    </div>
+    <div class="core-mark" id="coreMark">П</div>
+    <div class="core-status">P.R.I.N.C. // SIGNAL ACQUISITION</div>
+    <div class="core-line">
+      <span id="signalText">INITIALIZING UPLINK</span><i class="caret"></i>
+    </div>
+    <div class="signal-bars" id="signalBars"></div>
+    <div class="micro-readout" id="microReadout">
+      <span>HANDSHAKE 00%</span>
+      <span>· ENCRYPTED</span>
+      <span>· <b id="microHash">0x00000000</b></span>
+    </div>
+    <div class="protocol-strip" id="protocolStrip"></div>
+  </div>
+  <div class="skip-hint">PRESS <b>SPACE</b> TO SKIP · <b>CLICK</b> TO CONTINUE</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 1 — INTRUSION WARNING
+     ═══════════════════════════════════════════ -->
+<section class="scene" id="scene1">
+  <div class="breach-container">
+    <div class="breach-bg" id="breachBg"></div>
+    <div class="warning-frame">
+      <div class="warning-top">
+        <span class="blink-red">●</span> SYSTEM INTEGRITY EVENT · SEVERITY 5
+        <b id="warningCode">0x7F-A91</b>
+      </div>
+
+      <div class="warning-scanline"></div>
+
+      <div class="warning-icon-wrap">
+        <div class="warning-icon"><span>!</span></div>
+        <div class="warning-icon-pulse"></div>
+      </div>
+
+      <div class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</div>
+      <div class="warning-sub" id="warningSub">
+        Обнаружен внешний сеанс связи с защищённым узлом.<br>
+        Автоматическая блокировка активирована.
+      </div>
+
+      <div class="threat-matrix" id="threatMatrix"></div>
+
+      <div class="warning-meter-wrap">
+        <div class="warning-meter-label">
+          <span>THREAT ESCALATION</span>
+          <b id="threatPercent">0%</b>
+        </div>
+        <div class="warning-meter"><i id="warningMeter"></i></div>
+      </div>
+
+      <div class="warning-meta">
+        <span>TRACE ID: <b id="traceId">---</b></span>
+        <span>THREAT: <b class="red">CRITICAL</b></span>
+        <span>AUTH: <b>REQUIRED</b></span>
+        <span>ATTEMPTS: <b id="intrusionCount">00</b></span>
+      </div>
+
+      <div class="warning-log" id="warningLog"></div>
+
+      <button class="cyber-btn danger big" id="btnProceed" data-cursor>
+        <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span>
+        <em>→</em>
+        <span class="btn-glow"></span>
+      </button>
+      <div class="tiny-warning">
+        Продолжая, оператор подтверждает запуск интерактивного режима восстановления.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 2 — RECOVERY TERMINAL / BREACH
+     ═══════════════════════════════════════════ -->
+<section class="scene terminal-scene" id="scene2">
+  <div class="terminal-shell">
+    <div class="terminal-top">
+      <span><i class="led"></i> SECURE TERMINAL / RECOVERY MODE</span>
+      <span class="term-top-mid" id="termStatus">STATUS: BOOTING</span>
+      <span id="termClock">00:00:00</span>
+    </div>
+    <div class="terminal-body">
+      <aside class="terminal-left">
+        <div class="terminal-logo">P.R.I.N.C.</div>
+        <div class="terminal-sub">PRIVILEGED RESTRICTED<br>INTERFACE NODE CORE</div>
+
+        <div class="ascii-block">
+          <pre class="ascii" id="asciiArt"></pre>
+          <div class="ascii-glow"></div>
+        </div>
+
+        <div class="subsystem-list" id="subsystemList"></div>
+
+        <div class="progress-big"><i id="bootProgress"></i></div>
+        <div class="boot-percent"><span id="bootPercent">00</span><small>%</small></div>
+      </aside>
+      <main class="terminal-right">
+        <div class="terminal-log" id="terminalLog"></div>
+        <div class="hex-dump" id="hexDump"></div>
+      </main>
+    </div>
+    <div class="terminal-prompt">
+      <span class="prompt-user">root@limbo:~$</span>
+      <b id="promptText"></b><i class="caret"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 3 — LOGIN
+     ═══════════════════════════════════════════ -->
+<section class="scene login-scene" id="scene3">
+  <div class="login-environment">
+    <div class="radar radar-1"></div>
+    <div class="radar radar-2"></div>
+    <div class="radar radar-3"></div>
+    <div class="radar-sweep"></div>
+    <div class="data-column left" id="dataLeft"></div>
+    <div class="data-column right" id="dataRight"></div>
+    <div class="login-grid"></div>
+    <div class="login-vignette"></div>
+  </div>
+
+  <div class="login-wrap" id="loginWrap">
+    <div class="access-header">
+      <div class="header-left">
+        <span class="mini-label">◤ SECURE ACCESS PROTOCOL · LVL 5</span>
+        <h1 class="glitch-hover" data-text="П.Р.И.Н.Ц.">П.Р.И.Н.Ц.</h1>
+        <p>ПЕРИМЕТР РЕГУЛИРУЕМОГО ИНТЕРАКТИВНОГО НЕЙРОННОГО ЦЕНТРА</p>
+      </div>
+      <div class="access-status">
+        <i></i>
+        <div class="status-text">
+          <span class="status-top" id="accessStatus">CHANNEL OPEN</span>
+          <span class="status-sub" id="accessSub">ENCRYPTED · AES-256</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="access-body">
+      <aside class="access-sidebar">
+        <div class="side-title">SESSION <span>/ 07</span></div>
+        <div class="session-id" id="sessionId">--------</div>
+
+        <div class="side-item"><span>ENCRYPTION</span><b>AES-256</b></div>
+        <div class="side-item"><span>HANDSHAKE</span><b id="handshake">PENDING</b></div>
+        <div class="side-item"><span>TRACE MASK</span><b id="traceMask">OFFLINE</b></div>
+        <div class="side-item"><span>ACCESS LEVEL</span><b class="cyan">LVL-5</b></div>
+        <div class="side-item"><span>NODE ROUTE</span><b id="nodeRoute">---.---.---.---</b></div>
+
+        <div class="side-log" id="sideLog"></div>
+      </aside>
+
+      <main class="login-main">
+        <div class="decrypt-line">
+          <span id="decryptLabel">DECODING AUTHENTICATION MATRIX</span>
+          <b id="decryptPercent">00%</b>
+        </div>
+        <div class="decrypt-bar"><i id="decryptBar"></i></div>
+        <div class="decrypt-ticker" id="decryptTicker"></div>
+
+        <div class="login-form" id="loginForm">
+          <div class="field-block locked-field" id="userBlock">
+            <label><span>01</span> OPERATOR IDENTIFIER</label>
+            <div class="input-shell">
+              <span class="prefix">ID://</span>
+              <input id="username" autocomplete="username" spellcheck="false" placeholder="DECRYPTING..." disabled>
+              <span class="field-state" id="userState">LOCKED</span>
+            </div>
+          </div>
+          <div class="field-block locked-field" id="passBlock">
+            <label><span>02</span> AUTHENTICATION VECTOR</label>
+            <div class="input-shell">
+              <span class="prefix">KEY://</span>
+              <input id="password" type="password" autocomplete="current-password" placeholder="WAITING FOR CHANNEL" disabled>
+              <span class="field-state" id="passState">LOCKED</span>
+            </div>
+          </div>
+
+          <div class="auth-console" id="authConsole">
+            <span>&gt;</span> <b id="authConsoleText">waiting for decrypted input...</b><i class="caret"></i>
+          </div>
+
+          <button class="cyber-btn enter-btn" id="btnLogin" disabled data-cursor>
+            <span class="btn-label">INITIATE AUTHENTICATION</span>
+            <em>↯</em>
+            <span class="btn-glow"></span>
+          </button>
+
+          <div class="form-foot">
+            <span>SESSION WILL BE TERMINATED AFTER 03 FAILED ATTEMPTS</span>
+            <span id="attempts">ATTEMPTS: 00/03</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="access-footer">
+      <span>/// P.R.I.N.C. CORE AUTHORITY</span>
+      <span id="footerMessage">AWAITING OPERATOR CREDENTIALS</span>
+      <span id="footerRight">NO EXTERNAL CONNECTION</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 4 — FINAL AUTH
+     ═══════════════════════════════════════════ -->
+<section class="scene" id="scene4">
+  <div class="auth-final" id="alignStage">
+    <div class="align-vortex" id="alignVortex">
+      <div class="av-ring r1"></div>
+      <div class="av-ring r2"></div>
+      <div class="av-ring r3"></div>
+      <div class="av-ring r4"></div>
+      <div class="av-core" id="alignCore"></div>
+      <div class="av-reticle" id="alignReticle"></div>
+    </div>
+    <div class="final-code" id="finalCode">TRACK::------</div>
+    <div class="final-title" id="finalTitle">ALIGN TARGET</div>
+    <div class="final-sub" id="finalSub">RETICLE SEARCHING FOR CONVERGENCE</div>
+    <div class="checkpoint-list" id="checkpointList"></div>
+    <div class="final-bar"><i id="finalBar"></i></div>
+    <div class="final-percent" id="finalPercent">00%</div>
+    <div class="align-hint" id="alignHint">УДЕРЖИВАЙТЕ ПРИЦЕЛ В ЦЕНТРЕ · КАК ПИЛОТ НА ЗАХВАТЕ ЦЕЛИ</div>
+  </div>
+</section>
+<style>
+.align-vortex {
+  position: relative; width: 280px; height: 280px; margin: 0 auto 24px;
+}
+.av-ring {
+  position: absolute; left: 50%; top: 50%; border-radius: 50%;
+  border: 1px solid rgba(0,232,255,0.25);
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.av-ring.r1 { width: 90px; height: 90px; border-color: rgba(0,232,255,0.5); animation: spin 3s linear infinite; }
+.av-ring.r2 { width: 150px; height: 150px; border-top-color: transparent; animation: spinReverse 5s linear infinite; }
+.av-ring.r3 { width: 210px; height: 210px; border-style: dashed; border-color: rgba(0,232,255,0.15); animation: spin 12s linear infinite; }
+.av-ring.r4 { width: 270px; height: 270px; border-color: rgba(0,232,255,0.08); }
+.av-core {
+  position: absolute; left: 50%; top: 50%;
+  width: 48px; height: 48px; border-radius: 50%;
+  transform: translate(-50%,-50%);
+  background: radial-gradient(circle at 35% 35%, #1a3040, #000 60%, #000);
+  box-shadow: 0 0 40px rgba(0,232,255,0.35), inset 0 0 20px #000;
+  border: 1px solid rgba(0,232,255,0.4);
+}
+.av-core.locked {
+  box-shadow: 0 0 60px rgba(0,232,255,0.7), 0 0 120px rgba(0,232,255,0.3);
+  border-color: #00e8ff;
+}
+.av-reticle {
+  position: absolute; width: 36px; height: 36px;
+  left: 50%; top: 50%;
+  transform: translate(-50%,-50%);
+  border: 1px solid rgba(0,232,255,0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 12px rgba(0,232,255,0.3);
+  transition: border-color .15s, box-shadow .15s;
+}
+.av-reticle::before, .av-reticle::after {
+  content: ''; position: absolute; background: rgba(0,232,255,0.7);
+}
+.av-reticle::before { left: 50%; top: -8px; bottom: -8px; width: 1px; transform: translateX(-50%); }
+.av-reticle::after { top: 50%; left: -8px; right: -8px; height: 1px; transform: translateY(-50%); }
+.av-reticle.aligned {
+  border-color: #1ec99a;
+  box-shadow: 0 0 20px rgba(30,201,154,0.55);
+}
+.align-hint {
+  margin-top: 14px; font: 9px var(--font-mono, monospace);
+  color: rgba(0,232,255,0.45); letter-spacing: 0.14em;
+}
+@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+@keyframes spinReverse { to { transform: translate(-50%,-50%) rotate(-360deg); } }
+</style>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const rand = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+  const pick = arr => arr[rand(0, arr.length - 1)];
+  const hex = n => Array.from({length: n}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+  const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+
+  const scene = id => {
+    $$('.scene').forEach(x => x.classList.remove('active'));
+    $(id).classList.add('active');
+  };
+
+  // ─── CURSOR ───
+  const cursor = $('#cursor'), dot = $('#cursorDot');
+  let mx = innerWidth/2, my = innerHeight/2, cx = mx, cy = my;
+  addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  });
+  (function move() {
+    cx += (mx - cx) * 0.18;
+    cy += (my - cy) * 0.18;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    requestAnimationFrame(move);
+  })();
+  document.addEventListener('mouseover', e => {
+    if (e.target.closest('button,input,[data-cursor],a')) cursor.classList.add('hover');
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('button,input,[data-cursor],a')) cursor.classList.remove('hover');
+  });
+  if (matchMedia('(pointer:fine)').matches) document.body.style.cursor = 'none';
+
+  // ─── MATRIX ───
+  const canvas = $('#matrixCanvas'), ctx = canvas.getContext('2d');
+  let W, H, cols, drops = [];
+  const GLYPHS = '01ABCDEF<>[]{}#$%&*/\\|+=-_ЖДЫЛФЦЩЭЮЯ';
+  function resizeCanvas() {
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+    cols = Math.ceil(W / 16);
+    drops = Array.from({length: cols}, () => Math.random() * -50);
+  }
+  resizeCanvas();
+  addEventListener('resize', resizeCanvas);
+  function matrix() {
+    ctx.fillStyle = 'rgba(3, 5, 10, 0.09)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = '12px JetBrains Mono, monospace';
+    for (let i = 0; i < cols; i++) {
+      const ch = GLYPHS.charAt(rand(0, GLYPHS.length - 1));
+      const y = drops[i] * 16;
+      if (y > 0 && y < H) {
+        if (Math.random() > 0.9) {
+          ctx.fillStyle = 'rgba(180, 255, 250, 0.55)';
+          ctx.shadowColor = 'rgba(0,212,232,0.8)';
+          ctx.shadowBlur = 8;
+        } else if (Math.random() > 0.75) {
+          ctx.fillStyle = 'rgba(0, 212, 232, 0.42)';
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillStyle = 'rgba(0, 212, 232, 0.11)';
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillText(ch, i * 16, y);
+      }
+      drops[i] += Math.random() * 0.7 + 0.25;
+      if (y > H && Math.random() > 0.975) drops[i] = Math.random() * -30;
+    }
+    requestAnimationFrame(matrix);
+  }
+  matrix();
+
+  // ─── AUDIO (mechanical keys + tension drone) ───
+  let audio = null, masterGain = null, droneNodes = null;
+  function ensureAudio() {
+    try {
+      if (!audio) {
+        audio = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audio.createGain();
+        masterGain.gain.value = 0.75;
+        masterGain.connect(audio.destination);
+      }
+      if (audio.state === 'suspended') audio.resume();
+    } catch {}
+  }
+  function tone(freq = 440, dur = 0.05, type = 'square', vol = 0.02) {
+    try {
+      ensureAudio();
+      if (!audio) return;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = vol;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      const t = audio.currentTime;
+      o.start(t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.stop(t + dur + 0.02);
+    } catch {}
+  }
+  function noiseBurst(dur = 0.08, vol = 0.05) {
+    try {
+      ensureAudio();
+      if (!audio) return;
+      const len = Math.floor(audio.sampleRate * dur);
+      const buffer = audio.createBuffer(1, len, audio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.4));
+      const src = audio.createBufferSource(), g = audio.createGain();
+      g.gain.value = vol;
+      src.buffer = buffer;
+      src.connect(g); g.connect(masterGain || audio.destination);
+      src.start();
+    } catch {}
+  }
+  function keyClick() {
+    // dull mechanical keyboard — body + click + noise
+    try {
+      ensureAudio();
+      const t = audio.currentTime;
+      const o1 = audio.createOscillator(), g1 = audio.createGain();
+      o1.type = 'triangle'; o1.frequency.value = 90 + Math.random() * 30;
+      g1.gain.value = 0.055;
+      o1.connect(g1); g1.connect(masterGain || audio.destination);
+      o1.start(t); g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); o1.stop(t + 0.07);
+      const o2 = audio.createOscillator(), g2 = audio.createGain();
+      o2.type = 'square'; o2.frequency.value = 380 + Math.random() * 200;
+      g2.gain.value = 0.016;
+      o2.connect(g2); g2.connect(masterGain || audio.destination);
+      o2.start(t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.022); o2.stop(t + 0.025);
+      noiseBurst(0.012, 0.035);
+    } catch {}
+  }
+  function alertSiren() {
+    try {
+      ensureAudio();
+      const t = audio.currentTime;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(260, t);
+      o.frequency.linearRampToValueAtTime(480, t + 0.18);
+      o.frequency.linearRampToValueAtTime(200, t + 0.4);
+      g.gain.value = 0.038;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      o.start(t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.stop(t + 0.47);
+    } catch {}
+  }
+  function startDrone() {
+    try {
+      ensureAudio();
+      if (droneNodes) return;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sine'; o.frequency.value = 36;
+      g.gain.value = 0.012;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      o.start();
+      const lfo = audio.createOscillator(), lg = audio.createGain();
+      lfo.frequency.value = 0.07; lg.gain.value = 3.5;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start();
+      droneNodes = { o, g, lfo };
+    } catch {}
+  }
+  function lockBeep() {
+    tone(880, 0.07, 'sine', 0.035);
+    setTimeout(() => tone(1174, 0.12, 'sine', 0.04), 85);
+  }
+
+  // ─── GLITCH FX ───
+  const glitchFlash = $('#glitchFlash'), rgbSplit = $('#rgbSplit'), glitchOverlay = $('#glitchOverlay'), scanBeam = $('#scanBeam'), chroma = $('#chroma'), breachFlash = $('#breachFlash');
+
+  function glitchBurst(intensity = 3) {
+    let i = 0;
+    const colors = ['#00fff9', '#ff00aa', '#e02848', '#9b00d4', '#e8a020', '#fff'];
+    const go = () => {
+      glitchFlash.style.background = pick(colors);
+      glitchFlash.style.opacity = String(0.3 + Math.random() * 0.4);
+      rgbSplit.classList.add('on');
+      glitchOverlay.style.opacity = String(0.4 + Math.random() * 0.35);
+      chroma.style.opacity = String(0.2 + Math.random() * 0.3);
+      noiseBurst(0.04, 0.04);
+      setTimeout(() => {
+        glitchFlash.style.opacity = '0';
+        rgbSplit.classList.remove('on');
+        glitchOverlay.style.opacity = '0';
+        chroma.style.opacity = '0';
+        if (++i < intensity) setTimeout(go, rand(30, 90));
+      }, rand(25, 55));
+    };
+    go();
+  }
+  function scanSweep() {
+    scanBeam.style.opacity = '1';
+    scanBeam.style.top = '-4%';
+    const anim = scanBeam.animate(
+      [{ top: '-4%' }, { top: '104%' }],
+      { duration: 780, easing: 'cubic-bezier(.22,1,.36,1)' }
+    );
+    anim.onfinish = () => scanBeam.style.opacity = '0';
+    tone(1400, 0.16, 'sine', 0.014);
+  }
+  function breachPulse() {
+    breachFlash.style.opacity = '0.55';
+    setTimeout(() => breachFlash.style.opacity = '0', 110);
+  }
+
+  // ─── TEXT SCRAMBLE UTILITIES ───
+  const SCRAMBLE_CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/\\ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function scrambleInto(el, targetText, duration = 700, opts = {}) {
+    const tickRate = opts.tickRate || 28;
+    const start = performance.now();
+    const len = targetText.length;
+    return new Promise(resolve => {
+      const id = setInterval(() => {
+        const t = (performance.now() - start) / duration;
+        const revealed = Math.floor(t * len);
+        let out = '';
+        for (let i = 0; i < len; i++) {
+          if (i < revealed) out += targetText[i];
+          else if (targetText[i] === ' ') out += ' ';
+          else out += SCRAMBLE_CHARS[rand(0, SCRAMBLE_CHARS.length - 1)];
+        }
+        el.textContent = out;
+        if (t >= 1) {
+          el.textContent = targetText;
+          clearInterval(id);
+          resolve();
+        }
+      }, tickRate);
+    });
+  }
+  async function typeInto(el, text, speed = 14, opts = {}) {
+    el.textContent = '';
+    for (const ch of text) {
+      el.textContent += ch;
+      if (Math.random() > 0.72) keyClick();
+      await sleep(speed + (Math.random() > 0.9 ? 30 : 0));
+    }
+  }
+
+  // ─── HUD ANIMATION ───
+  let tZero = Date.now();
+  setInterval(() => {
+    $('#latency').textContent = rand(8, 47);
+    $('#packets').textContent = String(rand(1400, 9999));
+    $('#throughput').textContent = (Math.random() * 9 + 1).toFixed(1);
+    $('#termClock').textContent = new Date().toLocaleTimeString('ru-RU');
+    const d = new Date(Date.now() - tZero);
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    const ss = String(d.getUTCSeconds()).padStart(2, '0');
+    $('#hudClock').textContent = `T+${hh}:${mm}:${ss}`;
+  }, 500);
+
+  setInterval(() => { if (Math.random() > 0.72) glitchBurst(1); }, 8500);
+
+  // ─── SCENE 0 — SIGNAL ACQUISITION ───
+  const signalBars = $('#signalBars');
+  const protocolStrip = $('#protocolStrip');
+  const protocols = ['TCP/IPv6', 'TLS-1.3', 'X25519', 'AES-GCM', 'CHACHA20', 'SHA-3', 'ONION-R3', 'QUIC', 'DTLS'];
+
+  function buildSignalBars() {
+    signalBars.innerHTML = '';
+    for (let i = 0; i < 28; i++) {
+      const b = document.createElement('i');
+      b.style.height = rand(3, 26) + 'px';
+      b.style.animationDelay = (i * 0.04) + 's';
+      signalBars.appendChild(b);
+    }
+  }
+  buildSignalBars();
+  setInterval(() => {
+    signalBars.querySelectorAll('i').forEach(b => {
+      b.style.height = rand(3, 26) + 'px';
+    });
+  }, 180);
+
+  async function bootSignal() {
+    ensureAudio();
+    startDrone();
+    const messages = [
+      'INITIALIZING UPLINK',
+      'LOCATING SECURE NODE',
+      'NEGOTIATING HANDSHAKE',
+      'MASKING ORIGIN',
+      'BYPASSING EDGE FILTER',
+      'CHANNEL ACQUIRED'
+    ];
+    const signalText = $('#signalText');
+    const microReadout = $('#microReadout');
+    const microHash = $('#microHash');
+    const signalBars = $('#signalBars');
+
+    // animated equalizer bars
+    if (signalBars) {
+      signalBars.innerHTML = '';
+      for (let i = 0; i < 24; i++) {
+        const bar = document.createElement('span');
+        bar.style.height = (20 + Math.random() * 80) + '%';
+        bar.style.animationDelay = (i * 0.05) + 's';
+        bar.style.animationDuration = (0.35 + Math.random() * 0.45) + 's';
+        signalBars.appendChild(bar);
+      }
+      setInterval(() => {
+        if (!$('#scene0') || !$('#scene0').classList.contains('active')) return;
+        signalBars.querySelectorAll('span').forEach(b => {
+          b.style.height = (15 + Math.random() * 85) + '%';
+        });
+      }, 180);
+    }
+
+    if (protocolStrip) {
+      protocolStrip.innerHTML = '';
+      protocols.forEach((p, i) => {
+        const s = document.createElement('span');
+        s.textContent = p;
+        s.style.animationDelay = (i * 0.1) + 's';
+        protocolStrip.appendChild(s);
+      });
+    }
+
+    // GSAP entrance if available
+    if (window.gsap) {
+      gsap.from('.core-rings', { scale: 0.6, opacity: 0, duration: 1.4, ease: 'power3.out' });
+      gsap.from('.core-mark', { scale: 0.2, opacity: 0, duration: 1.1, delay: 0.3, ease: 'back.out(1.8)' });
+      gsap.from('.core-status, .core-line, .signal-bars, .micro-readout, .protocol-strip', {
+        y: 16, opacity: 0, duration: 0.7, stagger: 0.08, delay: 0.6, ease: 'power2.out'
+      });
+    }
+
+    for (let i = 0; i < messages.length; i++) {
+      await scrambleInto(signalText, messages[i], 420);
+      const pct = String((i + 1) * 16).padStart(2, '0');
+      microReadout.querySelector('span').textContent = `HANDSHAKE ${pct}%`;
+      microHash.textContent = '0x' + hex(8);
+      tone(160 + i * 90, 0.05, 'square', 0.018);
+      scanSweep();
+      await sleep(280);
+    }
+
+    glitchBurst(5);
+    breachPulse();
+    await sleep(340);
+    scene('#scene1');
+    $('#hudNode').textContent = 'NODE: FED-LIMBO-07';
+    $('#hudGeo').textContent = 'GEO: 55.75/37.61';
+    $('#trace').textContent = 'ACTIVE';
+    tone(110, 0.28, 'sawtooth', 0.04);
+    initWarning();
+  }
+
+  // ─── SCENE 1 — WARNING ───
+  const warningLogMessages = [
+    ['!!', 'INTRUSION DETECTED ON PORT 0x1F3A'],
+    ['>>', 'SOURCE SPOOFING ATTEMPT BLOCKED'],
+    ['!!', 'KERNEL INTEGRITY: COMPROMISED'],
+    ['::', 'COUNTERMEASURE DAEMON: ENGAGED'],
+    ['!!', 'FIREWALL RULE 07-F: VIOLATED'],
+    ['>>', 'TRACE ROUTE: UNSTABLE'],
+    ['!!', 'MEMORY REGION 0xAF31: TAMPERED'],
+    ['::', 'AUTO-RESPONSE: QUARANTINE PENDING'],
+    ['!!', 'PRIVILEGE ESCALATION VECTOR: OPEN'],
+    ['>>', 'OPERATOR OVERRIDE REQUIRED']
+  ];
+
+  function initWarning() {
+    document.body.classList.add('scene-red');
+    ensureAudio();
+    alertSiren();
+    setTimeout(alertSiren, 500);
+    if (window.gsap) {
+      gsap.from('.warning-frame', { scale: 0.92, opacity: 0, duration: 0.55, ease: 'power3.out' });
+      gsap.from('.warning-icon-wrap', { scale: 0, rotation: 0.2, duration: 0.6, ease: 'back.out(2)' });
+      gsap.from('.warning-title', { y: 20, opacity: 0, duration: 0.5, delay: 0.15 });
+    }
+
+    $('#traceId').textContent = 'TR-' + hex(10);
+    const warningTitle = $('#warningTitle');
+    const titles = [
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ',
+      'НEСAНКЦI0НИР0ВAННЫЙ КAНAЛ',
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ',
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНΛΛ'
+    ];
+    let ti = 0;
+    setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      ti = (ti + 1) % titles.length;
+      warningTitle.textContent = titles[ti];
+      if (ti % 2 === 1) glitchBurst(1);
+    }, 1700);
+
+    const tm = $('#threatMatrix');
+    tm.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('i');
+      c.style.animationDelay = (i * 0.035) + 's';
+      if (Math.random() > 0.7) c.classList.add('hot');
+      tm.appendChild(c);
+    }
+
+    let threat = 12;
+    const meter = $('#warningMeter');
+    const threatPercent = $('#threatPercent');
+    setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      threat = clamp(threat + rand(-3, 6), 8, 96);
+      meter.style.width = threat + '%';
+      threatPercent.textContent = threat + '%';
+      $('#hudIntrusion').textContent = threat + '%';
+      if (threat > 70) $('#hudSec').textContent = 'BREACHED';
+      else if (threat > 40) $('#hudSec').textContent = 'AT RISK';
+    }, 420);
+
+    const log = $('#warningLog');
+    let li = 0;
+    function pushLog() {
+      if (!$('#scene1').classList.contains('active')) return;
+      if (li < warningLogMessages.length) {
+        const [tag, text] = warningLogMessages[li++];
+        const row = document.createElement('div');
+        row.className = 'warn-log-row ' + (tag === '!!' ? 'err' : tag === '::' ? 'sys' : 'warn');
+        row.innerHTML = `<span class="wl-tag">${tag}</span><span class="wl-text"></span>`;
+        log.appendChild(row);
+        typeInto(row.querySelector('.wl-text'), text, 10);
+        if (log.children.length > 6) log.removeChild(log.children[0]);
+        tone(tag === '!!' ? 70 : 240, 0.03, tag === '!!' ? 'sawtooth' : 'square', 0.014);
+      }
+      setTimeout(pushLog, rand(600, 1200));
+    }
+    pushLog();
+
+    let intr = 0;
+    setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      intr = rand(1, 47);
+      $('#intrusionCount').textContent = String(intr).padStart(2, '0');
+      $('#warningCode').textContent = '0x' + hex(2) + '-' + hex(3).slice(0, 3);
+    }, 800);
+  }
+
+  $('#btnProceed').addEventListener('click', async () => {
+    ensureAudio();
+    tone(70, 0.18, 'sawtooth', 0.05);
+    glitchBurst(4);
+    breachPulse();
+    $('#warningMeter').style.width = '100%';
+    $('#warningMeter').style.background = 'linear-gradient(90deg, var(--red), #fff)';
+    await sleep(260);
+    scene('#scene2');
+    runTerminal();
+  });
+
+  // ─── SCENE 2 — TERMINAL ───
+  const terminalLines = [
+    ['SYS',  'P.R.I.N.C. CORE / RECOVERY KERNEL 3.0.0',              'ok'],
+    ['OK',   'Memory lattice ................. ONLINE',              'ok'],
+    ['OK',   'Neural routing ................. ONLINE',              'ok'],
+    ['OK',   'Quantum bus ................... STABLE',               'ok'],
+    ['WARN', 'External handshake ............. DETECTED',            'warn'],
+    ['ERR',  'Firewall policy ................ DENIED [01/03]',      'err'],
+    ['SYS',  'Reconstructing operator channel ...',                  'sys'],
+    ['OK',   'Trace mask ..................... ENABLED',             'ok'],
+    ['OK',   'Proxy chain (7 hops) ........... ESTABLISHED',         'ok'],
+    ['ERR',  'Firewall policy ................ DENIED [02/03]',      'err'],
+    ['WARN', 'Countermeasure daemon .......... ACTIVE',              'warn'],
+    ['SYS',  'Injecting recovery shell .......',                     'sys'],
+    ['OK',   'Kernel panic handler ........... SUPPRESSED',          'ok'],
+    ['ERR',  'Credential layer ............... LOCKED',              'err'],
+    ['OK',   'Fallback route ................. AVAILABLE',           'ok'],
+    ['ERR',  'Firewall policy ................ DENIED [03/03]',      'err'],
+    ['WARN', 'LOCKOUT OVERRIDE REQUESTED',                           'warn'],
+    ['SYS',  'Engaging brute-force mitigator ..',                    'sys'],
+    ['OK',   'Entropy pool ................... RE-CHARGED',          'ok'],
+    ['OK',   'Interactive authentication ..... READY',               'ok']
+  ];
+
+  const subsystems = [
+    'NEURAL BUS', 'KERNEL CORE', 'MEMORY LATTICE',
+    'TRACE MASKER', 'FIREWALL BYPASS', 'CREDENTIAL VAULT',
+    'SESSION MANAGER', 'AUDIO DRIVER', 'GPU LATTICE'
+  ];
+
+  async function runTerminal() {
+    const log = $('#terminalLog');
+    log.innerHTML = '';
+    $('#asciiArt').textContent =
+      '   ┌───────────────────┐\n' +
+      '   │   P.R.I.N.C.      │\n' +
+      '   │     SECURE        │\n' +
+      '   │       CORE        │\n' +
+      '   │         NODE      │\n' +
+      '   └─────────┬─────────┘\n' +
+      '             │\n' +
+      '      ═══════╪═══════\n' +
+      '             │';
+
+    const sl = $('#subsystemList');
+    sl.innerHTML = '';
+    subsystems.forEach((name, i) => {
+      const row = document.createElement('div');
+      row.className = 'sub-row';
+      row.innerHTML = `<span class="sub-name">${name}</span><span class="sub-state" id="sub${i}">IDLE</span>`;
+      sl.appendChild(row);
+    });
+
+    const makeData = (el) => {
+      el.innerHTML = Array.from({length: 40}, () =>
+        `<div>${hex(rand(5, 10))} :: ${scrambled(rand(9, 15))}</div>`
+      ).join('');
+    };
+    makeData($('#dataLeft'));
+    makeData($('#dataRight'));
+    setInterval(() => {
+      if (!$('#scene3').classList.contains('active')) return;
+      $('#dataLeft').querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.85) d.textContent = `${hex(rand(5,10))} :: ${scrambled(rand(9,15))}`;
+      });
+      $('#dataRight').querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.85) d.textContent = `${hex(rand(5,10))} :: ${scrambled(rand(9,15))}`;
+      });
+    }, 120);
+
+    $('#promptText').textContent = '';
+    $('#termStatus').textContent = 'STATUS: BOOTING';
+
+    for (let i = 0; i < terminalLines.length; i++) {
+      const [type, text] = terminalLines[i];
+      const row = document.createElement('div');
+      row.className = 'term-row ' + type.toLowerCase();
+      row.innerHTML = `<span class="term-time">[${String((i * 0.317).toFixed(3)).padStart(7, '0')}]</span><span class="term-type">${type}</span><span class="term-text"></span>`;
+      log.appendChild(row);
+      const txt = row.querySelector('.term-text');
+      await typeInto(txt, text, 3);
+      log.scrollTop = log.scrollHeight;
+
+      const pct = Math.round((i + 1) / terminalLines.length * 100);
+      $('#bootProgress').style.width = pct + '%';
+      $('#bootPercent').textContent = String(pct).padStart(2, '0');
+
+      if (i % 2 === 0 && i / 2 < subsystems.length) {
+        const idx = Math.floor(i / 2);
+        const el = document.getElementById('sub' + idx);
+        if (el) {
+          el.textContent = type === 'ERR' ? 'RETRY' : 'OK';
+          el.className = 'sub-state ' + (type === 'ERR' ? 'err' : 'ok');
+        }
+      }
+
+      tone(type === 'ERR' ? 82 : type === 'WARN' ? 240 : 520, 0.03,
+           type === 'ERR' ? 'sawtooth' : 'square', 0.012);
+      if (type === 'ERR') { glitchBurst(1); breachPulse(); }
+      if (type === 'WARN') scanSweep();
+
+      await sleep(type === 'ERR' ? 190 : 75);
+    }
+
+    for (let i = 0; i < subsystems.length; i++) {
+      const el = document.getElementById('sub' + i);
+      if (el && el.textContent === 'IDLE') {
+        setTimeout(() => {
+          el.textContent = 'OK';
+          el.className = 'sub-state ok';
+          tone(700, 0.02, 'sine', 0.006);
+        }, i * 80);
+      }
+    }
+
+    $('#termStatus').textContent = 'STATUS: READY';
+    await typeInto($('#promptText'), 'auth --interactive --secure', 22);
+    await sleep(450);
+    glitchBurst(5);
+    scanSweep();
+    await sleep(380);
+    scene('#scene3');
+    initLogin();
+  }
+
+  function scrambled(len) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%';
+    return Array.from({length: len}, () => chars[rand(0, chars.length - 1)]).join('');
+  }
+
+  // ─── SCENE 3 — LOGIN ───
+  let session = '';
+  async function initLogin() {
+    session = 'PX-' + hex(4) + '-' + hex(4);
+    $('#sessionId').textContent = session;
+    $('#accessStatus').textContent = 'CHANNEL OPEN';
+    $('#accessSub').textContent = 'ENCRYPTED · AES-256';
+    $('#handshake').textContent = 'NEGOTIATING';
+    $('#traceMask').textContent = 'SYNC';
+    $('#nodeRoute').textContent = [rand(10, 250), rand(0, 250), rand(0, 250), rand(1, 250)].join('.');
+
+    $('#username').disabled = true;
+    $('#password').disabled = true;
+    $('#btnLogin').disabled = true;
+    $('#username').value = '';
+    $('#password').value = '';
+    $('#sideLog').innerHTML = '';
+
+    addSide('> opening credential vault...', 'cyan');
+    await sleep(380);
+    addSide('> decrypting matrix blocks', '');
+
+    let p = 0;
+    const ticker = $('#decryptTicker');
+    ticker.textContent = '';
+    while (p < 100) {
+      p += rand(3, 9);
+      p = Math.min(p, 100);
+      $('#decryptPercent').textContent = String(p).padStart(2, '0') + '%';
+      $('#decryptBar').style.width = p + '%';
+      $('#decryptLabel').textContent =
+        p < 45 ? 'DECODING AUTHENTICATION MATRIX' :
+        p < 78 ? 'REASSEMBLING OPERATOR VECTOR' :
+                 'AUTHENTICATION MATRIX READY';
+      if (Math.random() > 0.7) {
+        $('#sessionId').textContent = scrambled(11);
+        ticker.textContent = hex(16);
+      }
+      tone(rand(1400, 1800), 0.008, 'square', 0.005);
+      await sleep(55);
+    }
+    $('#sessionId').textContent = session;
+    ticker.textContent = 'READY · ' + hex(20);
+    $('#handshake').textContent = 'VERIFIED';
+    $('#traceMask').textContent = 'ONLINE';
+    $('#accessStatus').textContent = 'AUTHENTICATION READY';
+    addSide('> handshake verified', 'ok');
+    addSide('> trace masked', 'ok');
+    addSide('> route established · ' + $('#nodeRoute').textContent, 'cyan');
+
+    await sleep(300);
+    unlockField($('#userBlock'), $('#username'), 'OP-');
+    await typeField($('#username'), 'OP-A55-ХЭЮ');
+    unlockField($('#passBlock'), $('#password'), '');
+    $('#password').placeholder = 'ENTER AUTH VECTOR';
+    $('#btnLogin').disabled = false;
+    $('#authConsoleText').textContent = 'credential channel ready — input required';
+    $('#footerMessage').textContent = 'AWAITING OPERATOR CREDENTIALS';
+    scanSweep();
+  }
+
+  function unlockField(block, input, prefix) {
+    block.classList.remove('locked-field');
+    block.classList.add('unlocked');
+    input.disabled = false;
+    input.focus();
+    const stateEl = $('#' + (input.id === 'username' ? 'userState' : 'passState'));
+    stateEl.textContent = 'READY';
+    stateEl.style.color = 'var(--green)';
+    tone(680, 0.05, 'sine', 0.02);
+  }
+  async function typeField(input, text) {
+    for (const ch of text) {
+      input.value += ch;
+      keyClick();
+      await sleep(35);
+    }
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  function addSide(text, cls = '') {
+    const d = document.createElement('div');
+    d.className = cls;
+    d.textContent = text;
+    $('#sideLog').appendChild(d);
+    if ($('#sideLog').children.length > 12) {
+      $('#sideLog').removeChild($('#sideLog').children[0]);
+    }
+  }
+
+  // ─── AUTH FLOW ───
+  let attempts = 0, authBusy = false;
+  $('#btnLogin').addEventListener('click', authenticate);
+  $('#password').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !$('#btnLogin').disabled) authenticate();
+  });
+  $('#username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('#password').focus();
+  });
+
+  async function authenticate() {
+    if (authBusy) return;
+    authBusy = true;
+    $('#btnLogin').disabled = true;
+    $('#username').disabled = true;
+    $('#password').disabled = true;
+    $('#footerMessage').textContent = 'VERIFYING OPERATOR VECTOR...';
+    $('#accessStatus').textContent = 'VERIFYING';
+
+    attempts++;
+    $('#attempts').textContent = `ATTEMPTS: ${String(attempts).padStart(2, '0')}/03`;
+
+    const consoleText = $('#authConsoleText');
+    const lines = [
+      '> reading operator signature',
+      '> comparing session fingerprint',
+      '> validating credential vector',
+      '> checking privilege envelope',
+      '> resolving access route',
+      '> requesting cryptographic challenge',
+      '> response accepted'
+    ];
+    for (const line of lines) {
+      await scrambleInto(consoleText, line, 300);
+      addSide(line, 'cyan');
+      tone(rand(300, 900), 0.02, 'square', 0.008);
+      await sleep(260);
+    }
+
+    if (!$('#username').value.trim() || !$('#password').value.trim()) {
+      addSide('> ERROR: EMPTY CREDENTIAL VECTOR', 'err');
+      consoleText.textContent = 'ACCESS DENIED — DATA REQUIRED';
+      $('#footerMessage').textContent = 'AUTHENTICATION FAILED';
+      $('#accessStatus').textContent = 'DENIED';
+      $('#loginWrap').classList.add('shake');
+      setTimeout(() => $('#loginWrap').classList.remove('shake'), 500);
+      glitchBurst(4);
+      breachPulse();
+      tone(65, 0.22, 'sawtooth', 0.05);
+      $('#username').disabled = false;
+      $('#password').disabled = false;
+      $('#btnLogin').disabled = false;
+      authBusy = false;
+      return;
+    }
+    await completeAuth();
+  }
+
+  // ─── SCENE 4 — FINAL AUTH ───
+  const checkpoints = [
+    'ENCRYPTION HANDSHAKE',
+    'OPERATOR SIGNATURE',
+    'PRIVILEGE ENVELOPE',
+    'SESSION TOKEN',
+    'NODE AUTHORIZATION'
+  ];
+
+  async function completeAuth() {
+    scene('#scene4');
+    $('#hudSec').textContent = 'TARGET ACQUISITION';
+    $('#finalTitle').textContent = 'ALIGN TARGET';
+    $('#finalSub').textContent = 'RETICLE SEARCHING FOR CONVERGENCE';
+    $('#finalBar').style.width = '0%';
+    $('#finalCode').textContent = 'TRACK::' + hex(6);
+
+    const cl = $('#checkpointList');
+    cl.innerHTML = '';
+    checkpoints.forEach((name, i) => {
+      const row = document.createElement('div');
+      row.className = 'chk-row';
+      row.innerHTML = `<span class="chk-mark">◇</span><span class="chk-name">${name}</span><span class="chk-state">PENDING</span>`;
+      row.id = 'chk' + i;
+      cl.appendChild(row);
+    });
+
+    // Interactive ALIGN: hold reticle in center
+    const vortex = document.getElementById('alignVortex');
+    const reticle = document.getElementById('alignReticle');
+    const core = document.getElementById('alignCore');
+    let lockProgress = 0;
+    let aligned = false;
+    const onMove = (e) => {
+      if (!vortex) return;
+      const r = vortex.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      // reticle follows mouse with lag relative to center
+      const dx = (e.clientX - cx) * 0.35;
+      const dy = (e.clientY - cy) * 0.35;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (reticle) {
+        reticle.style.left = `calc(50% + ${dx}px)`;
+        reticle.style.top = `calc(50% + ${dy}px)`;
+      }
+      aligned = dist < 42;
+      if (reticle) reticle.classList.toggle('aligned', aligned);
+      if (core) core.classList.toggle('locked', aligned);
+    };
+    window.addEventListener('mousemove', onMove);
+
+    // progress only while aligned
+    while (lockProgress < 100) {
+      if (aligned) {
+        lockProgress = Math.min(100, lockProgress + 1.8);
+        if (Math.random() > 0.85) tone(rand(600, 1200), 0.015, 'sine', 0.008);
+      } else {
+        lockProgress = Math.max(0, lockProgress - 0.6);
+      }
+      const i = Math.floor(lockProgress);
+      $('#finalBar').style.width = i + '%';
+      $('#finalPercent').textContent = String(i).padStart(2, '0') + '%';
+      $('#finalCode').textContent = 'TRACK::' + hex(6);
+      if (i >= 12 && i < 30) markChk(0, 'CHECK');
+      else if (i >= 30 && i < 50) markChk(1, 'CHECK');
+      else if (i >= 50 && i < 70) markChk(2, 'CHECK');
+      else if (i >= 70 && i < 88) markChk(3, 'CHECK');
+      else if (i >= 88) markChk(4, 'CHECK');
+      await sleep(40);
+    }
+    window.removeEventListener('mousemove', onMove);
+    checkpoints.forEach((_, i) => markChk(i, 'OK'));
+
+    lockBeep();
+    $('#finalCode').textContent = 'TRACK::LOCKED';
+    $('#finalTitle').textContent = 'ЦЕЛЬ ЗАХВАЧЕНА';
+    $('#finalSub').textContent = 'ВНЕДРЕНИЕ ВИРУСА МО · ПЕРЕХОД В ПЕРИМЕТР';
+    $('#hudSec').textContent = 'GRANTED';
+    $('#hudSec').style.color = 'var(--green)';
+    if (core) core.classList.add('locked');
+    if (document.getElementById('alignHint'))
+      document.getElementById('alignHint').textContent = 'КАНАЛ ОТКРЫТ · ЗАГРУЗКА ПРОСТРАНСТВА…';
+
+    scanSweep();
+    glitchBurst(8);
+    breachPulse();
+    tone(523, 0.14, 'sine', 0.05);
+    setTimeout(() => tone(659, 0.14, 'sine', 0.05), 130);
+    setTimeout(() => tone(784, 0.28, 'sine', 0.055), 260);
+
+    // immersion threat words + eyes feel via glitch
+    await sleep(1600);
+    try { window.location.href = 'intro.html'; }
+    catch { /* preview */ }
+  }
+
+  function markChk(i, state) {
+    const row = document.getElementById('chk' + i);
+    if (!row) return;
+    const mark = row.querySelector('.chk-mark');
+    const st = row.querySelector('.chk-state');
+    if (state === 'CHECK') {
+      mark.textContent = '◈';
+      mark.style.color = 'var(--amber)';
+      st.textContent = 'CHECKING';
+      st.style.color = 'var(--amber)';
+      tone(rand(600, 1200), 0.02, 'sine', 0.01);
+    } else {
+      mark.textContent = '◆';
+      mark.style.color = 'var(--green)';
+      st.textContent = 'PASS';
+      st.style.color = 'var(--green)';
+    }
+  }
+
+  // ─── SIDE STREAMS ───
+  function fillStream(el, count = 24) {
+    el.innerHTML = Array.from({length: count}, () => {
+      const s = document.createElement('div');
+      s.textContent = hex(rand(4, 10)) + ' ' + scrambled(rand(6, 16));
+      return s.outerHTML;
+    }).join('');
+  }
+  fillStream($('#sideStreamLeft'), 22);
+  fillStream($('#sideStreamRight'), 22);
+  setInterval(() => {
+    [ $('#sideStreamLeft'), $('#sideStreamRight') ].forEach(el => {
+      el.querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.92) d.textContent = hex(rand(4, 10)) + ' ' + scrambled(rand(6, 16));
+      });
+    });
+  }, 90);
+
+  // ─── KICKOFF ───
+  bootSignal();
+
+  addEventListener('keydown', e => {
+    if (e.code === 'Space' && $('#scene0').classList.contains('active')) {
+      e.preventDefault();
+      document.body.classList.remove('scene-red');
+      scene('#scene1');
+      initWarning();
+    }
+  });
+  $('#scene0').addEventListener('click', () => {
+    if ($('#scene0').classList.contains('active')) {
+      document.body.classList.remove('scene-red');
+      scene('#scene1');
+      initWarning();
+    }
+  });
+})();
+</script>
+</body>
+</html>

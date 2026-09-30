@@ -1,0 +1,3166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>П.Р.И.Н.Ц. // Терминал</title>
+<link rel="stylesheet" href="css/system.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   П.Р.И.Н.Ц. // TERMINAL v5 — CINEMATIC + INTERACTIVE
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── BASE ─── */
+body { position: relative; background: #02030a; overflow-x: hidden; }
+body.terminal-mode { padding-bottom: 0; }
+
+/* ─── LETTERBOX ─── */
+.letterbox-top, .letterbox-bottom {
+  position: fixed; left: 0; right: 0; height: 0; z-index: 400;
+  background: #000; pointer-events: none;
+  transition: height 0.6s var(--ease);
+}
+.letterbox-top { top: 0; } .letterbox-bottom { bottom: 0; }
+body.cinema .letterbox-top,
+body.cinema .letterbox-bottom { height: 28px; }
+
+/* ─── FLOOR GRID ─── */
+.floor-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0.55; }
+.floor-grid canvas { width: 100%; height: 100%; display: block; }
+
+/* ─── SPACE DUST ─── */
+.dust-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.7; mix-blend-mode: screen; }
+
+/* ─── BG STREAMS ─── */
+.bg-streams { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; opacity: 0.14; }
+.bg-streams span {
+  position: absolute; font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--cyan); white-space: nowrap;
+  animation: streamFall linear infinite; opacity: 0.5;
+  text-shadow: 0 0 6px rgba(0,212,232,0.5);
+}
+@keyframes streamFall {
+  0%   { transform: translateY(-30px); opacity: 0; }
+  12%  { opacity: 0.5; }
+  88%  { opacity: 0.35; }
+  100% { transform: translateY(105vh); opacity: 0; }
+}
+
+/* ─── PERSISTENT HUD ─── */
+.hud-persistent {
+  position: fixed; inset: 0; z-index: 500; pointer-events: none;
+  font-family: var(--font-mono); font-size: 0.58rem;
+  color: rgba(0,212,232,0.55); letter-spacing: 0.08em;
+  text-shadow: 0 0 6px rgba(0,212,232,0.4);
+}
+.hud-corner {
+  position: absolute; padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(0,212,232,0.15);
+  background: rgba(2,3,10,0.4);
+  backdrop-filter: blur(4px);
+}
+.hud-corner.tl { top: 60px; left: 18px; }
+.hud-corner.bl { bottom: 60px; left: 18px; }
+.hud-corner.br { bottom: 60px; right: 18px; text-align: right; }
+.hud-corner b { color: var(--cyan); font-weight: 500; }
+.hud-corner .row { margin-bottom: 0.15rem; }
+.hud-corner .row:last-child { margin-bottom: 0; }
+
+/* ─── RADAR ─── */
+.radar-hud { position: fixed; top: 60px; right: 18px; width: 130px; height: 130px; z-index: 501; pointer-events: none; opacity: 0.7; }
+.radar-hud canvas { width: 100%; height: 100%; display: block; }
+
+/* ─── CINE GLITCH ─── */
+.cine-glitch {
+  position: fixed; inset: 0; z-index: 550; pointer-events: none;
+  opacity: 0; mix-blend-mode: screen; transition: opacity 0.06s;
+}
+.cine-glitch.hit { opacity: 1; }
+.cine-glitch.r { background: linear-gradient(90deg, rgba(255,0,90,0.15), transparent 20%); }
+.cine-glitch.c { background: linear-gradient(90deg, transparent 80%, rgba(0,212,232,0.18)); }
+.cine-glitch.y { background: radial-gradient(circle at 30% 40%, rgba(232,160,32,0.14), transparent 50%); }
+.cine-glitch.w { background: rgba(255,255,255,0.08); }
+
+/* ─── CLICK RIPPLES ─── */
+.click-ripple {
+  position: fixed; pointer-events: none; z-index: 560;
+  width: 0; height: 0; border: 1px solid var(--cyan);
+  border-radius: 50%; transform: translate(-50%,-50%);
+  animation: clickRipple 0.7s ease-out forwards;
+  box-shadow: 0 0 14px rgba(0,212,232,0.5);
+}
+.click-ripple.pink { border-color: var(--pink); box-shadow: 0 0 14px rgba(224,26,111,0.5); }
+@keyframes clickRipple { to { width: 180px; height: 180px; opacity: 0; } }
+
+/* ─── SCANLINES ─── */
+.scanlines {
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.16) 2px, rgba(0,0,0,0.16) 4px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0,212,232,0.015) 3px, rgba(0,212,232,0.015) 4px);
+  opacity: 0.42; animation: scanDrift 8s linear infinite;
+}
+@keyframes scanDrift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 0 8px, 0 0; }
+}
+
+/* ─── TITLES ─── */
+.sys-title {
+  font-family: var(--font-display); font-size: clamp(1.7rem, 3.8vw, 2.55rem);
+  font-weight: 800; letter-spacing: 0.05em; line-height: 1.1; margin-bottom: 0.65rem;
+  position: relative;
+}
+.sys-title span { color: var(--cyan); position: relative; text-shadow: 0 0 20px rgba(0,212,232,0.35); }
+.sys-title span::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: titleLine 3s ease infinite;
+}
+@keyframes titleLine {
+  0%,100% { opacity: 0.4; transform: scaleX(0.6); }
+  50%     { opacity: 1;   transform: scaleX(1); }
+}
+
+.status-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.85rem 0 1.1rem; }
+.status-chip {
+  font-family: var(--font-mono); font-size: 0.64rem;
+  padding: 0.3rem 0.6rem; border-radius: 2px;
+  border: 1px solid var(--border); color: var(--text-dim);
+  position: relative; overflow: hidden;
+  transition: border-color 0.25s, color 0.25s, background 0.25s;
+}
+.status-chip::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--cyan); opacity: 0.4; transition: opacity 0.25s, width 0.25s;
+}
+.status-chip:hover { border-color: var(--border-mid); color: var(--text); }
+.status-chip:hover::before { opacity: 1; width: 3px; }
+.status-chip strong { color: var(--cyan); }
+.status-chip.hot strong { color: var(--red) !important; }
+.status-chip.hot::before { background: var(--red); }
+.status-chip.amber strong { color: var(--amber) !important; }
+.status-chip.amber::before { background: var(--amber); }
+.signal-pulse {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 8px var(--green);
+  animation: pulseDot 1.8s ease infinite; margin-right: 0.3rem; vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════
+   CAMERA WALL — v5 with DRONE MOTION
+   ═══════════════════════════════════════════ */
+.cam-wall {
+  margin: 1.4rem 0 1.6rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden; position: relative;
+}
+.cam-wall-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.55rem 1rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--text-dim); letter-spacing: 0.08em;
+  background: linear-gradient(90deg, rgba(0,0,0,0.4), transparent);
+  position: relative;
+}
+.cam-wall-header::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.4;
+}
+
+/* ─── DRONE MOTION WRAPPER ─── */
+.cam-main {
+  position: relative; width: 100%; aspect-ratio: 21/9;
+  background: #030305; overflow: hidden; cursor: pointer;
+}
+@media (max-width: 800px) { .cam-main { aspect-ratio: 16/10; } }
+
+/* ═══ NEW v5: drone-feed слой, внутри которого всё плывёт ═══ */
+.cam-drone-feed {
+  position: absolute;
+  inset: -3%;                     /* запас для параллакса */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.4s cubic-bezier(.22,1,.36,1);
+}
+.cam-main img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  opacity: 0.88; filter: contrast(1.08) saturate(0.9);
+  transition: opacity 0.35s, filter 0.35s, transform 0.5s;
+}
+.cam-main.switching img {
+  opacity: 0.15; filter: contrast(2.2) brightness(1.4) hue-rotate(40deg);
+  transform: scale(1.04);
+}
+/* Drone vibration */
+@keyframes droneShake {
+  0%, 100% { transform: translate(0, 0); }
+  25%      { transform: translate(-0.4px, 0.6px); }
+  50%      { transform: translate(0.5px, -0.4px); }
+  75%      { transform: translate(-0.3px, -0.5px); }
+}
+.cam-main.drone-active .cam-drone-feed {
+  animation: droneShake 0.14s linear infinite;
+}
+
+/* CRT */
+.cam-noise {
+  position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  opacity: 0.09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: noiseShift 0.35s steps(2) infinite;
+}
+.cam-vignette {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.6) 100%);
+}
+.cam-scanlines {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.14) 2px, rgba(0,0,0,0.14) 4px);
+  opacity: 0.55;
+}
+.cam-rgb {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  opacity: 0; mix-blend-mode: screen; transition: opacity 0.15s;
+}
+.cam-rgb.on { opacity: 1; }
+.cam-rgb::before, .cam-rgb::after { content: ''; position: absolute; inset: 0; }
+.cam-rgb::before { background: rgba(0,255,255,0.06); transform: translateX(-3px); }
+.cam-rgb::after  { background: rgba(255,0,80,0.05); transform: translateX(3px); }
+.cam-static-burst {
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  opacity: 0; background: #fff; mix-blend-mode: overlay;
+}
+.cam-scanbeam {
+  position: absolute; left: 0; right: 0; height: 2px; z-index: 7;
+  background: linear-gradient(90deg, transparent, rgba(0,212,232,0.55), transparent);
+  box-shadow: 0 0 14px rgba(0,212,232,0.4);
+  animation: camScan 4s linear infinite; pointer-events: none;
+}
+@keyframes camScan {
+  0%   { top: 0;    opacity: 0; }
+  8%   { opacity: 0.9; }
+  92%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════
+   TACTICAL OVERLAY (v5 — interactive objects)
+   ═══════════════════════════════════════════ */
+.tac-overlay { overflow: visible;
+  position: absolute; inset: 0; z-index: 8; pointer-events: none;
+  font-family: var(--font-mono);
+}
+.tac-tl {
+  position: absolute; top: 0.6rem; left: 0.8rem;
+  font-size: 0.6rem; color: #9aa8bc; letter-spacing: 0.05em;
+  text-shadow: 0 0 6px rgba(0,0,0,0.9);
+}
+.tac-tl .line { margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
+.tac-tl .rec { color: var(--red); font-weight: 700; }
+.tac-tl .rec .dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red); box-shadow: 0 0 10px var(--red);
+  animation: pulseDot 1.1s ease infinite;
+}
+.tac-tl b { color: var(--cyan); font-weight: 500; }
+.tac-tl .ctx { color: #7a8a9c; }
+.tac-tl .amber { color: var(--amber); }
+
+.tac-tr {
+  position: absolute; top: 0.6rem; right: 0.8rem;
+  text-align: right; font-size: 0.58rem; color: #9aa8bc;
+  letter-spacing: 0.05em; text-shadow: 0 0 6px rgba(0,0,0,0.9);
+}
+.tac-tr .line { margin-bottom: 0.25rem; }
+.tac-tr b { color: var(--amber); font-weight: 500; }
+.tac-tr .cyan { color: var(--cyan); }
+
+/* ═══ NEW v5: OBJECT BOXES become interactive ═══ */
+.obj-box {
+  position: absolute; border: 1px solid; pointer-events: auto;
+  overflow: visible;
+  cursor: pointer;
+  animation: objBoxIn 0.45s var(--ease);
+  transition: box-shadow 0.3s, transform 0.35s cubic-bezier(.22,1,.36,1), border-width 0.25s, opacity 0.35s, filter 0.3s;
+  opacity: 0.72;
+  transform: scale(0.92);
+  transform-origin: center center;
+  filter: saturate(0.85) brightness(0.92);
+}
+.obj-box:hover,
+.obj-box.selected {
+  opacity: 1;
+  transform: scale(1.06);
+  border-width: 2px;
+  box-shadow: 0 0 28px currentColor, inset 0 0 30px rgba(255,255,255,0.08);
+  filter: saturate(1.1) brightness(1.05);
+  z-index: 12 !important;
+}
+.obj-box.glitching {
+  animation: objGlitch 0.35s steps(2) infinite;
+  filter: contrast(1.8) hue-rotate(40deg) saturate(2);
+  opacity: 0.4;
+}
+.obj-box.signal-lost {
+  opacity: 0.35;
+  filter: grayscale(1) brightness(0.4);
+}
+.obj-box.signal-lost .obj-fill img { opacity: 0.2; }
+.obj-box.signal-lost::after {
+  content: 'SIGNAL LOST';
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  font: 700 9px var(--font-mono); letter-spacing: 0.12em;
+  color: #e02848; text-shadow: 0 0 8px #e02848;
+  background: rgba(0,0,0,0.55);
+  pointer-events: none;
+}
+@keyframes objGlitch {
+  0% { transform: scale(0.92) translate(0,0); }
+  25% { transform: scale(0.92) translate(-2px,1px); }
+  50% { transform: scale(0.94) translate(2px,-1px); }
+  75% { transform: scale(0.91) translate(-1px,2px); }
+  100% { transform: scale(0.92) translate(0,0); }
+}
+.cam-signal-error {
+  position: absolute; inset: 0; z-index: 15;
+  background: #050508;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0.6rem; text-align: center;
+  animation: sigFade 0.35s ease;
+}
+.cam-signal-error[hidden] { display: none !important; }
+@keyframes sigFade { from { opacity: 0; } to { opacity: 1; } }
+.cam-signal-error .sig-icon {
+  font-size: 1.4rem; color: #e02848;
+  text-shadow: 0 0 16px rgba(224,40,72,0.6);
+  animation: pulseDot 1.2s ease infinite;
+}
+.cam-signal-error .sig-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 1.1rem; letter-spacing: 0.18em;
+  color: #e02848;
+  text-shadow: 0 0 20px rgba(224,40,72,0.5);
+}
+.cam-signal-error .sig-sub {
+  font-family: var(--font-mono); font-size: 0.72rem;
+  color: #6a7590; max-width: 360px; line-height: 1.55;
+  letter-spacing: 0.04em;
+}
+.cam-main.glitching img {
+  animation: camImgGlitch 0.2s steps(2) infinite;
+}
+@keyframes camImgGlitch {
+  0% { filter: contrast(1.4) hue-rotate(0deg); transform: translate(0,0); }
+  50% { filter: contrast(2) hue-rotate(60deg) saturate(0.3); transform: translate(-3px,1px); }
+  100% { filter: contrast(1.2) hue-rotate(-20deg); transform: translate(2px,-1px); }
+}
+
+.obj-box.selected {
+  border-width: 2px;
+  box-shadow: 0 0 32px currentColor, inset 0 0 40px rgba(255,255,255,0.1);
+}
+.obj-box.cyan  { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,212,232,0.4), inset 0 0 20px rgba(0,212,232,0.05); }
+.obj-box.amber { border-color: var(--amber); box-shadow: 0 0 12px rgba(232,160,32,0.4), inset 0 0 20px rgba(232,160,32,0.05); }
+.obj-box.pink  { border-color: var(--pink); box-shadow: 0 0 12px rgba(224,26,111,0.4), inset 0 0 20px rgba(224,26,111,0.05); }
+
+.obj-box::before, .obj-box::after {
+  content: ''; position: absolute; width: 8px; height: 8px; border-color: inherit;
+}
+.obj-box::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+.obj-box::after  { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+.obj-box .obj-corner-bl, .obj-box .obj-corner-br {
+  position: absolute; width: 8px; height: 8px; border-color: inherit;
+}
+.obj-box .obj-corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+.obj-box .obj-corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+.obj-label {
+  position: absolute !important;
+  top: auto !important;
+  bottom: -1.4rem !important;
+  left: -1px;
+  right: auto;
+  padding: 0.12rem 0.5rem;
+  font-family: var(--font-mono); font-size: 0.55rem;
+  background: rgba(0,0,0,0.9); border: 1px solid; white-space: nowrap;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  z-index: 5;
+}
+.obj-box.cyan .obj-label { color: var(--cyan); border-color: var(--cyan); background: rgba(0,20,30,0.85); }
+.obj-box.amber .obj-label { color: var(--amber); border-color: var(--amber); background: rgba(30,20,0,0.85); }
+.obj-box.pink .obj-label { color: var(--pink); border-color: var(--pink); background: rgba(30,0,15,0.85); }
+
+.obj-sublabel {
+  position: absolute !important;
+  top: auto !important;
+  bottom: -2.6rem !important;
+  left: -1px;
+  right: auto;
+  padding: 0.12rem 0.45rem;
+  font-family: var(--font-mono); font-size: 0.5rem;
+  background: rgba(0,0,0,0.9); color: #9aa8bc; white-space: nowrap;
+  letter-spacing: 0.06em; border: 1px solid rgba(255,255,255,0.12);
+  pointer-events: none;
+  z-index: 4;
+}
+.obj-sublabel b { color: var(--cyan); font-weight: 500; }
+.obj-sublabel .val-amber { color: var(--amber); }
+.obj-sublabel .val-red { color: var(--red); }
+
+/* Object cell filled with live crop of camera feed */
+.obj-box {
+  overflow: visible; /* labels outside */
+}
+.obj-box .obj-fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  background: #05070c;
+}
+.obj-box .obj-fill img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+  filter: contrast(1.1) saturate(1.05) brightness(0.92);
+  transform: scale(1.001);
+  transform-origin: center center;
+  transition: transform 0.35s cubic-bezier(.22,1,.36,1), filter 0.3s;
+}
+.obj-box:hover .obj-fill img,
+.obj-box.selected .obj-fill img {
+  transform: scale(1.2);
+  filter: contrast(1.2) saturate(1.18) brightness(1.06);
+}
+.obj-box .obj-fill::after {
+  content: '';
+  position: absolute; inset: 0;
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.4);
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.3));
+  pointer-events: none;
+  z-index: 1;
+}
+.obj-box .obj-label { z-index: 5; position: absolute !important; top: auto !important; bottom: -1.4rem !important; left: -1px; }
+.obj-box .obj-sublabel { z-index: 4; position: absolute !important; top: auto !important; bottom: -2.6rem !important; left: -1px; }
+.obj-box .obj-corner-bl,
+.obj-box .obj-corner-br { z-index: 3; }
+.track-line { z-index: 1 !important; }
+.obj-box:hover { z-index: 12 !important; }
+.obj-box.selected { z-index: 13 !important; }
+.obj-box .obj-scan {
+  position: absolute; left: 0; right: 0; height: 1px; z-index: 1;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.45;
+  animation: objScan 2.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes objScan {
+  from { top: 0; opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.35; }
+  to { top: 100%; opacity: 0; }
+}
+
+
+/* ═══ NEW v5: OBJECT TOOLTIP ═══ */
+.obj-tooltip {
+  position: absolute;
+  min-width: 280px; max-width: 340px;
+  background: linear-gradient(160deg, rgba(6,11,20,0.97), rgba(2,4,10,0.99));
+  border: 1px solid var(--cyan);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,212,232,0.15);
+  padding: 0; z-index: 20;
+  pointer-events: none;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  font-family: var(--font-mono);
+}
+.obj-tooltip.show { opacity: 1; transform: translateY(0); }
+
+.obj-tooltip {
+  min-width: 420px !important;
+  max-width: 520px !important;
+}
+.obj-tooltip .tt-split {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 0;
+  border-bottom: 1px solid rgba(0,212,232,0.15);
+}
+.obj-tooltip .tt-media {
+  min-height: 160px;
+  background: #05070c;
+  border-right: 1px solid rgba(0,212,232,0.2);
+  overflow: hidden;
+}
+.obj-tooltip .tt-media img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 160px;
+  filter: contrast(1.08) saturate(1.05);
+}
+.obj-tooltip .tt-body { padding: 0.55rem 0.75rem; }
+@media (max-width: 700px) {
+  .obj-tooltip .tt-split { grid-template-columns: 1fr; }
+  .obj-tooltip .tt-media { min-height: 120px; border-right: none; border-bottom: 1px solid rgba(0,212,232,0.2); }
+}
+
+.obj-tooltip .tt-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid rgba(0,212,232,0.25);
+  background: rgba(0,212,232,0.05);
+  font-size: 0.6rem; letter-spacing: 0.1em;
+  color: var(--cyan); font-weight: 700;
+}
+.obj-tooltip .tt-head .close {
+  font-size: 0.85rem; cursor: pointer; color: var(--text-dim);
+  pointer-events: auto; padding: 0 0.3rem;
+}
+.obj-tooltip .tt-head .close:hover { color: var(--red); }
+.obj-tooltip .tt-body {
+  padding: 0.75rem 0.85rem;
+  font-size: 0.62rem; line-height: 1.6;
+  color: var(--text-dim);
+}
+.obj-tooltip .tt-body .row {
+  display: flex; justify-content: space-between;
+  padding: 0.15rem 0;
+  border-bottom: 1px dashed rgba(0,212,232,0.08);
+}
+.obj-tooltip .tt-body .row:last-child { border-bottom: 0; }
+.obj-tooltip .tt-body .row .k { color: var(--text-muted); letter-spacing: 0.06em; }
+.obj-tooltip .tt-body .row .v { color: var(--text); font-weight: 500; }
+.obj-tooltip .tt-body .row .v.cyan { color: var(--cyan); }
+.obj-tooltip .tt-body .row .v.amber { color: var(--amber); }
+.obj-tooltip .tt-body .row .v.red { color: var(--red); }
+.obj-tooltip .tt-body .row .v.green { color: var(--green); }
+.obj-tooltip .tt-body .desc {
+  margin-top: 0.6rem; padding-top: 0.6rem;
+  border-top: 1px solid rgba(0,212,232,0.1);
+  font-size: 0.58rem; line-height: 1.55; color: var(--text-muted);
+  font-style: italic;
+}
+.obj-tooltip .tt-footer {
+  padding: 0.45rem 0.8rem;
+  border-top: 1px solid rgba(0,212,232,0.2);
+  background: rgba(0,0,0,0.35);
+  font-size: 0.55rem; color: var(--text-muted);
+  letter-spacing: 0.08em;
+  display: flex; justify-content: space-between;
+}
+
+/* Tracking lines */
+.track-line {
+  position: absolute; background: linear-gradient(180deg, currentColor, transparent);
+  pointer-events: none;
+}
+.track-line.cyan { color: var(--cyan); }
+.track-line.amber { color: var(--amber); }
+.track-line.pink { color: var(--pink); }
+
+/* Crosshair */
+.tac-crosshair {
+  position: absolute; top: 50%; left: 50%;
+  width: 60px; height: 60px; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.tac-crosshair::before, .tac-crosshair::after {
+  content: ''; position: absolute; background: rgba(0,212,232,0.4);
+}
+.tac-crosshair::before { top: 50%; left: -12px; right: -12px; height: 1px; }
+.tac-crosshair::after  { left: 50%; top: -12px; bottom: -12px; width: 1px; }
+.tac-crosshair .ring {
+  position: absolute; inset: 0; border: 1px solid rgba(0,212,232,0.3);
+  border-radius: 50%;
+}
+.tac-crosshair .ring.small { inset: 22px; border-color: rgba(0,212,232,0.5); }
+
+.dist-marker {
+  position: absolute; font-family: var(--font-mono); font-size: 0.5rem;
+  color: rgba(0,212,232,0.6); letter-spacing: 0.05em;
+  text-shadow: 0 0 4px rgba(0,0,0,0.9);
+}
+.dist-marker.tl { top: 8px; left: 8px; }
+.dist-marker.tr { top: 8px; right: 8px; }
+.dist-marker.bl { bottom: 8px; left: 8px; }
+.dist-marker.br { bottom: 8px; right: 8px; }
+
+.tac-bl {
+  position: absolute; bottom: 0.5rem; left: 0.8rem;
+  font-size: 0.55rem; color: #9aa8bc; letter-spacing: 0.05em;
+  text-shadow: 0 0 6px rgba(0,0,0,0.9);
+  max-width: 34%; line-height: 1.55;
+}
+.tac-bl .row { display: block; }
+.tac-bl b { color: var(--cyan); font-weight: 500; }
+.tac-bl .amber { color: var(--amber); }
+.tac-bl .red { color: var(--red); }
+.tac-bl .bar-inline {
+  display: inline-block; width: 42px; height: 3px;
+  background: rgba(0,212,232,0.15); vertical-align: middle;
+  margin: 0 4px; border-radius: 1px; overflow: hidden;
+}
+.tac-bl .bar-inline i { display: block; height: 100%; background: var(--cyan); }
+
+.tac-br {
+  position: absolute; bottom: 0.5rem; right: 0.8rem;
+  font-size: 0.55rem; color: #9aa8bc; letter-spacing: 0.05em;
+  text-shadow: 0 0 6px rgba(0,0,0,0.9);
+  max-width: 34%; text-align: right; line-height: 1.55;
+}
+.tac-br b { color: var(--amber); font-weight: 500; }
+.tac-br .cyan { color: var(--cyan); }
+.tac-br .red { color: var(--red); }
+
+.classified-stamp {
+  position: absolute; top: 14%; right: 8%; z-index: 9; pointer-events: none;
+  font-family: var(--font-display); font-size: clamp(1.2rem, 3vw, 2rem);
+  font-weight: 800; letter-spacing: 0.15em; color: rgba(224,40,72,0.22);
+  transform: rotate(-12deg); border: 2px solid rgba(224,40,72,0.22);
+  padding: 0.3rem 0.8rem; text-transform: uppercase;
+  animation: stampFlicker 6s ease infinite;
+}
+@keyframes stampFlicker {
+  0%,100% { opacity: 0.9; }
+  50% { opacity: 0.5; }
+}
+
+.cam-alert {
+  position: absolute; padding: 0.15rem 0.5rem;
+  font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.08em;
+  background: rgba(224,40,72,0.15); border: 1px solid var(--red);
+  color: var(--red); z-index: 10; pointer-events: none;
+  animation: alertPulse 1.6s ease infinite;
+  text-transform: uppercase;
+}
+@keyframes alertPulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Thumbnails */
+.cam-thumbs {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+  background: rgba(0,0,0,0.55); border-top: 1px solid var(--border);
+}
+@media (max-width: 700px) { .cam-thumbs { grid-template-columns: repeat(3, 1fr); } }
+.cam-thumb {
+  position: relative; aspect-ratio: 16/10; overflow: hidden; cursor: pointer;
+  border: 2px solid transparent; opacity: 0.55;
+  transition: border-color 0.25s, opacity 0.25s, transform 0.3s;
+}
+.cam-thumb:hover { opacity: 0.85; transform: translateY(-2px); }
+.cam-thumb.active { border-color: var(--cyan); opacity: 1; box-shadow: 0 0 18px rgba(0,212,232,0.2); }
+.cam-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; filter: contrast(1.05) brightness(0.9); }
+.cam-thumb-label {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 0.2rem 0.35rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.9));
+  font-family: var(--font-mono); font-size: 0.52rem; color: var(--text-dim); letter-spacing: 0.04em;
+}
+.cam-thumb.active .cam-thumb-label { color: var(--cyan); }
+.cam-offline {
+  position: absolute; inset: 0; z-index: 10;
+  background: #050508; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.6rem; pointer-events: none;
+}
+.cam-offline .off-icon { font-size: 1.8rem; color: var(--red); opacity: 0.7; animation: pulseDot 1.4s ease infinite; }
+.cam-offline .off-title { font-family: var(--font-display); font-size: 0.95rem; letter-spacing: 0.12em; color: var(--red); text-transform: uppercase; }
+.cam-offline .off-sub { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; text-align: center; max-width: 280px; line-height: 1.5; }
+.cam-thumb.offline { opacity: 0.4; }
+.cam-thumb.offline img { filter: grayscale(1) brightness(0.3); }
+.cam-thumb .thumb-offline {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.75); font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--red); letter-spacing: 0.06em; text-align: center; padding: 0.3rem;
+}
+
+/* ═══════════════════════════════════════════
+   PANELS   ═══════════════════════════════════════════ */
+.panel {
+  position: relative; background: var(--panel);
+  border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  transition: border-color 0.35s, box-shadow 0.35s, transform 0.35s var(--ease);
+}
+.panel::before {
+  content: ''; position: absolute; left: 0; top: 0; width: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  transition: width 0.7s var(--ease);
+}
+.panel::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--cyan), transparent);
+  opacity: 0; transition: opacity 0.5s;
+}
+.panel:hover { border-color: var(--border-mid); box-shadow: 0 0 40px rgba(0,212,232,0.06); }
+.panel:hover::before { width: 100%; }
+.panel:hover::after { opacity: 0.6; }
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.65rem 1rem; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 0.64rem;
+  letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════
+   JOURNAL + TELEMETRY
+   ═══════════════════════════════════════════ */
+.grid-2.journal-row {
+  align-items: stretch; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 1.05rem;
+}
+@media (max-width: 900px) { .grid-2.journal-row { grid-template-columns: 1fr; } }
+
+.journal-panel-fixed, .telem-panel-fixed {
+  display: flex !important; flex-direction: column !important;
+  height: 100%; min-height: 580px; max-height: 700px;
+}
+.journal-panel-fixed > .panel-header,
+.telem-panel-fixed > .panel-header { flex: 0 0 auto; }
+
+.journal-panel-body, .telem-panel-body {
+  flex: 1 1 auto !important;
+  display: flex !important; flex-direction: column !important;
+  min-height: 0 !important; height: 100%;
+  padding-bottom: 0.9rem !important; overflow: hidden;
+}
+
+.journal-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  max-height: none !important; min-height: 0 !important;
+  font-family: var(--font-mono); font-size: 0.72rem; padding: 0.15rem 0;
+  scrollbar-width: thin; scrollbar-color: rgba(0,212,232,0.3) transparent;
+}
+.journal-body::-webkit-scrollbar { width: 4px; }
+.journal-body::-webkit-scrollbar-track { background: rgba(0,212,232,0.03); }
+.journal-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--cyan-dim), var(--cyan)); border-radius: 2px;
+}
+.journal-actions {
+  flex: 0 0 auto !important; display: flex !important;
+  gap: 0.5rem; flex-wrap: wrap; margin-top: auto !important;
+  padding-top: 0.85rem; padding-bottom: 0.1rem;
+  border-top: 1px solid var(--border); background: var(--panel);
+}
+
+/* ═══════════════════════════════════════════
+   NEURO-BRIDGE v2 — ЖИВОЙ И ДИНАМИЧНЫЙ
+   ═══════════════════════════════════════════ */
+.neuro-bridge {
+  margin: 0.6rem 0 0.4rem; height: 110px;
+  background: radial-gradient(ellipse at center, rgba(0,30,40,0.5), rgba(0,5,12,0.9));
+  border: 1px solid rgba(0,212,232,0.22); border-radius: 2px;
+  overflow: hidden; position: relative;
+}
+.neuro-bridge::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,212,232,0.03) 3px, rgba(0,212,232,0.03) 4px);
+  pointer-events: none; z-index: 1;
+}
+.neuro-bridge::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,232,0.6), transparent);
+  top: -2px; animation: nbScan 4.2s linear infinite;
+  filter: blur(1px); z-index: 2;
+}
+@keyframes nbScan {
+  0%   { top: -2px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+.neuro-bridge svg { width: 100%; height: 100%; display: block; position: relative; z-index: 3; }
+
+.nb-node {
+  fill: var(--cyan);
+  filter: drop-shadow(0 0 4px rgba(0,212,232,0.9));
+  animation: nbNodePulse 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+.nb-node.alt { fill: var(--pink); filter: drop-shadow(0 0 4px rgba(224,26,111,0.9)); animation-delay: 0.6s; }
+.nb-node.amber { fill: var(--amber); filter: drop-shadow(0 0 4px rgba(232,160,32,0.9)); animation-delay: 1.2s; }
+@keyframes nbNodePulse {
+  0%,100% { opacity: 0.55; transform: scale(1); }
+  50%     { opacity: 1;   transform: scale(1.6); }
+}
+
+.nb-line {
+  stroke: rgba(0,212,232,0.22); stroke-width: 1; fill: none;
+  stroke-dasharray: 2 4;
+  animation: nbLineDash 6s linear infinite;
+}
+.nb-line.pink { stroke: rgba(224,26,111,0.25); }
+.nb-line.amber { stroke: rgba(232,160,32,0.22); }
+@keyframes nbLineDash { to { stroke-dashoffset: -30; } }
+
+.nb-pulse {
+  stroke: var(--cyan); stroke-width: 2; fill: none;
+  stroke-dasharray: 6 22;
+  filter: drop-shadow(0 0 6px rgba(0,212,232,0.9));
+  animation: nbFlow 2.4s linear infinite;
+}
+.nb-pulse.alt {
+  stroke: var(--pink);
+  filter: drop-shadow(0 0 6px rgba(224,26,111,0.9));
+  animation-duration: 3.2s; animation-direction: reverse;
+}
+.nb-pulse.amber {
+  stroke: var(--amber);
+  filter: drop-shadow(0 0 6px rgba(232,160,32,0.9));
+  animation-duration: 4s;
+}
+@keyframes nbFlow { to { stroke-dashoffset: -200; } }
+
+.nb-flash-ring {
+  fill: none; stroke: var(--cyan); stroke-width: 1;
+  transform-origin: center;
+  animation: nbFlashRing 3.6s ease-out infinite;
+}
+.nb-flash-ring.alt {
+  stroke: var(--pink);
+  animation-delay: 1.8s;
+}
+@keyframes nbFlashRing {
+  0%   { r: 4; opacity: 0.9; }
+  100% { r: 120; opacity: 0; }
+}
+
+.neuro-label {
+  position: absolute; top: 4px; left: 8px;
+  font-family: var(--font-mono); font-size: 0.52rem;
+  color: rgba(0,212,232,0.7); letter-spacing: 0.1em;
+  text-transform: uppercase; z-index: 4;
+  text-shadow: 0 0 6px rgba(0,212,232,0.5);
+}
+.neuro-stats {
+  position: absolute; top: 4px; right: 8px;
+  font-family: var(--font-mono); font-size: 0.5rem;
+  color: rgba(0,212,232,0.55); letter-spacing: 0.08em;
+  z-index: 4; text-align: right; line-height: 1.4;
+}
+.neuro-stats b { color: var(--cyan); }
+.neuro-stats .alt { color: var(--pink); }
+.neuro-stats .amber { color: var(--amber); }
+
+/* ═══════════════════════════════════════════
+   TELEMETRY
+   ═══════════════════════════════════════════ */
+.telem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-bottom: 0.85rem; }
+.telem-metric {
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 2px; padding: 0.65rem 0.7rem;
+  position: relative; overflow: hidden;
+  transition: border-color 0.3s;
+}
+.telem-metric::after {
+  content: ''; position: absolute; top: 0; left: 0; width: 2px; height: 100%;
+  background: var(--cyan); opacity: 0.5; transition: width 0.3s, opacity 0.3s;
+}
+.telem-metric:hover::after { width: 3px; opacity: 1; }
+.telem-metric.danger::after { background: var(--red); }
+.telem-metric .value {
+  font-family: var(--font-display); font-size: 1.45rem;
+  font-weight: 700; line-height: 1.15;
+}
+.telem-metric .label {
+  font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dim);
+  letter-spacing: 0.07em; margin-top: 0.2rem; text-transform: uppercase;
+}
+.telem-metric .sub { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.08rem; }
+
+.chart-wrap {
+  position: relative; height: 100px; margin-top: 0.4rem;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+  border-radius: 2px; padding: 0.35rem 0.25rem 0.15rem;
+}
+.chart-label {
+  font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dim);
+  letter-spacing: 0.08em; margin-bottom: 0.3rem; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.chart-label .live-tag { color: var(--green); font-size: 0.55rem; animation: pulseDot 1.6s ease infinite; }
+
+.spark-row { display: flex; gap: 0.45rem; margin-top: 0.65rem; }
+.spark-card {
+  flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+  border-radius: 2px; padding: 0.5rem 0.5rem 0.45rem;
+  transition: border-color 0.3s, transform 0.25s;
+}
+.spark-card:hover { border-color: var(--border-mid); transform: translateY(-1px); }
+.spark-card .sk-label {
+  font-family: var(--font-mono); font-size: 0.52rem; color: var(--text-muted);
+  letter-spacing: 0.06em; margin-bottom: 0.2rem; text-transform: uppercase;
+}
+.spark-card .sk-val { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; }
+.mini-bars { display: flex; align-items: flex-end; gap: 2px; height: 22px; margin-top: 0.3rem; }
+.mini-bars span {
+  flex: 1; background: var(--cyan); opacity: 0.6; border-radius: 1px 1px 0 0;
+  transition: height 0.6s var(--ease), opacity 0.3s, background 0.3s;
+  box-shadow: 0 0 4px rgba(0,212,232,0.3);
+}
+.mini-bars span.hot { background: var(--amber); opacity: 0.85; box-shadow: 0 0 6px var(--amber); }
+.mini-bars span.crit { background: var(--red); opacity: 0.9; box-shadow: 0 0 8px var(--red); }
+
+/* ═══ NEW v5: MINI-EEG ═══ */
+.eeg-panel {
+  margin-top: 0.65rem;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,212,232,0.2);
+  border-radius: 2px;
+  padding: 0.5rem 0.55rem 0.35rem;
+  position: relative;
+}
+.eeg-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-dim); letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.eeg-header .live {
+  color: var(--green); font-size: 0.5rem;
+  animation: pulseDot 1.4s ease infinite;
+}
+.eeg-header .channels {
+  display: flex; gap: 0.6rem;
+  font-size: 0.5rem;
+}
+.eeg-header .channels .ch { display: flex; align-items: center; gap: 0.2rem; }
+.eeg-header .channels .ch::before {
+  content: ''; width: 6px; height: 2px; display: inline-block;
+}
+.eeg-header .channels .alpha::before { background: var(--cyan); box-shadow: 0 0 4px var(--cyan); }
+.eeg-header .channels .beta::before  { background: var(--pink); box-shadow: 0 0 4px var(--pink); }
+.eeg-header .channels .gamma::before { background: var(--amber); box-shadow: 0 0 4px var(--amber); }
+.eeg-header .channels .theta::before { background: var(--green); box-shadow: 0 0 4px var(--green); }
+
+.eeg-canvas-wrap {
+  position: relative; width: 100%; height: 88px;
+  background: #02030a;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.eeg-canvas-wrap::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,232,0.03) 2px, rgba(0,212,232,0.03) 3px),
+    repeating-linear-gradient(90deg, transparent, transparent 11px, rgba(0,212,232,0.03) 11px, rgba(0,212,232,0.03) 12px);
+  pointer-events: none;
+}
+#eegCanvas { width: 100%; height: 100%; display: block; }
+
+.eeg-stats {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 0.5rem;
+  color: var(--text-muted); letter-spacing: 0.06em;
+  margin-top: 0.3rem;
+}
+.eeg-stats .b { color: var(--cyan); }
+.eeg-stats .b.amber { color: var(--amber); }
+.eeg-stats .b.red { color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   METRIC STRIP
+   ═══════════════════════════════════════════ */
+.metric-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; margin: 0 0 1.3rem; }
+@media (max-width: 900px) { .metric-strip { grid-template-columns: 1fr 1fr; } }
+.metric-strip .ms-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.9rem 0.95rem;
+  transition: border-color 0.3s, transform 0.35s var(--ease), box-shadow 0.35s;
+  position: relative; overflow: hidden;
+}
+.metric-strip .ms-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, transparent, var(--cyan), transparent);
+  opacity: 0.4; transition: opacity 0.3s;
+}
+.metric-strip .ms-card:hover {
+  border-color: var(--border-strong); transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 30px rgba(0,212,232,0.06);
+}
+.metric-strip .ms-card:hover::before { opacity: 1; }
+.metric-strip .ms-label {
+  font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.1em;
+  color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.35rem;
+}
+.metric-strip .ms-value {
+  font-family: var(--font-display); font-size: 1.35rem; font-weight: 700;
+  letter-spacing: 0.03em; line-height: 1.15;
+}
+.metric-strip .ms-sub { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dim); margin-top: 0.3rem; letter-spacing: 0.04em; }
+.metric-strip .ms-card.danger .ms-value { color: var(--red); text-shadow: 0 0 14px rgba(224,40,72,0.5); }
+.metric-strip .ms-card.danger::before { background: linear-gradient(180deg, transparent, var(--red), transparent); }
+.metric-strip .ms-card.danger .ms-label { color: rgba(224,40,72,0.75); }
+
+/* ═══════════════════════════════════════════
+   DOCS + TACTICAL
+   ═══════════════════════════════════════════ */
+.docs-stack { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
+@media (min-width: 900px) { .docs-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; } }
+.doc-card h3 { font-family: var(--font-display); font-size: 0.95rem; letter-spacing: 0.04em; margin-bottom: 0.55rem; }
+.doc-card p { font-size: 0.84rem; color: var(--text-dim); font-weight: 300; line-height: 1.55; }
+.quote-block {
+  margin-top: 0.8rem; padding: 0.75rem 0.9rem;
+  background: rgba(0,0,0,0.35); border-left: 2px solid var(--cyan);
+  font-size: 0.8rem; color: var(--text-dim); font-style: italic; position: relative;
+}
+.quote-block::before {
+  content: ''; position: absolute; left: -2px; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, transparent, var(--cyan), transparent);
+  animation: quotePulse 2.4s ease infinite;
+}
+@keyframes quotePulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+.doc-expand {
+  margin-top: 0.65rem; font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--cyan); cursor: pointer; letter-spacing: 0.08em;
+  text-transform: uppercase; background: none; border: none; padding: 0;
+  transition: color 0.25s, letter-spacing 0.25s;
+}
+.doc-expand:hover { color: var(--text); letter-spacing: 0.12em; }
+.doc-extra {
+  display: none; margin-top: 0.75rem; padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem; color: var(--text-dim); line-height: 1.55;
+}
+.doc-extra.open { display: block; animation: fadeUp 0.4s var(--ease); }
+.bar { height: 3px; background: rgba(0,212,232,0.1); border-radius: 2px; overflow: hidden; margin-top: 0.45rem; position: relative; }
+.bar-fill {
+  height: 100%; background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+  border-radius: 2px; transition: width 1.1s var(--ease); position: relative;
+}
+.bar-fill::after {
+  content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 30%;
+  background: linear-gradient(90deg, transparent, #fff);
+  opacity: 0.4; animation: barShine 2.2s ease infinite;
+}
+@keyframes barShine { 0%,100% { opacity: 0.15; } 50% { opacity: 0.55; } }
+
+.tactical-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+@media (max-width: 900px) { .tactical-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .tactical-grid { grid-template-columns: 1fr; } }
+.tac-node {
+  position: relative; background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0; overflow: hidden;
+  text-decoration: none; color: inherit;
+  transition: border-color 0.35s, transform 0.45s var(--ease), box-shadow 0.35s;
+  display: flex; flex-direction: column; min-height: 150px;
+}
+.tac-node.has-art { min-height: 200px; background-size: cover; background-position: center top; }
+.tac-node.has-art .tac-body { background: linear-gradient(180deg, rgba(5,8,16,0.2) 0%, rgba(5,8,16,0.94) 45%, rgba(5,8,16,0.98) 100%); }
+.tac-node::before {
+  content: ''; position: absolute; left: 0; top: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.tac-node:hover:not(.locked)::before { opacity: 1; }
+.tac-node:hover:not(.locked) {
+  border-color: var(--border-strong); transform: translateY(-5px);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,232,0.08);
+}
+.tac-node.locked { opacity: 0.5; cursor: not-allowed; }
+.tac-node.threat { border-color: rgba(224,40,72,0.4); }
+.tac-node.threat:hover:not(.locked) {
+  border-color: var(--red);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.5), 0 0 40px rgba(224,40,72,0.15);
+}
+.tac-node.priority { border-color: rgba(0,212,232,0.4); }
+.tac-banner { height: 3px; width: 100%; background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); position: relative; overflow: hidden; }
+.tac-banner::after {
+  content: ''; position: absolute; left: -40%; top: 0; bottom: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, #fff, transparent);
+  opacity: 0.5; animation: bannerRun 2.4s ease-in-out infinite;
+}
+@keyframes bannerRun { 0% { left: -40%; } 100% { left: 100%; } }
+.tac-node.threat .tac-banner { background: linear-gradient(90deg, #6b1020, var(--red)); }
+.tac-node.locked .tac-banner { background: var(--text-muted); opacity: 0.35; }
+.tac-body { padding: 0.95rem 1rem 0.85rem; flex: 1; display: flex; flex-direction: column; position: relative; z-index: 2; }
+.tac-node .tac-id { font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-muted); letter-spacing: 0.12em; margin-bottom: 0.35rem; }
+.tac-node h4 { font-family: var(--font-display); font-size: 0.95rem; letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+.tac-node p { font-size: 0.72rem; color: var(--text-dim); font-weight: 300; line-height: 1.45; flex: 1; }
+.tac-node .tac-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; font-family: var(--font-mono); font-size: 0.58rem; }
+.tac-node .tac-status { color: var(--green); }
+.tac-node.threat .tac-status { color: var(--red); }
+.tac-node.locked .tac-status { color: var(--text-muted); }
+.tac-hint { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-muted); margin-top: 0.35rem; letter-spacing: 0.04em; }
+.tac-node .shine {
+  position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+  transform: translateX(-100%); transition: transform 0.75s var(--ease);
+}
+.tac-node:hover:not(.locked) .shine { transform: translateX(100%); }
+
+/* ═══════════════════════════════════════════
+   TOAST + MODAL
+   ═══════════════════════════════════════════ */
+.sys-toast {
+  position: fixed; bottom: 1.4rem; right: 1.4rem; z-index: 500;
+  max-width: 340px; padding: 0.9rem 1.1rem;
+  background: var(--panel); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); font-family: var(--font-mono); font-size: 0.7rem;
+  box-shadow: 0 14px 44px rgba(0,0,0,0.6), 0 0 30px rgba(0,212,232,0.08);
+  transform: translateY(120%); opacity: 0;
+  transition: transform 0.4s var(--ease), opacity 0.4s;
+}
+.sys-toast.show { transform: translateY(0); opacity: 1; }
+.sys-toast .toast-title { color: var(--cyan); letter-spacing: 0.08em; margin-bottom: 0.3rem; text-transform: uppercase; }
+.sys-toast.warn { border-color: rgba(224,40,72,0.5); }
+.sys-toast.warn .toast-title { color: var(--red); }
+.sys-toast .toast-bar { height: 2px; background: rgba(0,212,232,0.12); margin-top: 0.6rem; border-radius: 1px; overflow: hidden; }
+.sys-toast .toast-bar-fill { height: 100%; width: 0%; background: var(--cyan); transition: width 0.12s linear; }
+.sys-toast.warn .toast-bar-fill { background: var(--red); }
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 600; background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--panel); border: 1px solid rgba(224,40,72,0.5);
+  border-radius: var(--radius); padding: 1.5rem 1.6rem; max-width: 420px; width: 90%;
+  box-shadow: 0 0 60px rgba(224,40,72,0.15); position: relative;
+}
+.modal-box::before {
+  content: ''; position: absolute; left: 0; top: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+}
+.modal-box h3 { font-family: var(--font-display); font-size: 0.95rem; color: var(--red); letter-spacing: 0.05em; margin-bottom: 0.6rem; }
+.modal-box p { font-size: 0.84rem; color: var(--text-dim); line-height: 1.55; margin-bottom: 1.1rem; }
+.modal-actions { display: flex; gap: 0.55rem; justify-content: flex-end; }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem;
+  padding: 0.6rem 1.2rem; font-family: var(--font-mono); font-size: 0.7rem;
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+  border: 1px solid var(--border-strong); background: transparent;
+  color: var(--cyan); border-radius: 2px; cursor: pointer;
+  transition: all 0.25s var(--ease); position: relative; overflow: hidden;
+}
+.btn:hover { background: var(--cyan-glow); box-shadow: 0 0 22px rgba(0, 212, 232, 0.15); border-color: var(--cyan); }
+.btn-solid { background: var(--cyan); color: var(--void); border-color: var(--cyan); font-weight: 600; }
+.btn-solid:hover { background: #00e8ff; box-shadow: 0 0 28px rgba(0, 212, 232, 0.35); }
+.btn-danger { border-color: rgba(224,40,72,0.5); color: var(--red); }
+.btn-danger:hover { background: rgba(224,40,72,0.1); border-color: var(--red); box-shadow: 0 0 22px rgba(224,40,72,0.2); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn .ripple {
+  position: absolute; border-radius: 50%; background: rgba(0,212,232,0.3);
+  transform: scale(0); animation: rippleOut 0.6s ease-out forwards; pointer-events: none;
+}
+@keyframes rippleOut { to { transform: scale(4); opacity: 0; } }
+
+/* ═══════════════════════════════════════════
+   MISC
+   ═══════════════════════════════════════════ */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 2px; width: 0%;
+  background: linear-gradient(90deg, var(--cyan), var(--pink));
+  z-index: 9999; pointer-events: none; box-shadow: 0 0 12px rgba(0,212,232,0.6);
+}
+.draw-line { position: relative; display: inline-block; }
+.draw-line::after {
+  content: ''; position: absolute; left: 0; bottom: -4px; height: 1px; width: 0%;
+  background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+  transition: width 0.8s var(--ease);
+}
+.draw-line.in-view::after { width: 100%; }
+.orb {
+  position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+  filter: blur(70px); opacity: 0.1; mix-blend-mode: screen;
+}
+.orb-1 { width: 420px; height: 420px; background: radial-gradient(circle, var(--cyan), transparent 70%); top: 10%; left: -10%; }
+.orb-2 { width: 360px; height: 360px; background: radial-gradient(circle, var(--magenta), transparent 70%); top: 50%; right: -8%; }
+.orb-3 { width: 280px; height: 280px; background: radial-gradient(circle, var(--pink), transparent 70%); bottom: 5%; left: 30%; }
+
+.panel, .cam-wall, .tac-node, .sys-header, .sys-topbar, .sys-page { opacity: 1 !important; visibility: visible !important; }
+main.sys-page { display: block !important; position: relative; z-index: 2; }
+
+.warn-ticker {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 0.6rem; margin-bottom: 1.1rem; padding: 0.55rem 0.9rem;
+  background: rgba(8,6,18,0.9); border: 1px solid rgba(224,40,72,0.25);
+  border-left: 3px solid var(--red);
+  font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.06em;
+}
+.warn-ticker .wt-left { display: flex; align-items: center; gap: 0.55rem; color: var(--red); }
+.warn-ticker .wt-left .dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+  box-shadow: 0 0 10px var(--red); animation: pulseDot 1.2s ease infinite;
+}
+.warn-ticker .wt-right { color: var(--amber); }
+.warn-ticker .wt-right b { color: var(--text-dim); font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.neuro-bridge {
+  position: relative; margin-top: 0.75rem; padding: 0.55rem 0.6rem 0.4rem;
+  border: 1px solid rgba(0,212,232,0.18);
+  background: linear-gradient(180deg, rgba(0,20,30,0.5), rgba(2,4,10,0.8));
+  border-radius: 2px; overflow: hidden;
+}
+.neuro-bridge::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 30% 50%, rgba(0,212,232,0.06), transparent 60%),
+              radial-gradient(ellipse at 70% 40%, rgba(224,26,111,0.05), transparent 55%);
+}
+.neuro-label { font-family: var(--font-mono); font-size: 0.58rem; color: var(--cyan); letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+.neuro-stats { display: flex; gap: 1rem; font-family: var(--font-mono); font-size: 0.55rem; color: var(--text-dim); margin-bottom: 0.25rem; }
+.neuro-stats b { color: var(--cyan); font-weight: 600; }
+.neuro-stats b.alt { color: var(--green); }
+.neuro-stats b.amber { color: var(--amber); }
+#neuroCanvas { position: relative; z-index: 1; }
+
+</style>
+</head>
+<body class="terminal-mode">
+
+<div class="noise"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="letterbox-top"></div>
+<div class="letterbox-bottom"></div>
+<div class="cine-glitch" id="cineGlitch"></div>
+
+<div class="floor-grid"><canvas id="floorCanvas"></canvas></div>
+<canvas class="dust-canvas" id="dustCanvas"></canvas>
+<div class="bg-streams" id="bgStreams"></div>
+
+<div class="orb orb-1" id="orb1"></div>
+<div class="orb orb-2" id="orb2"></div>
+<div class="orb orb-3" id="orb3"></div>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<div class="hud-persistent">
+  <div class="hud-corner tl">
+    <div class="row">CORE <b>ЦЕФЕЙ-1</b></div>
+    <div class="row">PORT <b>9821</b></div>
+    <div class="row">GEO <b id="hudGeo">55.75/37.61</b></div>
+  </div>
+  <div class="hud-corner bl">
+    <div class="row">PING <b id="hudPing">8ms</b></div>
+    <div class="row">ENC <b>AES-256</b></div>
+    <div class="row">SESSION <b id="hudSession">A-55</b></div>
+  </div>
+  <div class="hud-corner br">
+    <div class="row">CLOCK <b id="hudClock">--:--:--</b></div>
+    <div class="row">FPS <b id="hudFps">60</b></div>
+    <div class="row">NODE <b>LMB-T1</b></div>
+  </div>
+</div>
+
+<div class="radar-hud"><canvas id="radarCanvas"></canvas></div>
+
+<header class="sys-topbar">
+  <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+  <div class="status-pill"><span class="dot"></span> ЯДРО СИНХРОНИЗИРОВАНО</div>
+  <nav class="sys-nav">
+    <a href="terminal.html" class="active">Терминал</a>
+    <a href="dossier.html">Досье</a>
+    <a href="scenes.html">Архив сцен</a>
+    <a href="polygon.html">Полигон</a>
+  </nav>
+  <div class="right-meta">
+    <span class="sec-level">SEC:LVL_5</span>
+    <span>ОПЕРАТОР: A-55</span>
+  </div>
+</header>
+
+<main class="sys-page">
+
+  <div class="warn-ticker reveal">
+    <div class="wt-left">
+      <span class="dot"></span>
+      <span>⚠ КРИТИЧЕСКОЕ СООБЩЕНИЕ · АНОМАЛИЯ NODE 0x00 АКТИВНА</span>
+    </div>
+    <div class="wt-right">
+      <b>ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ:</b> <span id="wtTime">только что</span> · <b>УРОВЕНЬ:</b> СОВЕРШЕННО СЕКРЕТНО
+    </div>
+  </div>
+
+  <div class="sys-header reveal">
+    <div class="eyebrow">Нейро-мост: «Цефей-1» // Порт TCP: 9821 · Восточный штаб // Центр-A · ГРИФ: СОВЕРШЕННО СЕКРЕТНО</div>
+    <h1 class="sys-title scramble-hover">П.Р.И.Н.Ц.<span>_ЛИМБО</span></h1>
+    <p class="desc">
+      Автоматизированный комплекс высшей меры пресечения под надзором Верховного Трибунала.
+      Создание персонализированного суррогатного ада для преступников высшего ранга через
+      каскадный соматический стазис.
+    </p>
+    <div class="status-row">
+      <div class="status-chip">СТАБИЛЬНОСТЬ ЯДРА <strong id="coreStab">98.4%</strong></div>
+      <div class="status-chip hot">СЕНСОРНЫЙ ШОК <strong>АКТИВЕН</strong></div>
+      <div class="status-chip amber">НЕЙРО-ШЛЮЗ <strong id="gatewayState">СИНХР</strong></div>
+      <div class="status-chip"><span class="signal-pulse"></span>КАНАЛ LIVE</div>
+    </div>
+  </div>
+
+  <!-- ═══ SURVEILLANCE ═══ -->
+  <div class="cam-wall reveal fx-section glow-chase">
+    <div class="cam-wall-header">
+      <span>// СЕТЬ КАМЕР РЕКУРСИИ · КЛАСТЕР ВОСТОК · ЗАШИФРОВАННЫЙ КАНАЛ</span>
+      <span id="camCount">5 КАНАЛОВ · ВЫБРАН: #19</span>
+    </div>
+    <div class="cam-main" id="camMain">
+      <!-- ═══ NEW v5: DRONE FEED WRAPPER ═══ -->
+      <div class="cam-drone-feed" id="camDroneFeed">
+        <img id="camMainImg" src="img/gorod/b1.png" alt="Камера"
+             onerror="this.style.opacity=0;document.getElementById('camOffline')&&(document.getElementById('camOffline').style.display='flex')">
+      </div>
+
+      <!-- ═══ TACTICAL OVERLAY ═══ -->
+      <div class="tac-overlay" id="tacOverlay">
+        <div class="tac-tl">
+          <div class="line">
+            <span class="rec"><span class="dot"></span>REC</span>
+            <span class="ctx">// ЗАПИСЬ В БУФЕР ЛИМБО</span>
+            <span class="amber" id="recFps">| 60.00 FPS SENSOR</span>
+          </div>
+          <div class="line">
+            <span class="ctx">ОБЪЕКТ:</span>
+            <b id="camSector">СЕКТОР ШАНХАЙ-02</b>
+            <span class="ctx">//</span>
+            <span class="ctx" id="camQuad">КВАДРАТ 44-B</span>
+          </div>
+          <div class="line">
+            <span class="ctx">СЕРВОПРИВОД PTZ: AZIMUTH</span>
+            <span class="amber" id="camAzimuth">184.22°</span>
+            <span class="ctx">// ELEVATION</span>
+            <span class="amber" id="camElevation">-12.18°</span>
+          </div>
+        </div>
+
+        <div class="tac-tr">
+          <div class="line">ОПТИКА: <b>F/2.8 LEICA RECON</b></div>
+          <div class="line">ZOOM: <b id="camZoom">3.48x</b> ОПТИЧЕСКИЙ <span class="cyan">[NEURO-STABILIZED]</span></div>
+          <div class="line">ДАЛЬНОМЕР LIDAR: <b id="camLidar">184.42 m</b> СРЕДНЕЕ</div>
+        </div>
+
+        <div class="tac-crosshair">
+          <div class="ring"></div>
+          <div class="ring small"></div>
+        </div>
+
+        <div class="dist-marker tl">-18°</div>
+        <div class="dist-marker tr">+22°</div>
+        <div class="dist-marker bl">112.8m</div>
+        <div class="dist-marker br">244.1m</div>
+
+        <div class="tac-bl">
+          <div class="row">ОПТИЧЕСКАЯ МАТРИЦА // <b>SONY IMX909-QUANTUM</b></div>
+          <div class="row">ШУМОПОДАВЛЕНИЕ: ТЕХНОРДИЕ <span class="amber">(ACTIVE NEURAL AI)</span></div>
+          <div class="row">СЕТКА КООРДИНАТ: <span id="camCoords">31°13'56.2"N 121°28'09.4"E</span></div>
+          <div class="row" style="margin-top:0.2rem;">
+            ЦЕЛОСТНОСТЬ СИГНАЛА
+            <span class="bar-inline"><i id="signalIntegrity" style="width:94%"></i></span>
+            <b id="signalIntegrityVal">94%</b>
+          </div>
+        </div>
+
+        <div class="tac-br">
+          <div class="row">СОСТОЯНИЕ ЛИМБО: <b id="limboState">ВТОРАЯ ФАЗА РАСПАДА</b></div>
+          <div class="row">СКОРОСТЬ ВЕТРА: <span class="cyan" id="windSpeed">11.4 m/s</span> · ВЛАЖНОСТЬ: <span class="cyan" id="humidity">87%</span></div>
+          <div class="row">СТАТУС ОБЪЕКТА: <span class="cyan" id="objStatus">СТАЦИОНАРНЫЙ</span> <span class="red">[ДРЕЙФ МИНИМАЛЕН]</span></div>
+          <div class="row" style="margin-top:0.2rem;">КЛАСС УГРОЗЫ: <span class="red" id="threatLevel">ZERO-1</span> · ОПЕРАТОР: <span class="cyan">A-55</span></div>
+        </div>
+      </div>
+
+      <div class="cam-noise"></div>
+      <div class="cam-vignette"></div>
+      <div class="cam-scanlines"></div>
+      <div class="cam-rgb" id="camRgb"></div>
+      <div class="cam-static-burst" id="camStatic"></div>
+      <div class="cam-scanbeam"></div>
+      <div class="classified-stamp">CLASSIFIED</div>
+      <div class="cam-offline" id="camOffline" style="display:none;">
+        <div class="off-icon">⚠</div>
+        <div class="off-title" id="camOffTitle">СИГНАЛ ПОТЕРЯН</div>
+        <div class="off-sub" id="camOffSub">Канал заглушён или камера уничтожена.</div>
+      </div>
+        <div class="cam-signal-error" id="camSignalError" hidden>
+          <div class="sig-icon">⚠</div>
+          <div class="sig-title" id="camSigTitle">СИГНАЛ ПОТЕРЯН</div>
+          <div class="sig-sub" id="camSigSub">Канал недоступен.</div>
+        </div>
+
+    </div>
+    <div class="cam-thumbs" id="camThumbs">
+      <div class="cam-thumb active" data-cam="0">
+        <img src="img/gorod/b1.png" alt="" onerror="this.parentElement.classList.add('offline')">
+        <div class="cam-thumb-label">#19 ШАНХАЙ</div>
+      </div>
+      <div class="cam-thumb" data-cam="1">
+        <img src="img/ruini/n0.png" alt="" onerror="this.parentElement.classList.add('offline')">
+        <div class="cam-thumb-label">#07 РУИНЫ</div>
+      </div>
+      <div class="cam-thumb offline" data-cam="2" data-offline="1">
+        <img src="img/cam03_ryokan_map.jpg" alt="" style="object-fit:cover;filter:grayscale(1) brightness(0.25);">
+        <div class="thumb-offline">⚠ SIGNAL LOST<br>JAMMED</div>
+        <div class="cam-thumb-label">#03 РЁКАН</div>
+      </div>
+      <div class="cam-thumb" data-cam="3">
+        <img src="img/pomestie/p0.png" alt="" onerror="this.parentElement.classList.add('offline')">
+        <div class="cam-thumb-label">#11 ТИХОЕ</div>
+      </div>
+      <div class="cam-thumb" data-cam="4">
+        <img src="img/hram/h0.png" alt="" onerror="this.parentElement.classList.add('offline')">
+        <div class="cam-thumb-label">#22 ХРАМ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ JOURNAL + TELEMETRY ═══ -->
+  <div class="grid-2 journal-row" style="margin-bottom:1.3rem;">
+    <div class="panel reveal fx-scan glow-chase journal-panel-fixed">
+      <div class="panel-header">
+        <span>// Журнал кернел-сообщений · LIVE</span>
+        <span>SYS_ID: 0x4FF8</span>
+      </div>
+      <div class="panel-body journal-panel-body">
+        <div class="journal-body" id="journalBody"></div>
+
+        <div class="neuro-bridge">
+          <div class="neuro-label">// НЕЙРО-МОСТ · АКТИВЕН</div>
+          <div class="neuro-stats">
+            <div>SYNC <b id="nbSync">99.4%</b></div>
+            <div>LOAD <b class="alt" id="nbLoad">42%</b></div>
+            <div>IMPULSE <b class="amber" id="nbImpulse">2841 Hz</b></div>
+          </div>
+          <canvas id="neuroCanvas" width="800" height="140" style="width:100%;height:110px;display:block;"></canvas>
+        </div>
+
+        <div class="journal-actions">
+          <button type="button" class="btn btn-solid" id="btnSync">Синхронизировать нейросетевой мост</button>
+          <button type="button" class="btn btn-danger" id="btnDecomp">Протокол аварийной декомпрессии</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel reveal reveal-d2 fx-scan glow-chase telem-panel-fixed">
+      <div class="panel-header">
+        <span>// Телеметрия узла Цефей-1</span>
+        <span id="telemPing">PING: 8ms</span>
+      </div>
+      <div class="panel-body telem-panel-body">
+        <div class="telem-grid">
+          <div class="telem-metric">
+            <div class="value" style="color:var(--cyan)" id="metricCapsules">1,402</div>
+            <div class="label">Синтетический стазис</div>
+            <div class="sub">Капсулы онлайн</div>
+          </div>
+          <div class="telem-metric">
+            <div class="value" style="color:var(--cyan)">03</div>
+            <div class="label">Сцены · Том 1</div>
+            <div class="sub">Активных секторов</div>
+          </div>
+          <div class="telem-metric">
+            <div class="value" id="metricWatchers">01</div>
+            <div class="label">Смотрящих в сети</div>
+            <div class="sub" id="metricWatchersSub">Хэ Ючоу</div>
+          </div>
+          <div class="telem-metric danger">
+            <div class="value" style="color:var(--red)" id="metricZero">ZERO</div>
+            <div class="label">Аномалия</div>
+            <div class="sub" id="metricRisk">Сюань У · Риск 14%</div>
+          </div>
+        </div>
+
+        <div class="chart-label"><span>Нагрузка кластера рендера · 60с</span><span class="live-tag">● LIVE</span></div>
+        <div class="chart-wrap"><canvas id="loadChart"></canvas></div>
+
+        <div class="spark-row">
+          <div class="spark-card">
+            <div class="sk-label">КРИО °C</div>
+            <div class="sk-val" id="cryoVal" style="color:var(--cyan)">−18.2</div>
+            <div class="mini-bars" id="cryoBars"></div>
+          </div>
+          <div class="spark-card">
+            <div class="sk-label">ПСИХОШОК %</div>
+            <div class="sk-val" id="psiVal" style="color:var(--amber)">71</div>
+            <div class="mini-bars" id="psiBars"></div>
+          </div>
+          <div class="spark-card">
+            <div class="sk-label">ПАМЯТЬ TB</div>
+            <div class="sk-val" id="memVal">94.2</div>
+            <div class="mini-bars" id="memBars"></div>
+          </div>
+        </div>
+
+        <!-- ═══ NEW v5: MINI-EEG ═══ -->
+        <div class="eeg-panel">
+          <div class="eeg-header">
+            <span>ЭЭГ · СУБЪЕКТ A-55 · 4 КАНАЛА</span>
+            <div class="channels">
+              <span class="ch alpha">α</span>
+              <span class="ch beta">β</span>
+              <span class="ch gamma">γ</span>
+              <span class="ch theta">θ</span>
+            </div>
+            <span class="live">● LIVE</span>
+          </div>
+          <div class="eeg-canvas-wrap">
+            <canvas id="eegCanvas"></canvas>
+          </div>
+          <div class="eeg-stats">
+            <span>ФОКУС <b class="b" id="eegFocus">74%</b></span>
+            <span>СТРЕСС <b class="b amber" id="eegStress">38%</b></span>
+            <span>ГЛУБИНА <b class="b" id="eegDepth">2.4</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ METRIC STRIP ═══ -->
+  <div class="metric-strip reveal">
+    <div class="ms-card">
+      <div class="ms-label">Синтетический стазис</div>
+      <div class="ms-value" style="color:var(--cyan)">1,402</div>
+      <div class="ms-sub">● Статус: постоянный мониторинг</div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-label">Архитектура реальности</div>
+      <div class="ms-value">03 СЦЕНЫ</div>
+      <div class="ms-sub">Том 1: Рёкан / Шанхай / Тихое</div>
+    </div>
+    <div class="ms-card">
+      <div class="ms-label">Оперативники в сети</div>
+      <div class="ms-value" style="color:var(--cyan)">04</div>
+      <div class="ms-sub">● Ючоу / Лань / Вега / Коикэ</div>
+    </div>
+    <div class="ms-card danger">
+      <div class="ms-label">Класс угрозы</div>
+      <div class="ms-value">ZERO</div>
+      <div class="ms-sub">● Сюань У · риск 14%</div>
+    </div>
+  </div>
+
+  <!-- ═══ DOCS ═══ -->
+  <div class="docs-stack">
+    <div class="panel doc-card reveal fx-scan tilt-card glow-chase">
+      <div class="panel-header"><span>Документ #01 // Перехват технологии</span><span>1998–2024</span></div>
+      <div class="panel-body">
+        <h3>П.Р.И.Н.Ц. // Лимбо — кратко</h3>
+        <p><strong>П.Р.И.Н.Ц.</strong> — программа регулирования и исполнения наказаний «Цефей». В Лимбо попадает сознание человека: боль, запахи, вкус есть, на тело в капсуле это не действует.</p>
+        <p style="margin-top:0.55rem;">Сюда направляют всех осуждённых по системе — от тех, кто ограбил, до серийных убийц. Сцена проверяет, раскаялся человек или нет.</p>
+        <div class="quote-block">
+          «Смерть освобождает слишком рано. Лимбо не даёт этой лазейки.»
+          <div style="margin-top:0.4rem;font-style:normal;font-size:0.68rem;color:var(--cyan);">— Директива Минюста #104-0</div>
+        </div>
+        <button class="doc-expand" data-target="doc1extra">▸ ХРОНОЛОГИЯ</button>
+        <div class="doc-extra" id="doc1extra">
+          <p><strong style="color:var(--text)">Хронология системы:</strong></p>
+          <p style="margin-top:0.35rem;font-family:var(--font-mono);font-size:0.68rem;line-height:1.7;color:var(--text-dim)">
+            2011 — первые черновики<br>
+            2012 — начало разработки<br>
+            2015 — тестирование на животных<br>
+            2019 — первое удачное тестирование на человеке<br>
+            2020 — патент и признание учёных<br>
+            2026 — переход системы в руки правительства<br>
+            2027 — смена курса: среда для наказания осуждённых<br>
+            2028 — первые три теста провалены, есть жертвы<br>
+            2030 — ЕЦСН, штабы, первые рабочие Сцены<br>
+            2031 — присоединение Азии, Европы, Америки<br>
+            2032 — весь мир на ЕЦСН<br>
+            2039 — первые помехи и сбои в системе
+          </p>
+          <p style="margin-top:0.4rem;color:var(--amber);font-family:var(--font-mono);font-size:0.68rem;">⚠ ЧАСТИЧНО РАССЕКРЕЧЕНО · LVL_4</p>
+        </div>
+      </div>
+    </div>
+    <div class="panel doc-card reveal reveal-d2 fx-scan tilt-card glow-chase">
+      <div class="panel-header"><span>Документ #02 // Природа конструкта</span><span>Сценография</span></div>
+      <div class="panel-body">
+        <h3>Сцена // Как это устроено</h3>
+        <p>Сцена — отдельная «комната» в Лимбо. Она не пересекается с другими: свой ландшафт, свои правила, свой сценарий проверки.</p>
+        <p style="margin-top:0.55rem;">Сознание внутри чувствует боль, запахи, вкус. Тело Смотрящего лежит в капсуле — система следит за здоровьем, в Сцену идёт только сознание.</p>
+        <p style="margin-top:0.55rem;">В Лимбо попадают все по приговору: от грабителя до серийного убийцы. Сцена проверяет, есть ли раскаяние.</p>
+        <div style="margin-top:0.85rem;">
+          <div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim);margin-bottom:0.2rem;">ИНТЕНСИВНОСТЬ БОЛИ · 100% [СУРРОГАТ]</div>
+          <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:0.3rem;font-family:var(--font-mono);font-size:0.58rem;color:var(--text-muted);">
+            <span>Урон телу: 0.0%</span><span>Психошок: 83%</span>
+          </div>
+        </div>
+        <button class="doc-expand" data-target="doc2extra">▸ РАСКРЫТЬ СПЕЦИФИКАЦИЮ</button>
+        <div class="doc-extra" id="doc2extra">
+          <p>Тактовая частота движка: <strong style="color:var(--cyan)">240 Hz</strong>. Погрешность &lt;0.001%. Отклонение психофона &gt;12% — каскадная перегрузка (инцидент кластера #8).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TACTICAL ═══ -->
+  <div style="margin-top:1.6rem;">
+    <div class="sys-header reveal" style="margin-bottom:0.8rem;">
+      <div class="eyebrow">// Тактическая карта узлов · НЕ ВСЕ МАРШРУТЫ БЕЗОПАСНЫ</div>
+      <h2 class="draw-line" style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:0.05em;">Сетка быстрого доступа</h2>
+      <p class="desc" style="margin-top:0.35rem;margin-bottom:0;">
+        Некоторые узлы требуют повышенного допуска. Аномальные сектора помечены. Выбор — на ваш страх и риск.
+      </p>
+    </div>
+    <div class="tactical-grid">
+      <a href="dossier.html" class="tac-node priority reveal has-art" style="background-image:linear-gradient(180deg,rgba(5,8,16,.2),rgba(5,8,16,.96)),url('img/limbo_1.png');">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · A-55 · ВОСТОК</div>
+          <h4>Хэ Ючоу</h4>
+          <p>Досье Смотрящего A-55. Психопрофиль, соматическая совместимость, протоколы допуска.</p>
+          <div class="tac-hint">Маршрут: /dossier · SEC:LVL_5</div>
+          <div class="tac-foot"><span class="tac-status">● ONLINE</span><span class="tag">ДОСЬЕ</span></div>
+        </div>
+      </a>
+      <a href="scenes.html" class="tac-node priority reveal reveal-d1 has-art" style="background-image:linear-gradient(180deg,rgba(5,8,16,.2),rgba(5,8,16,.96)),url('img/limbo_5.png');">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · ARC-T1 · АРХИВ</div>
+          <h4>Архив сцен · Том 1</h4>
+          <p>Рёкан · Шанхай · Тихое место. Devlog инженеров, симуляции, статус секторов.</p>
+          <div class="tac-hint">Маршрут: /scenes · 3 акта</div>
+          <div class="tac-foot"><span class="tac-status">● 3 СЕКТОРА</span><span class="tag">АРХИВ</span></div>
+        </div>
+      </a>
+      <a href="polygon.html" class="tac-node reveal reveal-d2 has-art" style="background-image:linear-gradient(180deg,rgba(5,8,16,.25),rgba(5,8,16,.97)),url('img/limbo_6.png');">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · POLY-0 · SANDBOX</div>
+          <h4>Полигон</h4>
+          <p>Интерактивный симулятор. Тренировка Смотрящих, кооп-режим, криминалистика. v0.84</p>
+          <div class="tac-hint">Маршрут: /polygon · нестабильно</div>
+          <div class="tac-foot"><span class="tac-status">● SANDBOX</span><span class="tag">СИМ</span></div>
+        </div>
+      </a>
+      <div class="tac-node threat reveal reveal-d3" id="nodeZero" role="button" tabindex="0">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · 0x00 · ANOMALY</div>
+          <h4>Сюань У · ZERO</h4>
+          <p>Класс угрозы ZERO. Данные повреждены. Несанкционированный след в ядре.</p>
+          <div class="tac-hint">Доступ: ОТКЛОНЁН · риск растёт</div>
+          <div class="tac-foot"><span class="tac-status">▲ ANOMALY</span><span class="tag tag-red">РИСК</span></div>
+        </div>
+      </div>
+      <div class="tac-node locked reveal">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · WEST-D · ЗАПАД</div>
+          <h4>Западный штаб</h4>
+          <p>Полный реестр Западного региона. Вега, Коикэ, засекреченные операции.</p>
+          <div class="tac-hint">Требуется SEC:LVL_6</div>
+          <div class="tac-foot"><span class="tac-status">🔒 LVL_6</span><span class="tag">LOCKED</span></div>
+        </div>
+      </div>
+      <div class="tac-node locked reveal reveal-d1">
+        <div class="shine"></div><div class="tac-banner"></div>
+        <div class="tac-body">
+          <div class="tac-id">NODE · ROOT · ЯДРО</div>
+          <h4>Ядро Цефей</h4>
+          <p>Прямой интерфейс к нейро-ядру. Только Совет директоров. Любая попытка логируется.</p>
+          <div class="tac-hint">Протокол запечатан</div>
+          <div class="tac-foot"><span class="tac-status">🔒 SEALED</span><span class="tag tag-red">ROOT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="sys-footer">
+  <span>П.Р.И.Н.Ц. ПРОТОКОЛ // СЕТЕВОЙ МОНИТОРИНГ ФЕДЕРАЛЬНОГО ОТРЯДА «ЛИМБО»</span>
+  <span>ЛОКАЦИИ: РЁКАН / ШАНХАЙ / ТИХОЕ МЕСТО · АВТОРИЗАЦИЯ 24Ч</span>
+</footer>
+
+<div class="sys-toast" id="sysToast">
+  <div class="toast-title" id="toastTitle">СИНХРОНИЗАЦИЯ</div>
+  <div id="toastMsg">—</div>
+  <div class="toast-bar"><div class="toast-bar-fill" id="toastBar"></div></div>
+</div>
+
+<div class="modal-overlay" id="decompModal">
+  <div class="modal-box">
+    <h3>⚠ ПРОТОКОЛ АВАРИЙНОЙ ДЕКОМПРЕССИИ</h3>
+    <p>Принудительный разрыв соматического канала. Все активные Сцены в секторе будут свёрнуты. Психошок субъектов до 40%. Действие необратимо в текущем цикле.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="decompCancel">Отмена</button>
+      <button type="button" class="btn btn-danger" id="decompConfirm">Подтвердить декомпрессию</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/system.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   TERMINAL v5 — MAIN LOGIC
+   ═══════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const rand = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  /* ═══ AUDIO ═══ */
+  let actx = null;
+  function audio() {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  function beep(f, d, type, v) {
+    try {
+      const c = audio(), o = c.createOscillator(), g = c.createGain();
+      o.type = type || 'square'; o.frequency.value = f; g.gain.value = v || 0.03;
+      o.connect(g); g.connect(c.destination); o.start();
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + d);
+      o.stop(c.currentTime + d);
+    } catch (e) {}
+  }
+  function noiseBurst(d) {
+    try {
+      const c = audio(), n = Math.floor(c.sampleRate * d);
+      const buf = c.createBuffer(1, n, c.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
+      const s = c.createBufferSource(); s.buffer = buf;
+      const g = c.createGain(); g.gain.value = 0.06;
+      s.connect(g); g.connect(c.destination); s.start();
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + d);
+    } catch (e) {}
+  }
+  /* ═══ NEW v5: SERVO DRONE SOUND ═══ */
+  function servoWhine(dur) {
+    // Синтез гула сервоприводов: 3 гармоники + шум
+    try {
+      const c = audio();
+      const t = c.currentTime;
+      const d = dur || 0.7;
+      // Несущая
+      const o1 = c.createOscillator();
+      o1.type = 'sawtooth';
+      o1.frequency.setValueAtTime(80, t);
+      o1.frequency.exponentialRampToValueAtTime(140, t + d * 0.4);
+      o1.frequency.exponentialRampToValueAtTime(90, t + d);
+      const g1 = c.createGain();
+      g1.gain.setValueAtTime(0.0001, t);
+      g1.gain.exponentialRampToValueAtTime(0.035, t + 0.08);
+      g1.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o1.connect(g1); g1.connect(c.destination);
+      o1.start(t); o1.stop(t + d + 0.05);
+      // Модулирующий
+      const o2 = c.createOscillator();
+      o2.type = 'square';
+      o2.frequency.setValueAtTime(1200 + Math.random() * 400, t);
+      o2.frequency.linearRampToValueAtTime(700 + Math.random() * 200, t + d);
+      const g2 = c.createGain();
+      g2.gain.setValueAtTime(0.0001, t);
+      g2.gain.exponentialRampToValueAtTime(0.008, t + 0.05);
+      g2.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o2.connect(g2); g2.connect(c.destination);
+      o2.start(t); o2.stop(t + d + 0.05);
+      // Шумовой хвост
+      const n = Math.floor(c.sampleRate * d * 0.5);
+      const buf = c.createBuffer(1, n, c.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * 0.05;
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      const g3 = c.createGain();
+      g3.gain.setValueAtTime(0.02, t + 0.05);
+      g3.gain.exponentialRampToValueAtTime(0.0001, t + d * 0.7);
+      src.connect(g3); g3.connect(c.destination);
+      src.start(t + 0.02);
+    } catch (e) {}
+  }
+  function servoPulse() {
+    // Короткий импульс-тик
+    try {
+      const c = audio();
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(2200 + Math.random() * 800, c.currentTime);
+      o.frequency.exponentialRampToValueAtTime(400, c.currentTime + 0.06);
+      g.gain.setValueAtTime(0.02, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.08);
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime + 0.09);
+    } catch (e) {}
+  }
+
+  /* ═══ BG STREAMS ═══ */
+  const streams = $('#bgStreams');
+  const st = ['CEFEY_OK','0x4FF8','SYNC','LMB_T1','A-55','SECTOR_SH','NEURO_LOCK','94.2TB','FPS:60','SOMATIC','TRACE','LVL_5','AES-256','CLASSIFIED','NODE_0x00','ANOMALY'];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('span');
+    s.textContent = st[i % st.length] + '  ' + st[(i + 5) % st.length];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.animationDuration = (9 + Math.random() * 12) + 's';
+    s.style.animationDelay = (Math.random() * 7) + 's';
+    streams.appendChild(s);
+  }
+
+  /* ═══ FLOOR GRID 3D ═══ */
+  (function () {
+    const c = $('#floorCanvas');
+    const ctx = c.getContext('2d');
+    let W, H;
+    let mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
+    function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+    resize();
+    addEventListener('resize', resize);
+    addEventListener('mousemove', (e) => {
+      mouse.tx = e.clientX / innerWidth;
+      mouse.ty = e.clientY / innerHeight;
+    });
+    let t = 0;
+    function draw() {
+      mouse.x += (mouse.tx - mouse.x) * 0.05;
+      mouse.y += (mouse.ty - mouse.y) * 0.05;
+      t += 0.008;
+      ctx.clearRect(0, 0, W, H);
+      const horizon = H * 0.62;
+      const vpX = W * (0.5 + (mouse.x - 0.5) * 0.25);
+      const vpY = horizon - H * 0.05 * (0.5 - mouse.y) * 2;
+      const rows = 22;
+      for (let i = 0; i < rows; i++) {
+        const p = i / rows;
+        const ease = Math.pow(p, 2.5);
+        const y = horizon + ease * (H - horizon) + Math.sin(t + i * 0.3) * 3;
+        const alpha = 0.08 + ease * 0.24;
+        ctx.strokeStyle = `rgba(0,212,232,${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      const cols = 22;
+      for (let i = 0; i <= cols; i++) {
+        const p = i / cols;
+        const xBottom = p * W * 1.6 - W * 0.3;
+        const alpha = 0.06 + Math.sin(t * 1.2 + i * 0.4) * 0.03;
+        ctx.strokeStyle = `rgba(0,212,232,${alpha + 0.06})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(vpX, vpY); ctx.lineTo(xBottom, H + 40); ctx.stroke();
+      }
+      for (let k = 0; k < 3; k++) {
+        const wave = (t * 0.5 + k * 0.33) % 1;
+        const ease = Math.pow(wave, 2.5);
+        const y = horizon + ease * (H - horizon);
+        ctx.strokeStyle = `rgba(0,212,232,${0.35 * (1 - wave)})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  /* ═══ SPACE DUST ═══ */
+  (function () {
+    const c = $('#dustCanvas');
+    const ctx = c.getContext('2d');
+    let W, H, parts = [];
+    function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+    resize();
+    addEventListener('resize', resize);
+    const N = Math.min(120, Math.floor(W * H / 16000));
+    for (let i = 0; i < N; i++) {
+      parts.push({ x: Math.random() * W, y: Math.random() * H, z: Math.random(), r: Math.random() * 1.6 + 0.3 });
+    }
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      parts.forEach(p => {
+        p.z -= 0.0018;
+        if (p.z <= 0) { p.z = 1; p.x = Math.random() * W; p.y = Math.random() * H; }
+        const scale = 1 / (1 + (1 - p.z) * 3);
+        const sx = W / 2 + (p.x - W / 2) * scale;
+        const sy = H / 2 + (p.y - H / 2) * scale;
+        const r = p.r * scale * 2;
+        ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,212,232,${p.z * 0.5})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  /* ═══ RADAR ═══ */
+  (function () {
+    const c = $('#radarCanvas');
+    const dpr = window.devicePixelRatio || 1;
+    const size = 130;
+    c.width = size * dpr; c.height = size * dpr;
+    const ctx = c.getContext('2d');
+    ctx.scale(dpr, dpr);
+    let angle = 0;
+    const blips = [];
+    for (let i = 0; i < 8; i++) {
+      blips.push({ a: Math.random() * Math.PI * 2, r: 15 + Math.random() * 45 });
+    }
+    function draw() {
+      const cx = size / 2, cy = size / 2;
+      ctx.clearRect(0, 0, size, size);
+      ctx.strokeStyle = 'rgba(0,212,232,0.2)'; ctx.lineWidth = 0.5;
+      [15, 30, 45, 60].forEach(r => { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); });
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 60); ctx.lineTo(cx, cy + 60);
+      ctx.moveTo(cx - 60, cy); ctx.lineTo(cx + 60, cy);
+      ctx.stroke();
+      const sweepGrad = ctx.createConicGradient ? ctx.createConicGradient(angle, cx, cy) : null;
+      if (sweepGrad) {
+        sweepGrad.addColorStop(0, 'rgba(0,212,232,0.5)');
+        sweepGrad.addColorStop(0.1, 'rgba(0,212,232,0.05)');
+        sweepGrad.addColorStop(0.5, 'transparent');
+        sweepGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = sweepGrad;
+        ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(0,212,232,0.7)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * 60, cy + Math.sin(angle) * 60); ctx.stroke();
+      blips.forEach(b => {
+        const rel = ((b.a - angle) + Math.PI * 2) % (Math.PI * 2);
+        const fade = Math.max(0, 1 - rel / 1.2);
+        if (fade > 0.01) {
+          const x = cx + Math.cos(b.a) * b.r;
+          const y = cy + Math.sin(b.a) * b.r;
+          ctx.fillStyle = `rgba(224,40,72,${fade})`;
+          ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+        }
+      });
+      angle += 0.03;
+      if (angle > Math.PI * 2) angle -= Math.PI * 2;
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  /* ═══ CINE GLITCH on scroll ═══ */
+  let lastScrollY = 0, glitchCooldown = 0;
+  addEventListener('scroll', () => {
+    const now = performance.now();
+    if (now - glitchCooldown < 400) return;
+    const dy = Math.abs(scrollY - lastScrollY);
+    lastScrollY = scrollY;
+    if (dy > 90) {
+      glitchCooldown = now;
+      const g = $('#cineGlitch');
+      const color = ['r','c','y','w'][Math.floor(Math.random() * 4)];
+      g.className = 'cine-glitch hit ' + color;
+      setTimeout(() => { g.className = 'cine-glitch'; }, 90);
+      noiseBurst(0.04);
+    }
+  }, { passive: true });
+
+  /* ═══ LETTERBOX ═══ */
+  const body = document.body;
+  let scrollTimer;
+  addEventListener('scroll', () => {
+    body.classList.add('cinema');
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => body.classList.remove('cinema'), 400);
+  }, { passive: true });
+
+  /* ═══ CLICK RIPPLES ═══ */
+  addEventListener('click', (e) => {
+    const r = document.createElement('div');
+    r.className = 'click-ripple ' + (Math.random() > 0.5 ? '' : 'pink');
+    r.style.left = e.clientX + 'px';
+    r.style.top = e.clientY + 'px';
+    document.body.appendChild(r);
+    setTimeout(() => r.remove(), 720);
+  });
+
+  /* ═══ HUD UPDATES ═══ */
+  const pad = n => String(n).padStart(2, '0');
+  setInterval(() => {
+    const n = new Date();
+    const clock = $('#hudClock');
+    if (clock) clock.textContent = pad(n.getHours()) + ':' + pad(n.getMinutes()) + ':' + pad(n.getSeconds());
+    const p = $('#hudPing');
+    if (p) p.textContent = (6 + Math.floor(Math.random() * 12)) + 'ms';
+    const f = $('#hudFps');
+    if (f) f.textContent = 58 + Math.floor(Math.random() * 4);
+    const wt = $('#wtTime');
+    if (wt) wt.textContent = ['только что','5 сек назад','12 сек назад'][Math.floor(Math.random() * 3)];
+  }, 1000);
+
+  /* ═══════════════════════════════════════════════════════════
+     CAMERAS + TACTICAL OVERLAY + DRONE MOTION
+     ═══════════════════════════════════════════════════════════ */
+  const cameras = [
+    {
+      src: 'img/gorod/b1.png',
+      frames: ['img/gorod/b1.png','img/gorod/b2.png','img/gorod/b3.png','img/gorod/b4.png','img/gorod/b0.jpg'],
+      name: 'КАМЕРА #19 // ШАНХАЙ · СЕКТОР НИЖНИЙ',
+      sector: 'СЕКТОР ШАНХАЙ-02', quad: 'КВАДРАТ 44-B',
+      coords: '31°13\'56.2"N 121°28\'09.4"E',
+      limboState: 'ВТОРАЯ ФАЗА РАСПАДА',
+      offline: false,
+      theme: 'gorod',
+      objects: [
+        { id:'O1', img: 'img/gorod/b1.png', frames: ['img/gorod/b1.png','img/gorod/b2.png','img/gorod/b0.jpg'], box: { w: 22, h: 32 }, label: 'OBJECT_01: МЯСОЙ БЛОК C-12', color: 'cyan', distance: '218.4м', height: '84м', static: 'НЕТ', type: 'СТРОЕНИЕ', material: 'БЕТОН·СТЕКЛО', history: 'Заброшен после «Серого дождя».', integrity: 34, threat: 12, temp: 18 },
+        { id:'O2', img: 'img/gorod/b2.png', frames: ['img/gorod/b2.png','img/gorod/b4.png','img/gorod/b3.png'], box: { w: 24, h: 26 }, label: 'OBJECT_02: СИНТЕТИЧЕСКАЯ ФЛОРА', color: 'pink', distance: '212.8м', height: '12м', static: 'ДА', type: 'БИОМ', material: 'ГИБРИД', history: 'Реагирует на оператора A-55.', integrity: 88, threat: 18, temp: 24 },
+        { id:'O3', img: 'img/gorod/b3.png', frames: ['img/gorod/b3.png','img/gorod/b1.png','img/gorod/b4.png'], box: { w: 20, h: 30 }, label: 'OBJECT_03: ТРАССА ЭВАКУАЦИИ', color: 'amber', distance: '142.8м', height: '—', static: 'ДА', type: 'МАРШРУТ', material: 'СТАЛЬ', history: 'Штаб Восток. Активен.', integrity: 76, threat: 6, temp: 21 },
+      ],
+    },
+    {
+      src: 'img/ruini/n0.png',
+      frames: ['img/ruini/n0.png','img/ruini/n1.png','img/ruini/n2.png','img/ruini/n3.png','img/ruini/n4.png'],
+      name: 'КАМЕРА #07 // РУИНЫ · ЭСТАКАДА',
+      sector: 'СЕКТОР РУИНЫ-07', quad: 'КВАДРАТ 12-C',
+      coords: '31°14\'02.8"N 121°29\'14.2"E',
+      limboState: 'ТРЕТЬЯ ФАЗА КОЛЛАПСА',
+      offline: false,
+      theme: 'ruini',
+      objects: [
+        { id:'O4', img: 'img/ruini/n1.png', frames: ['img/ruini/n1.png','img/ruini/n2.png','img/ruini/n0.png'], box: { w: 26, h: 34 }, label: 'OBJECT_04: ЭСТАКАДА', color: 'cyan', distance: '96.2м', height: '18м', static: 'НЕТ', type: 'СТРУКТУРА', material: 'БЕТОН·АРМАТУРА', history: 'Обрушение после импульса Лимбо.', integrity: 22, threat: 55, temp: 14 },
+        { id:'O5', img: 'img/ruini/n3.png', frames: ['img/ruini/n3.png','img/ruini/n4.png','img/ruini/n2.png'], box: { w: 20, h: 28 }, label: 'OBJECT_05: ТРЕЩИНА', color: 'amber', distance: '48.0м', height: '—', static: 'НЕТ', type: 'АНОМАЛИЯ', material: 'КАМЕНЬ', history: 'Расширяется каждый цикл рендера.', integrity: 41, threat: 38, temp: 11 },
+      ],
+    },
+    {
+      src: '',
+      frames: [],
+      name: 'КАМЕРА #03 // РЁКАН · КАНАЛ ПОТЕРЯН',
+      sector: 'РЁКАН · OFFLINE', quad: '—',
+      coords: '—',
+      limboState: 'НЕТ ДАННЫХ',
+      offline: true,
+      offTitle: 'КАНАЛ ЗАГЛУШЁН',
+      offSub: 'Сектор Рёкан: ответ станции отсутствует. Вероятна атака на ретранслятор или физическое уничтожение камеры. Требуется эскалация LVL_6.',
+      theme: 'offline',
+      objects: [],
+    },
+    {
+      src: 'img/pomestie/p0.png',
+      frames: ['img/pomestie/p0.png','img/pomestie/p1.png','img/pomestie/p2.png','img/pomestie/p3.png','img/pomestie/p4.png'],
+      name: 'КАМЕРА #11 // ТИХОЕ МЕСТО · ЮЖНЫЙ ФАСАД',
+      sector: 'ТИХОЕ МЕСТО', quad: 'ФАСАД-ЮГ',
+      coords: '44°26\'12.1"N 26°06\'33.0"E',
+      limboState: 'ФАЗА СТАГНАЦИИ',
+      offline: false,
+      theme: 'pomestie',
+      objects: [
+        { id:'O6', img: 'img/pomestie/p1.png', frames: ['img/pomestie/p1.png','img/pomestie/p2.png','img/pomestie/p0.png'], box: { w: 28, h: 36 }, label: 'OBJECT_06: ЮЖНЫЙ ФАСАД', color: 'cyan', distance: '64.1м', height: '22м', static: 'ДА', type: 'СТРОЕНИЕ', material: 'КАМЕНЬ·ШТУКАТУРКА', history: 'Сцена-эксперимент. Детективный контур повреждён.', integrity: 67, threat: 28, temp: 9 },
+        { id:'O7', img: 'img/pomestie/p3.png', frames: ['img/pomestie/p3.png','img/pomestie/p4.png','img/pomestie/p1.png'], box: { w: 18, h: 24 }, label: 'OBJECT_07: ТЕНЬ В ОКУТРИ', color: 'pink', distance: '71.4м', height: '—', static: 'НЕТ', type: 'АНОМАЛИЯ', material: '—', history: 'Силуэт не совпадает с базой субъектов.', integrity: 15, threat: 72, temp: 6 },
+      ],
+    },
+    {
+      src: 'img/hram/h0.png',
+      frames: ['img/hram/h0.png','img/hram/h1.png','img/hram/h2.png','img/hram/h3.png','img/hram/h4.png'],
+      name: 'КАМЕРА #22 // ХРАМ · ВНУТРЕННИЙ ДВОР',
+      sector: 'ХРАМ / САД', quad: 'ДВОР-01',
+      coords: '35°00\'18.4"N 135°46\'22.1"E',
+      limboState: 'СТАБИЛЬНАЯ ИЛЛЮЗИЯ',
+      offline: false,
+      theme: 'hram',
+      objects: [
+        { id:'O8', img: 'img/hram/h1.png', frames: ['img/hram/h1.png','img/hram/h2.png','img/hram/h0.png'], box: { w: 22, h: 30 }, label: 'OBJECT_08: ВРАТА ХРАМА', color: 'amber', distance: '28.4м', height: '6м', static: 'ДА', type: 'ПОСТРОЙКА', material: 'ДЕРЕВО·МЕДЬ', history: 'Святилище сцены. Ёкаи в периметре.', integrity: 91, threat: 15, temp: 17 },
+        { id:'O9', img: 'img/hram/h3.png', frames: ['img/hram/h3.png','img/hram/h4.png','img/hram/h1.png'], box: { w: 18, h: 26 }, label: 'OBJECT_09: ФОНАРЬ', color: 'cyan', distance: '12.0м', height: '2.4м', static: 'ДА', type: 'ПРЕДМЕТ', material: 'БУМАГА·БЕТОН', history: 'Источник локального освещения сцены.', integrity: 98, threat: 2, temp: 19 },
+        { id:'O10', img: 'img/pompom/g1.png', frames: ['img/pompom/g1.png','img/pompom/g2.png','img/pompom/g0.png'], box: { w: 16, h: 22 }, label: 'OBJECT_10: ТЕНЬ ЁКАЯ', color: 'pink', distance: '9.8м', height: '—', static: 'НЕТ', type: 'СУЩНОСТЬ', material: '—', history: 'Сигнатура Дзёрогумо. Не подтверждена.', integrity: 44, threat: 61, temp: 13 },
+      ],
+    },
+  ];
+  let currentCam = 0;
+  setTimeout(function(){ updateWatchersForCam(cameras[0]); }, 300);
+  const camMain = $('#camMain');
+  const camFeed = $('#camDroneFeed');
+  const camImg = $('#camMainImg');
+  const camRgb = $('#camRgb');
+  const camStatic = $('#camStatic');
+  const tacOverlay = $('#tacOverlay');
+
+  function camGlitch() {
+    camRgb.classList.add('on');
+    camStatic.style.opacity = '0.25';
+    noiseBurst(0.06);
+    setTimeout(() => {
+      camRgb.classList.remove('on');
+      camStatic.style.opacity = '0';
+    }, 70 + Math.random() * 60);
+  }
+
+  /* ═══ NEW v5: DRONE MOTION ═══ */
+  (function initDroneMotion() {
+    let targetX = 0, targetY = 0;
+    let currentX = 0, currentY = 0;
+    let targetScale = 1.03;
+    let currentScale = 1.03;
+
+    function tick() {
+      // Плавно к цели
+      currentX += (targetX - currentX) * 0.035;
+      currentY += (targetY - currentY) * 0.035;
+      currentScale += (targetScale - currentScale) * 0.03;
+      camFeed.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${currentScale})`;
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    // Обновляем цель каждые несколько секунд
+    setInterval(() => {
+      targetX = (Math.random() - 0.5) * 40;
+      targetY = (Math.random() - 0.5) * 24;
+      targetScale = 1.02 + Math.random() * 0.04;
+    }, 4200);
+
+    // При наведении мыши на камеру — микро-параллакс (имитация гироскопа)
+    camMain.addEventListener('mousemove', (e) => {
+      const r = camMain.getBoundingClientRect();
+      const nx = (e.clientX - r.left) / r.width - 0.5;
+      const ny = (e.clientY - r.top) / r.height - 0.5;
+      targetX = -nx * 30;
+      targetY = -ny * 20;
+      targetScale = 1.05;
+    });
+    camMain.addEventListener('mouseleave', () => {
+      targetX = 0; targetY = 0; targetScale = 1.03;
+    });
+  })();
+
+  /* ═══ NEW v5: OBJECT TOOLTIP ═══ */
+  let activeTooltip = null;
+  function showObjectTooltip(obj, boxEl) {
+    closeObjectTooltip();
+    const tt = document.createElement('div');
+    tt.className = 'obj-tooltip';
+    tt.dataset.objId = obj.id;
+
+    // Определяем положение (справа или слева от box)
+    const boxRect = boxEl.getBoundingClientRect();
+    const camRect = camMain.getBoundingClientRect();
+    const relX = boxRect.left - camRect.left;
+    const relY = boxRect.top - camRect.top;
+    const relR = boxRect.right - camRect.left;
+
+    const ttImg = (obj.frames && obj.frames.length ? obj.frames[obj._fi || 0] : null) || obj.img || '';
+    tt.innerHTML = `
+      <div class="tt-head">
+        <span>${obj.label.split(':')[0] || 'OBJECT'} · РАСШИФРОВКА</span>
+        <span class="close" data-close-tt>✕</span>
+      </div>
+      <div class="tt-split">
+        <div class="tt-media"><img src="${ttImg}" alt="" onerror="this.style.opacity=0"></div>
+        <div class="tt-body">
+          <div class="row"><span class="k">КЛАССИФИКАЦИЯ</span><span class="v cyan">${obj.type || '—'}</span></div>
+          <div class="row"><span class="k">МАТЕРИАЛ</span><span class="v">${obj.material || '—'}</span></div>
+          <div class="row"><span class="k">ЦЕЛОСТНОСТЬ</span><span class="v ${obj.integrity < 40 ? 'red' : obj.integrity < 70 ? 'amber' : 'green'}">${obj.integrity?.toFixed?.(1) ?? obj.integrity ?? '—'}%</span></div>
+          <div class="row"><span class="k">ДИСТАНЦИЯ</span><span class="v cyan">${obj.distance}</span></div>
+          <div class="row"><span class="k">ВЫСОТА</span><span class="v">${obj.height}</span></div>
+          <div class="row"><span class="k">ТЕМПЕРАТУРА</span><span class="v">${obj.temp?.toFixed?.(1) ?? obj.temp ?? '—'} °C</span></div>
+          <div class="row"><span class="k">УРОВЕНЬ УГРОЗЫ</span><span class="v ${obj.threat > 60 ? 'red' : obj.threat > 30 ? 'amber' : 'green'}">${obj.threat}/100</span></div>
+          <div class="row"><span class="k">STATIC</span><span class="v ${obj.static === 'ДА' ? 'amber' : 'red'}">${obj.static}</span></div>
+          <div class="desc">${obj.history || ''}</div>
+        </div>
+      </div>
+      <div class="tt-footer">
+        <span>ID: ${obj.id} · ${obj.label.split(':')[0]}</span>
+        <span>[ ТРЕКЕР АКТИВЕН ]</span>
+      </div>
+    `;
+    tacOverlay.appendChild(tt);
+    activeTooltip = tt;
+
+    // Позиция: справа, если есть место, иначе слева
+    requestAnimationFrame(() => {
+      const ttRect = tt.getBoundingClientRect();
+      const camW = camRect.width;
+      let x;
+      if (relR + 12 + ttRect.width < camW) {
+        x = relR + 12;
+      } else {
+        x = relX - ttRect.width - 12;
+        if (x < 8) x = 8;
+      }
+      let y = relY - 8;
+      if (y + ttRect.height > camRect.height - 8) {
+        y = camRect.height - ttRect.height - 8;
+      }
+      if (y < 8) y = 8;
+      tt.style.left = x + 'px';
+      tt.style.top = y + 'px';
+      tt.classList.add('show');
+    });
+
+    // Закрытие по клику крестика
+    tt.querySelector('[data-close-tt]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeObjectTooltip();
+    });
+  }
+
+  function closeObjectTooltip() {
+    if (activeTooltip) {
+      activeTooltip.classList.remove('show');
+      const t = activeTooltip;
+      setTimeout(() => t.remove(), 250);
+      activeTooltip = null;
+    }
+    document.querySelectorAll('.obj-box.selected').forEach(b => b.classList.remove('selected'));
+  }
+
+  /* ---- Render object boxes ---- */
+  function renderObjects(cam) {
+    tacOverlay.querySelectorAll('.obj-box, .track-line, .cam-alert, .obj-tooltip').forEach(el => el.remove());
+    if (cam.offline || !cam.objects) return;
+
+    // non-overlapping random layout each render
+    const placed = [];
+    function overlaps(a, pad) {
+      for (const p of placed) {
+        if (a.x < p.x + p.w + pad && a.x + a.w + pad > p.x &&
+            a.y < p.y + p.h + pad && a.y + a.h + pad > p.y) return true;
+      }
+      return false;
+    }
+    function placeBox(prefer) {
+      const w = prefer.w || (16 + Math.random() * 12);
+      const h = prefer.h || (18 + Math.random() * 16);
+      for (let attempt = 0; attempt < 40; attempt++) {
+        const x = 4 + Math.random() * (78 - w);
+        const y = 10 + Math.random() * (52 - h); // leave room for labels under
+        const box = { x, y, w, h };
+        if (!overlaps(box, 2.5)) {
+          placed.push(box);
+          return box;
+        }
+      }
+      // fallback grid slot
+      const slot = placed.length;
+      const box = {
+        x: 6 + (slot % 3) * 30,
+        y: 14 + Math.floor(slot / 3) * 28,
+        w: Math.min(w, 24),
+        h: Math.min(h, 26)
+      };
+      placed.push(box);
+      return box;
+    }
+
+    // thematic data pools by image keyword / index
+    const DATA_POOLS = {
+      ruin: [
+        { title: 'ОБРУШЕННЫЙ ПРОЛЁТ', type: 'СТРУКТУРА / АВАРИЯ', material: 'БЕТОН·АРМАТУРА', history: 'Обрушение после сейсмического импульса Лимбо.', threat: [40, 80], static: 'НЕТ' },
+        { title: 'ТРЕЩИНА ФУНДАМЕНТА', type: 'ГЕОМЕТРИЯ / СБОЙ', material: 'КАМЕНЬ·ПЫЛЬ', history: 'Расширяется при каждом цикле рендера.', threat: [20, 55], static: 'НЕТ' },
+      ],
+      flora: [
+        { title: 'СИНТЕТИЧЕСКАЯ ФЛОРА', type: 'БИОМ / ГЕН-МОД', material: 'ГИБРИД·ХЛОРОФИЛЛ', history: 'Выведена для сектора Шанхай-02. Реагирует на оператора.', threat: [5, 25], static: 'ДА' },
+        { title: 'КОРНЕВАЯ СЕТЬ', type: 'АНОМАЛИЯ / РОСТ', material: 'БИОМАССА', history: 'Корни проникают в капсульные каналы.', threat: [15, 45], static: 'НЕТ' },
+      ],
+      urban: [
+        { title: 'МЯСОЙ БЛОК C-12', type: 'СТРОЕНИЕ / КОММЕРЦИЯ', material: 'БЕТОН·СТЕКЛО·СТАЛЬ', history: 'Заброшен после инцидента «Серый дождь».', threat: [10, 30], static: 'НЕТ' },
+        { title: 'ТРАССА ЭВАКУАЦИИ', type: 'МАРШРУТ / ОТХОД', material: 'АСФАЛЬТ·МЕТАЛЛ', history: 'Проложен штабом Восток. Периодически заметается туманом.', threat: [4, 18], static: 'ДА' },
+        { title: 'НЕБЕСНЫЙ МОСТ', type: 'ИНФРАСТРУКТУРА', material: 'СТАЛЬ·КАБЕЛЬ', history: 'Соединяет кластеры 4 и 7. Частично обесточен.', threat: [8, 35], static: 'ДА' },
+      ],
+      eye: [
+        { title: 'ОКУЛУС НАБЛЮДЕНИЯ', type: 'АРТЕФАКТ / ZERO', material: 'НЕИЗВЕСТНО', history: 'Сигнатура совпадает с субъектом Сюань У.', threat: [60, 95], static: 'НЕТ' },
+        { title: 'СФЕРА ПРИСУТСТВИЯ', type: 'АНОМАЛИЯ', material: 'ЭФИР·СВЕТ', history: 'Появляется только при целостности сигнала >80%.', threat: [30, 70], static: 'НЕТ' },
+      ],
+      default: [
+        { title: 'НЕОПОЗНАННЫЙ ОБЪЕКТ', type: 'КЛАСС / UNKNOWN', material: '—', history: 'Сигнатура размыта. Требуется повторное сканирование.', threat: [10, 50], static: 'НЕТ' },
+      ]
+    };
+    function poolForSrc(src) {
+      const s = (src || '').toLowerCase();
+      if (s.includes('ruini') || s.includes('/n')) return DATA_POOLS.ruin;
+      if (s.includes('pompom') || s.includes('/g') || s.includes('flora')) return DATA_POOLS.flora;
+      if (s.includes('hram') || s.includes('/h')) return DATA_POOLS.urban.concat(DATA_POOLS.eye);
+      if (s.includes('pomestie') || s.includes('/p')) return DATA_POOLS.urban;
+      if (s.includes('gorod') || s.includes('/b')) return DATA_POOLS.urban;
+      return DATA_POOLS.default;
+    }
+    function mutateData(obj) {
+      const src = (obj.frames && obj.frames[obj._fi || 0]) || obj.img || '';
+      const pool = poolForSrc(src);
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      const threat = Math.floor(pick.threat[0] + Math.random() * (pick.threat[1] - pick.threat[0]));
+      obj.label = (obj.id || 'OBJ') + ': ' + pick.title;
+      // keep OBJECT_0N style if original had it
+      if (obj._baseLabel) {
+        const prefix = obj._baseLabel.split(':')[0];
+        obj.label = prefix + ': ' + pick.title;
+      }
+      obj.type = pick.type;
+      obj.material = pick.material;
+      obj.history = pick.history;
+      obj.static = pick.static;
+      obj.threat = threat;
+      obj.integrity = Math.round((100 - threat * 0.6 - Math.random() * 15) * 10) / 10;
+      obj.distance = (40 + Math.random() * 280).toFixed(1) + 'м';
+      obj.height = Math.random() > 0.3 ? (Math.floor(3 + Math.random() * 90) + 'м') : '—';
+      obj.temp = Math.round((12 + Math.random() * 18) * 10) / 10;
+    }
+
+    cam.objects.forEach((obj, idx) => {
+      if (!obj._baseLabel) obj._baseLabel = obj.label;
+      // reshuffle position
+      const b = placeBox(obj.box || { w: 20, h: 28 });
+      obj.box = b;
+      mutateData(obj);
+
+      const box = document.createElement('div');
+      box.className = `obj-box ${obj.color || 'cyan'}`;
+      box.style.left = b.x + '%';
+      box.style.top = b.y + '%';
+      box.style.width = b.w + '%';
+      box.style.height = b.h + '%';
+      box.dataset.objId = obj.id;
+      const imgSrc = (obj.frames && obj.frames.length ? obj.frames[obj._fi || 0] : null) || obj.img || cam.src || '';
+      box.innerHTML = `
+        <div class="obj-fill"><img src="${imgSrc}" alt="" onerror="this.style.opacity=0;this.parentElement.style.background='linear-gradient(135deg,#0a1018,#121a28)'"></div>
+        <div class="obj-scan"></div>
+        <div class="obj-label">${obj.label}</div>
+        <div class="obj-corner-bl"></div>
+        <div class="obj-corner-br"></div>
+        <div class="obj-sublabel">DST: <b>${obj.distance}</b> · ВЫСОТА: ${obj.height} · STATIC: ${obj.static === 'ДА' ? '<span class="val-amber">ДА</span>' : '<span class="val-red">НЕТ</span>'}</div>
+      `;
+      tacOverlay.appendChild(box);
+
+      // tracking tail behind labels
+      const tl = document.createElement('div');
+      tl.className = `track-line ${obj.color || 'cyan'}`;
+      tl.style.left = (b.x + b.w / 2) + '%';
+      tl.style.top = (b.y + b.h) + '%';
+      tl.style.width = '1px';
+      tl.style.height = Math.min(18, 88 - b.y - b.h) + '%';
+      tacOverlay.appendChild(tl);
+
+      // wire hover/click if handlers exist later via delegation
+      box.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.obj-box').forEach(x => x.classList.remove('selected'));
+        box.classList.add('selected');
+        if (typeof showObjectTooltip === 'function') showObjectTooltip(obj, box);
+      });
+    });
+  }
+
+
+  
+  const SCENE_WATCHERS = {
+    gorod: { n: 6, names: 'Хэ Ючоу · Цай Лань · Юй Цюэ · Юн Ли Мун · Юмико · Ичиро Ивасаки' },
+    ruini: { n: 1, names: 'Хэ Ючоу' },
+    offline: { n: 1, names: 'Хэ Ючоу' },
+    pomestie: { n: 2, names: 'Цай Лань · Хэ Ючоу', flicker: 'Селина Вега' },
+    hram: { n: 1, names: 'Хэ Ючоу' },
+  };
+  function updateWatchersForCam(cam) {
+    const theme = (cam && cam.theme) || 'gorod';
+    const w = SCENE_WATCHERS[theme] || SCENE_WATCHERS.gorod;
+    const el = document.getElementById('metricWatchers');
+    const sub = document.getElementById('metricWatchersSub');
+    if (!el || !sub) return;
+    if (w.flicker) {
+      let flip = false;
+      el.textContent = String(w.n).padStart(2, '0');
+      sub.innerHTML = w.names + ' · <span id="flickerSelina" style="opacity:0.35;color:var(--pink)">Селина Вега</span>';
+      if (window._selinaFlicker) clearInterval(window._selinaFlicker);
+      window._selinaFlicker = setInterval(() => {
+        flip = !flip;
+        el.textContent = String(flip ? w.n + 1 : w.n).padStart(2, '0');
+        const fs = document.getElementById('flickerSelina');
+        if (fs) {
+          fs.style.opacity = flip ? '1' : '0.2';
+          fs.style.textShadow = flip ? '0 0 8px rgba(224,26,111,0.6)' : 'none';
+        }
+      }, 1600);
+    } else {
+      if (window._selinaFlicker) { clearInterval(window._selinaFlicker); window._selinaFlicker = null; }
+      el.textContent = String(w.n).padStart(2, '0');
+      sub.textContent = w.names;
+    }
+  }
+
+  function switchCam(idx) {
+    if (idx === currentCam) return;
+    currentCam = idx;
+    closeObjectTooltip();
+    camMain.classList.add('switching');
+    camGlitch();
+    // ═══ NEW v5: servo whine ═══
+    servoWhine(0.75);
+    beep(180 + Math.random() * 100, 0.05, 'sawtooth', 0.025);
+    setTimeout(() => {
+      const cam = cameras[idx];
+      const off = $('#camOffline');
+      if (cam.offline) {
+        camImg.style.opacity = '0';
+        off.style.display = 'flex';
+        $('#camOffTitle').textContent = cam.offTitle || 'СИГНАЛ ПОТЕРЯН';
+        $('#camOffSub').textContent = cam.offSub || 'Канал недоступен.';
+        renderObjects(cam); updateWatchersForCam(cam);
+      } else {
+        off.style.display = 'none';
+        camImg.style.opacity = '';
+        camImg.src = cam.src;
+        camImg.style.objectFit = 'cover';
+        camImg.onload = function () {
+          /* keep per-object images */
+        };
+        camImg.onerror = function () {
+          cam.offline = true;
+          off.style.display = 'flex';
+          camImg.style.opacity = '0';
+          $('#camOffTitle').textContent = 'НЕТ СИГНАЛА';
+          $('#camOffSub').textContent = 'Файл трансляции повреждён или отсутствует.';
+          document.querySelectorAll('.cam-thumb')[idx]?.classList.add('offline');
+        };
+        renderObjects(cam); updateWatchersForCam(cam);
+      }
+      $('#camCount').textContent = '5 КАНАЛОВ · ВЫБРАН: ' + cam.name.split('//')[0].trim();
+      $('#camSector').textContent = cam.sector;
+      $('#camQuad').textContent = cam.quad;
+      $('#camCoords').textContent = cam.coords;
+      $('#limboState').textContent = cam.limboState;
+      document.querySelectorAll('.cam-thumb').forEach((t, i) => t.classList.toggle('active', i === idx));
+      camMain.classList.remove('switching');
+      camGlitch();
+      if (cam.offline) noiseBurst(0.1);
+    }, 300);
+  }
+  $$('.cam-thumb').forEach(t => t.addEventListener('click', () => { audio(); switchCam(+t.dataset.cam); }));
+  camMain.addEventListener('click', (e) => {
+    if (e.target.closest('.obj-box')) return;
+    if (e.target.closest('.obj-tooltip')) return;
+    audio(); switchCam((currentCam + 1) % cameras.length);
+  });
+
+  // Initial render
+  renderObjects(cameras[0]);
+
+  // Drone active
+  camMain.classList.add('drone-active');
+
+  setInterval(() => { if (Math.random() > 0.35) camGlitch(); }, 2800 + Math.random() * 3200);
+  setInterval(() => {
+    if (cameras[currentCam] && !cameras[currentCam].offline) {
+      camImg.style.filter = 'contrast(1.2) saturate(0.7) blur(1.2px)';
+      setTimeout(() => { camImg.style.filter = 'contrast(1.08) saturate(0.9)'; }, 120 + Math.random() * 180);
+    }
+  }, 5000 + Math.random() * 4000);
+
+  // ═══ NEW v5: периодический servo-pulse, будто дрон подстраивается ═══
+  setInterval(() => {
+    if (Math.random() > 0.6 && cameras[currentCam] && !cameras[currentCam].offline) {
+      servoPulse();
+    }
+  }, 4500);
+
+  // Update tactical readouts
+  setInterval(() => {
+    if (cameras[currentCam] && !cameras[currentCam].offline) {
+      $('#camAzimuth').textContent = (Math.random() * 360).toFixed(2) + '°';
+      $('#camElevation').textContent = (-20 + Math.random() * 40).toFixed(2) + '°';
+      $('#camZoom').textContent = (1 + Math.random() * 6).toFixed(2) + 'x';
+      $('#camLidar').textContent = (30 + Math.random() * 400).toFixed(2) + ' m';
+      $('#windSpeed').textContent = (2 + Math.random() * 20).toFixed(1) + ' m/s';
+      $('#humidity').textContent = (40 + Math.random() * 55).toFixed(0) + '%';
+      $('#recFps').textContent = '| ' + (55 + Math.random() * 10).toFixed(2) + ' FPS SENSOR';
+      const sig = 80 + Math.floor(Math.random() * 19);
+      $('#signalIntegrity').style.width = sig + '%';
+      $('#signalIntegrityVal').textContent = sig + '%';
+      const states = ['СТАЦИОНАРНЫЙ','АКТИВНЫЙ','ДРЕЙФ','НЕСТАБИЛЬНЫЙ','ЗАМЕР'];
+      $('#objStatus').textContent = pick(states);
+      const threats = ['ZERO-1','ZERO-2','LOW','MEDIUM','WATCH'];
+      $('#threatLevel').textContent = pick(threats);
+    }
+  }, 2200);
+
+  function updateClock() {
+    const n = new Date();
+    const p = v => String(v).padStart(2, '0');
+    const el = document.getElementById('camClock');
+    if (el) el.textContent =
+      p(n.getDate()) + '.' + p(n.getMonth() + 1) + '.' + n.getFullYear() + '  ' +
+      p(n.getHours()) + ':' + p(n.getMinutes()) + ':' + p(n.getSeconds());
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ═══ CHART ═══ */
+  const loadData = Array.from({ length: 30 }, () => 50 + Math.random() * 35);
+  const chart = new Chart($('#loadChart'), {
+    type: 'line',
+    data: {
+      labels: loadData.map(() => ''),
+      datasets: [{
+        data: loadData,
+        borderColor: '#00d4e8',
+        backgroundColor: 'rgba(0,212,232,0.1)',
+        borderWidth: 1.5, fill: true, tension: 0.35,
+        pointRadius: 0, pointHoverRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: { legend: { display: false }, tooltip: { enabled: true, callbacks: { label: c => c.raw.toFixed(0) + '%' } } },
+      scales: {
+        x: { display: false },
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(0,212,232,0.07)' },
+          ticks: { color: '#3a4558', font: { size: 9, family: 'JetBrains Mono' }, callback: v => v + '%' }
+        }
+      }
+    }
+  });
+  function pushLoad(v) {
+    loadData.push(v); loadData.shift();
+    chart.data.datasets[0].data = loadData;
+    chart.update('none');
+  }
+
+  /* ═══ MINI BARS ═══ */
+  function fillBars(id, vals, hotAt, critAt) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    vals.forEach(v => {
+      const s = document.createElement('span');
+      s.style.height = Math.max(8, Math.min(100, v)) + '%';
+      if (v >= critAt) s.className = 'crit';
+      else if (v >= hotAt) s.className = 'hot';
+      el.appendChild(s);
+    });
+  }
+  function randBars(n, base, spread) {
+    return Array.from({ length: n }, () => base + (Math.random() - 0.5) * spread);
+  }
+  fillBars('cryoBars', randBars(8, 55, 30), 70, 85);
+  fillBars('psiBars', randBars(8, 65, 35), 75, 90);
+  fillBars('memBars', randBars(8, 70, 25), 80, 92);
+
+  /* ═══════════════════════════════════════════════════════════
+     NEW v5: MINI-EEG ENGINE
+     ═══════════════════════════════════════════════════════════ */
+  (function initEEG() {
+    const canvas = $('#eegCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0, dpr = window.devicePixelRatio || 1;
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      W = rect.width; H = rect.height;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    addEventListener('resize', resize);
+
+    // 4 канала
+    const channels = [
+      { name: 'alpha', color: '#00d4e8', freq: 1.2, amp: 14, phase: 0, speed: 0.06, yOff: 0.15 },  // cyan
+      { name: 'beta',  color: '#e01a6f', freq: 2.4, amp: 10, phase: Math.PI, speed: 0.09, yOff: 0.38 }, // pink
+      { name: 'gamma', color: '#e8a020', freq: 3.6, amp: 8,  phase: 1.2, speed: 0.13, yOff: 0.62 },     // amber
+      { name: 'theta', color: '#1ec99a', freq: 0.9, amp: 12, phase: 2.1, speed: 0.04, yOff: 0.86 },     // green
+    ];
+
+    // История точек (для каждого канала по массиву)
+    const historyLen = 240;
+    const histories = channels.map(() => new Array(historyLen).fill(0));
+    // Спайки (аномалии)
+    const spikes = channels.map(() => ({ active: false, t: 0, amp: 0, decay: 0 }));
+
+    let t = 0;
+    function draw() {
+      t += 1;
+      ctx.clearRect(0, 0, W, H);
+
+      // Сетка-фон
+      ctx.strokeStyle = 'rgba(0,212,232,0.08)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x < W; x += 24) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 14) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Каждый канал
+      channels.forEach((ch, ci) => {
+        const hist = histories[ci];
+        const spike = spikes[ci];
+
+        // Обновляем спайк
+        if (spike.active) {
+          spike.t++;
+          if (spike.t > 18) spike.active = false;
+        } else if (Math.random() < 0.004) {
+          // Иногда запускаем новый спайк
+          spike.active = true;
+          spike.t = 0;
+          spike.amp = 20 + Math.random() * 30;
+          spike.decay = 0.85 + Math.random() * 0.1;
+        }
+
+        // Новое значение
+        const baseY = H * ch.yOff;
+        const wave = Math.sin(t * ch.speed * ch.freq + ch.phase) * ch.amp +
+                     Math.sin(t * ch.speed * ch.freq * 2.3 + ch.phase * 1.7) * (ch.amp * 0.4) +
+                     (Math.random() - 0.5) * 3;
+
+        let value = wave;
+        if (spike.active) {
+          value += Math.sin(spike.t * 0.9) * spike.amp * Math.pow(spike.decay, spike.t);
+        }
+
+        hist.push(value);
+        hist.shift();
+
+        // Рисуем линию
+        ctx.beginPath();
+        ctx.strokeStyle = ch.color;
+        ctx.lineWidth = 1.2;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = ch.color;
+        for (let i = 0; i < hist.length; i++) {
+          const x = (i / (hist.length - 1)) * W;
+          const y = baseY - hist[i] * 0.6;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Пульсирующая точка-курсор в правом конце
+        const lastY = baseY - hist[hist.length - 1] * 0.6;
+        ctx.beginPath();
+        ctx.fillStyle = ch.color;
+        ctx.arc(W - 2, lastY, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Статистика
+      if (t % 20 === 0) {
+        const focus = 60 + Math.floor(Math.random() * 30);
+        const stress = 25 + Math.floor(Math.random() * 35);
+        const depth = (1.8 + Math.random() * 1.4).toFixed(1);
+        const fEl = $('#eegFocus'), sEl = $('#eegStress'), dEl = $('#eegDepth');
+        if (fEl) fEl.textContent = focus + '%';
+        if (sEl) {
+          sEl.textContent = stress + '%';
+          sEl.className = 'b ' + (stress > 55 ? 'red' : stress > 40 ? 'amber' : '');
+        }
+        if (dEl) dEl.textContent = depth;
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+
+  // keep object crops in sync with main feed
+  const camMainImgEl = document.getElementById('camMainImg');
+  if (camMainImgEl) {
+    camMainImgEl.addEventListener('load', () => {
+      /* keep per-object images */
+    });
+  }
+
+
+  // auto-rotate multi-frame cameras every 2 minutes
+  let frameIdx = 0;
+  setInterval(() => {
+    const cam = cameras[currentCam];
+    if (!cam || cam.offline || !cam.frames || cam.frames.length < 2) return;
+    frameIdx = (frameIdx + 1) % cam.frames.length;
+    const img = document.getElementById('camMainImg');
+    if (img) {
+      const wrap = document.querySelector('.cam-main');
+      if (wrap) wrap.classList.add('switching');
+      setTimeout(() => {
+        img.src = cam.frames[frameIdx];
+        if (wrap) wrap.classList.remove('switching');
+        /* keep per-object images */
+      }, 200);
+    }
+  }, 120000);
+
+
+  // rotate images INSIDE object cells every 2 minutes
+  setInterval(() => {
+    const cam = cameras[currentCam];
+    if (!cam || cam.offline || !cam.objects) return;
+    cam.objects.forEach(obj => {
+      if (!obj.frames || obj.frames.length < 2) return;
+      obj._fi = ((obj._fi || 0) + 1) % obj.frames.length;
+    });
+    renderObjects(cam); updateWatchersForCam(cam);
+  }, 120000);
+
+
+  // ── Object reshuffle + signal glitch (main + cells) ──
+  setInterval(() => {
+    const cam = cameras[typeof currentCam !== 'undefined' ? currentCam : 0];
+    if (!cam || cam.offline) return;
+    // reshuffle positions & data
+    if (typeof renderObjects === 'function') renderObjects(cam); updateWatchersForCam(cam);
+  }, 90000); // every 1.5 min move boxes
+
+  const SIG_ERRORS = [
+    { title: 'СИГНАЛ ПОТЕРЯН', sub: 'Канал недоступен.' },
+    { title: 'КАНАЛ ЗАГЛУШЁН', sub: 'Ответ станции отсутствует. Вероятна атака на ретранслятор.' },
+    { title: 'ПОМЕХИ НА ЛИНИИ', sub: 'AES-туннель деградировал. Переподключение…' },
+    { title: 'ПЕРЕГРУЗКА БУФЕРА', sub: 'Кадры повреждены. Ожидание восстановления потока.' },
+    { title: 'INTRUSION DETECTED', sub: 'Внешний вектор. Маска трассы временно снята.' },
+  ];
+  function flashCamError(duration) {
+    const el = document.getElementById('camSignalError');
+    const cam = cameras[currentCam];
+    if (!el || (cam && cam.offline)) return;
+    const err = SIG_ERRORS[Math.floor(Math.random() * SIG_ERRORS.length)];
+    const t = document.getElementById('camSigTitle');
+    const s = document.getElementById('camSigSub');
+    if (t) t.textContent = err.title;
+    if (s) s.textContent = err.sub;
+    el.hidden = false;
+    const main = document.getElementById('camMain');
+    if (main) main.classList.add('glitching');
+    if (typeof camGlitch === 'function') camGlitch();
+    setTimeout(() => {
+      el.hidden = true;
+      if (main) main.classList.remove('glitching');
+    }, duration || (1200 + Math.random() * 1800));
+  }
+  setInterval(() => {
+    const boxes = document.querySelectorAll('.obj-box');
+    boxes.forEach(b => b.classList.remove('glitching', 'signal-lost'));
+    if (boxes.length && Math.random() > 0.4) {
+      const n = 1 + Math.floor(Math.random() * Math.min(2, boxes.length));
+      [...boxes].sort(() => Math.random() - 0.5).slice(0, n).forEach((b, i) => {
+        const mode = Math.random() > 0.35 ? 'glitching' : 'signal-lost';
+        setTimeout(() => {
+          b.classList.add(mode);
+          setTimeout(() => b.classList.remove('glitching', 'signal-lost'), 900 + Math.random() * 1600);
+        }, i * 100);
+      });
+    }
+    // main: soft glitch or full error screen
+    if (cameras[currentCam] && !cameras[currentCam].offline) {
+      const r = Math.random();
+      if (r > 0.82) {
+        flashCamError();
+      } else if (r > 0.45 && typeof camGlitch === 'function') {
+        camGlitch();
+        const img = document.getElementById('camMainImg');
+        if (img) {
+          img.style.filter = 'contrast(1.7) saturate(0.35) hue-rotate(55deg) blur(1.2px)';
+          setTimeout(() => { img.style.filter = ''; }, 350 + Math.random() * 700);
+        }
+      }
+    }
+  }, 6500 + Math.random() * 4500);
+
+
+
+  /* ═══ NEURO-BRIDGE WAVEFORM ═══ */
+  (function () {
+    const c = document.getElementById('neuroCanvas');
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    let t = 0;
+    const waves = [
+      { amp: 22, freq: 0.018, speed: 0.035, color: 'rgba(0,212,232,0.85)', w: 1.6 },
+      { amp: 16, freq: 0.027, speed: 0.048, color: 'rgba(224,26,111,0.65)', w: 1.3 },
+      { amp: 12, freq: 0.041, speed: 0.062, color: 'rgba(232,160,32,0.55)', w: 1.1 },
+      { amp: 8,  freq: 0.055, speed: 0.08,  color: 'rgba(30,201,154,0.45)', w: 1.0 },
+      { amp: 18, freq: 0.013, speed: 0.025, color: 'rgba(0,212,232,0.25)', w: 2.2 },
+    ];
+    function resize() {
+      const r = c.getBoundingClientRect();
+      c.width = Math.max(400, Math.floor(r.width * 2));
+      c.height = 140;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    function draw() {
+      t += 1;
+      const W = c.width, H = c.height, mid = H * 0.52;
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = 'rgba(0,212,232,0.06)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 28) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+      ctx.strokeStyle = 'rgba(0,212,232,0.12)';
+      ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(W, mid); ctx.stroke();
+      waves.forEach((w, wi) => {
+        ctx.beginPath();
+        ctx.strokeStyle = w.color;
+        ctx.lineWidth = w.w;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = w.color;
+        for (let x = 0; x <= W; x += 2) {
+          const y = mid
+            + Math.sin(x * w.freq + t * w.speed + wi * 1.1) * w.amp
+            + Math.sin(x * w.freq * 2.3 + t * w.speed * 0.7) * (w.amp * 0.35)
+            + Math.sin(x * 0.008 + t * 0.02 + wi) * 4;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+      for (let k = 0; k < 5; k++) {
+        const x = ((t * 1.7 + k * 160) % (W + 40)) - 20;
+        const y = mid + Math.sin(x * 0.02 + t * 0.04) * 14;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, 10);
+        g.addColorStop(0, 'rgba(0,212,232,0.7)');
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+
+  /* ═══ JOURNAL ═══ */
+  const journal = $('#journalBody');
+  const seedLogs = [
+    { cls: 'ok', text: 'Инициализация протокола «Цефей» завершена. Канал соматического сна стабилен.' },
+    { cls: '', text: 'Смотрящий A-55 (Хэ Ючоу) подключился к сектору «Шанхай // Сцена 02».' },
+    { cls: 'warn', text: 'АНОМАЛИЯ: Попытка несанкционированного искажения текстур в квадранте 9.' },
+    { cls: '', text: 'Проверка нейро-шлюза «Цефей-1»: без сбоев.' },
+    { cls: 'error', text: 'Перегрузка Шанхай // Разрыв памяти #02 — субъект Сюань У исключён.' },
+  ];
+  const livePool = [
+    { cls: '', text: 'Пинг штаба Восток: 8ms · OK' },
+    { cls: 'ok', text: 'Капсула #0881: соматический цикл стабилен' },
+    { cls: 'warn', text: 'Кластер рендера: температура +2°C от номинала' },
+    { cls: '', text: 'Ассистент A-22 запросил телеметрию Сцены 01' },
+    { cls: 'ok', text: 'Синхронизация нейро-моста: 99.1%' },
+    { cls: 'warn', text: 'Обнаружен микросбой коллизий в секторе #07' },
+    { cls: '', text: 'Натан Коикэ обновил тактическую сетку маршрутов' },
+    { cls: 'error', text: 'Попытка доступа к NODE · ROOT — отклонена' },
+    { cls: 'ok', text: 'Крио-контур: −18.2°C · номинал' },
+    { cls: 'warn', text: 'Психошок субъекта в капсуле #1104: 71%' },
+    { cls: '', text: 'SEC:LVL_5 · сессия оператора A-55 подтверждена' },
+    { cls: '', text: 'Трассировка канала «Цефей-1»: без утечек' },
+    { cls: '', text: 'Фоновый дамп памяти Сцены 02 завершён' },
+    { cls: 'ok', text: 'AES-256 tunnel integrity: OK' },
+  ];
+  function timeStr() {
+    const n = new Date();
+    return [n.getHours(), n.getMinutes(), n.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
+  }
+  function addLog(cls, text, animate) {
+    const div = document.createElement('div');
+    div.className = 'log-line ' + cls + (animate ? ' entering' : '');
+    div.innerHTML = '<span class="time">' + timeStr() + '</span> ' + text;
+    journal.appendChild(div);
+    if (animate) requestAnimationFrame(() => requestAnimationFrame(() => div.classList.add('entered')));
+    else div.classList.add('entered');
+    while (journal.children.length > 36) journal.removeChild(journal.firstChild);
+    journal.scrollTop = journal.scrollHeight;
+  }
+  seedLogs.forEach(l => addLog(l.cls, l.text, false));
+
+  setInterval(() => {
+    const msg = livePool[Math.floor(Math.random() * livePool.length)];
+    addLog(msg.cls, msg.text, true);
+    const load = Math.floor(45 + Math.random() * 40);
+    pushLoad(load);
+    $('#coreStab').textContent = (97.6 + Math.random() * 1.5).toFixed(1) + '%';
+    $('#telemPing').textContent = 'PING: ' + (6 + Math.floor(Math.random() * 12)) + 'ms';
+    const cryo = (-17.5 - Math.random() * 1.5).toFixed(1);
+    $('#cryoVal').textContent = cryo;
+    const psi = Math.floor(60 + Math.random() * 25);
+    $('#psiVal').textContent = psi;
+    $('#memVal').textContent = (92 + Math.random() * 5).toFixed(1);
+    fillBars('cryoBars', randBars(8, 55, 30), 70, 85);
+    fillBars('psiBars', randBars(8, psi * 0.9, 20), 75, 90);
+    fillBars('memBars', randBars(8, 72, 22), 80, 92);
+  }, 3400 + Math.random() * 1800);
+
+  /* ═══ NEURO-BRIDGE live stats ═══ */
+  setInterval(() => {
+    const s = (99 + Math.random()).toFixed(2);
+    const l = Math.floor(30 + Math.random() * 50);
+    const i = Math.floor(1500 + Math.random() * 2500);
+    const sEl = $('#nbSync'), lEl = $('#nbLoad'), iEl = $('#nbImpulse');
+    if (sEl) sEl.textContent = s + '%';
+    if (lEl) lEl.textContent = l + '%';
+    if (iEl) iEl.textContent = i + ' Hz';
+  }, 800);
+
+  /* ═══ TOAST ═══ */
+  const toast = $('#sysToast');
+  function showToast(title, msg, warn, duration) {
+    toast.classList.toggle('warn', !!warn);
+    $('#toastTitle').textContent = title;
+    $('#toastMsg').textContent = msg;
+    const bar = $('#toastBar');
+    bar.style.width = '0%';
+    toast.classList.add('show');
+    const dur = duration || 2800, start = performance.now();
+    (function tick(now) {
+      const p = Math.min(1, (now - start) / dur);
+      bar.style.width = (p * 100) + '%';
+      if (p < 1) requestAnimationFrame(tick);
+      else setTimeout(() => toast.classList.remove('show'), 180);
+    })(start);
+  }
+
+  /* ═══ BUTTONS ═══ */
+  $('#btnSync').addEventListener('click', function () {
+    audio();
+    const btn = this;
+    btn.disabled = true; btn.textContent = 'СИНХРОНИЗАЦИЯ…';
+    $('#gatewayState').textContent = 'SYNC…';
+    showToast('НЕЙРОСЕТЕВОЙ МОСТ', 'Установка канала с ядром Цефей-1…', false, 2000);
+    addLog('', 'Запрос синхронизации нейросетевого моста оператором A-55', true);
+    beep(520, 0.08, 'sine', 0.03);
+    setTimeout(() => {
+      addLog('ok', 'Нейро-шлюз «Цефей-1»: синхронизация завершена · 100%', true);
+      $('#gatewayState').textContent = 'СИНХР';
+      $('#coreStab').textContent = '99.2%';
+      btn.disabled = false; btn.textContent = 'Синхронизировать нейросетевой мост';
+      showToast('СИНХРОНИЗАЦИЯ OK', 'Канал стабилен. Задержка 8ms.', false, 2400);
+      beep(660, 0.1, 'sine', 0.035); beep(880, 0.12, 'sine', 0.03);
+    }, 2100);
+  });
+
+  const modal = $('#decompModal');
+  $('#btnDecomp').addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    audio(); modal.classList.add('open');
+    addLog('warn', 'Запрос протокола аварийной декомпрессии — ожидание подтверждения', true);
+    beep(120, 0.15, 'sawtooth', 0.04);
+  });
+  $('#decompCancel').addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    modal.classList.remove('open');
+    addLog('', 'Протокол декомпрессии отменён оператором', true);
+  });
+  $('#decompConfirm').addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    modal.classList.remove('open');
+    showToast('ДЕКОМПРЕССИЯ', 'Разрыв канала · принудительный выход из системы…', true, 2600);
+    addLog('error', 'ПРОТОКОЛ АВАРИЙНОЙ ДЕКОМПРЕССИИ АКТИВИРОВАН', true);
+    $('#gatewayState').textContent = 'РАЗРЫВ';
+    $('#coreStab').textContent = '41.0%';
+    noiseBurst(0.25); camGlitch();
+    const main = document.querySelector('main.sys-page');
+    if (main) {
+      main.style.filter = 'hue-rotate(25deg) contrast(1.2) saturate(0.6)';
+      main.style.transition = 'filter 0.4s, opacity 0.8s';
+    }
+    setTimeout(() => {
+      addLog('error', 'Сессия оператора A-55 принудительно завершена', true);
+      addLog('warn', 'Нейро-шлюз закрыт · выгрузка из Лимбо…', true);
+      $('#gatewayState').textContent = 'OFFLINE';
+      showToast('СЕССИЯ ПРЕРВАНА', 'Вы выброшены из системы.', true, 2000);
+      camGlitch();
+      if (main) main.style.opacity = '0.15';
+      setTimeout(() => {
+        try { localStorage.removeItem('limbo_session'); } catch (err) {}
+        window.location.href = 'index.html';
+      }, 2200);
+    }, 1400);
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) { e.preventDefault(); modal.classList.remove('open'); }
+  });
+
+  $$('.doc-expand').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = document.getElementById(btn.dataset.target);
+      const open = el.classList.toggle('open');
+      btn.textContent = open ? '▾ СВЕРНУТЬ' : (btn.dataset.target === 'doc2extra' ? '▸ РАСКРЫТЬ СПЕЦИФИКАЦИЮ' : '▸ РАСКРЫТЬ ПРИЛОЖЕНИЕ');
+    });
+  });
+
+  $('#nodeZero').addEventListener('click', () => {
+    audio(); beep(90, 0.1, 'sawtooth', 0.04);
+    showToast('ДОСТУП ОТКЛОНЁН', 'Субъект ZERO · данные повреждены.', true, 3000);
+    addLog('error', 'Попытка открыть NODE · 0x00 (Сюань У) — ACCESS DENIED', true);
+    $('#metricRisk').textContent = 'Сюань У · Риск ' + (14 + Math.floor(Math.random() * 10)) + '%';
+    camGlitch();
+  });
+  $$('.tac-node.locked').forEach(n => {
+    n.addEventListener('click', () => {
+      audio(); beep(100, 0.08, 'square', 0.03);
+      showToast('УЗЕЛ ЗАБЛОКИРОВАН', 'Недостаточный уровень допуска SEC:LVL_5', true, 2600);
+      addLog('warn', 'Отказ в доступе к запечатанному узлу', true);
+    });
+  });
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   GSAP SCROLL / HOVER ENGINE
+   ═══════════════════════════════════════════════════════════ */
+(function () {
+  if (typeof gsap === 'undefined') return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  const prog = document.getElementById('scrollProgress');
+  ScrollTrigger.create({
+    start: 'top top', end: 'max',
+    onUpdate: (self) => { if (prog) prog.style.width = (self.progress * 100) + '%'; }
+  });
+
+  gsap.to('#orb1', { y: 200, x: 80, ease: 'none', scrollTrigger: { scrub: 1.2, start: 'top top', end: 'bottom bottom' } });
+  gsap.to('#orb2', { y: -160, x: -60, ease: 'none', scrollTrigger: { scrub: 1.5, start: 'top top', end: 'bottom bottom' } });
+  gsap.to('#orb3', { y: 120, x: 40, ease: 'none', scrollTrigger: { scrub: 1, start: 'top top', end: 'bottom bottom' } });
+
+  const title = document.querySelector('.sys-title');
+  if (title) {
+    gsap.from(title, { opacity: 0, y: 40, letterSpacing: '0.2em', duration: 1.2, ease: 'power3.out', delay: 0.15 });
+  }
+
+  gsap.utils.toArray('.panel, .cam-wall, .tac-node, .sys-header, .reveal').forEach((el) => {
+    el.style.opacity = '1'; el.style.transform = 'none';
+    el.style.filter = 'none'; el.style.visibility = 'visible';
+  });
+
+  gsap.utils.toArray('.panel, .cam-wall, .tac-node').forEach((el, i) => {
+    gsap.fromTo(el,
+      { opacity: 0.85, y: 18 },
+      {
+        opacity: 1, y: 0, duration: 0.7, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 92%', toggleActions: 'play none none none' },
+        delay: (i % 3) * 0.04
+      }
+    );
+  });
+
+  const camWall = document.querySelector('.cam-wall');
+  if (camWall) {
+    gsap.to(camWall, {
+      y: -40, scale: 0.985, ease: 'none',
+      scrollTrigger: { trigger: camWall, start: 'top 60%', end: 'bottom top', scrub: 1.2 }
+    });
+  }
+
+  document.querySelectorAll('.draw-line').forEach((el) => {
+    ScrollTrigger.create({ trigger: el, start: 'top 85%', onEnter: () => el.classList.add('in-view') });
+  });
+
+  document.querySelectorAll('.tilt-card').forEach((card) => {
+    card.addEventListener('mousemove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      gsap.to(card, { rotateY: x * 6, rotateX: -y * 6, transformPerspective: 900, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+    });
+    card.addEventListener('mouseleave', () => {
+      gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.6, ease: 'power3.out' });
+    });
+  });
+
+  document.querySelectorAll('.btn, .tac-node:not(.locked)').forEach((btn) => {
+    btn.addEventListener('mousemove', (e) => {
+      if (btn.closest('.journal-actions') || btn.id === 'btnDecomp' || btn.id === 'btnSync') return;
+      const r = btn.getBoundingClientRect();
+      const x = e.clientX - r.left - r.width / 2;
+      const y = e.clientY - r.top - r.height / 2;
+      gsap.to(btn, { x: x * 0.08, y: y * 0.08, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+    });
+    btn.addEventListener('mouseleave', () => {
+      gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: 'power3.out' });
+    });
+  });
+
+  document.querySelectorAll('.btn').forEach((btn) => {
+    btn.addEventListener('click', function (e) {
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      r.style.width = r.style.height = size + 'px';
+      r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      r.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      this.appendChild(r);
+      setTimeout(() => r.remove(), 650);
+    });
+  });
+
+  gsap.utils.toArray('.status-chip').forEach((chip, i) => {
+    gsap.to(chip, {
+      y: -3 + (i % 2) * 2, duration: 2 + i * 0.3,
+      yoyo: true, repeat: -1, ease: 'sine.inOut', delay: i * 0.15
+    });
+  });
+
+  const journal = document.getElementById('journalBody');
+  if (journal) {
+    const obs = new MutationObserver((muts) => {
+      muts.forEach((m) => {
+        m.addedNodes.forEach((n) => {
+          if (n.classList && n.classList.contains('log-line')) {
+            n.classList.add('flash');
+            setTimeout(() => n.classList.remove('flash'), 500);
+          }
+        });
+      });
+    });
+    obs.observe(journal, { childList: true });
+  }
+
+  const topbar = document.querySelector('.sys-topbar');
+  if (topbar) {
+    ScrollTrigger.create({
+      start: 40,
+      onUpdate: (self) => {
+        topbar.style.background = self.scroll > 40
+          ? 'rgba(3,5,10,0.94)'
+          : 'rgba(3,5,10,0.88)';
+      }
+    });
+  }
+
+  let lastY = 0;
+  ScrollTrigger.create({
+    onUpdate: (self) => {
+      const vel = Math.abs(self.scroll - lastY);
+      lastY = self.scroll;
+      const beam = document.querySelector('.cam-scanbeam');
+      if (beam && vel > 5) {
+        beam.style.animationDuration = Math.max(1.2, 4 - vel * 0.02) + 's';
+      }
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

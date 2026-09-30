@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>П.Р.И.Н.Ц. // Досье персонала</title>
+<link rel="stylesheet" href="css/system.css">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   DOSSIER v2 — TACTICAL INTEL HUB
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── PAGE HEADER EXTRAS ─── */
+.dossier-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.4rem;
+}
+@media (max-width: 900px) { .dossier-hero { grid-template-columns: 1fr; } }
+
+.dossier-hero .crumb {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); letter-spacing: 0.12em;
+  margin-bottom: 0.35rem;
+}
+.dossier-hero .crumb .cyan { color: var(--cyan); }
+.dossier-hero .crumb .red  { color: var(--red); }
+.dossier-hero .crumb .amber { color: var(--amber); }
+
+.dossier-hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.4vw, 2.35rem);
+  font-weight: 800; letter-spacing: 0.02em; line-height: 1.1;
+  margin-bottom: 0.4rem;
+}
+.dossier-hero h1 .ver {
+  color: var(--cyan); font-family: var(--font-mono);
+  font-size: 0.5em; letter-spacing: 0.06em; vertical-align: middle;
+  margin-left: 0.4rem;
+}
+.dossier-hero .subtitle {
+  font-family: var(--font-mono); font-size: 0.72rem;
+  color: var(--text-dim); letter-spacing: 0.04em; max-width: 720px;
+}
+
+/* ─── TOP STAT STRIP ─── */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.55rem;
+  margin-bottom: 1.15rem;
+}
+@media (max-width: 900px) { .stat-strip { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
+
+.stat-cell {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.7rem 0.85rem;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.35s var(--ease);
+}
+.stat-cell::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, transparent, var(--cyan), transparent);
+  opacity: 0.6;
+}
+.stat-cell.red::before  { background: linear-gradient(180deg, transparent, var(--red), transparent); }
+.stat-cell.amber::before { background: linear-gradient(180deg, transparent, var(--amber), transparent); }
+.stat-cell.pink::before { background: linear-gradient(180deg, transparent, var(--pink), transparent); }
+.stat-cell:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+.stat-cell .lbl {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+.stat-cell .val {
+  font-family: var(--font-display);
+  font-size: 1.45rem; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--text);
+}
+.stat-cell .val .unit {
+  font-family: var(--font-mono); font-size: 0.55em;
+  color: var(--text-dim); letter-spacing: 0.06em; margin-left: 0.2rem;
+}
+.stat-cell .sub {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); margin-top: 0.15rem; letter-spacing: 0.04em;
+}
+
+/* ─── CONTROL RIBBON (filters + search + sort) ─── */
+.control-ribbon {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 1.4rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  position: relative;
+}
+@media (max-width: 1100px) { .control-ribbon { grid-template-columns: 1fr; } }
+
+.filter-cluster {
+  display: flex; flex-wrap: wrap; gap: 0.35rem;
+}
+.filter-tab {
+  font-family: var(--font-mono); font-size: 0.62rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.42rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+  position: relative;
+}
+.filter-tab:hover { border-color: var(--border-mid); color: var(--text); }
+.filter-tab.active {
+  background: var(--cyan); color: var(--void);
+  border-color: var(--cyan); font-weight: 700;
+}
+.filter-tab.anomaly-tab { color: var(--red); border-color: rgba(224,40,72,0.35); }
+.filter-tab.anomaly-tab.active { background: var(--red); color: #000; border-color: var(--red); }
+.filter-tab .count {
+  display: inline-block; margin-left: 0.3rem;
+  font-size: 0.55rem; opacity: 0.75;
+}
+
+/* Search */
+.search-well {
+  position: relative;
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border-mid);
+  transition: all 0.25s;
+}
+.search-well:focus-within {
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(0,212,232,0.08);
+}
+.search-well .icon {
+  padding: 0 0.6rem;
+  color: var(--cyan); font-family: var(--font-mono);
+  font-size: 0.7rem; user-select: none;
+}
+.search-well input {
+  flex: 1;
+  background: transparent; border: 0; outline: 0;
+  color: var(--cyan); padding: 0.55rem 0.35rem;
+  font-family: var(--font-mono); font-size: 0.72rem;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  min-width: 0;
+}
+.search-well input::placeholder { color: var(--text-muted); }
+.search-well .hint {
+  padding: 0 0.6rem;
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.08em;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+/* Sort */
+.sort-cluster { display: flex; align-items: center; gap: 0.4rem; }
+.sort-cluster .lbl {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.sort-cluster select {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border-mid);
+  color: var(--cyan);
+  font-family: var(--font-mono); font-size: 0.62rem;
+  padding: 0.4rem 0.5rem; outline: none;
+  cursor: pointer; letter-spacing: 0.06em;
+  transition: all 0.25s;
+}
+.sort-cluster select:hover { border-color: var(--cyan); }
+.sort-cluster select option { background: #0b0f1a; color: var(--cyan); }
+
+/* ─── GRID ─── */
+.char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 1.15rem;
+  position: relative;
+}
+.char-grid.scanning::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0;
+  height: 3px; z-index: 10;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  box-shadow: 0 0 20px var(--cyan);
+  animation: gridScan 0.6s ease-out;
+  pointer-events: none;
+}
+@keyframes gridScan {
+  from { top: 0; opacity: 1; }
+  to { top: 100%; opacity: 0; }
+}
+
+/* ─── CARD ─── */
+.char-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.35s, box-shadow 0.4s, transform 0.5s var(--ease);
+  transform-style: preserve-3d;
+  animation: cardIn 0.45s var(--ease) both;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.char-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 18px 52px rgba(0,0,0,0.55), 0 0 40px rgba(0,212,232,0.05);
+  transform: translateY(-6px);
+}
+.char-card.critical {
+  border-color: rgba(224, 40, 72, 0.35);
+  box-shadow: 0 0 24px rgba(224,40,72,0.08);
+}
+.char-card.critical:hover {
+  border-color: var(--red);
+  box-shadow: 0 18px 52px rgba(0,0,0,0.55), 0 0 44px rgba(224,40,72,0.18);
+}
+.char-card.anomaly {
+  border-color: rgba(155, 0, 212, 0.4);
+  background: linear-gradient(160deg, rgba(25,4,30,0.85), rgba(5,2,12,0.95));
+}
+.char-card.anomaly::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,42,85,0.03) 3px, rgba(255,42,85,0.03) 4px);
+  pointer-events: none; z-index: 1;
+  animation: anomalyScan 3s linear infinite;
+}
+@keyframes anomalyScan {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 40px; }
+}
+.char-card.anomaly:hover {
+  border-color: var(--magenta);
+  box-shadow: 0 18px 52px rgba(0,0,0,0.55), 0 0 44px rgba(155,0,212,0.25);
+}
+
+/* Top status rail */
+.card-rail {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  position: relative; z-index: 2;
+}
+.card-rail .status {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  text-transform: uppercase; font-weight: 600;
+}
+.card-rail .status .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+  animation: pulseDot 1.6s ease infinite;
+}
+.card-rail .status.red .dot { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.card-rail .status.amber .dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.card-rail .status.pink .dot { background: var(--pink); box-shadow: 0 0 8px var(--pink); }
+.card-rail .division {
+  color: var(--text-muted); font-size: 0.55rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* Visual */
+.char-visual {
+  position: relative;
+  height: 360px;
+  background: linear-gradient(160deg, #100828 0%, #05020c 100%);
+  overflow: hidden;
+}
+.char-visual .grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,232,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,232,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.char-visual img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
+  opacity: 1; position: relative; z-index: 1;
+  filter: grayscale(20%) contrast(1.08);
+  transition: transform 0.7s var(--ease), filter 0.4s;
+}
+.char-card:hover .char-visual img {
+  transform: scale(1.06);
+  filter: grayscale(0%) contrast(1.12);
+}
+.char-visual .placeholder-code {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 4.2rem; font-weight: 900; letter-spacing: 0.12em;
+  color: rgba(0, 212, 232, 0.12);
+  text-shadow: 0 0 40px rgba(0, 212, 232, 0.15);
+  transition: color 0.4s, text-shadow 0.4s;
+}
+.char-card:hover .placeholder-code {
+  color: rgba(0, 212, 232, 0.24);
+  text-shadow: 0 0 60px rgba(0, 212, 232, 0.35);
+}
+.char-visual::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(transparent, var(--panel));
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Visual overlays */
+.visual-overlay {
+  position: absolute; top: 0.6rem; left: 0.6rem;
+  display: flex; flex-direction: column; gap: 0.3rem;
+  z-index: 3;
+}
+.visual-overlay .chip {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  padding: 0.15rem 0.45rem;
+  background: rgba(3,5,10,0.85);
+  border: 1px solid var(--border);
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(4px);
+}
+.visual-overlay .chip.cyan { color: var(--cyan); border-color: rgba(0,212,232,0.35); }
+.visual-overlay .chip.red  { color: var(--red); border-color: rgba(224,40,72,0.5); }
+.visual-overlay .chip.amber { color: var(--amber); border-color: rgba(232,160,32,0.4); }
+.visual-overlay .chip.pink { color: var(--pink); border-color: rgba(224,26,111,0.4); }
+.visual-overlay .chip.green { color: var(--green); border-color: rgba(30,201,154,0.4); }
+
+.visual-badge {
+  position: absolute; bottom: 0.6rem; left: 0.75rem; right: 0.75rem;
+  z-index: 3;
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.visual-badge .id {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--pink); letter-spacing: 0.12em; margin-bottom: 0.15rem;
+}
+.visual-badge .name {
+  font-family: var(--font-display); font-size: 1.15rem;
+  font-weight: 800; letter-spacing: 0.03em; line-height: 1;
+}
+.visual-badge .state {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  padding: 0.2rem 0.45rem;
+  letter-spacing: 0.08em; font-weight: 700;
+}
+
+/* Body */
+.char-body {
+  padding: 1rem 1.1rem 1.15rem;
+  position: relative; z-index: 2;
+}
+.char-role {
+  font-family: var(--font-mono); font-size: 0.62rem;
+  color: var(--pink); letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+.char-tags {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+.char-tags .tag {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  padding: 0.15rem 0.45rem;
+  background: rgba(0,212,232,0.06);
+  border: 1px solid rgba(0,212,232,0.18);
+  color: var(--cyan);
+  letter-spacing: 0.06em;
+}
+.char-tags .tag.red { background: rgba(224,40,72,0.08); border-color: rgba(224,40,72,0.3); color: var(--red); }
+.char-tags .tag.pink { background: rgba(224,26,111,0.08); border-color: rgba(224,26,111,0.28); color: var(--pink); }
+.char-tags .tag.amber { background: rgba(232,160,32,0.08); border-color: rgba(232,160,32,0.28); color: var(--amber); }
+
+/* Biometric strip */
+.bio-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border);
+  margin-bottom: 0.85rem;
+}
+.bio-strip .cell {
+  padding: 0.5rem 0.3rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.bio-strip .cell:last-child { border-right: 0; }
+.bio-strip .cell .lbl {
+  font-family: var(--font-mono); font-size: 0.5rem;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
+  display: block; margin-bottom: 0.15rem;
+}
+.bio-strip .cell .val {
+  font-family: var(--font-mono); font-size: 0.72rem;
+  color: var(--text); letter-spacing: 0.04em; font-weight: 500;
+}
+.bio-strip .cell .val.cyan  { color: var(--cyan); }
+.bio-strip .cell .val.red   { color: var(--red); }
+.bio-strip .cell .val.amber { color: var(--amber); }
+.bio-strip .cell .val.pink  { color: var(--pink); }
+
+.char-bio {
+  font-size: 0.82rem; color: var(--text-dim);
+  font-weight: 300; line-height: 1.55; margin-bottom: 0.9rem;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Psi metric (radial) */
+.psi-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+.psi-radial {
+  position: relative;
+  width: 56px; height: 56px;
+}
+.psi-radial svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.psi-radial .bg {
+  fill: none; stroke: rgba(0,212,232,0.08); stroke-width: 2.5;
+}
+.psi-radial .fg {
+  fill: none; stroke: var(--cyan); stroke-width: 2.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s var(--ease), stroke 0.4s;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+.psi-radial .pct {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 0.66rem;
+  font-weight: 700; letter-spacing: 0.02em;
+}
+.psi-info .lbl {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 0.15rem;
+}
+.psi-info .status {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  font-weight: 600; letter-spacing: 0.06em;
+}
+
+/* Actions */
+.char-actions {
+  display: flex; gap: 0.45rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.char-actions .btn {
+  flex: 1; justify-content: center;
+  padding: 0.5rem 0.65rem; font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+.char-actions .btn.ghost { flex: 0 0 auto; }
+
+/* Anomaly pulse line */
+.anomaly-pulse {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  animation: anomalyPulse 2s ease infinite;
+}
+@keyframes anomalyPulse {
+  0%,100% { opacity: 0.3; }
+  50%     { opacity: 1; }
+}
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(2,3,10,0.85);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+.modal-panel {
+  width: 100%; max-width: 720px;
+  max-height: 88vh; overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,212,232,0.08);
+  position: relative;
+  transform: scale(0.94);
+  transition: transform 0.35s var(--ease);
+}
+.modal-overlay.open .modal-panel { transform: scale(1); }
+.modal-panel::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+.modal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.4);
+}
+.modal-head .title {
+  font-family: var(--font-display); font-size: 1rem;
+  font-weight: 700; letter-spacing: 0.04em;
+}
+.modal-head .sub {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); letter-spacing: 0.1em;
+  margin-top: 0.2rem;
+}
+.modal-close {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-dim); cursor: pointer;
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 1rem;
+  transition: all 0.25s;
+}
+.modal-close:hover {
+  border-color: var(--red); color: var(--red);
+  background: rgba(224,40,72,0.08);
+}
+.modal-body { padding: 1.15rem 1.25rem; }
+.modal-section { margin-bottom: 1.1rem; }
+.modal-section h4 {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--cyan); letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.modal-section h4::before {
+  content: '▸'; color: var(--pink);
+}
+.modal-section p, .modal-section li {
+  font-size: 0.85rem; color: var(--text-dim);
+  line-height: 1.6;
+}
+.modal-section ul {
+  list-style: none; padding: 0;
+}
+.modal-section ul li {
+  padding: 0.25rem 0 0.25rem 1rem;
+  position: relative;
+  font-family: var(--font-mono); font-size: 0.72rem;
+}
+.modal-section ul li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--cyan);
+}
+.modal-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+@media (max-width: 560px) { .modal-grid { grid-template-columns: 1fr; } }
+.modal-grid .kv {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.7rem;
+}
+.modal-grid .kv .k {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+.modal-grid .kv .v {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--text);
+}
+.modal-grid .kv .v.cyan  { color: var(--cyan); }
+.modal-grid .kv .v.red   { color: var(--red); }
+.modal-grid .kv .v.amber { color: var(--amber); }
+.modal-grid .kv .v.pink  { color: var(--pink); }
+.modal-grid .kv .v.green { color: var(--green); }
+
+.modal-actions {
+  display: flex; gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  justify-content: flex-end;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 3rem 1rem;
+  text-align: center;
+  border: 1px dashed var(--border-mid);
+  background: rgba(0,0,0,0.2);
+}
+.empty-state .icon {
+  font-family: var(--font-display); font-size: 2.4rem;
+  color: var(--text-muted); margin-bottom: 0.6rem;
+}
+.empty-state .msg {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--text-dim); letter-spacing: 0.08em;
+}
+.empty-state .sub {
+  font-family: var(--font-mono); font-size: 0.6rem;
+  color: var(--text-muted); margin-top: 0.4rem;
+}
+
+/* Hide utility */
+.hide { display: none !important; }
+
+/* Scrollbar within modal */
+.modal-panel::-webkit-scrollbar { width: 5px; }
+.modal-panel::-webkit-scrollbar-track { background: transparent; }
+.modal-panel::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--cyan-dim), var(--cyan));
+}
+
+/* Glitch accent on critical */
+.char-card.critical .visual-badge .state {
+  animation: stateFlicker 2.4s steps(2) infinite;
+}
+@keyframes stateFlicker {
+  0%, 92%, 100% { opacity: 1; }
+  94%           { opacity: 0.4; }
+  96%           { opacity: 0.8; }
+}
+
+.modal-section.glitch-intel h4 { color: var(--red); opacity: 0.85; }
+.modal-section.glitch-intel li.glitch-line {
+  position: relative;
+  color: transparent;
+  user-select: none;
+}
+.modal-section.glitch-intel li.glitch-line span {
+  color: var(--text-dim);
+  filter: blur(0.55px);
+  opacity: 0.45;
+  animation: intelNoise 2.8s steps(2) infinite;
+  display: inline-block;
+  max-width: 100%;
+}
+.modal-section.glitch-intel li.glitch-line:nth-child(odd) span {
+  animation-duration: 2.1s;
+  opacity: 0.32;
+  letter-spacing: 0.04em;
+}
+.modal-section.glitch-intel li.glitch-line:nth-child(3n) span {
+  text-shadow: 1px 0 rgba(224,40,72,0.35), -1px 0 rgba(0,212,232,0.25);
+  opacity: 0.55;
+}
+@keyframes intelNoise {
+  0%, 100% { filter: blur(0.7px); transform: translate(0,0); opacity: 0.35; }
+  25% { filter: blur(0); transform: translate(0.6px, -0.3px); opacity: 0.6; }
+  50% { filter: blur(1px); transform: translate(-0.5px, 0.4px); opacity: 0.25; }
+  75% { filter: blur(0.3px); transform: translate(0.3px, 0.2px); opacity: 0.5; }
+}
+
+
+.modal-section.glitch-intel h4 {
+  color: var(--red);
+  opacity: 0.9;
+  text-shadow: 0 0 12px rgba(224,40,72,0.5);
+  animation: titleGlitch 2.5s steps(2) infinite;
+}
+@keyframes titleGlitch {
+  0%, 90%, 100% { transform: none; opacity: 0.9; }
+  91% { transform: translate(2px, -1px); opacity: 0.6; }
+  93% { transform: translate(-2px, 1px); opacity: 1; }
+  95% { transform: translate(1px, 0); }
+}
+.modal-section.glitch-intel li.glitch-line {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  border-left: 1px solid rgba(224,40,72,0.25);
+  padding-left: 0.5rem;
+  margin: 0.35rem 0;
+  min-height: 1.35em;
+}
+.modal-section.glitch-intel .scramble {
+  color: var(--text-dim);
+  text-shadow: 1px 0 rgba(224,40,72,0.45), -1px 0 rgba(0,212,232,0.3);
+  filter: contrast(1.2);
+}
+.modal-section.glitch-intel .scramble.hot {
+  color: var(--red);
+  opacity: 0.85;
+}
+
+.char-visual { height: 360px !important; }
+.char-visual img { object-fit: cover; object-position: center 15%; opacity: 1 !important; }
+</style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <header class="sys-topbar">
+    <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+    <div class="status-pill"><span class="dot"></span> ЯДРО СИНХРОНИЗИРОВАНО</div>
+    <nav class="sys-nav">
+      <a href="terminal.html">Терминал</a>
+      <a href="dossier.html" class="active">Досье</a>
+      <a href="scenes.html">Архив сцен</a>
+      <a href="polygon.html">Полигон</a>
+    </nav>
+    <div class="right-meta">
+      <span class="sec-level">SEC:LVL_5</span>
+      <span>ОПЕРАТОР: A-55</span>
+    </div>
+  </header>
+
+  <main class="sys-page">
+
+    <!-- HERO -->
+    <div class="dossier-hero reveal">
+      <div>
+        <div class="crumb">
+          <span class="cyan">#СИСТЕМА_ЛИМБО</span> //
+          <span>РЕЕСТР_СУБЪЕКТОВ</span> //
+          <span class="amber">[АРХИВ_АКТИВЕН]</span>
+        </div>
+        <h1>
+          ДОСЬЕ ПЕРСОНАЛА И СМОТРЯЩИХ
+          <span class="ver">[V.09.4]</span>
+        </h1>
+        <p class="subtitle">
+          Центральный узел надзора · Класс доступа <span style="color:var(--cyan)">S-A</span> ·
+          Карантинная зона: <span style="color:var(--red)">АКТИВНА</span> ·
+          Синхронизация ядра: <span style="color:var(--cyan)" id="liveSync">99.82%</span>
+        </p>
+      </div>
+      <div class="hud-live" id="hudLive"></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-strip reveal">
+      <div class="stat-cell">
+        <div class="lbl">В РЕЕСТРЕ</div>
+        <div class="val"><span id="statTotal">06</span><span class="unit">субъектов</span></div>
+        <div class="sub">Активные записи</div>
+      </div>
+      <div class="stat-cell">
+        <div class="lbl">СМОТРЯЩИЕ</div>
+        <div class="val"><span id="statWatchers">03</span><span class="unit">единицы</span></div>
+        <div class="sub">Прямое погружение</div>
+      </div>
+      <div class="stat-cell">
+        <div class="lbl">АССИСТЕНТЫ</div>
+        <div class="val"><span id="statAssist">02</span><span class="unit">единицы</span></div>
+        <div class="sub">Консольный режим</div>
+      </div>
+      <div class="stat-cell red">
+        <div class="lbl">ZERO-КЛАСС</div>
+        <div class="val"><span id="statZero">01</span><span class="unit">аномалия</span></div>
+        <div class="sub">Прямая угроза ядру</div>
+      </div>
+      <div class="stat-cell amber">
+        <div class="lbl">СРЕДНЯЯ ПСИ</div>
+        <div class="val"><span id="statPsi">68</span><span class="unit">%</span></div>
+        <div class="sub">Коллективная стабильность</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="control-ribbon reveal">
+      <div class="filter-cluster" id="filterGroup">
+        <button class="filter-tab active" data-filter="all">
+          ВСЕ <span class="count" data-count="all">6</span>
+        </button>
+        <button class="filter-tab" data-filter="east">
+          ВОСТОК <span class="count" data-count="east">3</span>
+        </button>
+        <button class="filter-tab" data-filter="west">
+          ЗАПАД <span class="count" data-count="west">2</span>
+        </button>
+        <button class="filter-tab anomaly-tab" data-filter="anomaly">
+          ANOMALY <span class="count" data-count="anomaly">1</span>
+        </button>
+      </div>
+
+      <div class="search-well">
+        <span class="icon">⌕</span>
+        <input id="searchInput" type="text" placeholder="ПОИСК: ИМЯ / ПОЗЫВНОЙ / ID / РОЛЬ" autocomplete="off" spellcheck="false">
+        <span class="hint">ESC · СБРОС</span>
+      </div>
+
+      <div class="sort-cluster">
+        <span class="lbl">СОРТИРОВКА</span>
+        <select id="sortSelect">
+          <option value="default">ПО УМОЛЧАНИЮ</option>
+          <option value="threat-desc">УГРОЗА ↓</option>
+          <option value="threat-asc">УГРОЗА ↑</option>
+          <option value="psi-desc">ПСИ ↓</option>
+          <option value="psi-asc">ПСИ ↑</option>
+          <option value="name">ИМЯ A→Я</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="char-grid" id="charGrid"></div>
+
+  </main>
+
+  <footer class="sys-footer">
+    <span>П.Р.И.Н.Ц. ПРОТОКОЛ // РЕЕСТР СУБЪЕКТОВ</span>
+    <span id="footerMeta">НАЙДЕНО 6/6 · СЕКРЕТНОСТЬ LVL_5</span>
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div>
+          <div class="title" id="modalTitle">[ДЕЛО СУБЪЕКТА]</div>
+          <div class="sub" id="modalSub">// РАСШИРЕННОЕ ДОСЬЕ · SEC:LVL_5</div>
+        </div>
+        <button class="modal-close" id="modalClose" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="js/system.js"></script>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════
+     DOSSIER DATA
+     ═══════════════════════════════════════════════════════════ */
+  const SUBJECTS = [
+    {
+      id: 1,
+      code: 'A-55',
+      number: '#001',
+      name: 'ХЭ ЮЧОУ',
+      portrait: 'assets/img/Хэ Ючоу.png',
+      role: 'СМОТРЯЩИЙ A-55 · ВОСТОЧНЫЙ ШТАБ',
+      division: 'east',
+      divisionName: 'ВОСТОК',
+      status: { label: 'NOMINAL', color: 'green', rail: '' },
+      synced: 94.2,
+      age: '27 лет', birth: '07.10.2012',
+      psi: 97,
+      psiStatus: 'ВЫСОКАЯ', psiColor: 'green',
+      threat: 42,
+      tags: [
+        { t: '#ВОСТОЧНЫЙ_ШТАБ', c: '' },
+        { t: '#ЭЛИТНЫЙ_НАДЗИРАТЕЛЬ', c: '' },
+        { t: '#ЭКС_ПОЛИЦИЯ', c: '' }
+      ],
+      bio: 'Бывший сотрудник полиции. В 24 года ушёл в отставку после несчастного случая; через полгода принят в Восточный штаб Смотрящим A-55.',
+      visualChips: [
+        { t: 'СИНХР: 94.2%', c: 'cyan' },
+        { t: 'ИЗУЧЕННОСТЬ: 97%', c: '' }
+      ],
+      placeholder: { text: 'A-55', color: 'rgba(0,212,232,0.12)' },
+      modalExtra: {
+        history: [
+          '2036 — Уход из полиции в 24 года после несчастного случая.',
+          '2036–2037 — Вербовка П.Р.И.Н.Ц.; через ~6 месяцев — Восточный штаб.',
+          '2037 — Назначение Смотрящим A-55, допуск к Сценам тома 1.',
+          '2038–2039 — Операции в Сценах «Рёкан», «Шанхай», «Тихое место».'
+        ],
+        notes: [
+          'Быстрая реакция в критических ситуациях.',
+          'Уверенное владение огнестрельным оружием.',
+          'Способность быстро разобраться в обстановке и выстроить приоритеты.'
+        ]
+      }
+    },
+    {
+      id: 2,
+      code: 'A-89',
+      number: '#002',
+      name: 'ЦАЙ ЛАНЬ',
+      portrait: 'assets/img/Цай Лань.png',
+      role: 'СМОТРЯЩИЙ A-89 · ВОСТОЧНЫЙ ШТАБ',
+      division: 'east',
+      divisionName: 'ВОСТОК',
+      status: { label: 'CRITICAL', color: 'red', rail: 'red' },
+      synced: 99.8,
+      age: '24 года', birth: '12.09.2015',
+      psi: 31,
+      psiStatus: 'ВЫСОКИЙ РИСК СРЫВА', psiColor: 'red',
+      threat: 88,
+      tags: [
+        { t: '#ВОСТОЧНЫЙ_ШТАБ', c: '' },
+        { t: '#ГЛУБИННАЯ_КОМА', c: 'red' },
+        { t: '#КОРОНА_ЛИМБО', c: '' }
+      ],
+      bio: 'Брат-близнец Цай Фэя. С детства болезненный, искусственно погружён в кому. В последней коме попал в Лимбо и встретил Смотрящего A-55.',
+      visualChips: [
+        { t: 'СВЯЗЬ С ЛИМБО: 99.8%', c: 'cyan' },
+        { t: 'СУБЪЕКТ В КОМЕ', c: 'red' }
+      ],
+      placeholder: { text: 'A-89', color: 'rgba(224,40,72,0.14)' },
+      critical: true,
+      modalExtra: {
+        history: [
+          '12.09 — Рождение в семье Цай, нейродегенеративное расстройство.',
+          'С детства — искусственная кома для стабилизации.',
+          '2023 — Погружение в нижние фракталы Лимбо.',
+          '2024 — Установлен контакт с Хэ Ючоу. Ключевой узел.'
+        ],
+        notes: [
+          'Формирует связи с ядром Лимбо напрямую, минуя штаб.',
+          'Наблюдается активность в каналах, не подконтрольных П.Р.И.Н.Ц.',
+          'Требуется постоянный мониторинг психошока.'
+        ]
+      }
+    },
+    {
+      id: 3,
+      code: 'D-63',
+      number: '#003',
+      name: 'СЕЛИНА ВЕГА',
+      portrait: 'assets/img/Селина Вега.png',
+      role: 'СМОТРЯЩАЯ D-63 · ЗАПАДНЫЙ ШТАБ',
+      division: 'west',
+      divisionName: 'ЗАПАД',
+      status: { label: 'UNSTABLE', color: 'amber', rail: 'amber' },
+      synced: 88.4,
+      age: '25 лет', birth: '01.02',
+      psi: 52,
+      psiStatus: 'OVERDRIVE', psiColor: 'amber',
+      threat: 72,
+      tags: [
+        { t: '#ЗАПАДНЫЙ_ШТАБ', c: '' },
+        { t: '#КИНОАКТРИСА', c: 'pink' },
+        { t: '#БРИТАНСКАЯ_СУКА', c: 'pink' }
+      ],
+      bio: 'Мировая кинозвезда. Истинное призвание — творить хаос в Сценах Лимбо. Прозвана ББС — Бешеная Британская Сука. Имеет непредсказуемый паттерн.',
+      visualChips: [
+        { t: 'ФАКТОР ХАОСА: 88.4%', c: 'amber' },
+        { t: 'РАНГ УГРОЗЫ: ВЫСОКИЙ', c: '' }
+      ],
+      placeholder: { text: 'D-63', color: 'rgba(224,26,111,0.14)' },
+      modalExtra: {
+        history: [
+          '2016 — Дебют в большом кино. Три премии «Оскар».',
+          '2022 — Скандал с разрушением съёмочной площадки.',
+          '2023 — Вербовка Западным штабом.',
+          '2024 — 12 подтверждённых случаев полного схлопывания Сцен.'
+        ],
+        notes: [
+          'Деструктивный потенциал — максимальный по шкале штаба.',
+          'Не поддаётся стандартным протоколам подчинения.',
+          'Рекомендуется изоляция вне активных Сцен.'
+        ]
+      }
+    },
+    {
+      id: 4,
+      code: 'D-28',
+      number: '#004',
+      name: 'НАТАН КОИКЭ',
+      portrait: 'assets/img/Натан Коикэ.png',
+      role: 'АССИСТЕНТ D-28 · ЗАПАДНЫЙ ШТАБ',
+      division: 'west',
+      divisionName: 'ЗАПАД',
+      status: { label: 'ONLINE', color: 'green', rail: '' },
+      synced: 99.1,
+      age: '29 лет', birth: '04.04',
+      psi: 92,
+      psiStatus: 'ОПЕРАТИВНЫЙ', psiColor: 'green',
+      threat: 24,
+      tags: [
+        { t: '#ЗАПАДНЫЙ_ШТАБ', c: '' },
+        { t: '#SEAL_TACTICS', c: '' },
+        { t: '#ХАКИНГ_ПРОТОКОЛОВ', c: '' }
+      ],
+      bio: 'Бывший «морской котик». Не участвует в Сценах — полностью координирует Смотрящих с консоли. Подавляет спонтанные выбросы аномалий.',
+      visualChips: [
+        { t: 'СВЯЗЬ ШТАБА: 99.1%', c: 'cyan' },
+        { t: 'TACTICIAN LVL_5', c: '' }
+      ],
+      placeholder: { text: 'D-28', color: 'rgba(0,212,232,0.12)' },
+      modalExtra: {
+        history: [
+          '2015 — Отбор в спецназ. Позывной «Морской Волк».',
+          '2020 — Участие в 24 боевых операциях.',
+          '2022 — Переход в П.Р.И.Н.Ц. на должность координатора.',
+          '2024 — Западный штаб. Прямое руководство Селиной Вегой.'
+        ],
+        notes: [
+          'Исключительная точность координации.',
+          'Игнорирует риск физического погружения.',
+          'Пси-профиль: устойчивый, боевой.'
+        ]
+      }
+    },
+    {
+      id: 5,
+      code: 'A-22',
+      number: '#005',
+      name: 'ЦАЙ ФЭЙ',
+      portrait: 'assets/img/Цай Фэй.png',
+      role: 'АССИСТЕНТ A-22 · ВОСТОЧНЫЙ ШТАБ',
+      division: 'east',
+      divisionName: 'ВОСТОК',
+      status: { label: 'ACTIVE', color: 'green', rail: '' },
+      synced: 96.6,
+      age: '24 года', birth: '12.09.2015',
+      psi: 85,
+      psiStatus: 'АНАЛИТИКА', psiColor: 'green',
+      threat: 18,
+      tags: [
+        { t: '#ВОСТОЧНЫЙ_ШТАБ', c: '' },
+        { t: '#ТЕХНИЧЕСКИЙ_ГЕНИЙ', c: 'pink' },
+        { t: '#КУРАТОР_БЛИЗНЕЦ', c: '' }
+      ],
+      bio: 'Брат-близнец Цай Ланя. Закончил вуз экстерном с лучшими оценками. Устроился в штаб, чтобы оплачивать лекарства брата.',
+      visualChips: [
+        { t: 'ТЕХ-РЕЙТИНГ: TOP-1', c: 'pink' },
+        { t: 'ПРЕДАННОСТЬ: 100%', c: '' }
+      ],
+      placeholder: { text: 'A-22', color: 'rgba(155,0,212,0.14)' },
+      modalExtra: {
+        history: [
+          '2019 — Поступление в федеральный университет.',
+          '2022 — Экстерн с отличием. 5 опубликованных работ.',
+          '2023 — Секретный контракт с П.Р.И.Н.Ц.',
+          '2024 — Тех. аналитик А-22, куратор брата.'
+        ],
+        notes: [
+          'Высокий уровень IQ, сильная аналитика.',
+          'Быстрая реакция на данные телеметрии.',
+          'Не способен здраво мыслить, будучи ассистентом брата — рекомендуется разделять их.'
+        ]
+      }
+    },
+    {
+      id: 6,
+      code: 'ZERO',
+      number: '#006 // NULL',
+      name: 'СЮАНЬ У',
+      portrait: 'assets/img/Сюань У.png',
+      role: '/ДАННЫЕ ПОВРЕЖДЕНЫ/ · ВОСТОЧНЫЙ РЕГИОН',
+      glitchIntel: true,
+      division: 'anomaly',
+      divisionName: 'ANOMALY',
+      status: { label: 'ANOMALY', color: 'red', rail: 'red' },
+      synced: 0,
+      age: '??', birth: '??',
+      psi: 0,
+      psiStatus: 'НЕТ ДАННЫХ', psiColor: 'red',
+      threat: 100,
+      tags: [
+        { t: '#КЛАСС_ZERO', c: 'red' },
+        { t: '#МАСКА_НЕОНА', c: 'red' },
+        { t: '#УГРОЗА_ПРИНЦУ', c: 'red' }
+      ],
+      bio: 'Таинственный субъект с неоновой маской-улыбкой. Несанкционированный доступ к ядру. Связан с Цай Ланем неизвестным образом.',
+      visualChips: [
+        { t: 'ГЛИТЧ-ИНДЕКС: 99.9%', c: 'red' },
+        { t: 'ОПАСНОСТЬ: КРИТИЧЕСКАЯ', c: 'red' }
+      ],
+      placeholder: { text: '???', color: 'rgba(255,42,85,0.22)' },
+      anomaly: true,
+      modalExtra: {
+        history: [
+          'История субъекта не задокументирована.',
+          'Первое появление — в канале памяти Цай Ланя.',
+          'Несанкционированный доступ к 7 закрытым протоколам.',
+          'Способен искажать физику Лимбо.'
+        ],
+        notes: [
+          'Прямая угроза ядру П.Р.И.Н.Ц.',
+          'Ни один протокол изоляции не сработал.',
+          'Рекомендуется немедленная дешифровка следа.'
+        ]
+      }
+    }
+  ];
+
+  /* ═══════════════════════════════════════════════════════════
+     CARD BUILDER
+     ═══════════════════════════════════════════════════════════ */
+  function buildCard(s, index) {
+    const article = document.createElement('article');
+    article.className = 'char-card';
+    if (s.critical) article.classList.add('critical');
+    if (s.anomaly) article.classList.add('anomaly');
+    article.dataset.id = s.id;
+    article.dataset.division = s.division;
+    article.dataset.name = s.name;
+    article.dataset.threat = s.threat;
+    article.dataset.psi = s.psi;
+    article.style.animationDelay = (index * 0.04) + 's';
+
+    const railStatusClass = s.status.rail || '';
+    const psiColorVar = `var(--${s.psiColor === 'green' ? 'green' : s.psiColor === 'red' ? 'red' : s.psiColor === 'amber' ? 'amber' : 'cyan'})`;
+
+    // psi circle circumference (r=24 → 2πr ≈ 150.8)
+    const r = 24;
+    const circ = 2 * Math.PI * r;
+    const psiDash = (s.psi / 100) * circ;
+
+    article.innerHTML = `
+      <div class="card-rail">
+        <span class="status ${railStatusClass}">
+          <span class="dot"></span>
+          <span>[${s.code}]</span>
+        </span>
+        <span class="division">${s.divisionName} · SEC:LVL_4</span>
+      </div>
+
+      <div class="char-visual">
+        <div class="grid-bg"></div>
+        ${s.portrait
+          ? `<img src="${s.portrait}" alt="${s.name}" onerror="this.style.display='none'">`
+          : `<div class="placeholder-code" style="color:${s.placeholder.color}">${s.placeholder.text}</div>`}
+        ${!s.portrait ? '' : `<div class="placeholder-code" style="color:${s.placeholder.color};pointer-events:none;opacity:0.15">${s.placeholder.text}</div>`}
+
+        <div class="visual-overlay">
+          ${s.visualChips.map(c => `<span class="chip ${c.c}">${c.t}</span>`).join('')}
+        </div>
+
+        <div class="visual-badge">
+          <div>
+            <div class="id">СУБЪЕКТ ${s.number}</div>
+            <div class="name">${s.name}</div>
+          </div>
+          <span class="state tag tag-${s.status.color === 'green' ? 'green' : s.status.color === 'red' ? 'red' : s.status.color === 'amber' ? 'amber' : 'cyan'}"
+                style="padding:0.25rem 0.5rem;font-family:var(--font-mono);font-size:0.55rem;letter-spacing:0.1em;background:rgba(0,0,0,0.6);">
+            [${s.status.label}]
+          </span>
+        </div>
+      </div>
+
+      <div class="char-body">
+        <div class="char-role">${s.role}</div>
+
+        <div class="char-tags">
+          ${s.tags.map(t => `<span class="tag ${t.c}">${t.t}</span>`).join('')}
+        </div>
+
+        <div class="bio-strip">
+          <div class="cell">
+            <span class="lbl">Возраст</span>
+            <span class="val">${s.age}</span>
+          </div>
+          <div class="cell">
+            <span class="lbl">Дата рожд.</span>
+            <span class="val">${s.birth}</span>
+          </div>
+          <div class="cell">
+            <span class="lbl">Синхр.</span>
+            <span class="val ${s.synced > 95 ? 'cyan' : s.synced > 80 ? 'amber' : 'red'}">${s.synced.toFixed(1)}%</span>
+          </div>
+        </div>
+
+        <p class="char-bio">${s.bio}</p>
+
+        <div class="psi-row">
+          <div class="psi-radial" style="color:${psiColorVar}">
+            <svg viewBox="0 0 56 56">
+              <circle class="bg" cx="28" cy="28" r="${r}"/>
+              <circle class="fg" cx="28" cy="28" r="${r}"
+                      stroke-dasharray="${psiDash} ${circ}"
+                      style="stroke:${psiColorVar};"/>
+            </svg>
+            <span class="pct" style="color:${psiColorVar}">${s.psi}%</span>
+          </div>
+          <div class="psi-info">
+            <div class="lbl">Изученность</div>
+            <div class="status" style="color:${psiColorVar}">${s.psiStatus}</div>
+          </div>
+        </div>
+
+        <div class="char-actions">
+          <button class="btn" data-action="open">${s.anomaly ? 'Дешифровать след' : 'Развернуть дело'}</button>
+          <button class="btn ghost" data-action="quick" title="Быстрый просмотр">⌕</button>
+        </div>
+      </div>
+
+      ${s.anomaly ? '<div class="anomaly-pulse"></div>' : ''}
+    `;
+    return article;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     STATE + RENDER
+     ═══════════════════════════════════════════════════════════ */
+  const grid = document.getElementById('charGrid');
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
+  const footerMeta = document.getElementById('footerMeta');
+  const filterGroup = document.getElementById('filterGroup');
+
+  let state = {
+    filter: 'all',
+    query: '',
+    sort: 'default'
+  };
+
+  function renderGrid() {
+    const gridEl = document.getElementById('charGrid');
+    gridEl.innerHTML = '';
+    let list = SUBJECTS.slice();
+
+    // Filter
+    if (state.filter !== 'all') {
+      list = list.filter(s => s.division === state.filter);
+    }
+    // Search
+    if (state.query) {
+      const q = state.query.toLowerCase();
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.code.toLowerCase().includes(q) ||
+        s.role.toLowerCase().includes(q) ||
+        s.tags.some(t => t.t.toLowerCase().includes(q)) ||
+        s.number.toLowerCase().includes(q)
+      );
+    }
+    // Sort
+    switch (state.sort) {
+      case 'threat-desc': list.sort((a,b) => b.threat - a.threat); break;
+      case 'threat-asc':  list.sort((a,b) => a.threat - b.threat); break;
+      case 'psi-desc':    list.sort((a,b) => b.psi - a.psi); break;
+      case 'psi-asc':     list.sort((a,b) => a.psi - b.psi); break;
+      case 'name':        list.sort((a,b) => a.name.localeCompare(b.name, 'ru')); break;
+    }
+
+    if (list.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.innerHTML = `
+        <div class="icon">⌀</div>
+        <div class="msg">НЕ НАЙДЕНО СУБЪЕКТОВ ПО ЗАПРОСУ</div>
+        <div class="sub">Измените фильтр или поисковый запрос</div>
+      `;
+      gridEl.appendChild(empty);
+    } else {
+      list.forEach((s, i) => {
+        const card = buildCard(s, i);
+        gridEl.appendChild(card);
+      });
+    }
+
+    // Scan effect
+    gridEl.classList.remove('scanning');
+    void gridEl.offsetWidth;
+    gridEl.classList.add('scanning');
+
+    // Counter
+    footerMeta.textContent = `НАЙДЕНО ${list.length}/6 · СЕКРЕТНОСТЬ LVL_5`;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     FILTER TABS
+     ═══════════════════════════════════════════════════════════ */
+  filterGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-tab');
+    if (!btn) return;
+    filterGroup.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.filter = btn.dataset.filter;
+    renderGrid();
+    if (window.audioCtx) window.audioCtx.beep?.();
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     SEARCH
+     ═══════════════════════════════════════════════════════════ */
+  let searchDebounce;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+      state.query = e.target.value.trim();
+      renderGrid();
+    }, 180);
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      state.query = '';
+      renderGrid();
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     SORT
+     ═══════════════════════════════════════════════════════════ */
+  sortSelect.addEventListener('change', (e) => {
+    state.sort = e.target.value;
+    renderGrid();
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     MODAL
+     ═══════════════════════════════════════════════════════════ */
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalSub = document.getElementById('modalSub');
+  const modalBody = document.getElementById('modalBody');
+  const modalClose = document.getElementById('modalClose');
+
+  function openModal(subject) {
+    modalTitle.textContent = `[ДЕЛО: ${subject.name} // SEC:LVL_5]`;
+    modalSub.textContent = `СУБЪЕКТ ${subject.number} · ${subject.code} · ${subject.divisionName}`;
+
+    const psiColorVar = `var(--${subject.psiColor === 'green' ? 'green' : subject.psiColor === 'red' ? 'red' : subject.psiColor === 'amber' ? 'amber' : 'cyan'})`;
+
+    modalBody.innerHTML = `
+      <div class="modal-section">
+        <h4>// ИДЕНТИФИКАЦИЯ</h4>
+        <div class="modal-grid">
+          <div class="kv"><div class="k">Позывной</div><div class="v cyan">${subject.code}</div></div>
+          <div class="kv"><div class="k">Номер</div><div class="v">${subject.number}</div></div>
+          <div class="kv"><div class="k">Роль</div><div class="v">${subject.role}</div></div>
+          <div class="kv"><div class="k">Штаб</div><div class="v">${subject.divisionName}</div></div>
+          <div class="kv"><div class="k">Возраст</div><div class="v">${subject.age}</div></div>
+          <div class="kv"><div class="k">Дата рождения</div><div class="v">${subject.birth}</div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h4>// БИОМЕТРИЯ</h4>
+        <div class="modal-grid">
+          <div class="kv"><div class="k">Синхронизация</div><div class="v ${subject.synced > 95 ? 'cyan' : subject.synced > 80 ? 'amber' : 'red'}">${subject.synced.toFixed(1)}%</div></div>
+          <div class="kv"><div class="k">Изученность</div><div class="v" style="color:${psiColorVar}">${subject.psi}% · ${subject.psiStatus}</div></div>
+          <div class="kv"><div class="k">Индекс угрозы</div><div class="v ${subject.threat > 80 ? 'red' : subject.threat > 50 ? 'amber' : 'green'}">${subject.threat}/100</div></div>
+          <div class="kv"><div class="k">Статус</div><div class="v ${subject.status.color}">[${subject.status.label}]</div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h4>// ОПИСАНИЕ</h4>
+        <p class="${subject.glitchIntel ? 'scramble' : ''}" ${subject.glitchIntel ? `data-text="${subject.bio.replace(/"/g,'&quot;')}"` : ''}>${subject.bio}</p>
+      </div>
+
+      <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
+        <h4>// ИСТОРИЯ ОПЕРАЦИЙ</h4>
+        <ul>${subject.modalExtra.history.map(h => subject.glitchIntel
+          ? `<li class="glitch-line"><span class="scramble" data-text="${h.replace(/"/g,'&quot;')}">${h}</span></li>`
+          : `<li>${h}</li>`).join('')}</ul>
+      </div>
+
+      <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
+        <h4>// АНАЛИТИЧЕСКИЕ ЗАМЕТКИ</h4>
+        <ul>${subject.modalExtra.notes.map(n => subject.glitchIntel
+          ? `<li class="glitch-line"><span class="scramble" data-text="${n.replace(/"/g,'&quot;')}">${n}</span></li>`
+          : `<li>${n}</li>`).join('')}</ul>
+      </div>
+
+      <div class="modal-section">
+        <h4>// ТЕГИ И КЛАССИФИКАЦИЯ</h4>
+        <div class="char-tags">
+          ${subject.tags.map(t => `<span class="tag ${t.c}">${t.t}</span>`).join('')}
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn" data-modal-action="close">ЗАКРЫТЬ ПРОТОКОЛ</button>
+        <button class="btn btn-solid" data-modal-action="export">ЭКСПОРТ ДЕЛА</button>
+      </div>
+    `;
+    modal.classList.add('open');
+    if (subject.glitchIntel) startScramble();
+    else stopScramble();
+  }
+
+
+  /* ── ZERO subject: live glyph scramble ── */
+  const GLYPHS = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ01█░▒▓#@$%&<>/\\|?*№ΞΨΩ';
+  let scrambleTimer = null;
+  function stopScramble() {
+    if (scrambleTimer) { clearInterval(scrambleTimer); scrambleTimer = null; }
+  }
+  function startScramble() {
+    stopScramble();
+    const tick = () => {
+      document.querySelectorAll('#modalBody .scramble').forEach(el => {
+        const orig = el.getAttribute('data-text') || '';
+        if (!orig) return;
+        let out = '';
+        for (let i = 0; i < orig.length; i++) {
+          const ch = orig[i];
+          if (' —.,·-'.includes(ch)) { out += ch; continue; }
+          out += (Math.random() > 0.18) ? GLYPHS[(Math.random() * GLYPHS.length) | 0] : ch;
+        }
+        el.textContent = out;
+        el.classList.toggle('hot', Math.random() > 0.6);
+      });
+    };
+    tick();
+    scrambleTimer = setInterval(tick, 45);
+  }
+
+  function closeModal() {
+    stopScramble();
+    modal.classList.remove('open');
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+    const act = e.target.closest('[data-modal-action]')?.dataset.modalAction;
+    if (act === 'close') closeModal();
+    if (act === 'export') {
+      const title = modalTitle.textContent;
+      const text = `${title}\n\n${modalBody.innerText}`;
+      navigator.clipboard?.writeText(text);
+      e.target.textContent = 'СКОПИРОВАНО ✓';
+      setTimeout(() => { e.target.textContent = 'ЭКСПОРТ ДЕЛА'; }, 1400);
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     CARD CLICK DELEGATION
+     ═══════════════════════════════════════════════════════════ */
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.char-card');
+    if (!card) return;
+    const id = +card.dataset.id;
+    const subject = SUBJECTS.find(s => s.id === id);
+    if (!subject) return;
+
+    const action = e.target.closest('[data-action]')?.dataset.action;
+    if (action === 'open' || action === 'quick' || !action) {
+      openModal(subject);
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════════════
+     LIVE COUNTERS
+     ═══════════════════════════════════════════════════════════ */
+  setInterval(() => {
+    document.getElementById('liveSync').textContent = (99.5 + Math.random() * 0.4).toFixed(2) + '%';
+    const avgPsi = Math.round(SUBJECTS.reduce((a, s) => a + s.psi, 0) / SUBJECTS.length);
+    document.getElementById('statPsi').textContent = avgPsi;
+  }, 2200);
+
+  /* ═══════════════════════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════════════════════ */
+  renderGrid();
+  </script>
+</body>
+</html>

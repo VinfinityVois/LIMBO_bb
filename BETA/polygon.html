@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>П.Р.И.Н.Ц. // Полигон · Симуляция</title>
+  <link rel="stylesheet" href="css/system.css">
+  <style>
+    /* ═══ COMPLEX POLY LAYER ═══ */
+    .poly-page { position: relative; }
+
+    .poly-hero {
+      position: relative;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(0,212,232,0.18);
+      background: linear-gradient(160deg, #0a0f1a 0%, #060912 50%, #0c121f 100%);
+      overflow: hidden;
+      min-height: 280px;
+    }
+    .poly-hero::after {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background:
+        linear-gradient(90deg, transparent 0%, rgba(0,212,232,0.03) 50%, transparent 100%);
+      animation: heroScan 6s ease-in-out infinite;
+    }
+    @keyframes heroScan {
+      0%, 100% { transform: translateX(-30%); opacity: 0; }
+      40% { opacity: 1; }
+      70% { transform: translateX(30%); opacity: 0; }
+    }
+    .poly-hero-grid {
+      position: absolute; inset: 0; opacity: 0.3;
+      background-image:
+        linear-gradient(rgba(0,212,232,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,232,0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      animation: gridDrift 24s linear infinite;
+      mask-image: radial-gradient(ellipse at 60% 40%, #000 20%, transparent 75%);
+    }
+    @keyframes gridDrift {
+      0% { background-position: 0 0; }
+      100% { background-position: 32px 32px; }
+    }
+    .poly-hero-inner {
+      position: relative; z-index: 1;
+      padding: 1.75rem 1.6rem 1.6rem;
+      display: grid;
+      grid-template-columns: 1.45fr 0.9fr;
+      gap: 1.75rem;
+      align-items: center;
+    }
+    @media (max-width: 960px) {
+      .poly-hero-inner { grid-template-columns: 1fr; }
+    }
+    .poly-stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.55rem;
+      margin-top: 1.15rem;
+    }
+    @media (max-width: 700px) {
+      .poly-stat-row { grid-template-columns: 1fr 1fr; }
+    }
+    .poly-stat {
+      position: relative;
+      padding: 0.65rem 0.75rem;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(0,212,232,0.14);
+      font-family: var(--font-mono); font-size: 0.55rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .poly-stat:hover {
+      border-color: rgba(0,212,232,0.4);
+      box-shadow: 0 0 20px rgba(0,212,232,0.08);
+    }
+    .poly-stat::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; height: 2px; width: 0;
+      background: var(--cyan);
+      transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+    }
+    .poly-stat.lit::after { width: 100%; }
+    .poly-stat b {
+      display: block; margin-top: 0.25rem;
+      font-size: 1.05rem; color: var(--cyan); letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .poly-stat b.amber { color: var(--amber); }
+    .poly-stat b.green { color: var(--green); }
+
+    /* RADAR + rings */
+    .poly-radar-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+    }
+    .poly-radar {
+      width: 180px; height: 180px;
+      position: relative;
+    }
+    .poly-radar svg { width: 100%; height: 100%; filter: drop-shadow(0 0 12px rgba(0,212,232,0.15)); }
+    .radar-sweep {
+      transform-origin: 50% 50%;
+      animation: sweep 3.6s linear infinite;
+    }
+    @keyframes sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .radar-blip {
+      animation: blip 2.2s ease-in-out infinite;
+    }
+    @keyframes blip {
+      0%, 100% { opacity: 0.3; r: 1.2; }
+      50% { opacity: 1; }
+    }
+    .radar-label {
+      font-family: var(--font-mono); font-size: 0.55rem;
+      letter-spacing: 0.14em; color: var(--text-muted);
+    }
+
+    /* SCENE PREVIEWS — denser cinematic cards */
+    .scene-prev-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) {
+      .scene-prev-grid { grid-template-columns: 1fr; }
+    }
+    .scene-prev {
+      position: relative;
+      border: 1px solid rgba(0,212,232,0.12);
+      background: #070b14;
+      overflow: hidden;
+      min-height: 230px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.4s, transform 0.45s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s;
+    }
+    .scene-prev::before {
+      content: '';
+      position: absolute; inset: -1px; z-index: 4; pointer-events: none;
+      background: linear-gradient(135deg, rgba(0,212,232,0.25), transparent 40%, transparent 60%, rgba(224,26,111,0.15));
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .scene-prev:hover {
+      border-color: rgba(0,212,232,0.5);
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(0,212,232,0.12);
+    }
+    .scene-prev:hover::before { opacity: 1; }
+    .scene-prev img {
+      width: 100%; height: 230px; object-fit: cover; display: block;
+      transition: transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.45s;
+      filter: saturate(0.75) brightness(0.7) contrast(1.05);
+    }
+    .scene-prev:hover img {
+      transform: scale(1.08);
+      filter: saturate(1.05) brightness(0.85) contrast(1.08);
+    }
+    .scene-prev .shade {
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(3,5,10,0.2) 0%, transparent 30%, rgba(3,5,10,0.55) 55%, rgba(3,5,10,0.97) 100%);
+      pointer-events: none;
+    }
+    .scene-prev .scan {
+      position: absolute; left: 0; right: 0; height: 35%; z-index: 2; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(0,212,232,0.06), transparent);
+      animation: cardScan 5s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .scene-prev:hover .scan { opacity: 1; }
+    @keyframes cardScan {
+      0% { top: -35%; }
+      100% { top: 100%; }
+    }
+    .scene-prev .meta {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 1rem 1rem 0.95rem;
+      z-index: 3;
+    }
+    .scene-prev .code {
+      font-family: var(--font-mono); font-size: 0.52rem;
+      letter-spacing: 0.14em; color: var(--cyan); margin-bottom: 0.3rem;
+    }
+    .scene-prev h3 {
+      font-family: var(--font-display); font-size: 1.1rem;
+      letter-spacing: 0.04em; margin: 0 0 0.25rem;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.8);
+    }
+    .scene-prev .st {
+      font-family: var(--font-mono); font-size: 0.58rem;
+      letter-spacing: 0.1em;
+    }
+    .st.ok { color: var(--green); }
+    .st.lock { color: var(--text-muted); }
+    .st.warn { color: var(--amber); }
+    .st.bad { color: var(--red); }
+    .scene-prev .badge {
+      position: absolute; top: 0.6rem; left: 0.6rem; z-index: 5;
+      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.12em;
+      padding: 0.25rem 0.5rem;
+      background: rgba(3,5,10,0.85); border: 1px solid rgba(0,212,232,0.35);
+      color: var(--cyan); backdrop-filter: blur(6px);
+    }
+    .scene-prev .pct-ring {
+      position: absolute; top: 0.55rem; right: 0.55rem; z-index: 5;
+      width: 36px; height: 36px;
+    }
+    .scene-prev .pct-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .scene-prev .pct-ring circle {
+      fill: none; stroke-width: 2.5;
+    }
+    .scene-prev .pct-ring .bg { stroke: rgba(0,212,232,0.15); }
+    .scene-prev .pct-ring .fg {
+      stroke: var(--cyan);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      transition: stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    /* MODULES */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 800px) { .module-grid { grid-template-columns: 1fr; } }
+    .module-card {
+      position: relative;
+      background: linear-gradient(165deg, rgba(12,16,28,0.98), rgba(6,9,16,0.96));
+      border: 1px solid rgba(0,212,232,0.12);
+      padding: 0;
+      overflow: hidden;
+      transition: border-color 0.35s, transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s;
+      cursor: default;
+    }
+    .module-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+      background: linear-gradient(180deg, var(--cyan), transparent 75%);
+      opacity: 0.55;
+      transition: opacity 0.3s, height 0.5s;
+    }
+    .module-card:hover {
+      border-color: rgba(0,212,232,0.42);
+      transform: translateY(-4px);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.4), 0 0 30px rgba(0,212,232,0.06);
+    }
+    .module-card:hover::before { opacity: 1; }
+    .module-card .mh {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.8rem 1.05rem 0.6rem;
+      border-bottom: 1px solid rgba(0,212,232,0.1);
+      background: rgba(0,212,232,0.025);
+    }
+    .module-card .mh h3 {
+      font-family: var(--font-display); font-size: 0.85rem;
+      letter-spacing: 0.06em; color: var(--cyan); margin: 0;
+    }
+    .module-card .mh .num {
+      font-family: var(--font-mono); font-size: 0.52rem;
+      letter-spacing: 0.14em; color: var(--text-muted);
+    }
+    .module-card .mb {
+      padding: 0.9rem 1.05rem 1.05rem;
+      font-size: 0.86rem; color: var(--text-dim); line-height: 1.6;
+    }
+    .module-card .tags {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+      margin-top: 0.8rem;
+    }
+    .module-card .tag {
+      font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em;
+      padding: 0.22rem 0.48rem;
+      border: 1px solid rgba(0,212,232,0.22);
+      color: var(--text-muted);
+      transition: border-color 0.25s, color 0.25s, background 0.25s;
+    }
+    .module-card:hover .tag {
+      border-color: rgba(0,212,232,0.4);
+      color: var(--cyan);
+      background: rgba(0,212,232,0.05);
+    }
+
+    /* ROADMAP — complex progress */
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 900px) { .roadmap { grid-template-columns: 1fr; } }
+    .road-item {
+      background: linear-gradient(165deg, rgba(12,16,28,0.98), rgba(6,9,16,0.96));
+      border: 1px solid rgba(0,212,232,0.12);
+      padding: 1.25rem 1.2rem 1.3rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.35s, transform 0.35s;
+    }
+    .road-item:hover {
+      border-color: rgba(0,212,232,0.4);
+      transform: translateY(-3px);
+    }
+    .road-item .phase {
+      position: absolute; top: 0.75rem; right: 0.8rem;
+      font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+    .road-item .pct-row {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 0.45rem;
+    }
+    .road-item .pct-label {
+      font-family: var(--font-mono); font-size: 0.55rem;
+      letter-spacing: 0.1em; color: var(--text-muted);
+    }
+    .road-item .pct-val {
+      font-family: var(--font-mono); font-size: 1.15rem;
+      font-weight: 600; color: var(--cyan);
+      font-variant-numeric: tabular-nums;
+    }
+    .road-item h4 {
+      font-family: var(--font-display); font-size: 0.92rem;
+      letter-spacing: 0.03em; margin: 0 0 0.5rem;
+    }
+    .road-item p {
+      font-size: 0.82rem; color: var(--text-dim); line-height: 1.55; margin: 0 0 1rem;
+    }
+
+    /* Multi-layer progress bar */
+    .bar-complex {
+      position: relative;
+      height: 8px;
+      background: rgba(0,212,232,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .bar-complex .track-glow {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0,212,232,0.05), transparent);
+      animation: trackShimmer 2.5s ease infinite;
+    }
+    @keyframes trackShimmer {
+      0%, 100% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+    }
+    .bar-complex .fill {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #007a88, #00d4e8 60%, #7ef0ff);
+      box-shadow: 0 0 12px rgba(0,212,232,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+      border-radius: 2px;
+      transition: width 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .bar-complex .fill::after {
+      content: '';
+      position: absolute; right: 0; top: -2px; bottom: -2px; width: 10px;
+      background: #fff;
+      opacity: 0.55;
+      filter: blur(4px);
+      border-radius: 50%;
+    }
+    .bar-complex .seg {
+      position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgba(3,5,10,0.5);
+      z-index: 2;
+    }
+    .bar-ticks {
+      display: flex; justify-content: space-between;
+      margin-top: 0.35rem;
+      font-family: var(--font-mono); font-size: 0.48rem;
+      letter-spacing: 0.06em; color: var(--text-muted);
+    }
+
+    /* FEED */
+    .feed-panel {
+      background: linear-gradient(165deg, rgba(10,14,24,0.98), rgba(6,9,16,0.95));
+      border: 1px solid rgba(0,212,232,0.14);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .feed-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.75rem 1.05rem;
+      border-bottom: 1px solid rgba(0,212,232,0.1);
+      background: rgba(0,212,232,0.03);
+    }
+    .feed-head h3 {
+      font-family: var(--font-display); font-size: 0.78rem;
+      letter-spacing: 0.1em; color: var(--cyan); margin: 0;
+    }
+    .feed-live {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.12em;
+      color: var(--green);
+    }
+    .feed-live .d {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 8px var(--green);
+      animation: pulseDot 1.3s ease infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+    .feed-body {
+      max-height: 200px; overflow: hidden;
+      font-family: var(--font-mono); font-size: 0.68rem;
+      line-height: 1.75; padding: 0.8rem 1.05rem;
+      color: var(--text-dim);
+    }
+    .feed-body .line {
+      opacity: 0;
+      animation: feedIn 0.45s ease forwards;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .feed-body .line .ts { color: var(--text-muted); margin-right: 0.55rem; }
+    .feed-body .line .hi { color: var(--cyan); }
+    .feed-body .line .ok { color: var(--green); }
+    .feed-body .line .bad { color: var(--red); }
+    @keyframes feedIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* CTA */
+    .cta-box {
+      position: relative;
+      text-align: center;
+      padding: 2.2rem 1.5rem;
+      background: linear-gradient(135deg, rgba(0,212,232,0.1), rgba(8,12,22,0.95) 50%, rgba(224,26,111,0.06));
+      border: 1px solid rgba(0,212,232,0.3);
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0,212,232,0.08), transparent);
+      animation: ctaShine 3.5s ease infinite;
+    }
+    @keyframes ctaShine {
+      0%, 100% { transform: translateX(-120%); }
+      50% { transform: translateX(120%); }
+    }
+    .cta-box h3 {
+      font-family: var(--font-display); font-size: 1.25rem;
+      letter-spacing: 0.04em; margin: 0 0 0.55rem; position: relative;
+    }
+    .cta-box p {
+      color: var(--text-dim); font-size: 0.88rem; margin: 0 auto 1.3rem;
+      position: relative; max-width: 520px; line-height: 1.55;
+    }
+    .cta-box .btn {
+      position: relative;
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      padding: 0.8rem 1.5rem;
+      font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+      background: var(--cyan); color: #03050a; border: none;
+      transition: box-shadow 0.3s, transform 0.3s, filter 0.2s;
+      cursor: pointer;
+    }
+    .cta-box .btn:hover {
+      box-shadow: 0 0 32px rgba(0,212,232,0.5);
+      transform: translateY(-3px);
+      filter: brightness(1.08);
+    }
+
+    .sec-label {
+      font-family: var(--font-mono); font-size: 0.55rem;
+      letter-spacing: 0.16em; color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+    .sec-title {
+      font-family: var(--font-display); font-size: 1.08rem;
+      letter-spacing: 0.04em; margin: 0 0 1.1rem;
+    }
+
+    /* Audio toggle */
+    .sfx-toggle {
+      position: fixed; bottom: 1.1rem; right: 1.1rem; z-index: 50;
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.75rem;
+      background: rgba(7,10,18,0.9); border: 1px solid rgba(0,212,232,0.3);
+      font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.12em;
+      color: var(--cyan); cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .sfx-toggle:hover { background: rgba(0,212,232,0.1); border-color: var(--cyan); }
+    .sfx-toggle.off { color: var(--text-muted); border-color: var(--border); }
+
+    .reveal {
+      opacity: 0; transform: translateY(22px);
+      transition: opacity 0.65s cubic-bezier(0.22,1,0.36,1), transform 0.65s cubic-bezier(0.22,1,0.36,1);
+    }
+    .reveal.in { opacity: 1; transform: none; }
+    .reveal-d1 { transition-delay: 0.07s; }
+    .reveal-d2 { transition-delay: 0.14s; }
+    .reveal-d3 { transition-delay: 0.21s; }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <header class="sys-topbar">
+    <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+    <div class="status-pill"><span class="dot"></span> ЯДРО СИНХРОНИЗИРОВАНО</div>
+    <nav class="sys-nav">
+      <a href="terminal.html">Терминал</a>
+      <a href="dossier.html">Досье</a>
+      <a href="scenes.html">Архив сцен</a>
+      <a href="polygon.html" class="active">Полигон</a>
+    </nav>
+    <div class="right-meta">
+      <span class="sec-level">SEC:LVL_5</span>
+      <span>ОПЕРАТОР: A-55</span>
+    </div>
+  </header>
+
+  <main class="sys-page poly-page">
+    <div class="sys-header reveal">
+      <div class="eyebrow">Архитектура // Полигон_нейро_слой // Development_proving_grounds</div>
+      <h1>Интерактивный полигон ПРИНЦ // <span class="accent">Симуляция сцен</span></h1>
+      <p class="desc">
+        Тактический киберпанк-детектив. Прямой нейроинтерфейс между правительственной надстройкой
+        и забытыми слоями Лимбо. Погружайтесь в симуляцию или координируйте операции из кресла Смотрящего.
+      </p>
+    </div>
+
+    <div class="poly-hero reveal">
+      <div class="poly-hero-grid"></div>
+      <div class="poly-hero-inner">
+        <div>
+          <div class="sec-label">NODE STATUS · CLUSTER POLY</div>
+          <h2 style="font-family:var(--font-display);font-size:1.3rem;letter-spacing:0.04em;margin:0 0 0.5rem;">
+            Контур разработки тома 1
+          </h2>
+          <p style="font-size:0.88rem;color:var(--text-dim);line-height:1.55;margin:0;max-width:500px;">
+            Полигон связывает архив сцен, протоколы Смотрящих и будущий 3D-слой.
+            Текущий фокус — ветвящиеся симуляции и стабильность кластера 8.
+          </p>
+          <div class="poly-stat-row">
+            <div class="poly-stat" data-sfx="tick"><span>СЦЕНЫ ТОМА 1</span><b id="statScenes" class="green">0 / 3</b></div>
+            <div class="poly-stat" data-sfx="tick"><span>ГОТОВНОСТЬ БАЗЫ</span><b id="statBase">0%</b></div>
+            <div class="poly-stat" data-sfx="tick"><span>КЛАСТЕР</span><b class="amber">CL-8</b></div>
+            <div class="poly-stat" data-sfx="tick"><span>LATENCY</span><b id="statLat">— ms</b></div>
+          </div>
+        </div>
+        <div class="poly-radar-wrap">
+          <div class="poly-radar" aria-hidden="true">
+            <svg viewBox="0 0 100 100">
+              <defs>
+                <radialGradient id="rg" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="rgba(0,212,232,0.15)"/>
+                  <stop offset="100%" stop-color="rgba(0,212,232,0)"/>
+                </radialGradient>
+              </defs>
+              <circle cx="50" cy="50" r="48" fill="url(#rg)"/>
+              <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,212,232,0.2)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="34" fill="none" stroke="rgba(0,212,232,0.14)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(0,212,232,0.12)" stroke-width="0.5"/>
+              <circle cx="50" cy="50" r="10" fill="none" stroke="rgba(0,212,232,0.18)" stroke-width="0.5"/>
+              <line x1="50" y1="2" x2="50" y2="98" stroke="rgba(0,212,232,0.1)" stroke-width="0.35"/>
+              <line x1="2" y1="50" x2="98" y2="50" stroke="rgba(0,212,232,0.1)" stroke-width="0.35"/>
+              <path class="radar-sweep" d="M50 50 L50 4 A46 46 0 0 1 90 26 Z"
+                    fill="rgba(0,212,232,0.14)" stroke="rgba(0,212,232,0.4)" stroke-width="0.4"/>
+              <circle class="radar-blip" cx="68" cy="30" r="1.6" fill="#00d4e8"/>
+              <circle class="radar-blip" cx="36" cy="64" r="1.3" fill="#e01a6f" style="animation-delay:0.7s"/>
+              <circle class="radar-blip" cx="74" cy="72" r="1.1" fill="#1ec99a" style="animation-delay:1.3s"/>
+            </svg>
+          </div>
+          <div class="radar-label">SCAN · POLY_NODE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label reveal">// Секторы тома · быстрый доступ</div>
+    <h2 class="sec-title reveal">Активные и заблокированные симуляции</h2>
+    <div class="scene-prev-grid" id="scenePrev">
+      <a class="scene-prev reveal" href="scene-ryokan.html" data-need="0" data-sfx="hover">
+        <span class="badge">01</span>
+        <div class="pct-ring" title="готовность сектора">
+          <svg viewBox="0 0 36 36">
+            <circle class="bg" cx="18" cy="18" r="15.5"/>
+            <circle class="fg" cx="18" cy="18" r="15.5" data-pct="90" stroke-dasharray="97.4" pathLength="100"/>
+          </svg>
+        </div>
+        <img src="img/0_0 - 2025-05-25T173143.588.png" alt="Рёкан"
+             onerror="this.src='img/cam03_ryokan_map.jpg'">
+        <div class="shade"></div>
+        <div class="scan"></div>
+        <div class="meta">
+          <div class="code">H231-JP · РЁКАН</div>
+          <h3>«Рёкан»</h3>
+          <div class="st ok" id="st1">● ДОСТУПНА</div>
+        </div>
+      </a>
+      <a class="scene-prev reveal reveal-d1" href="scene-shanghai.html" data-need="1" data-sfx="hover">
+        <span class="badge">02</span>
+        <div class="pct-ring">
+          <svg viewBox="0 0 36 36">
+            <circle class="bg" cx="18" cy="18" r="15.5"/>
+            <circle class="fg" cx="18" cy="18" r="15.5" data-pct="55" stroke-dasharray="97.4" pathLength="100"/>
+          </svg>
+        </div>
+        <img src="img/cam19_shanghai.png" alt="Шанхай"
+             onerror="this.src='img/gorod/b1.png'">
+        <div class="shade"></div>
+        <div class="scan"></div>
+        <div class="meta">
+          <div class="code">SH-CL8 · МЕГАПОЛИС</div>
+          <h3>«Шанхай»</h3>
+          <div class="st lock" id="st2">● ТРЕБУЕТ 01</div>
+        </div>
+      </a>
+      <a class="scene-prev reveal reveal-d2" href="scene-quiet.html" data-need="2" data-sfx="hover">
+        <span class="badge">03</span>
+        <div class="pct-ring">
+          <svg viewBox="0 0 36 36">
+            <circle class="bg" cx="18" cy="18" r="15.5"/>
+            <circle class="fg" cx="18" cy="18" r="15.5" data-pct="20" stroke-dasharray="97.4" pathLength="100"/>
+          </svg>
+        </div>
+        <img src="img/0_0 - 2025-05-25T172416.372.png" alt="Тихое место"
+             onerror="this.src='img/tixiy/t0.jpg'">
+        <div class="shade"></div>
+        <div class="scan"></div>
+        <div class="meta">
+          <div class="code">QP-BRK · БРАК</div>
+          <h3>«Тихое место»</h3>
+          <div class="st bad" id="st3">● КАРАНТИН / АРХИВ</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sec-label reveal">// Ядро геймплея и нейромеханика</div>
+    <h2 class="sec-title reveal">4 ключевых уровня взаимодействия</h2>
+    <div class="module-grid">
+      <div class="module-card reveal" data-sfx="hover">
+        <div class="mh"><h3>Выбор роли</h3><span class="num">MOD 01</span></div>
+        <div class="mb">
+          Смотрящий vs Осуждённый. Асимметричный геймплей: оператор в штабе перехватывает логи и выносит вердикты; игрок внутри Сцены выживает в искажённой геометрии Лимбо.
+          <div class="tags"><span class="tag">ASYMMETRY</span><span class="tag">HQ / FIELD</span></div>
+        </div>
+      </div>
+      <div class="module-card reveal reveal-d1" data-sfx="hover">
+        <div class="mh"><h3>Сенсорика</h3><span class="num">MOD 02</span></div>
+        <div class="mb">
+          Боль реальна, смерть виртуальна. Колебания пульса меняют контраст, вызывают глитч-артефакты и звуковые галлюцинации. Критический шок сбрасывает соединение.
+          <div class="tags"><span class="tag">BIOFEED</span><span class="tag">GLITCH</span></div>
+        </div>
+      </div>
+      <div class="module-card reveal reveal-d2" data-sfx="hover">
+        <div class="mh"><h3>Лабиринт памяти</h3><span class="num">MOD 03</span></div>
+        <div class="mb">
+          Процедурные сектора: рёкан с ёкаями, неоновый Шанхай, готическое «тихое место». Карта не повторяется дважды — Лимбо подстраивается под осуждённого.
+          <div class="tags"><span class="tag">PROC-GEN</span><span class="tag">MEMORY</span></div>
+        </div>
+      </div>
+      <div class="module-card reveal reveal-d3" data-sfx="hover">
+        <div class="mh"><h3>Кооператив</h3><span class="num">MOD 04</span></div>
+        <div class="mb">
+          Штабные координаторы и полевые ассистенты. Рассинхронизация грозит разрывом цепи и гибелью всей оперативной ячейки.
+          <div class="tags"><span class="tag">CO-OP</span><span class="tag">SYNC RISK</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label reveal">Development vector // 2024–2026</div>
+    <h2 class="sec-title reveal">Дорожная карта</h2>
+    <div class="roadmap">
+      <div class="road-item reveal" data-sfx="hover">
+        <span class="phase">PHASE A</span>
+        <div class="pct-row">
+          <span class="pct-label">ГОТОВНОСТЬ</span>
+          <span class="pct-val" data-count="90">0%</span>
+        </div>
+        <h4>База и системный допуск</h4>
+        <p>Терминал, протоколы шифрования досье, карантинные шлюзы, симулятор калибровки, архив сцен тома 1.</p>
+        <div class="bar-complex" data-w="90">
+          <div class="track-glow"></div>
+          <div class="fill"></div>
+          <div class="seg" style="left:25%"></div>
+          <div class="seg" style="left:50%"></div>
+          <div class="seg" style="left:75%"></div>
+        </div>
+        <div class="bar-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+      <div class="road-item reveal reveal-d1" data-sfx="hover">
+        <span class="phase">PHASE B</span>
+        <div class="pct-row">
+          <span class="pct-label">ГОТОВНОСТЬ</span>
+          <span class="pct-val" data-count="55">0%</span>
+        </div>
+        <h4>Интерактивные симуляции</h4>
+        <p>Ветвящиеся новеллы «Рёкан», «Шанхай», «Тихое место». Детектив, давление, логи архитектора.</p>
+        <div class="bar-complex" data-w="55">
+          <div class="track-glow"></div>
+          <div class="fill"></div>
+          <div class="seg" style="left:25%"></div>
+          <div class="seg" style="left:50%"></div>
+          <div class="seg" style="left:75%"></div>
+        </div>
+        <div class="bar-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+      <div class="road-item reveal reveal-d2" data-sfx="hover">
+        <span class="phase">PHASE C</span>
+        <div class="pct-row">
+          <span class="pct-label">ГОТОВНОСТЬ</span>
+          <span class="pct-val" data-count="15">0%</span>
+        </div>
+        <h4>3D-киберпанк слой</h4>
+        <p>Масштабный immersive sim, мультиплеер Смотрящих, интеграция VR-манипуляторов.</p>
+        <div class="bar-complex" data-w="15">
+          <div class="track-glow"></div>
+          <div class="fill"></div>
+          <div class="seg" style="left:25%"></div>
+          <div class="seg" style="left:50%"></div>
+          <div class="seg" style="left:75%"></div>
+        </div>
+        <div class="bar-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+    </div>
+
+    <div class="feed-panel reveal">
+      <div class="feed-head">
+        <h3>// ТЕЛЕМЕТРИЯ ПОЛИГОНА</h3>
+        <span class="feed-live"><span class="d"></span> LIVE</span>
+      </div>
+      <div class="feed-body" id="feedBody"></div>
+    </div>
+
+    <div class="cta-box reveal">
+      <h3>Готовы к закрытой симуляции?</h3>
+      <p>
+        Пройдите Сцену 01 в архиве, чтобы разблокировать следующие сектора
+        и получить доступ к логам архитектора.
+      </p>
+      <a href="scenes.html" class="btn" data-sfx="click">Перейти к архиву сцен →</a>
+    </div>
+  </main>
+
+  <footer class="sys-footer">
+    <span>П.Р.И.Н.Ц. ПРОТОКОЛ // ПОЛИГОН НЕЙРОСЛОЙ</span>
+    <span>ВЕРСИЯ 0.85 · BUILD Q3 2025–2026</span>
+  </footer>
+
+  <button type="button" class="sfx-toggle" id="sfxToggle" title="Звуки интерфейса">SFX · ON</button>
+
+  <script src="js/system.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const KEY = 'limbo_scene_progress';
+    const progress = parseInt(localStorage.getItem(KEY) || '0', 10);
+
+    /* ── Web Audio SFX ── */
+    const sfx = {
+      ctx: null,
+      muted: localStorage.getItem('poly_sfx_mute') === '1',
+      init() {
+        if (this.ctx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+      },
+      tone(freq, dur, type, vol, slide) {
+        if (this.muted || !this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const t0 = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type || 'square';
+        o.frequency.setValueAtTime(freq, t0);
+        if (slide) o.frequency.exponentialRampToValueAtTime(slide, t0 + dur);
+        g.gain.setValueAtTime(vol || 0.04, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(t0); o.stop(t0 + dur + 0.02);
+      },
+      hover() { this.tone(880, 0.05, 'sine', 0.025); },
+      click() {
+        this.tone(420, 0.06, 'square', 0.04, 180);
+        setTimeout(() => this.tone(620, 0.04, 'sine', 0.02), 40);
+      },
+      tick() { this.tone(1200, 0.03, 'triangle', 0.018); },
+      fill() { this.tone(220, 0.12, 'sawtooth', 0.02, 440); },
+      lock() {
+        this.tone(180, 0.1, 'square', 0.035);
+        setTimeout(() => this.tone(120, 0.12, 'square', 0.03), 80);
+      },
+      boot() {
+        this.tone(200, 0.08, 'sine', 0.03, 400);
+        setTimeout(() => this.tone(400, 0.1, 'sine', 0.025, 800), 100);
+      }
+    };
+
+    const toggle = document.getElementById('sfxToggle');
+    function syncToggle() {
+      if (!toggle) return;
+      toggle.textContent = sfx.muted ? 'SFX · OFF' : 'SFX · ON';
+      toggle.classList.toggle('off', sfx.muted);
+    }
+    syncToggle();
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        sfx.init();
+        sfx.muted = !sfx.muted;
+        localStorage.setItem('poly_sfx_mute', sfx.muted ? '1' : '0');
+        syncToggle();
+        if (!sfx.muted) sfx.click();
+      });
+    }
+
+    // unlock audio on first gesture
+    const unlock = () => { sfx.init(); if (!sfx.muted) sfx.boot(); };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+
+    document.querySelectorAll('[data-sfx="hover"]').forEach(el => {
+      el.addEventListener('mouseenter', () => { sfx.init(); sfx.hover(); });
+    });
+    document.querySelectorAll('[data-sfx="click"]').forEach(el => {
+      el.addEventListener('click', () => { sfx.init(); sfx.click(); });
+    });
+    document.querySelectorAll('[data-sfx="tick"]').forEach(el => {
+      el.addEventListener('mouseenter', () => { sfx.init(); sfx.tick(); });
+    });
+
+    /* ── progress UI ── */
+    const stat = document.getElementById('statScenes');
+    if (stat) stat.textContent = Math.min(progress, 3) + ' / 3';
+
+    const st1 = document.getElementById('st1');
+    const st2 = document.getElementById('st2');
+    const st3 = document.getElementById('st3');
+    if (progress >= 1 && st1) { st1.textContent = '● ПРОЙДЕНА'; st1.className = 'st ok'; }
+    if (progress >= 1 && st2) {
+      st2.textContent = progress >= 2 ? '● ПРОЙДЕНА' : '● ДОСТУПНА';
+      st2.className = 'st ok';
+    }
+    if (progress >= 2 && st3) {
+      st3.textContent = progress >= 3 ? '● ОТМЕЧЕНА' : '● АРХИВ ДОСТУПЕН';
+      st3.className = progress >= 3 ? 'st ok' : 'st warn';
+    }
+
+    document.querySelectorAll('.scene-prev').forEach(a => {
+      const need = parseInt(a.getAttribute('data-need') || '0', 10);
+      if (progress < need) {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          sfx.init(); sfx.lock();
+          a.style.boxShadow = '0 0 0 1px rgba(224,40,72,0.55)';
+          setTimeout(() => { a.style.boxShadow = ''; }, 500);
+        });
+      }
+    });
+
+    /* ── animated counters + bars ── */
+    function animateCount(el, target, suffix) {
+      const dur = 1100;
+      const t0 = performance.now();
+      function frame(now) {
+        const p = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased) + (suffix || '');
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    const barObs = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        const bar = en.target;
+        const w = parseFloat(bar.getAttribute('data-w') || '0');
+        const fill = bar.querySelector('.fill');
+        if (fill) {
+          fill.style.width = w + '%';
+          sfx.init(); sfx.fill();
+        }
+        const item = bar.closest('.road-item');
+        if (item) {
+          const val = item.querySelector('.pct-val[data-count]');
+          if (val && !val.dataset.done) {
+            val.dataset.done = '1';
+            animateCount(val, parseInt(val.getAttribute('data-count'), 10), '%');
+          }
+        }
+        barObs.unobserve(bar);
+      });
+    }, { threshold: 0.35 });
+    document.querySelectorAll('.bar-complex[data-w]').forEach(b => barObs.observe(b));
+
+    // circular rings on scene cards
+    const ringObs = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        const fg = en.target.querySelector('.fg[data-pct]');
+        if (fg) {
+          const pct = parseFloat(fg.getAttribute('data-pct') || '0');
+          // pathLength 100 → offset = 100 - pct
+          fg.style.strokeDashoffset = String(100 - pct);
+        }
+        ringObs.unobserve(en.target);
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.pct-ring').forEach(r => ringObs.observe(r));
+
+    // base % counter
+    const baseEl = document.getElementById('statBase');
+    if (baseEl) {
+      setTimeout(() => {
+        animateCount(baseEl, 90, '%');
+        document.querySelectorAll('.poly-stat').forEach((s, i) => {
+          setTimeout(() => s.classList.add('lit'), 80 + i * 120);
+        });
+      }, 400);
+    }
+
+    /* ── reveal ── */
+    const revObs = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          revObs.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+
+    /* ── latency ── */
+    setInterval(() => {
+      const el = document.getElementById('statLat');
+      if (el) el.textContent = (12 + (Math.random() * 28 | 0)) + ' ms';
+    }, 1500);
+
+    /* ── live feed ── */
+    const lines = [
+      { c: 'hi', t: 'POLY_NODE handshake OK' },
+      { c: 'ok', t: 'scene_01 ryokan link stable' },
+      { c: '', t: 'cluster_8 load 0.42 · thermal nominal' },
+      { c: 'hi', t: 'watcher channel A-55 authenticated' },
+      { c: '', t: 'novel_state sync · localStorage' },
+      { c: 'bad', t: 'QP-BRK residual corruption detected' },
+      { c: 'ok', t: 'archive progress mirror updated' },
+      { c: '', t: 'render pipeline idle · waiting operator' },
+      { c: 'hi', t: 'devlog buffer flushed to dossier' },
+      { c: '', t: 'latency probe cycle' },
+      { c: 'ok', t: 'bar_fill animation checkpoint' },
+      { c: 'hi', t: 'sfx layer online · poly_audio' }
+    ];
+    const body = document.getElementById('feedBody');
+    let fi = 0;
+    function pushFeed() {
+      if (!body) return;
+      const L = lines[fi % lines.length];
+      fi++;
+      const d = document.createElement('div');
+      d.className = 'line';
+      const ts = new Date().toTimeString().slice(0, 8);
+      const extra = L.t.indexOf('latency') >= 0 ? (' ' + (12 + (Math.random() * 20 | 0)) + 'ms') : '';
+      d.innerHTML = '<span class="ts">[' + ts + ']</span><span class="' + L.c + '">' + L.t + extra + '</span>';
+      body.appendChild(d);
+      while (body.children.length > 9) body.removeChild(body.firstChild);
+      if (!sfx.muted && fi % 4 === 0) { sfx.init(); sfx.tick(); }
+    }
+    pushFeed();
+    setInterval(pushFeed, 2100);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>П.Р.И.Н.Ц. // Архив сцен · Том 1</title>
+<link rel="stylesheet" href="css/system.css">
+<style>
+  /* ═══ ARCHIVE STAGE ═══ */
+  .archive-stage {
+    position: relative;
+    margin-bottom: 1.75rem;
+  }
+  .archive-stage::before {
+    content: '';
+    position: absolute; inset: -1px;
+    border: 1px solid rgba(0,212,232,0.08);
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(0,212,232,0.06) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(rgba(0,212,232,0.04) 1px, transparent 1px) 0 0 / 48px 48px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.5), transparent 70%);
+  }
+  .stage-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+  .stage-header .live-tag {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.14em;
+    color: var(--cyan); padding: 0.3rem 0.65rem;
+    border: 1px solid rgba(0,212,232,0.3);
+    background: rgba(0,212,232,0.06);
+  }
+  .stage-header .live-tag .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+    animation: livePulse 1.6s ease infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
+  }
+
+  /* progress */
+  .progress-bar-wrap {
+    margin-bottom: 1.35rem; padding: 0.9rem 1.15rem;
+    background: linear-gradient(135deg, rgba(11,15,26,0.95), rgba(8,12,20,0.9));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    position: relative; overflow: hidden;
+  }
+  .progress-bar-wrap::after {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(180deg, var(--cyan), transparent);
+  }
+  .progress-bar-wrap .label {
+    font-family: var(--font-mono); font-size: 0.66rem;
+    color: var(--text-dim); letter-spacing: 0.1em;
+  }
+  .progress-track {
+    flex: 1; min-width: 140px; height: 5px;
+    background: rgba(0,212,232,0.08); border-radius: 3px; overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+    box-shadow: 0 0 12px rgba(0,212,232,0.45);
+    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; right: 0; top: -2px; bottom: -2px; width: 8px;
+    background: #fff; opacity: 0.7; filter: blur(3px);
+  }
+  .reset-progress {
+    margin-left: auto; padding: 0.4rem 0.8rem;
+    background: rgba(224,40,72,0.07); border: 1px solid rgba(224,40,72,0.32);
+    color: var(--red); font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+    transition: background 0.25s, border-color 0.25s;
+  }
+  .reset-progress:hover {
+    background: rgba(224,40,72,0.16); border-color: var(--red);
+  }
+
+  /* ═══ SCENE MAP — hover expand rail ═══ */
+  .scene-map {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+    min-height: 440px;
+  }
+  @media (max-width: 960px) {
+    .scene-map { flex-direction: column; min-height: auto; }
+  }
+
+  .scene-card {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 420px;
+    background: #070b14;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition:
+      flex 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.35s,
+      box-shadow 0.45s,
+      transform 0.45s;
+  }
+  .scene-card.locked { opacity: 0.58; cursor: not-allowed; }
+  .scene-card.active-node {
+    border-color: rgba(0,212,232,0.42);
+    box-shadow: 0 0 28px rgba(0,212,232,0.1);
+  }
+  .scene-card.done { border-color: rgba(30,201,154,0.45); }
+
+  @media (min-width: 961px) {
+    .scene-map:hover .scene-card:not(.locked) { flex: 0.82 1 0; }
+    .scene-map:hover .scene-card:not(.locked):hover {
+      flex: 2.35 1 0;
+      z-index: 6;
+      border-color: rgba(0,212,232,0.6);
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.5),
+        0 0 50px rgba(0,212,232,0.14);
+    }
+    .scene-map:hover .scene-card.locked { flex: 0.65 1 0; }
+  }
+  @media (max-width: 960px) {
+    .scene-card:not(.locked):hover {
+      transform: translateY(-4px);
+      border-color: rgba(0,212,232,0.5);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+  }
+
+  .scene-card.done::after {
+    content: '✓';
+    position: absolute; top: 0.65rem; right: 0.7rem; z-index: 5;
+    width: 26px; height: 26px; display: grid; place-items: center;
+    background: var(--green); color: #000; border-radius: 50%;
+    font-family: var(--font-mono); font-weight: 800; font-size: 0.85rem;
+    box-shadow: 0 0 14px rgba(30,201,154,0.55);
+  }
+
+  /* thumb fills most of card */
+  .scene-card .thumb {
+    position: absolute; inset: 0;
+    z-index: 0;
+  }
+  .scene-card .thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.45s;
+    filter: saturate(0.75) brightness(0.55) contrast(1.05);
+  }
+  .scene-card:not(.locked):hover .thumb img {
+    transform: scale(1.08);
+    filter: saturate(1) brightness(0.72) contrast(1.08);
+  }
+  .scene-card .thumb .shade {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(3,5,10,0.15) 0%, transparent 25%, rgba(3,5,10,0.55) 55%, rgba(3,5,10,0.97) 100%),
+      linear-gradient(90deg, rgba(3,5,10,0.35), transparent 40%);
+    pointer-events: none;
+  }
+  .scene-card .scan-line {
+    position: absolute; left: 0; right: 0; height: 40%;
+    background: linear-gradient(180deg, transparent, rgba(0,212,232,0.04), transparent);
+    animation: cardScan 5s linear infinite;
+    pointer-events: none; z-index: 1;
+  }
+  @keyframes cardScan {
+    0% { top: -40%; }
+    100% { top: 100%; }
+  }
+
+  .scene-card .badge {
+    position: absolute; top: 0.6rem; left: 0.6rem; z-index: 4;
+    font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.14em;
+    padding: 0.28rem 0.55rem;
+    background: rgba(3,5,10,0.8); border: 1px solid rgba(0,212,232,0.35);
+    color: var(--cyan); backdrop-filter: blur(6px);
+  }
+  .scene-card.locked .badge {
+    color: var(--text-muted); border-color: var(--border);
+  }
+  .scene-card.done .badge {
+    border-color: rgba(30,201,154,0.45); color: var(--green);
+  }
+
+  .scene-card .body {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+    padding: 1.15rem 1.15rem 1.2rem;
+    display: flex; flex-direction: column; gap: 0.3rem;
+  }
+  .scene-card .num {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--pink); letter-spacing: 0.12em;
+  }
+  .scene-card.done .num { color: var(--green); }
+  .scene-card h3 {
+    font-family: var(--font-display); font-size: 1.35rem;
+    letter-spacing: 0.05em; margin: 0;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+  }
+  .scene-card .meta {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--text-muted); letter-spacing: 0.06em;
+  }
+  .scene-card .blurb {
+    font-size: 0.8rem; color: var(--text-dim); line-height: 1.5;
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.4s, margin 0.4s;
+  }
+  .scene-card:not(.locked):hover .blurb {
+    max-height: 100px; opacity: 1; margin: 0.35rem 0 0.5rem;
+  }
+
+  .scene-card .go {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    width: fit-content;
+    margin-top: 0.35rem;
+    padding: 0.6rem 1.05rem;
+    font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none;
+    color: #03050a; background: var(--cyan);
+    border: none; border-radius: 2px;
+    box-shadow: 0 0 0 rgba(0,212,232,0);
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.35s, transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s, filter 0.2s;
+    pointer-events: none;
+  }
+  .scene-card:not(.locked):hover .go,
+  .scene-card:not(.locked):focus-within .go {
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+    box-shadow: 0 0 28px rgba(0,212,232,0.4);
+  }
+  .scene-card .go:hover { filter: brightness(1.08); }
+  .scene-card .go .arr {
+    display: inline-block; transition: transform 0.25s;
+  }
+  .scene-card .go:hover .arr { transform: translateX(4px); }
+  .scene-card.locked .go { display: none; }
+
+  /* corner ticks */
+  .scene-card .ticks::before,
+  .scene-card .ticks::after {
+    content: ''; position: absolute; width: 12px; height: 12px;
+    border-color: rgba(0,212,232,0.45); border-style: solid; z-index: 4;
+    opacity: 0; transition: opacity 0.35s;
+  }
+  .scene-card .ticks::before {
+    top: 6px; left: 6px; border-width: 1.5px 0 0 1.5px;
+  }
+  .scene-card .ticks::after {
+    bottom: 6px; right: 6px; border-width: 0 1.5px 1.5px 0;
+  }
+  .scene-card:not(.locked):hover .ticks::before,
+  .scene-card:not(.locked):hover .ticks::after { opacity: 1; }
+
+  .lock-overlay {
+    position: absolute; inset: 0; z-index: 7;
+    background: rgba(3,5,10,0.78);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.12em; color: var(--text-muted);
+    text-align: center; padding: 1rem;
+    backdrop-filter: blur(2px);
+  }
+  .scene-card:not(.locked) .lock-overlay { display: none; }
+  .lock-overlay .ic { font-size: 1.6rem; opacity: 0.65; }
+
+  .hint-line {
+    margin-top: 1.1rem;
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.1em; color: var(--text-muted);
+  }
+  .hint-line .sep { opacity: 0.35; }
+
+  /* telemetry strip */
+  .tele-strip {
+    display: flex; gap: 1.25rem; flex-wrap: wrap;
+    margin-top: 1.5rem; padding: 0.75rem 1rem;
+    border: 1px solid rgba(0,212,232,0.1);
+    background: rgba(0,0,0,0.25);
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.08em; color: var(--text-muted);
+  }
+  .tele-strip b { color: var(--cyan); font-weight: 600; }
+
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(2,3,10,0.85); backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; padding: 1rem;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: auto; }
+  .confirm-panel {
+    background: var(--panel); border: 1px solid rgba(224,40,72,0.5);
+    padding: 1.45rem 1.55rem; max-width: 420px; width: 100%;
+    box-shadow: 0 0 50px rgba(224,40,72,0.12);
+  }
+  .confirm-panel h3 {
+    font-family: var(--font-display); color: var(--red);
+    margin-bottom: 0.55rem; letter-spacing: 0.04em;
+  }
+  .confirm-panel p { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.1rem; line-height: 1.55; }
+  .confirm-panel .acts { display: flex; gap: 0.55rem; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<header class="sys-topbar">
+  <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+  <div class="status-pill"><span class="dot"></span> ЯДРО СИНХРОНИЗИРОВАНО</div>
+  <nav class="sys-nav">
+    <a href="terminal.html">Терминал</a>
+    <a href="dossier.html">Досье</a>
+    <a href="scenes.html" class="active">Архив сцен</a>
+    <a href="polygon.html">Полигон</a>
+  </nav>
+  <div class="right-meta">
+    <span class="sec-level">SEC:LVL_5</span>
+    <span>ОПЕРАТОР: A-55</span>
+  </div>
+</header>
+
+<main class="sys-page">
+  <div class="sys-header reveal">
+    <div class="eyebrow">Системный журнал · Кластер рендера: ОНЛАЙН</div>
+    <h1>Архив сцен тома 1 // <span class="accent">Деконструкция симуляций</span></h1>
+    <p class="desc">
+      Секторы тома выстроены в цепочку доступа. Наведите на карту — превью раскроется.
+      «Перейти» открывает полный сектор: фон, галерею кадров, брифинг и симуляцию.
+    </p>
+  </div>
+
+  <div class="progress-bar-wrap reveal">
+    <span class="label">ПРОГРЕСС ТОМА 1</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="label" id="progressText">0 / 3</span>
+    <button type="button" class="reset-progress" id="resetBtn">⟲ СБРОС</button>
+  </div>
+
+  <div class="archive-stage reveal">
+    <div class="stage-header">
+      <span class="live-tag"><span class="pulse"></span> RENDER CLUSTER · LIVE</span>
+      <span class="label" style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--text-muted)">
+        SEQ: 01→02→03 · OPERATOR A-55
+      </span>
+    </div>
+
+    <div class="scene-map" id="sceneMap">
+      <!-- 01 -->
+      <article class="scene-card active-node" id="node1" data-href="scene-ryokan.html" tabindex="0">
+        <div class="ticks"></div>
+        <div class="thumb">
+          <span class="badge">01 · LIVE</span>
+          <img src="img/hram/_ryokan_.jpg" alt="Рёкан"
+               onerror="this.onerror=null;this.src='img/cam03_ryokan_map.jpg'">
+          <div class="shade"></div>
+          <div class="scan-line"></div>
+        </div>
+        <div class="body">
+          <div class="num" id="num1">СЦЕНА 01 · ДОСТУПНА</div>
+          <h3>«Рёкан»</h3>
+          <div class="meta" id="meta1">Древняя Япония · Смотрящий: Хэ Ючоу</div>
+          <p class="blurb">Сасаки Момо, кокэси-механика, Дзёрогумо на потолке. Первый сектор раскаяния.</p>
+          <a class="go" href="scene-ryokan.html">ПЕРЕЙТИ <span class="arr">→</span></a>
+        </div>
+      </article>
+
+      <!-- 02 -->
+      <article class="scene-card locked" id="node2" data-href="scene-shanghai.html" tabindex="0">
+        <div class="ticks"></div>
+        <div class="thumb">
+          <span class="badge" id="badge2">02 · LOCK</span>
+          <img src="img/gorod/b1.png" alt="Шанхай"
+               onerror="this.onerror=null;this.src='img/gorod/cam19_shanghai.png'">
+          <div class="shade"></div>
+          <div class="scan-line"></div>
+        </div>
+        <div class="body">
+          <div class="num" id="num2">СЦЕНА 02 · ЗАБЛОКИРОВАНА</div>
+          <h3>«Шанхай»</h3>
+          <div class="meta" id="meta2">Мегаполис · требуется сцена 01</div>
+          <p class="blurb">Несколько групп, крыши и метро. Кластер 8 на грани перегрева.</p>
+          <a class="go" href="scene-shanghai.html">ПЕРЕЙТИ <span class="arr">→</span></a>
+        </div>
+        <div class="lock-overlay" id="lock2">
+          <div class="ic">🔒</div>
+          <span>ТРЕБУЕТСЯ СЦЕНА 01</span>
+        </div>
+      </article>
+
+      <!-- 03 -->
+      <article class="scene-card locked" id="node3" data-href="scene-quiet.html" tabindex="0">
+        <div class="ticks"></div>
+        <div class="thumb">
+          <span class="badge" id="badge3">03 · BRAC</span>
+          <img src="img/tixiy/t0.jpg" alt="Тихое место"
+               onerror="this.onerror=null;this.src='img/tixiy/t3.png'">
+          <div class="shade"></div>
+          <div class="scan-line"></div>
+        </div>
+        <div class="body">
+          <div class="num" id="num3">СЦЕНА 03 · БРАК</div>
+          <h3>«Тихое место»</h3>
+          <div class="meta" id="meta3">Озеро · кладбище · санаторий</div>
+          <p class="blurb">Эксперимент вывернут сбоем. Архивный дамп: башня, вода, пустые палаты.</p>
+          <a class="go" href="scene-quiet.html">ПЕРЕЙТИ <span class="arr">→</span></a>
+        </div>
+        <div class="lock-overlay" id="lock3">
+          <div class="ic">🔒</div>
+          <span>ТРЕБУЕТСЯ СЦЕНА 02</span>
+        </div>
+      </article>
+    </div>
+
+    <p class="hint-line">
+      <span>HOVER · РАСКРЫТИЕ</span>
+      <span class="sep">│</span>
+      <span>CLICK / ПЕРЕЙТИ · ВХОД В СЕКТОР</span>
+      <span class="sep">│</span>
+      <span>SEQ LOCK · СТРОГИЙ ПОРЯДОК</span>
+    </p>
+
+    <div class="tele-strip">
+      <span>NODE <b id="teleNode">H231-JP</b></span>
+      <span>WATCHERS <b id="teleWatch">1</b></span>
+      <span>STATUS <b id="teleStatus">READY</b></span>
+      <span>LATENCY <b id="teleLat">—</b> ms</span>
+    </div>
+  </div>
+</main>
+
+<footer class="sys-footer">
+  <span>П.Р.И.Н.Ц. // АРХИВ СЦЕН ТОМА 1</span>
+  <span id="footerProgress">ПРОГРЕСС: 0/3</span>
+</footer>
+
+<div class="confirm-overlay" id="resetModal">
+  <div class="confirm-panel">
+    <h3>⚠ СБРОСИТЬ ПРОГРЕСС?</h3>
+    <p>Все пройденные сцены и сохранённые ветки симуляций будут обнулены. Действие необратимо.</p>
+    <div class="acts">
+      <button type="button" class="btn" id="resetCancel">Отмена</button>
+      <button type="button" class="btn btn-danger" id="resetConfirm">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/system.js"></script>
+<script>
+(function () {
+  const KEY = 'limbo_scene_progress';
+  let progress = parseInt(localStorage.getItem(KEY) || '0', 10);
+  const $ = (id) => document.getElementById(id);
+
+  const tele = {
+    nodes: ['H231-JP', 'SH-CL8', 'QP-BRK'],
+    watch: ['1', '6', '2–3'],
+    status: ['READY', 'MULTI-CELL', 'CORRUPT']
+  };
+
+  function updateUI() {
+    const fill = $('progressFill');
+    if (fill) fill.style.width = ((progress / 3) * 100) + '%';
+    if ($('progressText')) $('progressText').textContent = progress + ' / 3';
+    if ($('footerProgress')) $('footerProgress').textContent = 'ПРОГРЕСС: ' + progress + '/3';
+
+    const n1 = $('node1'), n2 = $('node2'), n3 = $('node3');
+
+    if (progress >= 1) {
+      n1.classList.add('done');
+      n1.classList.remove('active-node');
+      if ($('num1')) $('num1').textContent = 'СЦЕНА 01 · ПРОЙДЕНА';
+      n2.classList.remove('locked');
+      const l2 = $('lock2'); if (l2) l2.remove();
+      if ($('badge2')) $('badge2').textContent = progress >= 2 ? '02 · DONE' : '02 · LIVE';
+      if ($('num2')) $('num2').textContent = progress >= 2 ? 'СЦЕНА 02 · ПРОЙДЕНА' : 'СЦЕНА 02 · ДОСТУПНА';
+      if ($('meta2')) $('meta2').textContent = 'Мегаполис · АКТИВНА';
+      if (progress >= 2) { n2.classList.add('done'); n2.classList.remove('active-node'); }
+      else n2.classList.add('active-node');
+    }
+    if (progress >= 2) {
+      n3.classList.remove('locked');
+      const l3 = $('lock3'); if (l3) l3.remove();
+      if ($('badge3')) $('badge3').textContent = progress >= 3 ? '03 · DONE' : '03 · ARCH';
+      if ($('num3')) $('num3').textContent = progress >= 3 ? 'СЦЕНА 03 · ОТМЕЧЕНА' : 'СЦЕНА 03 · АРХИВ';
+      if ($('meta3')) $('meta3').textContent = 'Озеро · санаторий · ДОСТУПНА';
+      if (progress >= 3) n3.classList.add('done');
+      else n3.classList.add('active-node');
+    }
+
+    // telemetry defaults
+    const idx = Math.min(progress, 2);
+    if ($('teleNode')) $('teleNode').textContent = tele.nodes[idx];
+    if ($('teleWatch')) $('teleWatch').textContent = tele.watch[idx];
+    if ($('teleStatus')) $('teleStatus').textContent = tele.status[idx];
+  }
+
+  // hover telemetry
+  document.querySelectorAll('.scene-card').forEach((card, i) => {
+    card.addEventListener('mouseenter', () => {
+      if ($('teleNode')) $('teleNode').textContent = tele.nodes[i];
+      if ($('teleWatch')) $('teleWatch').textContent = tele.watch[i];
+      if ($('teleStatus')) $('teleStatus').textContent = tele.status[i];
+    });
+    card.addEventListener('click', (e) => {
+      if (card.classList.contains('locked')) return;
+      if (e.target.closest('a.go')) return;
+      const href = card.getAttribute('data-href');
+      if (href) location.href = href;
+    });
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !card.classList.contains('locked')) {
+        const href = card.getAttribute('data-href');
+        if (href) location.href = href;
+      }
+    });
+  });
+
+  // fake latency
+  setInterval(() => {
+    const el = $('teleLat');
+    if (el) el.textContent = String(12 + (Math.random() * 28 | 0));
+  }, 1800);
+
+  const modal = $('resetModal');
+  if ($('resetBtn')) $('resetBtn').onclick = () => modal.classList.add('open');
+  if ($('resetCancel')) $('resetCancel').onclick = () => modal.classList.remove('open');
+  if ($('resetConfirm')) $('resetConfirm').onclick = () => {
+    localStorage.removeItem(KEY);
+    localStorage.removeItem('limbo_novel_state');
+    location.reload();
+  };
+  if (modal) modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.classList.remove('open');
+  });
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
+  
