@@ -620,6 +620,101 @@
     .reveal-d1 { transition-delay: 0.07s; }
     .reveal-d2 { transition-delay: 0.14s; }
     .reveal-d3 { transition-delay: 0.21s; }
+      /* ═══ NET CONSOLE HUD ═══ */
+    .net-console {
+      position: relative;
+      margin: 1.25rem 0 1.75rem;
+      border: 1px solid rgba(0, 212, 232, 0.2);
+      background: linear-gradient(145deg, rgba(6,10,18,0.92), rgba(8,12,22,0.88));
+      padding: 1rem 1.1rem 1.05rem;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1.15fr;
+      gap: 1rem;
+      z-index: 2;
+      backdrop-filter: blur(8px);
+    }
+    @media (max-width: 960px) {
+      .net-console { grid-template-columns: 1fr; }
+    }
+    .net-console .nc-label {
+      font-family: var(--font-mono);
+      font-size: 0.52rem;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 0.45rem;
+    }
+    .topo-row {
+      display: flex; flex-wrap: wrap; gap: 0.35rem;
+    }
+    .topo-row button {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid rgba(0,212,232,0.22);
+      background: rgba(0,0,0,0.35);
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: border-color 0.25s, color 0.25s, box-shadow 0.25s, background 0.25s;
+    }
+    .topo-row button:hover {
+      border-color: rgba(0,212,232,0.5);
+      color: var(--cyan);
+    }
+    .topo-row button.is-on {
+      border-color: rgba(0,212,232,0.65);
+      color: #031018;
+      background: linear-gradient(135deg, #00d4e8, #1ec9c0);
+      box-shadow: 0 0 18px rgba(0,212,232,0.25);
+    }
+    .nc-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+    }
+    .nc-stats div {
+      padding: 0.4rem 0.45rem;
+      border: 1px solid rgba(0,212,232,0.12);
+      background: rgba(0,0,0,0.3);
+      color: var(--text-muted);
+    }
+    .nc-stats b {
+      display: block;
+      color: var(--cyan);
+      font-size: 0.78rem;
+      margin-top: 0.15rem;
+      letter-spacing: 0.04em;
+    }
+    .nc-node {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 0.25rem 0.5rem;
+      align-items: baseline;
+    }
+    .nc-node span { color: var(--text-muted); }
+    .nc-node b { color: var(--text); font-weight: 500; }
+    .nc-node b#netNodeLat { color: var(--amber, #e8a020); }
+    .nc-hint {
+      grid-column: 1 / -1;
+      font-family: var(--font-mono);
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(0,212,232,0.1);
+      padding-top: 0.55rem;
+      margin-top: 0.15rem;
+    }
+    .topo-anchor {
+      position: relative;
+      min-height: 4px;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
