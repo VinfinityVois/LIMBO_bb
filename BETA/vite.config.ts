@@ -20,7 +20,7 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: false,
-    open: '/polygon.html',
+    open: '/index.html',
   },
   preview: { port: 4173 },
   build: {
