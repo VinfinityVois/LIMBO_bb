@@ -1239,6 +1239,31 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 .neuro-stats b.amber { color: var(--amber); }
 #neuroCanvas { position: relative; z-index: 1; }
 
+
+/* hide page scroll progress bar */
+.scroll-progress { display: none !important; width: 0 !important; height: 0 !important; opacity: 0 !important; }
+
+/* _ЛИМБО live type / glitch */
+.sys-title .limbo-type {
+  color: var(--cyan);
+  position: relative;
+  display: inline-block;
+  text-shadow: 0 0 20px rgba(0,212,232,0.35);
+  font-variant-ligatures: none;
+  min-width: 5.2em;
+}
+.sys-title .limbo-type.is-glitching {
+  text-shadow:
+    -1px 0 rgba(224,26,111,0.7),
+    1px 0 rgba(0,212,232,0.8),
+    0 0 18px rgba(0,212,232,0.45);
+}
+.sys-title .limbo-type::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -6px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: titleLine 3s ease infinite;
+}
 </style>
 </head>
 <body class="terminal-mode">
@@ -1258,7 +1283,6 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 <div class="orb orb-2" id="orb2"></div>
 <div class="orb orb-3" id="orb3"></div>
 
-<div class="scroll-progress" id="scrollProgress"></div>
 
 <div class="hud-persistent">
   <div class="hud-corner tl">
@@ -1309,7 +1333,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 
   <div class="sys-header reveal">
     <div class="eyebrow">Нейро-мост: «Цефей-1» // Порт TCP: 9821 · Восточный штаб // Центр-A · ГРИФ: СОВЕРШЕННО СЕКРЕТНО</div>
-    <h1 class="sys-title scramble-hover">П.Р.И.Н.Ц.<span>_ЛИМБО</span></h1>
+    <h1 class="sys-title scramble-hover">П.Р.И.Н.Ц.<span class="limbo-type" id="limboType" data-text="_ЛИМБО">_ЛИМБО</span></h1>
     <p class="desc">
       Автоматизированный комплекс высшей меры пресечения под надзором Верховного Трибунала.
       Создание персонализированного суррогатного ада для преступников высшего ранга через
@@ -3032,11 +3056,8 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
   if (typeof gsap === 'undefined') return;
   gsap.registerPlugin(ScrollTrigger);
 
-  const prog = document.getElementById('scrollProgress');
-  ScrollTrigger.create({
-    start: 'top top', end: 'max',
-    onUpdate: (self) => { if (prog) prog.style.width = (self.progress * 100) + '%'; }
-  });
+  /* scroll progress bar removed */
+  const prog = null;
 
   gsap.to('#orb1', { y: 200, x: 80, ease: 'none', scrollTrigger: { scrub: 1.2, start: 'top top', end: 'bottom bottom' } });
   gsap.to('#orb2', { y: -160, x: -60, ease: 'none', scrollTrigger: { scrub: 1.5, start: 'top top', end: 'bottom bottom' } });
@@ -3162,5 +3183,75 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 })();
 </script>
 <script type="module" src="/src/main-terminal.ts"></script>
+
+<script>
+/* _ЛИМБО — typewriter + brief glyph glitch */
+(function () {
+  const el = document.getElementById('limboType');
+  if (!el) return;
+  const FULL = el.getAttribute('data-text') || '_ЛИМБО';
+  const GLYPHS = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩ01#@$%█░<>/\\|';
+  let busy = false;
+
+  function typeIn() {
+    if (busy) return;
+    busy = true;
+    el.classList.add('is-glitching');
+    let i = 0;
+    el.textContent = '';
+    const step = () => {
+      if (i <= FULL.length) {
+        // partial real + noise tail
+        let out = FULL.slice(0, i);
+        if (i < FULL.length) {
+          out += GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        }
+        el.textContent = out;
+        i++;
+        setTimeout(step, 55 + Math.random() * 40);
+      } else {
+        el.textContent = FULL;
+        el.classList.remove('is-glitching');
+        busy = false;
+      }
+    };
+    step();
+  }
+
+  function briefGlitch() {
+    if (busy) return;
+    busy = true;
+    el.classList.add('is-glitching');
+    const orig = FULL;
+    let frames = 5 + ((Math.random() * 4) | 0);
+    const tick = () => {
+      if (frames-- <= 0) {
+        el.textContent = orig;
+        el.classList.remove('is-glitching');
+        busy = false;
+        return;
+      }
+      let out = '';
+      for (let i = 0; i < orig.length; i++) {
+        const ch = orig[i];
+        if (ch === '_') { out += '_'; continue; }
+        out += (Math.random() < 0.45) ? GLYPHS[(Math.random() * GLYPHS.length) | 0] : ch;
+      }
+      el.textContent = out;
+      setTimeout(tick, 40 + Math.random() * 35);
+    };
+    tick();
+  }
+
+  // initial type-in after short delay
+  setTimeout(typeIn, 280);
+  // rare short glitches
+  setInterval(() => {
+    if (document.hidden) return;
+    if (Math.random() < 0.55) briefGlitch();
+  }, 4200 + Math.random() * 1800);
+})();
+</script>
+
 </body>
 </html>

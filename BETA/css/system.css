@@ -1975,3 +1975,415 @@
     mask-image: radial-gradient(circle at 85% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
     -webkit-mask-image: radial-gradient(circle at 85% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 75%);
   }
+/* ═══════════════════════════════════════════════════════════
+   BREACH VISUAL BOOST v2 — append only, nothing removed
+   ═══════════════════════════════════════════════════════════ */
+body.breach-mode {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 40, 55, 0.45), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(80, 0, 40, 0.2), transparent 50%),
+    #03050a;
+}
+body.breach-mode #matrixCanvas {
+  opacity: 0.55 !important;
+  mix-blend-mode: screen;
+}
+body.breach-mode .ambient-grid {
+  opacity: 0.35;
+  background-size: 48px 48px;
+  animation: ambientDrift 40s linear infinite;
+}
+@keyframes ambientDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+body.breach-mode .hud {
+  backdrop-filter: blur(8px);
+  background: rgba(3, 5, 10, 0.45);
+  border: 1px solid rgba(0, 212, 232, 0.12);
+  padding: 0.45rem 0.65rem;
+  border-radius: 2px;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.4);
+}
+body.breach-mode .hud-line b {
+  text-shadow: 0 0 10px rgba(0, 212, 232, 0.45);
+}
+body.breach-mode .side-stream {
+  opacity: 0.55;
+  font-size: 9px;
+  line-height: 1.45;
+  color: rgba(0, 212, 232, 0.4);
+  text-shadow: 0 0 8px rgba(0, 212, 232, 0.15);
+  mask-image: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+}
+body.breach-mode .boot-core {
+  filter: drop-shadow(0 0 40px rgba(0, 212, 232, 0.15));
+}
+body.breach-mode .core-mark {
+  text-shadow:
+    0 0 20px rgba(0, 212, 232, 0.8),
+    0 0 60px rgba(0, 212, 232, 0.35),
+    0 0 100px rgba(0, 100, 120, 0.25);
+  animation: coreMarkPulse 3.5s ease-in-out infinite;
+}
+@keyframes coreMarkPulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+body.breach-mode .ring-pulse {
+  box-shadow: 0 0 0 0 rgba(0, 212, 232, 0.35);
+  animation: ringPulseExpand 2.8s ease-out infinite;
+}
+@keyframes ringPulseExpand {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+body.breach-mode .skip-hint {
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 12px rgba(0, 212, 232, 0.25);
+  animation: skipBlink 2.2s ease infinite;
+}
+@keyframes skipBlink {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+body.breach-mode .warning-frame {
+  background: linear-gradient(160deg, rgba(18, 6, 10, 0.92), rgba(8, 4, 8, 0.95));
+  border: 1px solid rgba(224, 40, 72, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 24px 80px rgba(0, 0, 0, 0.65),
+    0 0 60px rgba(224, 40, 72, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+}
+body.breach-mode .warning-title {
+  text-shadow: 0 0 24px rgba(224, 40, 72, 0.45);
+  letter-spacing: 0.08em;
+}
+body.breach-mode .warning-icon {
+  box-shadow: 0 0 30px rgba(224, 40, 72, 0.35);
+  animation: warnIconPulse 1.6s ease infinite;
+}
+@keyframes warnIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+body.breach-mode .warning-meter i {
+  box-shadow: 0 0 12px rgba(224, 40, 72, 0.55);
+}
+body.breach-mode .cyber-btn.danger {
+  box-shadow: 0 0 24px rgba(224, 40, 72, 0.2);
+}
+body.breach-mode .cyber-btn.danger:hover {
+  box-shadow: 0 0 40px rgba(224, 40, 72, 0.35);
+  transform: translateY(-1px);
+}
+body.breach-mode .terminal-shell {
+  border: 1px solid rgba(0, 212, 232, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 30px 90px rgba(0, 0, 0, 0.7),
+    0 0 50px rgba(0, 212, 232, 0.08);
+  background: linear-gradient(180deg, rgba(6, 10, 18, 0.95), rgba(3, 5, 10, 0.98));
+  backdrop-filter: blur(14px);
+}
+body.breach-mode .terminal-top {
+  border-bottom: 1px solid rgba(0, 212, 232, 0.15);
+  background: rgba(0, 212, 232, 0.03);
+}
+body.breach-mode .led {
+  box-shadow: 0 0 8px #1ec99a;
+  animation: ledBlink 1.4s ease infinite;
+}
+@keyframes ledBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+body.breach-mode .term-row.ok .term-type { color: #1ec99a; text-shadow: 0 0 8px rgba(30, 201, 154, 0.4); }
+body.breach-mode .term-row.err .term-type { color: #e02848; text-shadow: 0 0 8px rgba(224, 40, 72, 0.4); }
+body.breach-mode .term-row.warn .term-type { color: #e8a020; }
+body.breach-mode .progress-big i {
+  box-shadow: 0 0 16px rgba(0, 212, 232, 0.45);
+}
+body.breach-mode .boot-percent {
+  text-shadow: 0 0 20px rgba(0, 212, 232, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+body.breach-mode .login-wrap {
+  border: 1px solid rgba(0, 212, 232, 0.2);
+  background: linear-gradient(155deg, rgba(8, 12, 22, 0.92), rgba(4, 6, 12, 0.96));
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.75),
+    0 0 80px rgba(0, 212, 232, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(18px);
+}
+body.breach-mode .access-header h1 {
+  text-shadow: 0 0 30px rgba(0, 212, 232, 0.35);
+}
+body.breach-mode .input-shell {
+  border-color: rgba(0, 212, 232, 0.2);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+body.breach-mode .field-block.unlocked .input-shell {
+  border-color: rgba(0, 212, 232, 0.45);
+  box-shadow: 0 0 20px rgba(0, 212, 232, 0.1);
+}
+body.breach-mode .decrypt-bar i {
+  box-shadow: 0 0 14px rgba(0, 212, 232, 0.5);
+}
+body.breach-mode .radar { opacity: 0.35; border-color: rgba(0, 212, 232, 0.2); }
+body.breach-mode .radar-sweep { opacity: 0.5; }
+body.breach-mode .align-vortex .av-ring {
+  box-shadow: 0 0 20px rgba(0, 232, 255, 0.08);
+}
+body.breach-mode .av-core.locked {
+  animation: coreLockFlash 0.6s ease;
+}
+@keyframes coreLockFlash {
+  0% { transform: translate(-50%, -50%) scale(0.9); }
+  50% { transform: translate(-50%, -50%) scale(1.12); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+body.breach-mode .final-title {
+  text-shadow: 0 0 24px rgba(0, 212, 232, 0.4);
+  letter-spacing: 0.12em;
+}
+body.breach-mode .final-bar i {
+  box-shadow: 0 0 16px rgba(0, 212, 232, 0.5);
+}
+body.breach-mode .cursor.hover {
+  transform: translate(-50%, -50%) scale(1.35);
+}
+body.breach-mode .glitch-overlay { mix-blend-mode: hard-light; }
+body.breach-mode.scene-red {
+  animation: redAlarm 0.15s steps(2) infinite;
+}
+@keyframes redAlarm {
+  0% { filter: none; }
+  50% { filter: hue-rotate(-8deg) brightness(1.05); }
+  100% { filter: none; }
+}
+body.breach-mode .protocol-strip span,
+body.breach-mode .protocol-strip i {
+  border: 1px solid rgba(0, 212, 232, 0.25);
+  background: rgba(0, 212, 232, 0.06);
+  padding: 0.15rem 0.4rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  margin-right: 0.35rem;
+}
+.breach-flash {
+  pointer-events: none;
+  position: fixed; inset: 0; z-index: 999;
+  background: radial-gradient(circle, rgba(0,232,255,0.25), transparent 60%);
+  opacity: 0;
+}
+body.breach-mode .breach-flash.on {
+  opacity: 1;
+  animation: breachFlashPop 0.35s ease-out;
+}
+@keyframes breachFlashPop {
+  0% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ============================================================
+   SCROLLBARS — П.Р.И.Н.Ц. terminal chrome
+   Browser page + internal panels / modals / feeds
+   ============================================================ */
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 232, 0.45) rgba(3, 5, 10, 0.9);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 232, 0.4) rgba(7, 10, 18, 0.95);
+}
+
+/* WebKit / Chromium / Safari — page */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, rgba(3, 5, 10, 0.95), rgba(7, 10, 18, 0.98));
+  border-left: 1px solid rgba(0, 212, 232, 0.08);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 212, 232, 0.55), rgba(0, 122, 136, 0.75));
+  border: 1px solid rgba(0, 212, 232, 0.25);
+  border-radius: 2px;
+  box-shadow:
+    0 0 8px rgba(0, 212, 232, 0.25),
+    inset 0 0 6px rgba(0, 240, 255, 0.15);
+  min-height: 40px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00e8ff, #00a8b8);
+  border-color: rgba(0, 232, 255, 0.55);
+  box-shadow:
+    0 0 14px rgba(0, 212, 232, 0.45),
+    inset 0 0 8px rgba(255, 255, 255, 0.12);
+}
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #7af7ff, #00d4e8);
+  box-shadow: 0 0 18px rgba(0, 212, 232, 0.55);
+}
+::-webkit-scrollbar-corner {
+  background: rgba(3, 5, 10, 0.95);
+  border: 0;
+}
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Horizontal track nuance */
+::-webkit-scrollbar:horizontal {
+  height: 8px;
+}
+::-webkit-scrollbar-track:horizontal {
+  border-left: 0;
+  border-top: 1px solid rgba(0, 212, 232, 0.08);
+}
+
+/* Nested / panel scroll areas — slightly tighter */
+.modal-panel,
+.modal-intel,
+.modal-body,
+.intercept-log,
+.feed,
+.hex-stream,
+.side-stream,
+.char-grid,
+.panel-body,
+.sys-page,
+.sc-body,
+.wc-viewport,
+.warning-log,
+.novel-log,
+[data-scroll],
+.scroll-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 212, 232, 0.5) rgba(0, 0, 0, 0.45);
+}
+.modal-panel::-webkit-scrollbar,
+.modal-intel::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.intercept-log::-webkit-scrollbar,
+.feed::-webkit-scrollbar,
+.hex-stream::-webkit-scrollbar,
+.panel-body::-webkit-scrollbar,
+.wc-viewport::-webkit-scrollbar,
+.warning-log::-webkit-scrollbar,
+[data-scroll]::-webkit-scrollbar,
+.scroll-panel::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.modal-panel::-webkit-scrollbar-track,
+.modal-intel::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track,
+.intercept-log::-webkit-scrollbar-track,
+.feed::-webkit-scrollbar-track,
+.hex-stream::-webkit-scrollbar-track,
+.panel-body::-webkit-scrollbar-track,
+.wc-viewport::-webkit-scrollbar-track,
+.warning-log::-webkit-scrollbar-track,
+[data-scroll]::-webkit-scrollbar-track,
+.scroll-panel::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
+  border-left: 1px solid rgba(0, 212, 232, 0.06);
+}
+.modal-panel::-webkit-scrollbar-thumb,
+.modal-intel::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb,
+.intercept-log::-webkit-scrollbar-thumb,
+.feed::-webkit-scrollbar-thumb,
+.hex-stream::-webkit-scrollbar-thumb,
+.panel-body::-webkit-scrollbar-thumb,
+.wc-viewport::-webkit-scrollbar-thumb,
+.warning-log::-webkit-scrollbar-thumb,
+[data-scroll]::-webkit-scrollbar-thumb,
+.scroll-panel::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 212, 232, 0.65), rgba(0, 122, 136, 0.85));
+  border: 1px solid rgba(0, 212, 232, 0.3);
+  border-radius: 1px;
+  box-shadow: 0 0 10px rgba(0, 212, 232, 0.2);
+}
+.modal-panel::-webkit-scrollbar-thumb:hover,
+.modal-intel::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover,
+.intercept-log::-webkit-scrollbar-thumb:hover,
+.feed::-webkit-scrollbar-thumb:hover,
+.hex-stream::-webkit-scrollbar-thumb:hover,
+.panel-body::-webkit-scrollbar-thumb:hover,
+.wc-viewport::-webkit-scrollbar-thumb:hover,
+.warning-log::-webkit-scrollbar-thumb:hover,
+[data-scroll]::-webkit-scrollbar-thumb:hover,
+.scroll-panel::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00e8ff, #00b8c8);
+  box-shadow: 0 0 14px rgba(0, 212, 232, 0.4);
+}
+
+/* Anomaly / danger contexts — red-tinted scrollbar */
+.modal-panel.anomaly-panel,
+.modal-panel.anomaly-panel .modal-intel,
+.char-card.anomaly,
+.glitch-intel {
+  scrollbar-color: rgba(224, 40, 72, 0.55) rgba(10, 2, 6, 0.9);
+}
+.modal-panel.anomaly-panel::-webkit-scrollbar-thumb,
+.modal-panel.anomaly-panel .modal-intel::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 60, 90, 0.7), rgba(160, 0, 40, 0.85));
+  border-color: rgba(224, 40, 72, 0.4);
+  box-shadow: 0 0 10px rgba(224, 40, 72, 0.25);
+}
+.modal-panel.anomaly-panel::-webkit-scrollbar-thumb:hover,
+.modal-panel.anomaly-panel .modal-intel::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff6a82, #e02848);
+  box-shadow: 0 0 14px rgba(224, 40, 72, 0.45);
+}
+.modal-panel.anomaly-panel::-webkit-scrollbar-track,
+.modal-panel.anomaly-panel .modal-intel::-webkit-scrollbar-track {
+  border-left-color: rgba(224, 40, 72, 0.12);
+  background: rgba(20, 2, 8, 0.5);
+}
+
+/* Breach / red scene page scrollbar accent */
+body.breach-mode.scene-red {
+  scrollbar-color: rgba(255, 40, 80, 0.5) rgba(8, 2, 6, 0.95);
+}
+body.breach-mode.scene-red::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 40, 80, 0.65), rgba(160, 0, 40, 0.8));
+  border-color: rgba(255, 40, 80, 0.35);
+  box-shadow: 0 0 10px rgba(255, 40, 80, 0.3);
+}
+body.breach-mode.scene-red::-webkit-scrollbar-track {
+  border-left-color: rgba(255, 40, 80, 0.12);
+  background: rgba(8, 2, 6, 0.95);
+}
+
+/* Smooth scroll remains; avoid jank on nested */
+.modal-panel,
+.modal-intel,
+.feed,
+.intercept-log {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optional utility: hide scrollbar but keep scroll */
+.scroll-hidden {
+  scrollbar-width: none;
+}
+.scroll-hidden::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
