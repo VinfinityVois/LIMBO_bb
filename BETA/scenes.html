@@ -374,7 +374,7 @@
         <div class="ticks"></div>
         <div class="thumb">
           <span class="badge">01 · LIVE</span>
-          <img src="img/hram/_ryokan_.jpg" alt="Рёкан"
+          <img src="img/ryokan/cam03_ryokan_map.jpg" alt="Рёкан"
                onerror="this.onerror=null;this.src='img/cam03_ryokan_map.jpg'">
           <div class="shade"></div>
           <div class="scan-line"></div>
@@ -472,8 +472,34 @@
 <script>
 (function () {
   const KEY = 'limbo_scene_progress';
-  let progress = parseInt(localStorage.getItem(KEY) || '0', 10);
   const $ = (id) => document.getElementById(id);
+
+  function isDone(id) {
+    try {
+      if (localStorage.getItem(KEY + '_done_' + id) === '1') return true;
+      return parseInt(localStorage.getItem(KEY) || '0', 10) >= id;
+    } catch (e) { return false; }
+  }
+  function syncProgress() {
+    // derive sequential progress from individual done flags
+    let p = 0;
+    if (isDone(1)) p = 1;
+    if (isDone(1) && isDone(2)) p = 2;
+    if (isDone(1) && isDone(2) && isDone(3)) p = 3;
+    // fallback to stored integer if higher (legacy)
+    try {
+      const stored = parseInt(localStorage.getItem(KEY) || '0', 10);
+      if (stored > p) p = stored;
+      // write back individual flags for consistency
+      for (let i = 1; i <= p; i++) {
+        if (localStorage.getItem(KEY + '_done_' + i) !== '1')
+          localStorage.setItem(KEY + '_done_' + i, '1');
+      }
+      localStorage.setItem(KEY, String(p));
+    } catch (e) {}
+    return p;
+  }
+  let progress = syncProgress();
 
   const tele = {
     nodes: ['H231-JP', 'SH-CL8', 'QP-BRK'],
@@ -482,6 +508,8 @@
   };
 
   function updateUI() {
+    progress = syncProgress();
+    const d1 = isDone(1), d2 = isDone(2), d3 = isDone(3);
     const fill = $('progressFill');
     if (fill) fill.style.width = ((progress / 3) * 100) + '%';
     if ($('progressText')) $('progressText').textContent = progress + ' / 3';
@@ -489,30 +517,55 @@
 
     const n1 = $('node1'), n2 = $('node2'), n3 = $('node3');
 
-    if (progress >= 1) {
+    // Scene 1 always available
+    if (d1) {
       n1.classList.add('done');
       n1.classList.remove('active-node');
       if ($('num1')) $('num1').textContent = 'СЦЕНА 01 · ПРОЙДЕНА';
+    } else {
+      n1.classList.add('active-node');
+      n1.classList.remove('done');
+      if ($('num1')) $('num1').textContent = 'СЦЕНА 01 · ДОСТУПНА';
+    }
+
+    // Scene 2 unlocks after scene 1 done
+    if (d1) {
       n2.classList.remove('locked');
       const l2 = $('lock2'); if (l2) l2.remove();
-      if ($('badge2')) $('badge2').textContent = progress >= 2 ? '02 · DONE' : '02 · LIVE';
-      if ($('num2')) $('num2').textContent = progress >= 2 ? 'СЦЕНА 02 · ПРОЙДЕНА' : 'СЦЕНА 02 · ДОСТУПНА';
+      if (d2) {
+        n2.classList.add('done');
+        n2.classList.remove('active-node');
+        if ($('badge2')) $('badge2').textContent = '02 · DONE';
+        if ($('num2')) $('num2').textContent = 'СЦЕНА 02 · ПРОЙДЕНА';
+      } else {
+        n2.classList.add('active-node');
+        n2.classList.remove('done');
+        if ($('badge2')) $('badge2').textContent = '02 · LIVE';
+        if ($('num2')) $('num2').textContent = 'СЦЕНА 02 · ДОСТУПНА';
+      }
       if ($('meta2')) $('meta2').textContent = 'Мегаполис · АКТИВНА';
-      if (progress >= 2) { n2.classList.add('done'); n2.classList.remove('active-node'); }
-      else n2.classList.add('active-node');
     }
-    if (progress >= 2) {
+
+    // Scene 3 unlocks after scene 2 done
+    if (d1 && d2) {
       n3.classList.remove('locked');
       const l3 = $('lock3'); if (l3) l3.remove();
-      if ($('badge3')) $('badge3').textContent = progress >= 3 ? '03 · DONE' : '03 · ARCH';
-      if ($('num3')) $('num3').textContent = progress >= 3 ? 'СЦЕНА 03 · ОТМЕЧЕНА' : 'СЦЕНА 03 · АРХИВ';
+      if (d3) {
+        n3.classList.add('done');
+        n3.classList.remove('active-node');
+        if ($('badge3')) $('badge3').textContent = '03 · DONE';
+        if ($('num3')) $('num3').textContent = 'СЦЕНА 03 · ОТМЕЧЕНА';
+      } else {
+        n3.classList.add('active-node');
+        n3.classList.remove('done');
+        if ($('badge3')) $('badge3').textContent = '03 · ARCH';
+        if ($('num3')) $('num3').textContent = 'СЦЕНА 03 · АРХИВ';
+      }
       if ($('meta3')) $('meta3').textContent = 'Озеро · санаторий · ДОСТУПНА';
-      if (progress >= 3) n3.classList.add('done');
-      else n3.classList.add('active-node');
     }
 
     // telemetry defaults
-    const idx = Math.min(progress, 2);
+    const idx = Math.min(Math.max(progress, 0), 2);
     if ($('teleNode')) $('teleNode').textContent = tele.nodes[idx];
     if ($('teleWatch')) $('teleWatch').textContent = tele.watch[idx];
     if ($('teleStatus')) $('teleStatus').textContent = tele.status[idx];
@@ -551,6 +604,7 @@
   if ($('resetConfirm')) $('resetConfirm').onclick = () => {
     localStorage.removeItem(KEY);
     localStorage.removeItem('limbo_novel_state');
+    for (let i = 1; i <= 3; i++) localStorage.removeItem(KEY + '_done_' + i);
     location.reload();
   };
   if (modal) modal.addEventListener('click', (e) => {
@@ -563,4 +617,3 @@
 <script type="module" src="/src/main-scenes.ts"></script>
 </body>
 </html>
-  

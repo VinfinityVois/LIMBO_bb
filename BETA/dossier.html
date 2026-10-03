@@ -503,34 +503,43 @@
 .modal-overlay.open { opacity: 1; pointer-events: auto; }
 
 .modal-panel {
-  width: 100%; max-width: 720px;
-  max-height: 88vh; overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--border-strong);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,212,232,0.08);
+  width: 100%; max-width: 1180px;
+  max-height: 92vh; overflow-y: auto;
+  background: linear-gradient(165deg, rgba(10,14,24,0.98), rgba(5,8,14,0.98));
+  border: 1px solid rgba(0,212,232,0.22);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.75), 0 0 60px rgba(0,212,232,0.06);
   position: relative;
-  transform: scale(0.94);
+  transform: scale(0.96);
   transition: transform 0.35s var(--ease);
 }
 .modal-overlay.open .modal-panel { transform: scale(1); }
 .modal-panel::before {
   content: ''; position: absolute; left: 0; right: 0; top: 0; height: 1px;
   background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  z-index: 2;
+}
+.modal-panel.anomaly-panel {
+  border-color: rgba(224,40,72,0.4);
+  box-shadow: 0 30px 90px rgba(0,0,0,0.75), 0 0 50px rgba(224,40,72,0.1);
+}
+.modal-panel.anomaly-panel::before {
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
 }
 .modal-head {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 0.9rem 1.1rem;
+  padding: 0.75rem 1.1rem;
   border-bottom: 1px solid var(--border);
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.45);
+  position: sticky; top: 0; z-index: 5;
 }
 .modal-head .title {
-  font-family: var(--font-display); font-size: 1rem;
+  font-family: var(--font-display); font-size: 0.95rem;
   font-weight: 700; letter-spacing: 0.04em;
 }
 .modal-head .sub {
-  font-family: var(--font-mono); font-size: 0.6rem;
+  font-family: var(--font-mono); font-size: 0.55rem;
   color: var(--text-muted); letter-spacing: 0.1em;
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
 }
 .modal-close {
   background: transparent; border: 1px solid var(--border);
@@ -544,51 +553,177 @@
   border-color: var(--red); color: var(--red);
   background: rgba(224,40,72,0.08);
 }
-.modal-body { padding: 1.15rem 1.25rem; }
-.modal-section { margin-bottom: 1.1rem; }
-.modal-section h4 {
-  font-family: var(--font-mono); font-size: 0.6rem;
-  color: var(--cyan); letter-spacing: 0.14em; text-transform: uppercase;
-  margin-bottom: 0.5rem;
-  display: flex; align-items: center; gap: 0.5rem;
+
+.modal-body { padding: 0; }
+.modal-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 0;
+  align-items: stretch;
+  min-height: 560px;
 }
-.modal-section h4::before {
-  content: '▸'; color: var(--pink);
+@media (max-width: 900px) {
+  .modal-layout { grid-template-columns: 1fr; }
 }
-.modal-section p, .modal-section li {
-  font-size: 0.85rem; color: var(--text-dim);
-  line-height: 1.6;
-}
-.modal-section ul {
-  list-style: none; padding: 0;
-}
-.modal-section ul li {
-  padding: 0.25rem 0 0.25rem 1rem;
+.modal-portrait {
   position: relative;
-  font-family: var(--font-mono); font-size: 0.72rem;
+  background: linear-gradient(165deg, #12082a 0%, #06030e 55%, #03050a 100%);
+  border-right: 1px solid rgba(0,212,232,0.12);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 520px;
+}
+.modal-panel.anomaly-panel .modal-portrait {
+  border-right-color: rgba(224,40,72,0.2);
+  background: linear-gradient(165deg, #1a0520 0%, #0a020c 55%, #050208 100%);
+}
+.modal-portrait .p-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 380px;
+  overflow: hidden;
+}
+.modal-portrait img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+  display: block; min-height: 380px;
+  filter: grayscale(12%) contrast(1.1);
+}
+.modal-portrait.anomaly img {
+  filter: saturate(1.25) contrast(1.12) brightness(0.95);
+}
+.modal-portrait .p-grad {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3,5,10,0.15) 0%, transparent 25%, transparent 45%, rgba(3,5,10,0.92) 100%),
+    linear-gradient(90deg, rgba(0,212,232,0.04), transparent 40%);
+}
+.modal-panel.anomaly-panel .modal-portrait .p-grad {
+  background:
+    linear-gradient(180deg, rgba(3,5,10,0.2) 0%, transparent 25%, transparent 40%, rgba(3,5,10,0.95) 100%),
+    radial-gradient(ellipse at 50% 30%, rgba(224,40,72,0.12), transparent 55%);
+}
+.modal-portrait .p-top {
+  position: absolute; top: 0.65rem; left: 0.65rem; right: 0.65rem;
+  display: flex; justify-content: space-between; gap: 0.4rem;
+  z-index: 3; flex-wrap: wrap;
+}
+.modal-portrait .chip {
+  font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em;
+  padding: 0.2rem 0.45rem;
+  background: rgba(3,5,10,0.85); border: 1px solid var(--border);
+  color: var(--cyan); backdrop-filter: blur(4px);
+}
+.modal-portrait .chip.red { color: var(--red); border-color: rgba(224,40,72,0.45); }
+.modal-portrait .chip.amber { color: var(--amber); border-color: rgba(232,160,32,0.4); }
+.modal-portrait .p-brand {
+  position: absolute; top: 12%; left: 0; right: 0;
+  text-align: center; z-index: 2; pointer-events: none;
+  font-family: var(--font-display); font-weight: 900;
+  font-size: clamp(2.4rem, 5vw, 3.6rem); letter-spacing: 0.18em;
+  color: rgba(0,240,255,0.12);
+  text-shadow: 0 0 40px rgba(0,212,232,0.15);
+  mix-blend-mode: screen;
+}
+.modal-panel.anomaly-panel .p-brand {
+  color: rgba(255,42,85,0.14);
+  text-shadow: 0 0 40px rgba(224,40,72,0.2);
+}
+.modal-portrait .p-bottom {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 2.5rem 0.85rem 0.85rem;
+  z-index: 3;
+}
+.modal-portrait .p-name {
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: 800;
+  letter-spacing: 0.06em; margin-bottom: 0.2rem;
+}
+.modal-portrait .p-sub {
+  font-family: var(--font-mono); font-size: 0.55rem;
+  color: var(--text-muted); letter-spacing: 0.08em;
+}
+.modal-portrait .p-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-top: 1px solid rgba(0,212,232,0.1);
+  background: rgba(0,0,0,0.35);
+}
+.modal-portrait .p-actions .pa {
+  font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.08em;
+  padding: 0.45rem 0.35rem; text-align: center;
+  border: 1px solid rgba(0,212,232,0.2); color: var(--cyan);
+  background: rgba(0,212,232,0.05);
+}
+.modal-portrait .p-actions .pa.danger {
+  border-color: rgba(224,40,72,0.35); color: var(--red);
+  background: rgba(224,40,72,0.06);
+}
+.modal-portrait .p-meta {
+  display: flex; justify-content: space-between; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.4rem 0.75rem 0.55rem;
+  font-family: var(--font-mono); font-size: 0.48rem;
+  color: var(--text-muted); letter-spacing: 0.06em;
+  border-top: 1px solid rgba(0,212,232,0.08);
+}
+
+.modal-intel {
+  min-width: 0;
+  padding: 1rem 1.15rem 1.1rem;
+  display: flex; flex-direction: column; gap: 0.85rem;
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+}
+.modal-section {
+  margin-bottom: 0;
+  padding: 0.75rem 0.85rem;
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(0,212,232,0.1);
+}
+.modal-panel.anomaly-panel .modal-section {
+  border-color: rgba(224,40,72,0.12);
+}
+.modal-section h4 {
+  font-family: var(--font-mono); font-size: 0.58rem;
+  color: var(--cyan); letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 0.55rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+}
+.modal-section h4 .sec-num { color: var(--pink); margin-right: 0.25rem; }
+.modal-section h4 .sec-tag {
+  font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.08em;
+  border: 1px solid var(--border); padding: 0.1rem 0.35rem; font-weight: 400;
+}
+.modal-section h4 .sec-tag.danger { color: var(--red); border-color: rgba(224,40,72,0.4); }
+.modal-section p, .modal-section li {
+  font-size: 0.8rem; color: var(--text-dim); line-height: 1.55;
+}
+.modal-section ul { list-style: none; padding: 0; margin: 0; }
+.modal-section ul li {
+  padding: 0.28rem 0 0.28rem 0.9rem; position: relative;
+  font-family: var(--font-mono); font-size: 0.68rem;
 }
 .modal-section ul li::before {
-  content: '›'; position: absolute; left: 0;
-  color: var(--cyan);
+  content: '›'; position: absolute; left: 0; color: var(--cyan);
 }
 .modal-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
 }
-@media (max-width: 560px) { .modal-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .modal-grid { grid-template-columns: 1fr 1fr; } }
 .modal-grid .kv {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  padding: 0.55rem 0.7rem;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(0,212,232,0.08);
+  padding: 0.45rem 0.5rem;
 }
 .modal-grid .kv .k {
-  font-family: var(--font-mono); font-size: 0.55rem;
-  color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: 0.48rem;
+  color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase;
   margin-bottom: 0.2rem;
 }
 .modal-grid .kv .v {
-  font-family: var(--font-mono); font-size: 0.75rem;
-  color: var(--text);
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--text);
+  letter-spacing: 0.03em;
+}
+.modal-grid .kv .v.sub {
+  display: block; font-size: 0.55rem; color: var(--text-muted); margin-top: 0.15rem;
 }
 .modal-grid .kv .v.cyan  { color: var(--cyan); }
 .modal-grid .kv .v.red   { color: var(--red); }
@@ -596,11 +731,116 @@
 .modal-grid .kv .v.pink  { color: var(--pink); }
 .modal-grid .kv .v.green { color: var(--green); }
 
-.modal-actions {
-  display: flex; gap: 0.5rem;
-  padding-top: 1rem;
+.bio-bars { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.35rem; }
+.bio-bar-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 0.5rem; align-items: center; }
+.bio-bar-row .bl {
+  font-family: var(--font-mono); font-size: 0.5rem; color: var(--text-muted); letter-spacing: 0.06em;
+}
+.bio-bar-row .track {
+  height: 6px; background: rgba(0,212,232,0.08); border: 1px solid rgba(0,212,232,0.12);
+  overflow: hidden;
+}
+.bio-bar-row .track > i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+  box-shadow: 0 0 8px rgba(0,212,232,0.35);
+}
+.bio-bar-row .track.danger > i {
+  background: linear-gradient(90deg, #880020, var(--red));
+  box-shadow: 0 0 8px rgba(224,40,72,0.4);
+}
+.bio-bar-row .track.warn > i {
+  background: linear-gradient(90deg, #8a6000, var(--amber));
+}
+.bio-bar-row .bv {
+  font-family: var(--font-mono); font-size: 0.58rem; color: var(--cyan); min-width: 52px; text-align: right;
+}
+.bio-bar-row .bv.red { color: var(--red); }
+.bio-bar-row .bv.amber { color: var(--amber); }
+
+.modal-foot {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
   border-top: 1px solid var(--border);
-  justify-content: flex-end;
+  background: rgba(0,0,0,0.4);
+  font-family: var(--font-mono); font-size: 0.5rem;
+  color: var(--text-muted); letter-spacing: 0.06em;
+}
+.modal-foot .actions { display: flex; gap: 0.4rem; }
+.modal-foot .btn {
+  font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.08em;
+  padding: 0.4rem 0.7rem; border: 1px solid rgba(0,212,232,0.3);
+  color: var(--cyan); background: rgba(0,212,232,0.06); cursor: pointer;
+}
+.modal-foot .btn:hover { background: rgba(0,212,232,0.14); }
+.modal-foot .btn.solid {
+  background: linear-gradient(135deg, #00d4e8, #0090a8); color: #041018; border: 0; font-weight: 700;
+}
+.modal-actions { display: none !important; }
+
+/* analysis progress + intercept log */
+.analysis-row {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 0.55rem;
+  font-family: var(--font-mono); font-size: 0.52rem;
+  color: var(--text-muted); letter-spacing: 0.06em;
+}
+.analysis-row .ap-track {
+  flex: 1; height: 5px;
+  background: rgba(0,212,232,0.08);
+  border: 1px solid rgba(0,212,232,0.15);
+  overflow: hidden;
+}
+.analysis-row .ap-track > i {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+  box-shadow: 0 0 8px rgba(0,212,232,0.35);
+}
+.modal-panel.anomaly-panel .analysis-row .ap-track > i {
+  background: linear-gradient(90deg, #880020, var(--red));
+  box-shadow: 0 0 8px rgba(224,40,72,0.35);
+}
+.analysis-row .ap-val { color: var(--cyan); min-width: 3.2rem; text-align: right; }
+.modal-panel.anomaly-panel .analysis-row .ap-val { color: var(--red); }
+.analysis-row .ap-ref { color: var(--text-muted); margin-left: auto; font-size: 0.48rem; }
+
+.intercept-log {
+  font-family: var(--font-mono); font-size: 0.62rem;
+  line-height: 1.55; color: var(--text-dim);
+  max-height: 140px; overflow-y: auto;
+  padding: 0.35rem 0;
+}
+.intercept-log .ilog {
+  display: grid; grid-template-columns: 3.4rem 5.6rem 1fr;
+  gap: 0.4rem; padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(0,212,232,0.05);
+}
+.intercept-log .ilog .ts { color: var(--text-muted); }
+.intercept-log .ilog .tag {
+  letter-spacing: 0.06em; font-weight: 600;
+}
+.intercept-log .ilog .tag.alert { color: var(--amber); }
+.intercept-log .ilog .tag.corrupt { color: var(--red); }
+.intercept-log .ilog .tag.breach { color: var(--pink); }
+.intercept-log .ilog .tag.anomaly { color: var(--red); text-shadow: 0 0 8px rgba(224,40,72,0.35); }
+.intercept-log .ilog .tag.ok { color: var(--green); }
+.intercept-log .ilog .msg { color: var(--text-dim); }
+
+.status-pills {
+  display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem;
+}
+.status-pills span {
+  font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.08em;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid rgba(0,212,232,0.2);
+  color: var(--text-dim); background: rgba(0,0,0,0.25);
+}
+.status-pills span.hot {
+  border-color: rgba(224,40,72,0.4); color: var(--red);
+  background: rgba(224,40,72,0.08);
+}
+.status-pills span.ok {
+  border-color: rgba(30,201,154,0.35); color: var(--green);
 }
 
 /* ─── EMPTY STATE ─── */
@@ -841,8 +1081,6 @@
     </div>
   </div>
 
-
-  <script type="module" src="/src/main-dossier.ts"></script>
   <script src="js/system.js"></script>
 
   <script>
@@ -855,7 +1093,7 @@
       code: 'A-55',
       number: '#001',
       name: 'ХЭ ЮЧОУ',
-      portrait: 'assets/img/Хэ Ючоу.png',
+      portrait: 'img/char/Хэ.png',
       role: 'СМОТРЯЩИЙ A-55 · ВОСТОЧНЫЙ ШТАБ',
       division: 'east',
       divisionName: 'ВОСТОК',
@@ -895,7 +1133,7 @@
       code: 'A-89',
       number: '#002',
       name: 'ЦАЙ ЛАНЬ',
-      portrait: 'assets/img/Цай Лань.png',
+      portrait: 'img/char/Лань.png',
       role: 'СМОТРЯЩИЙ A-89 · ВОСТОЧНЫЙ ШТАБ',
       division: 'east',
       divisionName: 'ВОСТОК',
@@ -936,7 +1174,7 @@
       code: 'D-63',
       number: '#003',
       name: 'СЕЛИНА ВЕГА',
-      portrait: 'assets/img/Селина Вега.png',
+      portrait: 'img/char/Селина.png',
       role: 'СМОТРЯЩАЯ D-63 · ЗАПАДНЫЙ ШТАБ',
       division: 'west',
       divisionName: 'ЗАПАД',
@@ -976,7 +1214,7 @@
       code: 'D-28',
       number: '#004',
       name: 'НАТАН КОИКЭ',
-      portrait: 'assets/img/Натан Коикэ.png',
+      portrait: 'img/char/Натан.png',
       role: 'АССИСТЕНТ D-28 · ЗАПАДНЫЙ ШТАБ',
       division: 'west',
       divisionName: 'ЗАПАД',
@@ -1016,7 +1254,7 @@
       code: 'A-22',
       number: '#005',
       name: 'ЦАЙ ФЭЙ',
-      portrait: 'assets/img/Цай Фэй.png',
+      portrait: 'img/char/Фэй.png',
       role: 'АССИСТЕНТ A-22 · ВОСТОЧНЫЙ ШТАБ',
       division: 'east',
       divisionName: 'ВОСТОК',
@@ -1056,7 +1294,7 @@
       code: 'ZERO',
       number: '#006 // NULL',
       name: 'СЮАНЬ У',
-      portrait: 'assets/img/Сюань У.png',
+      portrait: 'img/char/Сюань.png',
       role: '/ДАННЫЕ ПОВРЕЖДЕНЫ/ · ВОСТОЧНЫЙ РЕГИОН',
       glitchIntel: true,
       division: 'anomaly',
@@ -1323,60 +1561,147 @@
     modalTitle.textContent = `[ДЕЛО: ${subject.name} // SEC:LVL_5]`;
     modalSub.textContent = `СУБЪЕКТ ${subject.number} · ${subject.code} · ${subject.divisionName}`;
 
+    const panel = modal.querySelector('.modal-panel');
+    if (panel) panel.classList.toggle('anomaly-panel', !!subject.anomaly);
+
     const psiColorVar = `var(--${subject.psiColor === 'green' ? 'green' : subject.psiColor === 'red' ? 'red' : subject.psiColor === 'amber' ? 'amber' : 'cyan'})`;
+    const isAnom = !!subject.anomaly;
+    const portraitSrc = subject.portrait || '';
+    const syncCls = subject.synced > 95 ? 'cyan' : subject.synced > 80 ? 'amber' : 'red';
+    const threatCls = subject.threat > 80 ? 'red' : subject.threat > 50 ? 'amber' : 'green';
+    const syncBar = Math.max(0, Math.min(100, subject.synced));
+    const threatBar = Math.max(0, Math.min(100, subject.threat));
+    const psiBar = Math.max(0, Math.min(100, subject.psi));
+
+    const portraitBlock = `
+      <div class="modal-portrait${isAnom ? ' anomaly' : ''}">
+        <div class="p-stage">
+          <div class="p-top">
+            <span class="chip${isAnom ? ' red' : ''}">[${subject.code}] ${isAnom ? 'ANOMALY' : subject.status.label}</span>
+            <span class="chip">FREQ: ${(120 + Math.random()*40).toFixed(1)} MHz</span>
+          </div>
+          <div class="p-brand">LIMBO</div>
+          ${portraitSrc
+            ? `<img src="${portraitSrc}" alt="${subject.name}" onerror="this.style.opacity='0.2'">`
+            : `<div style="display:grid;place-items:center;min-height:380px;font-family:var(--font-display);font-size:3rem;color:rgba(0,212,232,0.18)">${subject.placeholder ? subject.placeholder.text : '???'}</div>`}
+          <div class="p-grad"></div>
+          <div class="p-bottom">
+            <div class="p-name">${subject.name}</div>
+            <div class="p-sub">${subject.role}</div>
+          </div>
+        </div>
+        <div class="p-actions">
+          <div class="pa">◎ НЕЙРО-СКАНЕР</div>
+          <div class="pa${isAnom ? ' danger' : ''}">${isAnom ? '⊘ КАРАНТИН: OFF' : '◉ КАНАЛ АКТИВЕН'}</div>
+        </div>
+        <div class="p-meta">
+          <span>ШТАБ: ${subject.divisionName}</span>
+          <span>УГРОЗА: ${subject.threat}/100</span>
+          <span>СИНХР: ${subject.synced.toFixed(1)}%</span>
+        </div>
+      </div>`;
 
     modalBody.innerHTML = `
-      <div class="modal-section">
-        <h4>// ИДЕНТИФИКАЦИЯ</h4>
-        <div class="modal-grid">
-          <div class="kv"><div class="k">Позывной</div><div class="v cyan">${subject.code}</div></div>
-          <div class="kv"><div class="k">Номер</div><div class="v">${subject.number}</div></div>
-          <div class="kv"><div class="k">Роль</div><div class="v">${subject.role}</div></div>
-          <div class="kv"><div class="k">Штаб</div><div class="v">${subject.divisionName}</div></div>
-          <div class="kv"><div class="k">Возраст</div><div class="v">${subject.age}</div></div>
-          <div class="kv"><div class="k">Дата рождения</div><div class="v">${subject.birth}</div></div>
+      <div class="modal-layout">
+        ${portraitBlock}
+        <div class="modal-intel">
+          <div class="modal-section">
+            <h4><span><span class="sec-num">01.</span> ИДЕНТИФИКАЦИЯ СУБЪЕКТА</span><span class="sec-tag">КЛАСС: 77-A</span></h4>
+            <div class="modal-grid">
+              <div class="kv"><div class="k">Позывной</div><div class="v cyan">${subject.code}</div><div class="v sub">${isAnom ? '[системный сбой]' : '[верифицирован]'}</div></div>
+              <div class="kv"><div class="k">Личный номер</div><div class="v">${subject.number}</div><div class="v sub">${isAnom ? '[хранилище опустошено]' : '[архив штаба]'}</div></div>
+              <div class="kv"><div class="k">Назначенная роль</div><div class="v ${isAnom ? 'red' : ''}">${isAnom ? 'НАБЛЮДАТЕЛЬ' : subject.role.split('·')[0].trim()}</div><div class="v sub">${isAnom ? '[данные повреждены]' : subject.divisionName}</div></div>
+              <div class="kv"><div class="k">Штаб / регион</div><div class="v">${subject.divisionName}</div></div>
+              <div class="kv"><div class="k">Биологический возраст</div><div class="v">${subject.age}</div></div>
+              <div class="kv"><div class="k">Дата рождения</div><div class="v">${subject.birth}</div></div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4><span><span class="sec-num">02.</span> БИОМЕТРИЯ &amp; РЕЗОНАНС</span><span class="sec-tag${subject.threat > 80 ? ' danger' : ''}">${subject.threat > 80 ? 'КРИТИЧЕСКАЯ УГРОЗА' : 'НОМИНАЛ'}</span></h4>
+            <div class="bio-bars">
+              <div class="bio-bar-row">
+                <span class="bl">СИНХРОНИЗАЦИЯ</span>
+                <div class="track ${syncBar < 50 ? 'danger' : syncBar < 85 ? 'warn' : ''}"><i style="width:${syncBar}%"></i></div>
+                <span class="bv ${syncCls}">${subject.synced.toFixed(1)}%</span>
+              </div>
+              <div class="bio-bar-row">
+                <span class="bl">ИНДЕКС УГРОЗЫ</span>
+                <div class="track ${threatBar > 80 ? 'danger' : threatBar > 50 ? 'warn' : ''}"><i style="width:${threatBar}%"></i></div>
+                <span class="bv ${threatCls}">${subject.threat}/100</span>
+              </div>
+              <div class="bio-bar-row">
+                <span class="bl">ИЗУЧЕННОСТЬ</span>
+                <div class="track ${psiBar < 40 ? 'danger' : psiBar < 70 ? 'warn' : ''}"><i style="width:${psiBar}%"></i></div>
+                <span class="bv" style="color:${psiColorVar}">${subject.psi}%</span>
+              </div>
+            </div>
+            <div class="modal-grid" style="margin-top:0.65rem">
+              <div class="kv"><div class="k">Статус</div><div class="v ${subject.status.color}">[${subject.status.label}]</div></div>
+              <div class="kv"><div class="k">Изученность</div><div class="v" style="color:${psiColorVar}">${subject.psiStatus}</div></div>
+              <div class="kv"><div class="k">Протокол</div><div class="v ${isAnom ? 'red' : 'cyan'}">${isAnom ? 'ТОТАЛЬНАЯ ИЗОЛЯЦИЯ' : 'ШТАТНЫЙ'}</div></div>
+            </div>
+          </div>
+
+          <div class="modal-section">
+            <h4><span><span class="sec-num">03.</span> АРХИВ СОЗНАНИЯ</span><span class="sec-tag">${isAnom ? 'РАСШИФРОВКА' : 'ДОПУСК'}</span></h4>
+            <div class="analysis-row">
+              <span>ПРОГРЕСС АНАЛИЗА</span>
+              <div class="ap-track"><i style="width:${(isAnom ? 28+subject.id*3.2 : 72+subject.id*4).toFixed(1)}%"></i></div>
+              <span class="ap-val">${(isAnom ? 28+subject.id*3.2 : 72+subject.id*4).toFixed(1)}%</span>
+              <span class="ap-ref">// DEV_NOTE_REF: LIMBO_PRO1_${String(90+subject.id).padStart(2,'0')}</span>
+            </div>
+            <p class="${subject.glitchIntel ? 'scramble' : ''}" ${subject.glitchIntel ? `data-text="${subject.bio.replace(/"/g,'&quot;')}"` : ''}>${subject.bio}</p>
+            <div class="status-pills">
+              ${isAnom
+                ? '<span class="hot">ДАННЫЕ ЗАСЕКРЕЧЕНЫ</span><span class="hot">ВНЕ СИМУЛЯЦИИ</span><span class="hot">ВРАЖДЕБЕН К П.Р.И.Н.Ц.</span>'
+                : '<span class="ok">АРХИВ ДОСТУПЕН</span><span class="ok">ПРОТОКОЛ ШТАТНЫЙ</span>'}
+            </div>
+          </div>
+
+          <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
+            <h4><span><span class="sec-num">04.</span> ПЕРЕХВАТЫ &amp; СЕТЕВАЯ АКТИВНОСТЬ</span><span class="sec-tag">${isAnom ? 'LIVE-RECURSION' : 'ЖУРНАЛ'}</span></h4>
+            <div class="intercept-log">
+              ${subject.modalExtra.history.map((h, i) => {
+                const tags = isAnom
+                  ? ['ALERT','CORRUPT','BREACH','ANOMALY']
+                  : ['OK','SYNC','LOG','ACK'];
+                const tag = tags[i % tags.length];
+                const tagCls = tag.toLowerCase() === 'ok' || tag.toLowerCase() === 'sync' || tag.toLowerCase() === 'ack' ? 'ok'
+                  : tag.toLowerCase() === 'alert' ? 'alert'
+                  : tag.toLowerCase() === 'anomaly' || tag.toLowerCase() === 'corrupt' || tag.toLowerCase() === 'breach' ? tag.toLowerCase()
+                  : '';
+                const mm = String(13 + (i % 4)).padStart(2,'0');
+                const ss = String(40 + i * 7).padStart(2,'0');
+                const body = subject.glitchIntel
+                  ? `<span class="scramble" data-text="${h.replace(/"/g,'&quot;')}">${h}</span>`
+                  : h;
+                return `<div class="ilog"><span class="ts">${mm}:${ss}</span><span class="tag ${tagCls}">[${tag}]</span><span class="msg">${body}</span></div>`;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
+            <h4><span><span class="sec-num">05.</span> АНАЛИТИЧЕСКИЕ ЗАМЕТКИ</span></h4>
+            <ul>${subject.modalExtra.notes.map(n => subject.glitchIntel
+              ? `<li class="glitch-line"><span class="scramble" data-text="${n.replace(/"/g,'&quot;')}">${n}</span></li>`
+              : `<li>${n}</li>`).join('')}</ul>
+          </div>
+
+          <div class="modal-section">
+            <h4><span><span class="sec-num">06.</span> ТЕГИ &amp; КЛАССИФИКАЦИЯ</span></h4>
+            <div class="char-tags">
+              ${subject.tags.map(t => `<span class="tag ${t.c}">${t.t}</span>`).join('')}
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="modal-section">
-        <h4>// БИОМЕТРИЯ</h4>
-        <div class="modal-grid">
-          <div class="kv"><div class="k">Синхронизация</div><div class="v ${subject.synced > 95 ? 'cyan' : subject.synced > 80 ? 'amber' : 'red'}">${subject.synced.toFixed(1)}%</div></div>
-          <div class="kv"><div class="k">Изученность</div><div class="v" style="color:${psiColorVar}">${subject.psi}% · ${subject.psiStatus}</div></div>
-          <div class="kv"><div class="k">Индекс угрозы</div><div class="v ${subject.threat > 80 ? 'red' : subject.threat > 50 ? 'amber' : 'green'}">${subject.threat}/100</div></div>
-          <div class="kv"><div class="k">Статус</div><div class="v ${subject.status.color}">[${subject.status.label}]</div></div>
+      <div class="modal-foot">
+        <div>SEC:LVL_5 · СЕССИЯ #${String(900+subject.id).padStart(3,'0')}-${String(subject.id*7).padStart(2,'0')} · РАСПАД: ${(isAnom ? 30+Math.random()*20 : 2+Math.random()*8).toFixed(1)}%</div>
+        <div class="actions">
+          <button class="btn" data-modal-action="close">ЗАКРЫТЬ</button>
+          <button class="btn solid" data-modal-action="export">ЭКСПОРТ ДАННЫХ</button>
         </div>
-      </div>
-
-      <div class="modal-section">
-        <h4>// ОПИСАНИЕ</h4>
-        <p class="${subject.glitchIntel ? 'scramble' : ''}" ${subject.glitchIntel ? `data-text="${subject.bio.replace(/"/g,'&quot;')}"` : ''}>${subject.bio}</p>
-      </div>
-
-      <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
-        <h4>// ИСТОРИЯ ОПЕРАЦИЙ</h4>
-        <ul>${subject.modalExtra.history.map(h => subject.glitchIntel
-          ? `<li class="glitch-line"><span class="scramble" data-text="${h.replace(/"/g,'&quot;')}">${h}</span></li>`
-          : `<li>${h}</li>`).join('')}</ul>
-      </div>
-
-      <div class="modal-section${subject.glitchIntel ? ' glitch-intel' : ''}">
-        <h4>// АНАЛИТИЧЕСКИЕ ЗАМЕТКИ</h4>
-        <ul>${subject.modalExtra.notes.map(n => subject.glitchIntel
-          ? `<li class="glitch-line"><span class="scramble" data-text="${n.replace(/"/g,'&quot;')}">${n}</span></li>`
-          : `<li>${n}</li>`).join('')}</ul>
-      </div>
-
-      <div class="modal-section">
-        <h4>// ТЕГИ И КЛАССИФИКАЦИЯ</h4>
-        <div class="char-tags">
-          ${subject.tags.map(t => `<span class="tag ${t.c}">${t.t}</span>`).join('')}
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn" data-modal-action="close">ЗАКРЫТЬ ПРОТОКОЛ</button>
-        <button class="btn btn-solid" data-modal-action="export">ЭКСПОРТ ДЕЛА</button>
       </div>
     `;
     modal.classList.add('open');
@@ -1463,5 +1788,6 @@
      ═══════════════════════════════════════════════════════════ */
   renderGrid();
   </script>
+<script type="module" src="/src/main-dossier.ts"></script>
 </body>
 </html>
