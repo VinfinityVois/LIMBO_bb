@@ -1,0 +1,392 @@
+/* ═══════════════════════════════════════════════════════════
+   П.Р.И.Н.Ц. // SIM — Ryokan Phase A
+   ═══════════════════════════════════════════════════════════ */
+
+   body.sim-mode {
+    overflow: hidden;
+    height: 100vh;
+    background: var(--void, #03050a);
+  }
+  
+  .sim-shell {
+    display: grid;
+    grid-template-rows: 46px 1fr auto;
+    height: 100vh;
+    max-height: 100vh;
+  }
+  
+  .sim-main {
+    display: grid;
+    grid-template-columns: 1fr 180px;
+    gap: 0;
+    min-height: 0;
+    position: relative;
+  }
+  
+  @media (max-width: 900px) {
+    .sim-main { grid-template-columns: 1fr; }
+    .sim-side { display: none; }
+  }
+  
+  /* STAGE */
+  .sim-stage-wrap {
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--border, rgba(0,200,220,0.1));
+  }
+  
+  #sim-stage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #05070e;
+    transition: opacity 0.28s ease, filter 0.28s;
+    --vig: rgba(2,4,10,0.55);
+  }
+  #sim-stage.fade {
+    opacity: 0.15;
+    filter: brightness(0.4);
+  }
+  #sim-stage::after {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 20;
+    background: radial-gradient(ellipse at center, transparent 35%, var(--vig) 100%);
+  }
+  
+  #sim-layers {
+    position: absolute; inset: -4%;
+    z-index: 1;
+  }
+  .sim-layer {
+    position: absolute; inset: 0;
+    will-change: transform;
+    pointer-events: none;
+  }
+  
+  #sim-eyes {
+    position: absolute;
+    width: 48px; height: 18px;
+    left: 62%; top: 28%;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s;
+    filter: blur(0.5px);
+  }
+  #sim-eyes.on { opacity: 0.55; }
+  #sim-eyes::before,
+  #sim-eyes::after {
+    content: '';
+    position: absolute; top: 0;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #e02848 0%, #800 70%, transparent 100%);
+    box-shadow: 0 0 12px rgba(224,40,72,0.6);
+  }
+  #sim-eyes::before { left: 0; }
+  #sim-eyes::after { right: 0; }
+  
+  #sim-hotspots,
+  #sim-exits {
+    position: absolute; inset: 0;
+    z-index: 10;
+  }
+  
+  .sim-hotspot {
+    position: absolute;
+    border: 1px solid rgba(0,212,232,0.25);
+    background: rgba(0,212,232,0.04);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 2px;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.25s;
+    transform: translate(-50%, -50%);
+  }
+  .sim-hotspot:hover {
+    border-color: var(--cyan, #00d4e8);
+    background: rgba(0,212,232,0.12);
+    box-shadow: 0 0 24px rgba(0,212,232,0.2);
+    z-index: 12;
+  }
+  .sim-hotspot .hs-label {
+    position: absolute;
+    left: 50%; bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: var(--cyan, #00d4e8);
+    background: rgba(3,5,10,0.9);
+    border: 1px solid rgba(0,212,232,0.25);
+    padding: 0.2rem 0.45rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .sim-hotspot:hover .hs-label { opacity: 1; }
+  .sim-hotspot.cursor-door { border-color: rgba(232,160,32,0.35); }
+  .sim-hotspot.cursor-door:hover { border-color: var(--amber, #e8a020); box-shadow: 0 0 20px rgba(232,160,32,0.2); }
+  
+  .sim-exit {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    padding: 0.45rem 0.75rem;
+    background: rgba(3,5,10,0.85);
+    border: 1px solid rgba(0,212,232,0.3);
+    color: var(--cyan, #00d4e8);
+    cursor: pointer;
+    border-radius: 2px;
+    z-index: 11;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .sim-exit:hover:not(.locked) {
+    background: rgba(0,212,232,0.15);
+    box-shadow: 0 0 18px rgba(0,212,232,0.25);
+  }
+  .sim-exit.locked {
+    color: var(--text-muted, #3a4558);
+    border-color: rgba(100,100,120,0.3);
+    cursor: not-allowed;
+  }
+  
+  /* HUD top on stage */
+  .sim-zone-hud {
+    position: absolute;
+    top: 0.75rem; left: 0.9rem; right: 0.9rem;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+  }
+  .sim-zone-hud h2 {
+    font-family: var(--font-display, Orbitron, sans-serif);
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    margin: 0;
+    text-shadow: 0 0 20px rgba(0,0,0,0.9);
+  }
+  .sim-zone-hud .sub {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    color: var(--text-dim, #6a7590);
+    letter-spacing: 0.08em;
+    margin-top: 0.2rem;
+  }
+  
+  /* SIDE minimap */
+  .sim-side {
+    background: var(--panel, #0b0f1a);
+    border-left: 1px solid var(--border, rgba(0,200,220,0.1));
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow: auto;
+  }
+  .mm-title {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    color: var(--text-muted, #3a4558);
+    margin-bottom: 0.5rem;
+  }
+  .mm-graph {
+    position: relative;
+    height: 220px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border, rgba(0,200,220,0.1));
+  }
+  .mm-edges {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .mm-node {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.35rem;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(60,70,90,0.5);
+    color: var(--text-muted, #3a4558);
+    cursor: default;
+    min-width: 2.5rem;
+    text-align: center;
+  }
+  .mm-node.vis {
+    border-color: rgba(0,212,232,0.35);
+    color: var(--text-dim, #6a7590);
+    cursor: pointer;
+  }
+  .mm-node.cur {
+    border-color: var(--cyan, #00d4e8);
+    color: var(--cyan, #00d4e8);
+    box-shadow: 0 0 12px rgba(0,212,232,0.3);
+  }
+  
+  .sim-side .help {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.55rem;
+    color: var(--text-muted, #3a4558);
+    line-height: 1.55;
+    letter-spacing: 0.04em;
+  }
+  
+  /* BOTTOM BAR */
+  .sim-bottom {
+    border-top: 1px solid var(--border, rgba(0,200,220,0.1));
+    background: rgba(3,5,10,0.95);
+    padding: 0.65rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  #sim-inv {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    min-height: 52px;
+    align-items: center;
+  }
+  .inv-empty {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.62rem;
+    color: var(--text-muted, #3a4558);
+    letter-spacing: 0.1em;
+  }
+  .inv-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    width: 56px;
+    padding: 0.35rem 0.25rem;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(0,212,232,0.2);
+    color: var(--text, #c5cddc);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .inv-slot:hover { border-color: var(--cyan, #00d4e8); }
+  .inv-slot.selected {
+    border-color: var(--cyan, #00d4e8);
+    box-shadow: 0 0 14px rgba(0,212,232,0.35);
+    background: rgba(0,212,232,0.08);
+  }
+  .inv-slot.combine {
+    border-color: var(--amber, #e8a020);
+  }
+  .inv-slot .ic { font-size: 1.1rem; line-height: 1; }
+  .inv-slot .nm {
+    font-family: var(--font-mono, monospace);
+    font-size: 0.48rem;
+    letter-spacing: 0.06em;
+    color: var(--text-dim, #6a7590);
+  }
+  
+  .sim-bottom-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.58rem;
+    color: var(--text-dim, #6a7590);
+    letter-spacing: 0.06em;
+  }
+  #sim-hint { max-width: 280px; text-align: right; color: var(--text-muted, #3a4558); }
+  #sim-selected { color: var(--cyan, #00d4e8); }
+  
+  /* TOAST */
+  #sim-toast {
+    position: fixed;
+    bottom: 110px; left: 50%;
+    transform: translateX(-50%) translateY(12px);
+    z-index: 80;
+    max-width: min(480px, 90vw);
+    padding: 0.7rem 1.1rem;
+    background: rgba(8,12,22,0.95);
+    border: 1px solid rgba(0,212,232,0.35);
+    color: var(--text, #c5cddc);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  #sim-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  #sim-toast.warn {
+    border-color: rgba(224,40,72,0.45);
+    color: #ffb0bc;
+  }
+  
+  /* MODAL */
+  #sim-modal {
+    position: fixed; inset: 0;
+    z-index: 100;
+    background: rgba(2,4,10,0.72);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+    backdrop-filter: blur(6px);
+  }
+  #sim-modal.open {
+    opacity: 1; visibility: visible;
+  }
+  .sim-modal-panel {
+    width: min(480px, 92vw);
+    background: var(--panel, #0b0f1a);
+    border: 1px solid rgba(0,212,232,0.28);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.65), 0 0 40px rgba(0,212,232,0.08);
+  }
+  .sim-modal-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border, rgba(0,200,220,0.1));
+    font-family: var(--font-display, Orbitron, sans-serif);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    color: var(--cyan, #00d4e8);
+  }
+  .sim-modal-head button {
+    background: none; border: 0; color: var(--text-dim, #6a7590);
+    cursor: pointer; font-size: 1.1rem; line-height: 1;
+  }
+  .sim-modal-body { padding: 1rem 1.1rem; }
+  .exam-text {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text, #c5cddc);
+    font-weight: 300;
+    margin: 0 0 0.75rem;
+  }
+  .exam-text.cyan { color: var(--cyan, #00d4e8); }
+  .sim-modal-actions {
+    display: flex; gap: 0.5rem; justify-content: flex-end;
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--border, rgba(0,200,220,0.1));
+  }
+  
+  .sim-scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+    opacity: 0.35;
+  }
+  

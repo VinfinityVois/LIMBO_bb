@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>П.Р.И.Н.Ц. // Симуляция · Рёкан</title>
+  <link rel="stylesheet" href="css/system.css" />
+  <link rel="stylesheet" href="css/sim.css" />
+</head>
+<body class="sim-mode">
+  <div class="noise"></div>
+  <div class="sim-scanlines"></div>
+
+  <div class="sim-shell">
+    <header class="sys-topbar">
+      <a class="brand" href="scene-ryokan.html">П.Р.И.Н.Ц.<span> // СИМ</span></a>
+      <nav class="sys-nav">
+        <a href="terminal.html">Терминал</a>
+        <a href="scenes.html">Сцены</a>
+        <a href="scene-ryokan.html">Рёкан</a>
+        <a href="sim.html" class="active">Погружение</a>
+      </nav>
+      <div class="right-meta">
+        <button type="button" class="status-pill" id="sim-btn-mute" style="cursor:pointer;background:transparent;font:inherit;color:inherit">SFX · ON</button>
+        <button type="button" class="status-pill" id="sim-btn-reset" style="cursor:pointer;background:transparent;font:inherit;color:inherit" title="Сброс">RESET</button>
+        <span class="sec-level">SEC:LVL_5</span>
+      </div>
+    </header>
+
+    <div class="sim-main">
+      <div class="sim-stage-wrap">
+        <div id="sim-stage">
+          <div id="sim-layers"></div>
+          <div id="sim-eyes" aria-hidden="true"></div>
+          <div id="sim-hotspots"></div>
+          <div id="sim-exits"></div>
+          <div class="sim-zone-hud">
+            <div>
+              <h2 id="sim-zone-title">—</h2>
+              <div class="sub" id="sim-zone-sub">—</div>
+            </div>
+            <div class="sub" style="text-align:right">СЕКТОР RK-01<br />ПОИСК / ОСМОТР</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sim-side">
+        <div id="sim-minimap"></div>
+        <div class="help">
+          ЛКМ по зоне — осмотр / действие<br />
+          ЛКМ по предмету — выбрать<br />
+          второй предмет — комбинация<br />
+          ПКМ по предмету — описание<br />
+          выбранный предмет + дверь/объект — использовать<br />
+          карта: переход в уже открытые комнаты
+        </div>
+      </aside>
+    </div>
+
+    <footer class="sim-bottom">
+      <div id="sim-inv"></div>
+      <div class="sim-bottom-meta">
+        <div id="sim-selected">В РУКАХ: —</div>
+        <div id="sim-hint">—</div>
+      </div>
+    </footer>
+  </div>
+
+  <div id="sim-toast"></div>
+
+  <div id="sim-modal">
+    <div class="sim-modal-panel">
+      <div class="sim-modal-head">
+        <span id="sim-modal-title">ОСМОТР</span>
+        <button type="button" id="sim-modal-close" aria-label="Закрыть">×</button>
+      </div>
+      <div class="sim-modal-body" id="sim-modal-body"></div>
+      <div class="sim-modal-actions" id="sim-modal-actions"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main-sim.ts"></script>
+</body>
+</html>
