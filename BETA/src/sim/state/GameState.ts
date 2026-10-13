@@ -1,82 +1,93 @@
-import type { ItemId } from './Inventory';
-import type { LocationId } from '../data/ryokan/locations';
+/** Unified sim state — Рёкан Phase A */
 
-const SAVE_KEY = 'limbo_sim_ryokan_v1';
+export type LocationId =
+  | 'gate'
+  | 'garden'
+  | 'engawa'
+  | 'genkan'
+  | 'hall'
+  | 'storage';
 
-export interface SimState {
+export type ItemId =
+  | 'paper_lantern_shard'
+  | 'wet_key_half'
+  | 'wet_key_other'
+  | 'ryokan_key'
+  | 'kokeshi_note'
+  | 'silk_thread'
+  | 'matchbox';
+
+export interface GameState {
   location: LocationId;
   inventory: ItemId[];
   flags: Record<string, boolean>;
   visited: LocationId[];
-  selectedItem: ItemId | null;
-  combineSlot: ItemId | null;
+  selected: ItemId | null;
   completed: boolean;
+  muted: boolean;
 }
 
-export function defaultState(): SimState {
+const SAVE_KEY = 'limbo_sim_ryokan_v1';
+
+export function defaultState(): GameState {
   return {
     location: 'gate',
     inventory: [],
     flags: {},
     visited: ['gate'],
-    selectedItem: null,
-    combineSlot: null,
+    selected: null,
     completed: false,
+    muted: localStorage.getItem('limbo_sim_mute') === '1',
   };
 }
 
-export function loadState(): SimState {
+export function loadState(): GameState {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return defaultState();
-    const p = JSON.parse(raw) as Partial<SimState>;
+    const p = JSON.parse(raw) as Partial<GameState>;
     return {
       ...defaultState(),
       ...p,
       inventory: Array.isArray(p.inventory) ? p.inventory : [],
       flags: p.flags || {},
       visited: p.visited?.length ? p.visited : ['gate'],
+      selected: p.selected ?? null,
+      muted: localStorage.getItem('limbo_sim_mute') === '1',
     };
   } catch {
     return defaultState();
   }
 }
 
-export function saveState(s: SimState): void {
+export function saveState(s: GameState): void {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      location: s.location,
+      inventory: s.inventory,
+      flags: s.flags,
+      visited: s.visited,
+      selected: s.selected,
+      completed: s.completed,
+    }));
   } catch { /* */ }
 }
 
-export function resetState(): SimState {
+export function setMuted(s: GameState, v: boolean): void {
+  s.muted = v;
+  localStorage.setItem('limbo_sim_mute', v ? '1' : '0');
+}
+
+export function markSceneDone(): void {
+  try {
+    const KEY = 'limbo_scene_progress';
+    const cur = parseInt(localStorage.getItem(KEY) || '0', 10);
+    if (cur < 1) localStorage.setItem(KEY, '1');
+    localStorage.setItem(`${KEY}_done_1`, '1');
+  } catch { /* */ }
+}
+
+export function resetSim(): GameState {
   localStorage.removeItem(SAVE_KEY);
   return defaultState();
-}
-
-export function hasItem(s: SimState, id: ItemId): boolean {
-  return s.inventory.includes(id);
-}
-
-export function addItem(s: SimState, id: ItemId): SimState {
-  if (s.inventory.includes(id)) return s;
-  return { ...s, inventory: [...s.inventory, id] };
-}
-
-export function removeItems(s: SimState, ids: ItemId[]): SimState {
-  const set = new Set(ids);
-  return {
-    ...s,
-    inventory: s.inventory.filter((i) => !set.has(i)),
-    selectedItem: s.selectedItem && set.has(s.selectedItem) ? null : s.selectedItem,
-    combineSlot: s.combineSlot && set.has(s.combineSlot) ? null : s.combineSlot,
-  };
-}
-
-export function setFlag(s: SimState, key: string, val = true): SimState {
-  return { ...s, flags: { ...s.flags, [key]: val } };
-}
-
-export function visit(s: SimState, loc: LocationId): SimState {
-  if (s.visited.includes(loc)) return { ...s, location: loc };
-  return { ...s, location: loc, visited: [...s.visited, loc] };
 }

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Погружение · Рёкан</title>
+  <link rel="stylesheet" href="/css/sim.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="immerse" data-matrix="idle">
+  <!-- dive-in intro -->
+  <div id="diveOverlay" class="dive-overlay">
+    <div class="dive-core">
+      <div class="dive-ring"></div>
+      <div class="dive-ring d2"></div>
+      <div class="dive-title">ПОГРУЖЕНИЕ</div>
+      <div id="diveLog" class="dive-log"></div>
+    </div>
+  </div>
+
+  <div class="matrix-rail left" id="matrixLeft" aria-hidden="true"></div>
+  <div class="matrix-rail right" id="matrixRight" aria-hidden="true"></div>
+
+  <div id="notifyHost" class="notify-host"></div>
+  <div id="hoverCard" class="hover-card"></div>
+  <div id="revealFlash" class="reveal-flash" aria-hidden="true"></div>
+
+  <div class="float-ctrl">
+    <button type="button" id="btnExit" title="Выход">✕</button>
+    <button type="button" id="btnMute">SFX ON</button>
+    <button type="button" id="btnReset" title="Сброс">↻</button>
+  </div>
+
+  <div class="zone-whisper">
+    <div id="zoneLabel">—</div>
+    <div id="zoneSub">—</div>
+  </div>
+
+  <div class="sim-stage" id="simStage">
+    <canvas id="simCanvas"></canvas>
+    <div class="hotspot-layer" id="hotspotLayer"></div>
+    <div class="exit-layer" id="exitLayer"></div>
+    <div class="stage-error" id="stageError" hidden>Нет кадра</div>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scan" aria-hidden="true"></div>
+  </div>
+
+  <div class="dock">
+    <div class="mini" id="miniMap"></div>
+    <div class="inv" id="invSlots"></div>
+    <div class="hand" id="handLabel">В РУКАХ: —</div>
+  </div>
+
+  <div class="sim-modal" id="simModal">
+    <div class="sim-modal-backdrop" id="modalBackdrop"></div>
+    <div class="sim-modal-panel">
+      <div class="smp-h">
+        <span id="modalTitle">ОБЪЕКТ</span>
+        <button type="button" id="modalClose">×</button>
+      </div>
+      <div class="smp-body-row">
+        <div class="smp-visual" id="modalVisual"></div>
+        <div class="smp-b" id="modalBody"></div>
+      </div>
+      <div class="smp-a" id="modalActions"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main-sim.ts"></script>
+</body>
+</html>
