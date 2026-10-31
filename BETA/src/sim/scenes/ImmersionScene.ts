@@ -434,7 +434,7 @@ export class ImmersionScene {
     const visual=document.getElementById('modalVisual');
     const item=hs.item?ITEMS[hs.item]:null;
     if(visual) visual.innerHTML=hs.item?itemSvgMarkup(hs.item,224):hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
-    body.textContent=item?item.name+'\\n\\n'+hs.examine:hs.examine;
+    body.textContent=item?item.name+'\n\n'+hs.examine:hs.examine;
     if(hs.item==='black_seed'||hs.item==='stitched_mask'){
       const risk=document.createElement('span');risk.className='item-risk';risk.textContent='НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';body.appendChild(risk);
     }
@@ -580,7 +580,7 @@ export class ImmersionScene {
     document.getElementById('modalTitle')!.textContent = def.name;
     const visual = document.getElementById('modalVisual');
     if (visual) visual.innerHTML = itemSvgMarkup(id, 224);
-    document.getElementById('modalBody')!.textContent = def.name + '\\n\\n' + def.examine;
+    document.getElementById('modalBody')!.textContent = def.name + '\n\n' + def.examine;
     const actions = document.getElementById('modalActions')!;
     actions.innerHTML = '';
     const close = document.createElement('button');
