@@ -579,3 +579,30 @@ body.immerse .float-ctrl button:hover {
   .hud-inventory .inv {grid-template-columns:repeat(6,minmax(38px,1fr));grid-auto-rows:58px}
   .hud-utility {min-height:112px}
 }
+
+
+/* Horror exploration UI */
+.smp-body-row{align-items:stretch;gap:16px;padding:14px 16px}
+.sim-modal-panel{width:min(760px,94vw);max-height:min(82vh,720px);overflow:auto;border:1px solid rgba(0,212,232,.42);background:linear-gradient(145deg,rgba(12,19,27,.985),rgba(3,7,12,.985))}
+.smp-visual{flex:0 0 min(38%,250px);min-height:230px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(139,165,187,.24);background:radial-gradient(ellipse,rgba(54,90,99,.28),rgba(2,7,12,.94) 72%);box-shadow:inset 0 0 35px rgba(0,0,0,.65)}
+.smp-visual svg{width:min(88%,220px);height:auto;max-height:220px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.7))}
+.smp-b{flex:1;min-width:0;padding:10px 4px;font-size:.9rem;white-space:pre-line}
+.item-risk{display:block;margin-top:14px;padding:9px 10px;border-left:2px solid #d85b64;background:rgba(180,42,57,.1);color:#ffb3b8;font:500 .62rem var(--mono);line-height:1.55}
+.item-detail{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09);color:#aebdc6;font-size:.78rem;line-height:1.6}
+.smp-a{flex-wrap:wrap}.smp-a .btn{min-width:116px}.smp-a .btn.danger{border-color:rgba(224,40,72,.55);color:#ff9da9}.smp-a .btn.danger:hover{background:rgba(224,40,72,.14)}
+.sense-feed{position:fixed;z-index:24;left:22px;top:78px;width:min(300px,34vw);display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.sense-event{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid rgba(110,178,190,.22);background:rgba(4,11,17,.72);backdrop-filter:blur(8px);color:#aebdc6;font:500 .58rem var(--mono);animation:sense-in .25s ease-out}
+.sense-event .sense-icon{color:#63cbd2;font-size:1rem;text-shadow:0 0 12px currentColor}
+.sense-event.warning{border-color:rgba(224,72,82,.45);color:#ffc1c4}.sense-event.warning .sense-icon{color:#ef6470}
+.sound-wave{margin-left:auto;display:flex;align-items:center;gap:2px;height:18px}.sound-wave i{width:2px;height:5px;background:currentColor;opacity:.75;animation:wave .7s ease-in-out infinite alternate}.sound-wave i:nth-child(2n){animation-delay:.18s}.sound-wave i:nth-child(3n){animation-delay:.34s}
+@keyframes wave{to{height:16px;opacity:1}}@keyframes sense-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.threat-overlay{position:fixed;z-index:80;left:50%;top:38%;transform:translate(-50%,-50%);width:min(470px,90vw);display:grid;grid-template-columns:100px 1fr;gap:14px;padding:18px;border:1px solid rgba(221,66,79,.65);background:linear-gradient(135deg,rgba(17,10,15,.96),rgba(3,7,12,.97));box-shadow:0 0 60px rgba(180,25,42,.28),0 20px 60px #000;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s,visibility .2s}
+.threat-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
+.threat-silhouette{position:relative;min-height:112px;display:grid;place-items:center;background:radial-gradient(ellipse,rgba(151,35,49,.25),transparent 70%);overflow:hidden}
+.threat-silhouette:before{content:"";width:44px;height:70px;background:#050609;border-radius:48% 48% 28% 28%;box-shadow:0 0 22px rgba(224,40,72,.35);clip-path:polygon(20% 0,80% 0,100% 34%,76% 49%,94% 100%,56% 78%,40% 100%,18% 53%,0 36%)}
+.threat-silhouette span,.threat-silhouette i{position:absolute;top:37px;width:5px;height:3px;background:#ff5362;box-shadow:0 0 12px 4px rgba(255,50,70,.65)}.threat-silhouette span{left:40px}.threat-silhouette i{right:40px}
+.threat-copy strong{display:block;margin:5px 0 8px;color:#ffd9dc;font:600 .82rem var(--mono);letter-spacing:.08em}.threat-copy p{color:#a9aeb8;font-size:.76rem;line-height:1.5}
+.threat-actions{grid-column:1/-1;display:flex;gap:8px}.threat-actions button{min-height:38px}
+body.threat-active .sim-stage{animation:threat-shake .32s linear 2;filter:saturate(.72) contrast(1.08)}body.threat-active .vignette{background:radial-gradient(ellipse at center,transparent 20%,rgba(130,0,18,.48) 100%)}
+@keyframes threat-shake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,1px)}75%{transform:translate(3px,-1px)}}
+@media(max-width:700px){.sense-feed{left:8px;top:64px;width:min(240px,60vw)}.smp-body-row{flex-direction:column}.smp-visual{flex-basis:auto;min-height:150px}.smp-visual svg{max-height:145px}.threat-overlay{top:34%;grid-template-columns:72px 1fr;padding:12px}}
