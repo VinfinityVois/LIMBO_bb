@@ -1,0 +1,146 @@
+/* LIMBO / visual refinement
+   A quieter, more legible interface layer shared by the experience pages.
+   Motion is purposeful; high-frequency flicker is deliberately avoided. */
+
+:root {
+  --ui-bg: #060912;
+  --ui-surface: rgba(11, 17, 29, .88);
+  --ui-surface-raised: rgba(16, 24, 39, .94);
+  --ui-line: rgba(133, 170, 190, .14);
+  --ui-line-strong: rgba(0, 212, 232, .28);
+  --ui-text: #e3eaf0;
+  --ui-muted: #8b9aaa;
+  --ui-dim: #647486;
+  --ui-accent: #69d7df;
+  --ui-accent-soft: rgba(105, 215, 223, .12);
+  --ui-radius: 10px;
+  --ui-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+  --ui-ease: cubic-bezier(.2, .75, .25, 1);
+}
+
+html { color-scheme: dark; scroll-behavior: smooth; }
+body { color: var(--ui-text); text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+::selection { color: #071014; background: rgba(105, 215, 223, .72); }
+:focus-visible { outline: 2px solid var(--ui-accent) !important; outline-offset: 3px; }
+button, input, textarea, select { font: inherit; }
+button, a, [role="button"] { -webkit-tap-highlight-color: transparent; }
+a { text-underline-offset: 3px; }
+img, canvas, video { max-width: 100%; }
+
+/* Quiet the always-on CRT layer without removing the atmosphere. */
+.noise { opacity: .012 !important; animation: none !important; }
+.scanlines { opacity: .12 !important; animation: none !important; }
+.vignette { background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.34) 100%) !important; }
+#matrixCanvas { opacity: .14 !important; }
+.signal-noise, .cam-noise { opacity: .025 !important; animation-duration: 2.8s !important; }
+.glitch-hover:hover { text-shadow: 0 0 18px rgba(105,215,223,.22) !important; }
+.blink-red, .signal-pulse, .status-pill .dot, .live-tag { animation-duration: 3.2s !important; }
+body.breach-mode.scene-red { animation: none !important; }
+body.limbo-enter .noise { opacity: .025 !important; animation: none !important; }
+body.limbo-enter .scanlines { opacity: .18 !important; }
+body.limbo-enter #rgbSplit { opacity: .12 !important; }
+.cine-glitch.hit { opacity: .18 !important; }
+.cam-rgb.on { opacity: .18 !important; }
+.cam-noise { mix-blend-mode: soft-light; }
+.cam-scanlines { opacity: .2 !important; }
+.cam-static-burst { display: none !important; }
+
+/* Shared surfaces: more depth, less neon outline everywhere. */
+.sys-topbar, .terminal-top, .access-header, .access-footer,
+.cam-wall, .chart-card, .info-card, .panel, .terminal-shell,
+.warning-frame, .login-wrap, .archive-stage, .dossier-card {
+  border-color: var(--ui-line) !important;
+}
+.sys-topbar {
+  min-height: 54px;
+  background: rgba(5, 9, 16, .86) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  backdrop-filter: blur(18px);
+}
+.sys-page { max-width: 1460px; padding-top: clamp(1.25rem, 3vw, 2.4rem); }
+.sys-header { margin-bottom: 2rem; }
+.sys-title { letter-spacing: .015em; line-height: 1.14; }
+.sys-title span { text-shadow: 0 0 16px rgba(105,215,223,.18) !important; }
+.sys-title span::after { animation: none !important; opacity: .65; }
+.status-chip { border-radius: 5px; padding: .38rem .68rem; background: rgba(255,255,255,.018); }
+.status-chip::before { opacity: .55; }
+.cam-wall, .terminal-shell, .warning-frame, .login-wrap {
+  border-radius: var(--ui-radius);
+  box-shadow: var(--ui-shadow);
+  overflow: clip;
+}
+.cam-wall-header, .terminal-top {
+  background: rgba(255,255,255,.025) !important;
+}
+.cam-main { background: #080d16; }
+.cam-main img { filter: saturate(.78) contrast(1.04) !important; }
+.cam-main.drone-active .cam-drone-feed { animation: none !important; }
+.cam-scanbeam, .obj-scan { opacity: .24 !important; animation-duration: 6s !important; }
+.obj-box { opacity: .82; filter: saturate(.78) brightness(.96); }
+.obj-box:hover, .obj-box.selected {
+  box-shadow: 0 0 18px rgba(105,215,223,.16), inset 0 0 20px rgba(255,255,255,.035) !important;
+  filter: saturate(.92) brightness(1.02);
+}
+.obj-box.glitching { animation: none !important; filter: none !important; }
+.obj-box.signal-lost { opacity: .58; filter: grayscale(.45) brightness(.72); }
+.obj-tooltip {
+  border-color: var(--ui-line-strong) !important;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.48) !important;
+  backdrop-filter: blur(16px);
+}
+.sys-nav a { border-radius: 6px; transition: color .2s var(--ui-ease), background .2s var(--ui-ease); }
+.sys-nav a.active { box-shadow: 0 4px 18px rgba(0,212,232,.12); }
+button, .cyber-btn, .sys-button, .action-btn {
+  border-radius: 6px;
+  transition: transform .22s var(--ui-ease), background .22s var(--ui-ease),
+    border-color .22s var(--ui-ease), box-shadow .22s var(--ui-ease);
+}
+button:hover, .cyber-btn:hover, .sys-button:hover, .action-btn:hover {
+  transform: translateY(-1px);
+}
+button:active, .cyber-btn:active, .sys-button:active, .action-btn:active {
+  transform: translateY(0) scale(.99);
+}
+input, textarea, select {
+  border-radius: 6px;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(105,215,223,.58) !important;
+  box-shadow: 0 0 0 3px rgba(105,215,223,.09) !important;
+}
+::placeholder { color: #718092; opacity: .8; }
+.sys-nav a, .sys-topbar a { min-height: 36px; display: inline-flex; align-items: center; }
+
+/* Softer transitions for scene-based pages. */
+.reveal { transition-duration: .55s !important; }
+.scene, .scene-page, .limbo-scene { backface-visibility: hidden; }
+.warning-scanline, .warning-icon-pulse, .dangerPulse, .warning-jitter,
+.cam-main.glitching img { animation: none !important; }
+.warning-frame { background: linear-gradient(145deg, rgba(12,17,28,.97), rgba(5,8,15,.97)); }
+.warning-icon { box-shadow: 0 0 24px rgba(224,40,72,.12) !important; }
+.breach-flash { display: none !important; }
+.glitch-flash { mix-blend-mode: normal; }
+.rgb-split.on { opacity: .12 !important; }
+.glitch-overlay { transition: opacity .22s ease !important; }
+.scan-beam { box-shadow: 0 0 12px rgba(0,212,232,.2) !important; }
+
+/* Responsive comfort and reduced-motion support. */
+@media (max-width: 760px) {
+  .sys-topbar { padding-inline: .9rem; min-height: 50px; }
+  .sys-page { padding-inline: 1rem; }
+  .sys-nav { gap: .05rem; }
+  .sys-nav a { padding-inline: .55rem; font-size: .62rem; }
+  .cam-wall, .terminal-shell, .warning-frame, .login-wrap { border-radius: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .noise, .scanlines, #matrixCanvas, .glitch-flash, .glitch-overlay,
+  .rgb-split, .chroma, .breach-flash, .cine-glitch { display: none !important; }
+}
