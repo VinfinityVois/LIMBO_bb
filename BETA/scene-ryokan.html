@@ -2419,5 +2419,27 @@
 })();
 </script>
 <script type="module" src="/src/main-ryokan.ts"></script>
+<script>
+(function(){
+ try{
+  const raw=localStorage.getItem('limbo_sim_ryokan_v1'); if(!raw)return;
+  const state=JSON.parse(raw); if(!state.ending)return;
+  const data={
+   clear:['КАНАЛ ОЧИЩЕН','Мы сохранили ясность. В следующих секторах меньше ложных сигналов.'],
+   bind:['СВЯЗЬ ПРИНЯТА','Маска запомнила нас. Чужие голоса могут открывать скрытые ответы — рассудок уязвим.'],
+   break:['УЗЕЛ РАЗРУШЕН','Существа ослаблены, но тело ранено. Часть ресурсов утрачена.']
+  }[state.ending];
+  if(!data)return;
+  const card=document.createElement('aside'); card.className='ending-carryover';
+  card.innerHTML='<b></b><span></span>'; card.querySelector('b').textContent=data[0]; card.querySelector('span').textContent=data[1];
+  const target=document.querySelector('.sc-body')||document.querySelector('main')||document.body; target.prepend(card);
+ }catch(e){}
+})();
+</script>
+<style>
+.ending-carryover{display:flex;flex-direction:column;gap:6px;margin:14px auto;padding:13px 16px;max-width:1100px;border:1px solid rgba(53,200,230,.35);border-left:3px solid #35c8e6;background:linear-gradient(90deg,rgba(6,25,36,.96),rgba(6,13,22,.82));color:#b8d1da;font:12px/1.5 var(--font-ui,sans-serif)}
+.ending-carryover b{color:#53d7ed;font:600 10px var(--font-mono,monospace);letter-spacing:.16em}
+</style>
+
 </body>
 </html>
