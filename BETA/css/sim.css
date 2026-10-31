@@ -756,3 +756,17 @@ body.mask-worn .zone-whisper{color:#d5a2b3;text-shadow:0 0 10px #b63d6c66}
 .combat-actions button:hover{transform:none!important}
 .combat-actions button:active{transform:translateY(1px)!important}
 @media(max-width:620px){.initiative-row{grid-template-columns:70px 1fr;}.combat-targets{flex-wrap:wrap}.combat-targets>span{width:100%;margin-bottom:3px}}
+
+/* Real transparent sprites replace generic silhouettes */
+.scene-creature .creature-sprite{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:1;filter:brightness(1.16) contrast(1.14) drop-shadow(0 0 14px #5cd9eb99);z-index:1}
+.scene-creature:before{opacity:.08}
+.scene-creature .creature-eyes,.scene-creature i,.scene-creature b{z-index:2;opacity:.18}
+.scene-creature-light .creature-sprite{filter:brightness(1.24) contrast(1.18) drop-shadow(0 0 16px #f2ce82aa)}
+.scene-creature-sound .creature-sprite{filter:brightness(1.25) contrast(1.2) drop-shadow(0 0 17px #5ce3eeaa)}
+.scene-creature-dweller .creature-sprite{filter:brightness(1.2) contrast(1.2) drop-shadow(0 0 18px #ed4766aa)}
+.combat-monster-art .combat-sprite{position:absolute;z-index:2;inset:0;width:100%;height:100%;object-fit:contain;opacity:1;filter:brightness(1.2) contrast(1.18) drop-shadow(0 0 18px #d94b6588)}
+.combat-monster-art:before{opacity:.12}
+.combat-monster-art:after{opacity:.18}
+.combat-monster-art.combat-beast-light .combat-sprite{filter:brightness(1.24) contrast(1.2) drop-shadow(0 0 20px #f3ce84aa)}
+.combat-monster-art.combat-beast-sound .combat-sprite{filter:brightness(1.25) contrast(1.22) drop-shadow(0 0 20px #5ce3eeaa)}
+.combat-monster-art.combat-beast-dweller .combat-sprite{filter:brightness(1.22) contrast(1.2) drop-shadow(0 0 20px #ed4766aa)}
