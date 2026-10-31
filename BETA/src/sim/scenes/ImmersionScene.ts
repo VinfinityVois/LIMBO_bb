@@ -40,6 +40,12 @@ export class ImmersionScene {
   private roomEnteredAt = Date.now();
   private lightActive = false;
   private noiseUntil = 0;
+  private monsterHp = 42;
+  private monsterMaxHp = 42;
+  private monsterName = 'СЛУШАТЕЛЬ';
+  private combatTurn = 0;
+  private guarding = false;
+  private maskWorn = false;
   private diving = true;
 
   constructor() {
@@ -178,7 +184,13 @@ export class ImmersionScene {
     });
     document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
     document.getElementById('btnHide')?.addEventListener('click', () => this.resolveThreat('hide'));
-    document.getElementById('btnConfront')?.addEventListener('click', () => this.resolveThreat('confront'));
+    document.getElementById('btnConfront')?.addEventListener('click', () => this.startCombat());
+    document.getElementById('btnCall')?.addEventListener('click', () => this.makeNoise('Ты громко окликнул кого-то в темноте.'));
+    document.getElementById('combatAttack')?.addEventListener('click', () => this.combatAction('attack'));
+    document.getElementById('combatGuard')?.addEventListener('click', () => this.combatAction('guard'));
+    document.getElementById('combatItem')?.addEventListener('click', () => this.combatAction('item'));
+    document.getElementById('combatNoise')?.addEventListener('click', () => this.combatAction('noise'));
+    document.getElementById('combatFlee')?.addEventListener('click', () => this.combatAction('flee'));
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
@@ -236,6 +248,7 @@ export class ImmersionScene {
     this.threatKind = kind;
     this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
+    this.showCreatureInScene();
     document.body.classList.remove('threat-kind-light','threat-kind-sound','threat-kind-dweller');
     document.body.classList.add('threat-active','threat-kind-' + kind);
     const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = kind === 'light' ? 'СВЕТ ОБНАРУЖЕН' : kind === 'sound' ? 'ШУМ ЗАСЕЧЁН' : 'ПРИСУТСТВИЕ РЯДОМ';
@@ -249,10 +262,12 @@ export class ImmersionScene {
 
   private resolveThreat(choice: 'hide' | 'confront') {
     if(!this.threatActive)return;
+    if (choice === 'confront') { this.startCombat(); return; }
     this.threatActive=false; this.threatCooldown=Date.now()+35000;
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     document.body.classList.remove('threat-active','threat-kind-light','threat-kind-sound','threat-kind-dweller');
+    document.getElementById('sceneCreature')?.remove();
     const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = 'СИГНАЛ СТАБИЛЕН';
     if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Слепой потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
     else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Слушатель потерял источник шума.','ok'); }
@@ -355,6 +370,8 @@ export class ImmersionScene {
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
       b.style.height = hs.h + '%';
+      if (hs.item) { b.innerHTML = `<span class="world-loot-art">${itemSvgMarkup(hs.item, 48)}</span><span class="world-loot-name">${hs.label}</span>`; }
+      else b.innerHTML = `<span class="world-object-mark">${hs.complete ? '◇' : '⌖'}</span><span class="world-loot-name">${hs.label}</span>`;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
         this.showHover(hs, b);
@@ -411,6 +428,7 @@ export class ImmersionScene {
 
   private async go(to: LocationId) {
     simAudio.whoosh(this.state.muted);
+    this.makeNoise('Шаги эхом разнеслись по локации.');
     this.state.location = to;
     this.roomEnteredAt = Date.now();
     this.noiseUntil = Date.now() + 4500;
@@ -563,6 +581,106 @@ export class ImmersionScene {
     }
   }
 
+
+  private makeNoise(message: string) {
+    this.noiseUntil = Date.now() + 9000;
+    const caption = document.getElementById('soundCaption');
+    if (caption) caption.textContent = 'ШУМ: ВЫСОКИЙ · источник — ты';
+    const danger = document.getElementById('dangerValue');
+    if (danger) danger.textContent = 'ПОВЫШЕНА';
+    const fill = document.getElementById('dangerFill') as HTMLElement | null;
+    if (fill) fill.style.width = '72%';
+    this.showSense('◖))', message, true);
+    simAudio.click(this.state.muted);
+  }
+
+  private showCreatureInScene() {
+    document.getElementById('sceneCreature')?.remove();
+    const el = document.createElement('div');
+    el.id = 'sceneCreature';
+    el.className = 'scene-creature scene-creature-' + this.threatKind;
+    el.innerHTML = '<span class="creature-eyes"></span><i></i><b></b>';
+    el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
+    this.stage.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('visible'));
+  }
+
+  private startCombat() {
+    this.threatActive = false;
+    document.getElementById('threatOverlay')?.classList.remove('open');
+    document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
+    this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
+    this.monsterHp = this.monsterMaxHp;
+    this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+    this.combatTurn = 0;
+    const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
+    const screen = document.getElementById('combatScreen'); screen?.classList.add('open'); screen?.setAttribute('aria-hidden','false');
+    document.body.classList.add('combat-active');
+    this.updateCombatHud('Ты вступил в схватку. Выбирай действие.');
+    this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
+    simAudio.monster(this.state.muted);
+  }
+
+  private updateCombatHud(log: string) {
+    const hpText = document.getElementById('monsterHpText'); if (hpText) hpText.textContent = this.monsterHp + ' / ' + this.monsterMaxHp;
+    const hpFill = document.getElementById('monsterHpFill') as HTMLElement | null; if (hpFill) hpFill.style.width = (this.monsterHp / this.monsterMaxHp * 100) + '%';
+    const player = document.getElementById('combatPlayerHp'); if (player) player.textContent = String(this.state.health);
+    const playerFill = document.getElementById('combatPlayerFill') as HTMLElement | null; if (playerFill) playerFill.style.width = this.state.health + '%';
+    const text = document.getElementById('combatLog'); if (text) text.textContent = log;
+    const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = this.combatTurn % 2 ? 'ТВОЙ ХОД' : 'ОПАСНОСТЬ';
+  }
+
+  private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
+    if (!document.getElementById('combatScreen')?.classList.contains('open')) return;
+    let log = '';
+    if (action === 'flee') {
+      this.state.health = Math.max(0, this.state.health - 5);
+      this.finishCombat('Ты отступил, получив ранение.');
+      return;
+    }
+    if (action === 'attack') {
+      const damage = this.state.selected === 'ryokan_key' ? 18 : this.state.selected === 'stitched_mask' ? 3 : 10 + Math.floor(Math.random()*5);
+      this.monsterHp = Math.max(0, this.monsterHp - damage);
+      log = 'Ты наносишь ' + damage + ' урона. Существо отшатывается.';
+      const art = document.getElementById('combatMonsterArt'); art?.classList.add('hit'); setTimeout(() => art?.classList.remove('hit'), 280);
+      simAudio.click(this.state.muted);
+    } else if (action === 'guard') {
+      this.guarding = true; log = 'Ты закрываешься и ждёшь удара.';
+    } else if (action === 'item') {
+      if (this.state.selected === 'herbal_poultice') { this.state.health = Math.min(100,this.state.health+22); this.state.inventory = this.state.inventory.filter(x=>x!=='herbal_poultice'); this.state.selected=null; log='Повязка стягивает рану. +22 здоровья.'; }
+      else if (this.state.selected === 'warding_charm') { this.state.sanity = Math.min(100,this.state.sanity+16); this.state.inventory = this.state.inventory.filter(x=>x!=='warding_charm'); this.state.selected=null; log='Оберег вспыхнул холодным светом. +16 рассудка.'; }
+      else { log='Подходящего предмета в руке нет.'; this.updateCombatHud(log); return; }
+      this.renderInv(); this.renderVitals();
+    } else {
+      this.noiseUntil = Date.now()+12000;
+      this.monsterHp = Math.max(0,this.monsterHp-6);
+      log='Ты резко хлопаешь ладонью по камню. Существо дёргается на звук.';
+    }
+    if (this.monsterHp <= 0) { this.finishCombat('Существо рухнуло во тьму. Победа, но шум мог привлечь кого-то ещё.'); return; }
+    const incoming = this.threatKind === 'dweller' ? 13 : this.threatKind === 'light' ? 10 : 8;
+    const damage = this.guarding ? Math.ceil(incoming*.3) : incoming;
+    this.state.health = Math.max(0,this.state.health-damage);
+    this.guarding = false;
+    this.combatTurn++;
+    this.renderVitals(); this.updateCombatHud(log + ' Ответный удар: -' + damage + ' здоровья.');
+    const arena = document.getElementById('combatMonsterArt'); arena?.classList.add('attack'); setTimeout(()=>arena?.classList.remove('attack'),380);
+    if (this.state.health <= 0) this.finishCombat('Ты падаешь. Сознание гаснет…');
+    saveState(this.state);
+  }
+
+  private finishCombat(message: string) {
+    document.getElementById('combatScreen')?.classList.remove('open');
+    document.getElementById('combatScreen')?.setAttribute('aria-hidden','true');
+    document.body.classList.remove('combat-active');
+    document.getElementById('sceneCreature')?.remove();
+    this.threatCooldown = Date.now()+45000;
+    this.state.sanity = Math.max(0,this.state.sanity-4);
+    saveState(this.state); this.renderVitals(); this.renderInv();
+    this.notify(message, this.state.health > 0 ? 'warn' : 'info');
+    this.showSense('◉',message,true);
+    this.pulseMatrix('alert');
+  }
+
   private useSelectedItem() {
     const id = this.state.selected;
     if (!id) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
@@ -571,6 +689,7 @@ export class ImmersionScene {
       warding_charm: { field: 'sanity', amount: 20, message: 'Оберег холодеет в ладони. Мысли становятся яснее.' },
       ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
     };
+    if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Шёпот стал отчётливее, но Слепой хуже различает твой силуэт.' : 'Ты снял маску. На внутренней стороне появилось новое имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · рассудок под угрозой' : 'Маска снята', this.maskWorn); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderVitals(); return; }
     if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseUntil = Date.now() + 7000; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
     const effect = effects[id];
     if (!effect) {
@@ -594,7 +713,7 @@ export class ImmersionScene {
 
   private onInv(id: ItemId) {
     simAudio.click(this.state.muted);
-    this.noiseUntil = Date.now() + 8000;
+    this.makeNoise('Ты пошевелил предметы в инвентаре.');
     const caption = document.getElementById('soundCaption'); if (caption) caption.textContent = 'Шорох… (рядом)';
     if (this.state.selected && this.state.selected !== id) {
       const recipe = RECIPES.find(
