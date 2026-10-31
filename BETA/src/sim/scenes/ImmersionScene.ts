@@ -56,6 +56,9 @@ export class ImmersionScene {
   private enemyLegsSlowed = false;
   private maskWorn = false;
   private maskLastTick = Date.now();
+  private sanityTier = -1;
+  private hallucinationTimer: ReturnType<typeof setInterval> | number = 0;
+  private thoughtIndex = 0;
   private diving = true;
 
   constructor() {
@@ -107,6 +110,7 @@ export class ImmersionScene {
     this.renderMinimap();
     this.updateZone();
     this.startWorldClock();
+    this.startSanityDistortions();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
     this.scheduleEvents();
@@ -539,6 +543,7 @@ export class ImmersionScene {
     const item=hs.item?ITEMS[hs.item]:null;
     if(visual) visual.innerHTML=hs.item?`<img class="item-art-image" src="${this.itemAsset(hs.item)}" alt="${item?.name || hs.label}">`:hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
     body.textContent=item?item.name+'\n\n'+hs.examine:hs.examine;
+    body.classList.remove('thought-text');
     if(hs.item==='black_seed'||hs.item==='stitched_mask'){
       const risk=document.createElement('span');risk.className='item-risk';risk.textContent='НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';body.appendChild(risk);
     }
@@ -611,6 +616,7 @@ export class ImmersionScene {
     if (sanityFill) sanityFill.style.width = sanity + '%';
     if (healthValue) healthValue.textContent = String(health);
     if (sanityValue) sanityValue.textContent = String(sanity);
+    this.applySanityTier(sanity);
   }
 
   private syncHand() {
@@ -821,6 +827,61 @@ export class ImmersionScene {
     if(this.state.health<=0)this.finishCombat('Ты падаешь. Сознание гаснет…');
   }
 
+  private applySanityTier(sanity: number) {
+    const tier = sanity >= 65 ? 0 : sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
+    if (tier === this.sanityTier) return;
+    this.sanityTier = tier;
+    document.body.dataset.sanity = String(tier);
+    document.body.classList.toggle('mind-frayed', tier >= 1);
+    document.body.classList.toggle('mind-fractured', tier >= 2);
+    document.body.classList.toggle('mind-collapse', tier >= 3);
+    const voice = document.getElementById('innerVoice');
+    if (voice) voice.textContent = tier === 0 ? 'Мысли ровные. Пока.' :
+      tier === 1 ? 'Что-то не сходится. Тени двигаются не в такт.' :
+      tier === 2 ? 'Я уже проходил здесь. Или это место повторяет меня?' :
+      'Не смотри на отражение. Оно моргает позже.';
+    if (tier >= 1) this.showSense('◉', tier === 1 ? 'Краем глаза замечаешь движение.' : tier === 2 ? 'Комната будто стала длиннее.' : 'Ты слышишь второй ритм собственного сердца.', true);
+    if (tier >= 2) simAudio.whisper(this.state.muted);
+  }
+
+  private startSanityDistortions() {
+    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
+    this.hallucinationTimer = setInterval(() => {
+      const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
+      if (sanity >= 65 || this.threatActive || document.getElementById('combatScreen')?.classList.contains('open')) return;
+      const tier = sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
+      const thoughts = tier === 1
+        ? ['Не оборачивайся. Там просто дождь.', 'Шаги повторяют твой темп.', 'На секунду показалось, что фонарь погас.']
+        : tier === 2
+        ? ['Дверь была дальше. Почему она ближе?', 'Кто-то произнёс твоё имя изнутри стены.', 'Предмет в кармане кажется тёплым.']
+        : ['Это не выход. Это воспоминание о выходе.', 'Не доверяй силуэтам. Один из них — твой.', 'Ты забыл, сколько пальцев на руке.'];
+      const line = thoughts[this.thoughtIndex++ % thoughts.length];
+      const voice = document.getElementById('innerVoice');
+      if (voice) voice.textContent = line;
+      this.showSense('◉', line, true);
+      if (tier >= 2 && Math.random() < (tier === 2 ? .42 : .72)) {
+        document.body.classList.remove('hallucination-hit');
+        void document.body.clientWidth;
+        document.body.classList.add('hallucination-hit');
+        setTimeout(() => document.body.classList.remove('hallucination-hit'), 900);
+      }
+      if (tier === 3 && Math.random() < .28) {
+        const caption = document.getElementById('soundCaption');
+        if (caption) caption.textContent = 'ТВОЙ ГОЛОС · позади';
+        simAudio.maskWhisper(this.state.muted, 1.35);
+        // A brief false silhouette: visual only, never starts combat or deals damage.
+        if (!document.getElementById('falsePresence')) {
+          const ghost = document.createElement('div');
+          ghost.id = 'falsePresence';
+          ghost.className = 'false-presence';
+          ghost.setAttribute('aria-hidden', 'true');
+          this.stage.appendChild(ghost);
+          setTimeout(() => ghost.remove(), 1800);
+        }
+      }
+    }, 12500);
+  }
+
   private tickMaskEffects() {
     if (!this.maskWorn) { this.maskLastTick = Date.now(); return; }
     if (Date.now() - this.maskLastTick < 20000) return;
@@ -912,7 +973,9 @@ export class ImmersionScene {
     document.getElementById('modalTitle')!.textContent = def.name;
     const visual = document.getElementById('modalVisual');
     if (visual) visual.innerHTML = `<img class="item-art-image" src="${this.itemAsset(id)}" alt="${def.name}">`;
-    document.getElementById('modalBody')!.textContent = def.name + '\n\n' + def.examine;
+    const examBody = document.getElementById('modalBody')!;
+    examBody.textContent = def.name + '\n\n' + def.examine;
+    examBody.classList.remove('thought-text');
     const actions = document.getElementById('modalActions')!;
     actions.innerHTML = '';
     const close = document.createElement('button');
