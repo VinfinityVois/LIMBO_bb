@@ -25,6 +25,7 @@
   <div id="notifyHost" class="notify-host"></div>
   <div id="hoverCard" class="hover-card"></div>
   <div id="revealFlash" class="reveal-flash" aria-hidden="true"></div>
+  <header class="world-hud"><div class="world-clock"><span class="clock-mark">◔</span><strong id="worldTime">04:37</strong><small id="worldDate">15.10.2025</small></div><div class="sound-readout"><span>◖))</span><div class="sound-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="soundCaption">Шаги… (далеко)</small></div></header>
   <div class="sense-feed" id="senseFeed" aria-live="polite"></div>
   <section class="threat-overlay" id="threatOverlay" aria-live="assertive" aria-hidden="true">
     <div class="threat-silhouette" aria-hidden="true"><span></span><i></i></div>
@@ -78,12 +79,13 @@
     </div>
     <aside class="hud-utility">
       <div class="utility-heading"><span class="hud-eyebrow">ДЕЙСТВИЕ</span><strong>ВЫБРАННЫЙ ПРЕДМЕТ</strong></div>
-      <div class="selected-item-preview" id="selectedItemPreview">—</div>
+      <div class="selected-item-card" id="selectedItemPreview"><div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div></div>
       <div class="hud-actions">
         <button type="button" class="hud-action" id="btnInspectItem">ОСМОТРЕТЬ</button>
         <button type="button" class="hud-action primary" id="btnUseItem">ИСПОЛЬЗОВАТЬ</button>
       </div>
     </aside>
+    <aside class="hud-radar"><div class="radar-heading">ОРИЕНТИР</div><div id="miniMap" class="mini"></div><div class="radar-signal" id="radarSignal">СИГНАЛ СТАБИЛЕН</div></aside>
   </section>
 
   <div class="sim-modal" id="simModal">
