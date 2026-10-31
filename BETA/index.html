@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>П.Р.И.Н.Ц. // BREACH PROTOCOL</title>
 <link rel="stylesheet" href="css/system.css">
+<link rel="stylesheet" href="css/experience-polish.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
 </head>
@@ -528,10 +529,10 @@
     const colors = ['#00fff9', '#ff00aa', '#e02848', '#9b00d4', '#e8a020', '#fff'];
     const go = () => {
       glitchFlash.style.background = pick(colors);
-      glitchFlash.style.opacity = String(0.3 + Math.random() * 0.4);
+      glitchFlash.style.opacity = String(0.08 + Math.random() * 0.08);
       rgbSplit.classList.add('on');
-      glitchOverlay.style.opacity = String(0.4 + Math.random() * 0.35);
-      chroma.style.opacity = String(0.2 + Math.random() * 0.3);
+      glitchOverlay.style.opacity = String(0.12 + Math.random() * 0.1);
+      chroma.style.opacity = String(0.06 + Math.random() * 0.06);
       noiseBurst(0.04, 0.04);
       setTimeout(() => {
         glitchFlash.style.opacity = '0';
@@ -554,7 +555,7 @@
     tone(1400, 0.16, 'sine', 0.014);
   }
   function breachPulse() {
-    breachFlash.style.opacity = '0.55';
+    breachFlash.style.opacity = '0.12';
     setTimeout(() => breachFlash.style.opacity = '0', 110);
   }
 
@@ -606,7 +607,7 @@
     $('#hudClock').textContent = `T+${hh}:${mm}:${ss}`;
   }, 500);
 
-  setInterval(() => { if (Math.random() > 0.72) glitchBurst(1); }, 8500);
+  // Ambient corruption is event-driven; no random full-screen flicker loop.
 
   // ─── SCENE 0 — SIGNAL ACQUISITION ───
   const signalBars = $('#signalBars');
@@ -692,8 +693,7 @@
       await sleep(280);
     }
 
-    glitchBurst(5);
-    breachPulse();
+    glitchBurst(1);
     await sleep(340);
     scene('#scene1');
     $('#hudNode').textContent = 'NODE: FED-LIMBO-07';
@@ -741,8 +741,8 @@
       if (!$('#scene1').classList.contains('active')) return;
       ti = (ti + 1) % titles.length;
       warningTitle.textContent = titles[ti];
-      if (ti % 2 === 1) glitchBurst(1);
-    }, 1700);
+      // Keep warning copy stable; no recurring visual interruption.
+    }, 4200);
 
     const tm = $('#threatMatrix');
     tm.innerHTML = '';
@@ -796,8 +796,7 @@
   $('#btnProceed').addEventListener('click', async () => {
     ensureAudio();
     tone(70, 0.18, 'sawtooth', 0.05);
-    glitchBurst(4);
-    breachPulse();
+    glitchBurst(1);
     $('#warningMeter').style.width = '100%';
     $('#warningMeter').style.background = 'linear-gradient(90deg, var(--red), #fff)';
     await sleep(260);
@@ -903,7 +902,7 @@
 
       tone(type === 'ERR' ? 82 : type === 'WARN' ? 240 : 520, 0.03,
            type === 'ERR' ? 'sawtooth' : 'square', 0.012);
-      if (type === 'ERR') { glitchBurst(1); breachPulse(); }
+      if (type === 'ERR') { /* keep error output readable */ }
       if (type === 'WARN') scanSweep();
 
       await sleep(type === 'ERR' ? 190 : 75);
@@ -923,7 +922,7 @@
     $('#termStatus').textContent = 'STATUS: READY';
     await typeInto($('#promptText'), 'auth --interactive --secure', 22);
     await sleep(450);
-    glitchBurst(5);
+    glitchBurst(1);
     scanSweep();
     await sleep(380);
     scene('#scene3');
@@ -1070,8 +1069,7 @@
       $('#accessStatus').textContent = 'DENIED';
       $('#loginWrap').classList.add('shake');
       setTimeout(() => $('#loginWrap').classList.remove('shake'), 500);
-      glitchBurst(4);
-      breachPulse();
+      glitchBurst(1);
       tone(65, 0.22, 'sawtooth', 0.05);
       $('#username').disabled = false;
       $('#password').disabled = false;
@@ -1167,8 +1165,7 @@
       document.getElementById('alignHint').textContent = 'КАНАЛ ОТКРЫТ · ЗАГРУЗКА ПРОСТРАНСТВА…';
 
     scanSweep();
-    glitchBurst(8);
-    breachPulse();
+    glitchBurst(2);
     tone(523, 0.14, 'sine', 0.05);
     setTimeout(() => tone(659, 0.14, 'sine', 0.05), 130);
     setTimeout(() => tone(784, 0.28, 'sine', 0.055), 260);
