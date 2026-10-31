@@ -36,6 +36,10 @@ export class ImmersionScene {
   private eventTimer = 0 as ReturnType<typeof setInterval> | number;
   private threatActive = false;
   private threatCooldown = 0;
+  private threatKind: 'light' | 'sound' | 'dweller' = 'dweller';
+  private roomEnteredAt = Date.now();
+  private lightActive = false;
+  private noiseUntil = 0;
   private diving = true;
 
   constructor() {
@@ -84,6 +88,7 @@ export class ImmersionScene {
     this.renderVitals();
     this.renderMinimap();
     this.updateZone();
+    this.startWorldClock();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
     this.scheduleEvents();
@@ -186,16 +191,37 @@ export class ImmersionScene {
     if (this.eventTimer) clearInterval(this.eventTimer as number);
     this.eventTimer = setInterval(() => {
       if (this.threatActive || Date.now() < this.threatCooldown) return;
-      if (Math.random() < .48) return;
-      const roll = Math.random();
-      if (roll < .38) { simAudio.steps(this.state.muted); this.showSense('♬','Шаги на мокром камне…',false); this.state.flags.heard_steps = true; this.state.sanity = Math.max(0,this.state.sanity-2); }
-      else if (roll < .62) { simAudio.creak(this.state.muted); this.showSense('⌁','Где-то рядом скрипнула древесина',false); }
-      else if (roll < .8) { simAudio.whisper(this.state.muted); this.showSense('◉','Шёпот произнёс твоё имя',true); this.state.sanity = Math.max(0,this.state.sanity-3); }
-      else if (['garden','engawa','hall','storage'].includes(this.state.location)) this.startThreat();
+      const stayed = Date.now() - this.roomEnteredAt;
+      // Each creature has its own trigger condition.
+      if (this.lightActive && ['garden','engawa','hall'].includes(this.state.location) && Math.random() < .16) {
+        this.startThreat('light'); return;
+      }
+      if (Date.now() < this.noiseUntil && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < .2) {
+        this.startThreat('sound'); return;
+      }
+      if (stayed > 90000 && ['hall','storage','genkan'].includes(this.state.location) && Math.random() < .16) {
+        this.startThreat('dweller'); return;
+      }
+      if (Math.random() < .24) {
+        const roll = Math.random();
+        if (roll < .42) { simAudio.steps(this.state.muted); this.showSense('♬','Шаги… (далеко)',false); this.state.flags.heard_steps = true; }
+        else if (roll < .72) { simAudio.creak(this.state.muted); this.showSense('⌁','Где-то вдалеке скрип…',false); }
+        else { simAudio.whisper(this.state.muted); this.showSense('◉','Похоже, кто-то наблюдает…',true); this.state.sanity = Math.max(0,this.state.sanity-1); }
+      }
       saveState(this.state); this.renderVitals();
-    }, 18000);
+    }, 5000);
   }
 
+  private startWorldClock() {
+    const update = () => {
+      const d = new Date();
+      const time = document.getElementById('worldTime');
+      const date = document.getElementById('worldDate');
+      if (time) time.textContent = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      if (date) date.textContent = d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});
+    };
+    update(); setInterval(update, 15000);
+  }
   private showSense(icon: string, message: string, warning: boolean) {
     const feed = document.getElementById('senseFeed'); if (!feed) return;
     const el = document.createElement('div'); el.className = 'sense-event' + (warning ? ' warning' : '');
@@ -206,15 +232,16 @@ export class ImmersionScene {
     setTimeout(() => el.remove(), 6500);
   }
 
-  private startThreat() {
+  private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
+    this.threatKind = kind;
     this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
     document.body.classList.add('threat-active');
     const panel=document.getElementById('threatOverlay');
     const title=document.getElementById('threatTitle');
     const copy=document.getElementById('threatText');
-    if(title) title.textContent=Math.random()>.5?'СУЩЕСТВО У ВОРОТ':'СУСТАВЫ СКРИПЯТ В ТЕМНОТЕ';
-    if(copy) copy.textContent='Оно ещё не заметило тебя. Решай быстро: затаиться или попытаться отогнать его.';
+    if(title) title.textContent=kind==='light'?'СЛЕПОЙ ИДЁТ НА СВЕТ':kind==='sound'?'СЛУШАТЕЛЬ ИДЁТ НА ШУМ':'ЖИЛЕЦ ВЫХОДИТ ИЗ СТЕНЫ';
+    if(copy) copy.textContent=kind==='light'?'Существо тянется к источнику света. Погаси фонарь и не двигайся.':kind==='sound'?'Оно услышало тебя и приближается на звук. Замри или попробуй отвлечь его.':'Ты слишком долго оставался в одной комнате. Оно уже здесь.';
     panel?.classList.add('open'); panel?.setAttribute('aria-hidden','false');
   }
 
@@ -224,7 +251,9 @@ export class ImmersionScene {
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     document.body.classList.remove('threat-active');
-    if(choice==='hide') {
+    if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Слепой потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
+    else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Слушатель потерял источник шума.','ok'); }
+    else if(choice==='hide') {
       if(Math.random()<.78){simAudio.whisper(this.state.muted);this.notify('Ты затаился. Шаги медленно удаляются.','ok');this.state.sanity=Math.max(0,this.state.sanity-1);}
       else{simAudio.monster(this.state.muted);this.notify('Оно заметило движение!','warn');this.state.health=Math.max(0,this.state.health-9);this.state.sanity=Math.max(0,this.state.sanity-7);}
     } else if(this.state.selected==='ember_lantern') {
@@ -380,6 +409,8 @@ export class ImmersionScene {
   private async go(to: LocationId) {
     simAudio.whoosh(this.state.muted);
     this.state.location = to;
+    this.roomEnteredAt = Date.now();
+    this.noiseUntil = Date.now() + 4500;
     if (!this.state.visited.includes(to)) this.state.visited.push(to);
     saveState(this.state);
     this.stage.classList.add('fade');
@@ -529,6 +560,7 @@ export class ImmersionScene {
       warding_charm: { field: 'sanity', amount: 20, message: 'Оберег холодеет в ладони. Мысли становятся яснее.' },
       ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
     };
+    if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseUntil = Date.now() + 7000; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
     const effect = effects[id];
     if (!effect) {
       this.notify('Выбери объект сцены и нажми на него, чтобы применить предмет.', 'info');
@@ -551,6 +583,8 @@ export class ImmersionScene {
 
   private onInv(id: ItemId) {
     simAudio.click(this.state.muted);
+    this.noiseUntil = Date.now() + 8000;
+    const caption = document.getElementById('soundCaption'); if (caption) caption.textContent = 'Шорох… (рядом)';
     if (this.state.selected && this.state.selected !== id) {
       const recipe = RECIPES.find(
         (r) =>
