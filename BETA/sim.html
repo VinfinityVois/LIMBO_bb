@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/experience-polish.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   <!-- НОВОЕ: стили интерфейса по макету, подключать последними -->
+  <link rel="stylesheet" href="/css/madness-fx.css" />   <!-- в <head>, последним, после sanity-effects.css -->
   <link rel="stylesheet" href="/css/hud-mockup.css" />
 <style>
   /* hud-mockup.css — подключать ПОСЛЕ sim.css и experience-polish.css
@@ -350,5 +351,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
   </div>
 
   <script type="module" src="/src/main-sim.ts"></script>
+  <script type="module" src="/src/madness-fx.js"></script> <!-- перед </body>, после main-sim.ts -->
+
 </body>
 </html>
