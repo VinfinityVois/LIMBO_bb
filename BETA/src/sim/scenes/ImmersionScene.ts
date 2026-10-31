@@ -50,6 +50,8 @@ export class ImmersionScene {
   private combatTarget: 'head' | 'torso' | 'arms' | 'legs' = 'torso';
   private enemyAttackPattern = '';
   private initiative = 100;
+  private enemyArmsWeakened = false;
+  private enemyLegsSlowed = false;
   private maskWorn = false;
   private maskLastTick = Date.now();
   private diving = true;
@@ -522,7 +524,7 @@ export class ImmersionScene {
     const body=document.getElementById('modalBody')!;
     const visual=document.getElementById('modalVisual');
     const item=hs.item?ITEMS[hs.item]:null;
-    if(visual) visual.innerHTML=hs.item?itemSvgMarkup(hs.item,224):hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
+    if(visual) visual.innerHTML=hs.item?`<img class="item-art-image" src="${this.itemAsset(hs.item)}" alt="${item?.name || hs.label}">`:hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
     body.textContent=item?item.name+'\n\n'+hs.examine:hs.examine;
     if(hs.item==='black_seed'||hs.item==='stitched_mask'){
       const risk=document.createElement('span');risk.className='item-risk';risk.textContent='НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';body.appendChild(risk);
@@ -647,7 +649,7 @@ export class ImmersionScene {
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
-    this.dodgeReady = false; this.guarding = false; this.initiative = 100;
+    this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
     this.monsterHp = this.monsterMaxHp;
     this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
@@ -706,8 +708,8 @@ export class ImmersionScene {
         const damage = Math.max(1,Math.round((base-armPenalty+(this.maskWorn?2:0))*zoneBonus[this.combatTarget]));
         this.monsterHp = Math.max(0,this.monsterHp-damage);
         log = (critical?'КРИТИЧЕСКИЙ УДАР! ':'') + this.combatTarget.toUpperCase() + ' · ' + damage + ' урона.';
-        if (this.combatTarget === 'arms' && Math.random()<.45) log += ' Атака существа ослаблена.';
-        if (this.combatTarget === 'legs' && Math.random()<.45) log += ' Существо замедлилось.';
+        if (this.combatTarget === 'arms' && Math.random()<.55) { this.enemyArmsWeakened = true; log += ' Атака существа ослаблена.'; }
+        if (this.combatTarget === 'legs' && Math.random()<.55) { this.enemyLegsSlowed = true; log += ' Существо замедлилось.'; }
         const art=document.getElementById('combatMonsterArt'); art?.classList.remove('hit'); void art?.clientWidth; art?.classList.add('hit'); setTimeout(()=>art?.classList.remove('hit'),360); simAudio.attack(this.state.muted);
       }
     } else if (action === 'guard') { this.guarding = true; this.initiative = Math.min(100,this.initiative+12); log = 'Ты закрываешься. Следующий удар будет слабее.'; }
@@ -737,7 +739,7 @@ export class ImmersionScene {
     if(dodge){dodge.disabled=false;dodge.classList.add('dodge-window');}
     const phase=document.getElementById('combatPhase'); if(phase) phase.textContent=this.threatKind==='light'?'ПРЫЖОК · УКЛОНИСЬ':this.threatKind==='sound'?'ЗВУКОВОЙ ИМПУЛЬС · ЗАЩИТИСЬ':'ЗАХВАТ · УКЛОНИСЬ';
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
-    const windowMs=this.state.injuries.includes('leg')?720:this.threatKind==='light'?850:1150;
+    const windowMs=this.state.injuries.includes('leg')?720:this.enemyLegsSlowed?1450:this.threatKind==='light'?850:1150;
     const bar=document.getElementById('enemyTelegraph') as HTMLElement|null; if(bar){bar.style.transition='none';bar.style.width='100%';requestAnimationFrame(()=>{bar.style.transition='width '+windowMs+'ms linear';bar.style.width='0%';});}
     simAudio.monster(this.state.muted);
     this.enemyTurnTimer=setTimeout(()=>this.resolveEnemyAttack(false),windowMs);
@@ -756,12 +758,13 @@ export class ImmersionScene {
     if(dodge){dodge.disabled=true;dodge.classList.remove('dodge-window');}
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack');
     let incoming=this.threatKind==='dweller'?17:this.threatKind==='light'?15:11;
+    if (this.enemyArmsWeakened) incoming = Math.ceil(incoming * .55);
     let wound='';
     if(this.threatKind==='light'&&!evaded) wound='leg';
     if(this.threatKind==='sound'&&!evaded){this.state.sanity=Math.max(0,this.state.sanity-9);wound='arm';}
     if(this.threatKind==='dweller'&&!evaded) wound='bleed';
     const damage=evaded?0:this.guarding?Math.ceil(incoming*.28):incoming;
-    this.guarding=false;
+    this.guarding=false; this.enemyArmsWeakened=false; this.enemyLegsSlowed=false;
     if(!evaded){
       this.state.health=Math.max(0,this.state.health-damage);
       if(wound&&!this.state.injuries.includes(wound)){this.state.injuries.push(wound);}
