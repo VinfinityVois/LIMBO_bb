@@ -47,6 +47,9 @@ export class ImmersionScene {
   private guarding = false;
   private dodgeReady = false;
   private enemyTurnTimer: ReturnType<typeof setTimeout> | number = 0;
+  private combatTarget: 'head' | 'torso' | 'arms' | 'legs' = 'torso';
+  private enemyAttackPattern = '';
+  private initiative = 100;
   private maskWorn = false;
   private maskLastTick = Date.now();
   private diving = true;
@@ -374,6 +377,17 @@ export class ImmersionScene {
     if (s) s.textContent = loc.subtitle;
   }
 
+  private itemAsset(id: ItemId): string {
+    const files: Partial<Record<ItemId,string>> = {
+      ryokan_key:'key', wet_key_half:'key', wet_key_other:'key', paper_lantern_shard:'mirror_shard',
+      kokeshi_note:'sealed_scroll', silk_thread:'red_cord', matchbox:'matches',
+      medicinal_herbs:'herbs', copper_bell:'bell', herbal_poultice:'bandage',
+      warding_charm:'ward_tag', ember_lantern:'old_lantern', black_seed:'toxic_flower',
+      stitched_mask:'fox_mask'
+    };
+    return '/assets/game/items/' + (files[id] || 'sealed_scroll') + '.png';
+  }
+
   private buildHotspots() {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
@@ -389,7 +403,7 @@ export class ImmersionScene {
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
       b.style.height = hs.h + '%';
-      if (hs.item) { b.innerHTML = `<span class="world-loot-art">${itemSvgMarkup(hs.item, 48)}</span><span class="world-loot-name">${hs.label}</span>`; }
+      if (hs.item) { const art = this.itemAsset(hs.item); b.innerHTML = `<span class="world-loot-art"><img src="${art}" alt="" draggable="false"></span><span class="world-loot-name">${hs.label}</span>`; }
       else b.innerHTML = `<span class="world-object-mark">${hs.complete ? '◇' : '⌖'}</span><span class="world-loot-name">${hs.label}</span>`;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
@@ -591,7 +605,7 @@ export class ImmersionScene {
       if (this.state.selected) {
         const def = ITEMS[this.state.selected];
         preview.innerHTML = '<div class="selected-art"></div><div class="selected-copy"><strong></strong><span></span><small>ПКМ по слоту — подробный осмотр</small></div>';
-        preview.querySelector('.selected-art')!.innerHTML = itemSvgMarkup(this.state.selected, 76);
+        preview.querySelector('.selected-art')!.innerHTML = `<img class="item-art-image" src="${this.itemAsset(this.state.selected)}" alt="">`;
         preview.querySelector('strong')!.textContent = def.name;
         preview.querySelector('.selected-copy span')!.textContent = def.examine;
       } else {
@@ -629,19 +643,20 @@ export class ImmersionScene {
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
-    this.dodgeReady = false;
+    this.dodgeReady = false; this.guarding = false; this.initiative = 100;
     this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
     this.monsterHp = this.monsterMaxHp;
     this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
-    this.combatTurn = 0;
+    this.combatTurn = 0; this.combatTarget = 'torso';
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
-    const monsterArt = document.getElementById('combatMonsterArt');
-    monsterArt?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
-    monsterArt?.classList.add('combat-beast-' + this.threatKind);
+    const art = document.getElementById('combatMonsterArt');
+    art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
+    art?.classList.add('combat-beast-' + this.threatKind);
     const screen = document.getElementById('combatScreen'); screen?.classList.add('open'); screen?.setAttribute('aria-hidden','false');
     const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null; if (dodge) dodge.disabled = true;
     document.body.classList.add('combat-active');
-    this.updateCombatHud('Ты вступил в схватку. Выбирай действие.');
+    this.renderCombatWounds();
+    this.updateCombatHud('Существо приближается. Выбери часть тела и действие.');
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
     simAudio.monster(this.state.muted);
   }
@@ -652,7 +667,22 @@ export class ImmersionScene {
     const player = document.getElementById('combatPlayerHp'); if (player) player.textContent = String(this.state.health);
     const playerFill = document.getElementById('combatPlayerFill') as HTMLElement | null; if (playerFill) playerFill.style.width = this.state.health + '%';
     const text = document.getElementById('combatLog'); if (text) text.textContent = log;
-    const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = this.combatTurn % 2 ? 'ТВОЙ ХОД' : 'ОПАСНОСТЬ';
+    const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = this.dodgeReady ? 'ВРАГ АТАКУЕТ' : 'ТВОЙ ХОД';
+    const ini = document.getElementById('initiativeFill') as HTMLElement | null; if (ini) ini.style.width = this.initiative + '%';
+    const enemyIni = document.getElementById('enemyInitiativeFill') as HTMLElement | null; if (enemyIni) enemyIni.style.width = (100-this.initiative) + '%';
+  }
+
+  private selectCombatTarget(target: 'head'|'torso'|'arms'|'legs') {
+    this.combatTarget = target;
+    document.querySelectorAll<HTMLButtonElement>('[data-hit-zone]').forEach(b => b.classList.toggle('selected', b.dataset.hitZone === target));
+    const labels: Record<string,string> = {head:'Голова · высокий риск, критический урон',torso:'Корпус · надёжная цель',arms:'Конечности · ослабить атаку',legs:'Ноги · замедлить существо'};
+    this.updateCombatHud(labels[target]);
+  }
+
+  private renderCombatWounds() {
+    const host = document.getElementById('combatWounds'); if (!host) return;
+    const labels: Record<string,string> = {arm:'Ранена рука: урон снижен',leg:'Ранена нога: уклонение сложнее',bleed:'Кровотечение: -2 HP за ход'};
+    host.textContent = this.state.injuries.map(x => labels[x] || x).join(' · ') || 'ТЯЖЁЛЫХ РАН НЕТ';
   }
 
   private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
@@ -660,63 +690,85 @@ export class ImmersionScene {
     let log = '';
     if (action === 'flee') { this.state.health = Math.max(0, this.state.health - 5); this.finishCombat('Ты отступил, получив ранение.'); return; }
     if (action === 'attack') {
-      const weapon = this.state.selected === 'ryokan_key' ? 18 : this.state.selected === 'stitched_mask' ? 3 : 10 + Math.floor(Math.random()*5);
-      const damage = Math.max(1, weapon + (this.maskWorn ? 2 : 0));
-      this.monsterHp = Math.max(0, this.monsterHp - damage);
-      log = 'Ты наносишь ' + damage + ' урона. Существо отшатывается.';
-      const art = document.getElementById('combatMonsterArt'); art?.classList.remove('hit'); void art?.clientWidth; art?.classList.add('hit');
-      setTimeout(() => art?.classList.remove('hit'), 320); simAudio.attack(this.state.muted);
-    } else if (action === 'guard') { this.guarding = true; log = 'Ты закрываешься, готовясь принять удар.'; }
+      const base = this.state.selected === 'ryokan_key' ? 18 : this.state.selected === 'stitched_mask' ? 3 : 11 + Math.floor(Math.random()*5);
+      const armPenalty = this.state.injuries.includes('arm') ? 4 : 0;
+      const accuracy: Record<string,number> = {head:.48,torso:.82,arms:.72,legs:.68};
+      const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg')?.08:0);
+      if (!hit) log = 'Ты промахнулся. Существо успело сместиться.';
+      else {
+        const critChance = this.combatTarget === 'head' ? .38 : .08;
+        const critical = Math.random() < critChance;
+        const zoneBonus: Record<string,number> = {head:critical?2.1:1.25,torso:1,arms:.72,legs:.82};
+        const damage = Math.max(1,Math.round((base-armPenalty+(this.maskWorn?2:0))*zoneBonus[this.combatTarget]));
+        this.monsterHp = Math.max(0,this.monsterHp-damage);
+        log = (critical?'КРИТИЧЕСКИЙ УДАР! ':'') + this.combatTarget.toUpperCase() + ' · ' + damage + ' урона.';
+        if (this.combatTarget === 'arms' && Math.random()<.45) log += ' Атака существа ослаблена.';
+        if (this.combatTarget === 'legs' && Math.random()<.45) log += ' Существо замедлилось.';
+        const art=document.getElementById('combatMonsterArt'); art?.classList.remove('hit'); void art?.clientWidth; art?.classList.add('hit'); setTimeout(()=>art?.classList.remove('hit'),360); simAudio.attack(this.state.muted);
+      }
+    } else if (action === 'guard') { this.guarding = true; this.initiative = Math.min(100,this.initiative+12); log = 'Ты закрываешься. Следующий удар будет слабее.'; }
     else if (action === 'item') {
-      if (this.state.selected === 'herbal_poultice') { this.state.health = Math.min(100,this.state.health+22); this.state.inventory = this.state.inventory.filter(x=>x!=='herbal_poultice'); this.state.selected=null; log='Повязка стягивает рану. +22 здоровья.'; }
-      else if (this.state.selected === 'warding_charm') { this.state.sanity = Math.min(100,this.state.sanity+16); this.state.inventory = this.state.inventory.filter(x=>x!=='warding_charm'); this.state.selected=null; log='Оберег вспыхнул холодным светом. +16 рассудка.'; }
-      else { this.updateCombatHud('В руке нет предмета, который поможет сейчас.'); return; }
+      if (this.state.selected === 'herbal_poultice') { this.state.health=Math.min(100,this.state.health+22); this.state.inventory=this.state.inventory.filter(x=>x!=='herbal_poultice'); this.state.selected=null; log='Повязка стягивает рану. +22 здоровья.'; }
+      else if (this.state.selected === 'warding_charm') { this.state.sanity=Math.min(100,this.state.sanity+16); this.state.inventory=this.state.inventory.filter(x=>x!=='warding_charm'); this.state.selected=null; log='Оберег вспыхнул холодным светом. +16 рассудка.'; }
+      else { this.updateCombatHud('В руке нет подходящего предмета.'); return; }
       this.renderInv(); this.renderVitals();
-    } else { this.noiseUntil = Date.now()+12000; this.monsterHp = Math.max(0,this.monsterHp-6); log='Ты резко хлопаешь ладонью по камню. Существо дёргается на звук.'; simAudio.impact(this.state.muted); }
-    if (this.monsterHp <= 0) { this.finishCombat('Существо рухнуло во тьму. Победа, но шум мог привлечь кого-то ещё.'); return; }
-    this.combatTurn++; this.renderVitals();
-    this.updateCombatHud(log + ' Существо готовится к атаке — уклонись в нужный момент.');
+    } else { this.noiseUntil=Date.now()+12000; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
+    if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
+    this.combatTurn++; this.initiative=Math.max(0,this.initiative-22);
+    if (this.state.injuries.includes('bleed')) { this.state.health=Math.max(0,this.state.health-2); log+=' Кровь продолжает уходить: -2 HP.'; }
+    this.renderVitals(); this.renderCombatWounds();
+    this.updateCombatHud(log+' '+this.enemyAttackDescription());
     this.beginEnemyAttack(); saveState(this.state);
   }
 
+  private enemyAttackDescription() {
+    if (this.threatKind==='light') return 'Слепой собирается прыгнуть из темноты.';
+    if (this.threatKind==='sound') return 'Слушатель накапливает звуковую волну.';
+    return 'Жилец тянется к тебе длинными руками.';
+  }
+
   private beginEnemyAttack() {
-    this.dodgeReady = true;
-    const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null;
-    if (dodge) { dodge.disabled = false; dodge.classList.add('dodge-window'); }
-    const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = 'АТАКА! УКЛОНИСЬ';
-    const art = document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
+    this.dodgeReady=true;
+    const dodge=document.getElementById('combatDodge') as HTMLButtonElement|null;
+    if(dodge){dodge.disabled=false;dodge.classList.add('dodge-window');}
+    const phase=document.getElementById('combatPhase'); if(phase) phase.textContent=this.threatKind==='light'?'ПРЫЖОК · УКЛОНИСЬ':this.threatKind==='sound'?'ЗВУКОВОЙ ИМПУЛЬС · ЗАЩИТИСЬ':'ЗАХВАТ · УКЛОНИСЬ';
+    const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
+    const windowMs=this.state.injuries.includes('leg')?720:this.threatKind==='light'?850:1150;
+    const bar=document.getElementById('enemyTelegraph') as HTMLElement|null; if(bar){bar.style.transition='none';bar.style.width='100%';requestAnimationFrame(()=>{bar.style.transition='width '+windowMs+'ms linear';bar.style.width='0%';});}
     simAudio.monster(this.state.muted);
-    this.enemyTurnTimer = setTimeout(() => this.resolveEnemyAttack(false), 1050);
+    this.enemyTurnTimer=setTimeout(()=>this.resolveEnemyAttack(false),windowMs);
   }
 
   private combatDodge() {
-    if (!this.dodgeReady) return;
-    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    if(!this.dodgeReady)return;
+    if(this.enemyTurnTimer)clearTimeout(this.enemyTurnTimer as number);
     this.resolveEnemyAttack(true);
   }
 
-  private resolveEnemyAttack(evaded: boolean) {
-    if (!this.dodgeReady) return;
-    this.dodgeReady = false;
-    const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null;
-    if (dodge) { dodge.disabled = true; dodge.classList.remove('dodge-window'); }
-    const art = document.getElementById('combatMonsterArt'); art?.classList.remove('attack');
-    const incoming = this.threatKind === 'dweller' ? 16 : this.threatKind === 'light' ? 12 : 10;
-    const damage = evaded ? 0 : this.guarding ? Math.ceil(incoming*.3) : incoming;
-    this.guarding = false;
-    if (!evaded) {
-      this.state.health = Math.max(0,this.state.health-damage); simAudio.impact(this.state.muted);
-      document.body.classList.remove('player-hit'); void document.body.clientWidth; document.body.classList.add('player-hit');
-      setTimeout(() => document.body.classList.remove('player-hit'), 360);
-    } else {
-      simAudio.evade(this.state.muted);
-      document.getElementById('combatMonsterArt')?.classList.add('miss');
-      setTimeout(() => document.getElementById('combatMonsterArt')?.classList.remove('miss'), 380);
-    }
-    this.renderVitals();
-    this.updateCombatHud(evaded ? 'Ты ушёл с линии атаки. Существо промахнулось.' : 'Удар достиг цели: -' + damage + ' здоровья.');
+  private resolveEnemyAttack(evaded:boolean) {
+    if(!this.dodgeReady)return;
+    this.dodgeReady=false;
+    const dodge=document.getElementById('combatDodge') as HTMLButtonElement|null;
+    if(dodge){dodge.disabled=true;dodge.classList.remove('dodge-window');}
+    const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack');
+    let incoming=this.threatKind==='dweller'?17:this.threatKind==='light'?15:11;
+    let wound='';
+    if(this.threatKind==='light'&&!evaded) wound='leg';
+    if(this.threatKind==='sound'&&!evaded){this.state.sanity=Math.max(0,this.state.sanity-9);wound='arm';}
+    if(this.threatKind==='dweller'&&!evaded) wound='bleed';
+    const damage=evaded?0:this.guarding?Math.ceil(incoming*.28):incoming;
+    this.guarding=false;
+    if(!evaded){
+      this.state.health=Math.max(0,this.state.health-damage);
+      if(wound&&!this.state.injuries.includes(wound)){this.state.injuries.push(wound);}
+      simAudio.impact(this.state.muted);
+      document.body.classList.remove('player-hit');void document.body.clientWidth;document.body.classList.add('player-hit');setTimeout(()=>document.body.classList.remove('player-hit'),360);
+    }else{simAudio.evade(this.state.muted);art?.classList.add('miss');setTimeout(()=>art?.classList.remove('miss'),380);this.initiative=Math.min(100,this.initiative+18);}
+    this.renderVitals();this.renderCombatWounds();
+    const detail=evaded?'Ты ушёл с линии атаки. Инициатива возвращается.':'Удар достиг цели: -'+damage+' HP.'+(wound?' Получено состояние: '+wound+'.':'');
+    this.updateCombatHud(detail);
     saveState(this.state);
-    if (this.state.health <= 0) this.finishCombat('Ты падаешь. Сознание гаснет…');
+    if(this.state.health<=0)this.finishCombat('Ты падаешь. Сознание гаснет…');
   }
 
   private tickMaskEffects() {
@@ -809,7 +861,7 @@ export class ImmersionScene {
     const modal = document.getElementById('simModal')!;
     document.getElementById('modalTitle')!.textContent = def.name;
     const visual = document.getElementById('modalVisual');
-    if (visual) visual.innerHTML = itemSvgMarkup(id, 224);
+    if (visual) visual.innerHTML = `<img class="item-art-image" src="${this.itemAsset(id)}" alt="${def.name}">`;
     document.getElementById('modalBody')!.textContent = def.name + '\n\n' + def.examine;
     const actions = document.getElementById('modalActions')!;
     actions.innerHTML = '';
