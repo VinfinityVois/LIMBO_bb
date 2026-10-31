@@ -547,9 +547,17 @@ export class ImmersionScene {
       ? 'В РУКАХ: ' + ITEMS[this.state.selected].name
       : 'В РУКАХ: —';
     const preview = document.getElementById('selectedItemPreview');
-    if (preview) preview.textContent = this.state.selected
-      ? ITEMS[this.state.selected].name + ' · ' + ITEMS[this.state.selected].examine
-      : 'Выбери предмет в инвентаре, чтобы увидеть описание и действия.';
+    if (preview) {
+      if (this.state.selected) {
+        const def = ITEMS[this.state.selected];
+        preview.innerHTML = '<div class="selected-art"></div><div class="selected-copy"><strong></strong><span></span><small>ПКМ по слоту — подробный осмотр</small></div>';
+        preview.querySelector('.selected-art')!.innerHTML = itemSvgMarkup(this.state.selected, 76);
+        preview.querySelector('strong')!.textContent = def.name;
+        preview.querySelector('.selected-copy span')!.textContent = def.examine;
+      } else {
+        preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
+      }
+    }
   }
 
   private useSelectedItem() {
