@@ -36,6 +36,7 @@ export interface GameState {
   sanity: number;
   maskWorn: boolean;
   maskExposure: number;
+  injuries: string[];
 }
 
 const SAVE_KEY = 'limbo_sim_ryokan_v1';
@@ -53,6 +54,7 @@ export function defaultState(): GameState {
     sanity: 100,
     maskWorn: false,
     maskExposure: 0,
+    injuries: [],
   };
 }
 
@@ -72,6 +74,7 @@ export function loadState(): GameState {
       sanity: typeof p.sanity === 'number' ? Math.max(0, Math.min(100, p.sanity)) : 100,
       maskWorn: p.maskWorn === true,
       maskExposure: typeof p.maskExposure === 'number' ? Math.max(0, p.maskExposure) : 0,
+      injuries: Array.isArray(p.injuries) ? p.injuries.filter((x): x is string => typeof x === 'string') : [],
       muted: localStorage.getItem('limbo_sim_mute') === '1',
     };
   } catch {
@@ -92,6 +95,7 @@ export function saveState(s: GameState): void {
       sanity: s.sanity,
       maskWorn: s.maskWorn,
       maskExposure: s.maskExposure,
+      injuries: s.injuries,
     }));
   } catch { /* */ }
 }
