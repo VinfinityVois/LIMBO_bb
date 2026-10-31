@@ -629,3 +629,13 @@ body.threat-active .sim-stage{animation:threat-shake .32s linear 2;filter:satura
 .hud-radar .mini:before{content:"";position:absolute;inset:12%;border:1px solid #1b748555;border-radius:50%;box-shadow:0 0 0 13px #1b74851c,0 0 0 27px #1b748511}.hud-radar .mm-title{display:none}.hud-radar .mm-graph{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;gap:3px;max-width:90%;font-size:8px}.hud-radar .mm-n{padding:2px 3px;background:#071c26;border:1px solid #246274;color:#80a8b3;font-size:7px}.hud-radar .mm-n.current{color:#fff;background:#07546a;border-color:#1ac7df}.radar-signal{color:#5c98a7;font:7px var(--mono);letter-spacing:.08em;text-align:center}
 @media(max-width:1100px){.game-hud{grid-template-columns:190px minmax(0,1fr) 230px}.hud-radar{display:none}.hud-inventory .inv{grid-template-columns:repeat(6,minmax(40px,1fr))}}
 @media(max-width:700px){.world-hud{right:8px;top:8px;gap:6px}.sound-readout{display:none}.sense-feed{top:70px;left:8px;width:min(240px,60vw)}.game-hud{grid-template-columns:1fr;max-height:45vh}.selected-item-card{grid-template-columns:70px 1fr}.selected-art{height:66px}.hud-radar{display:none}}
+
+/* Distinct silhouettes and atmosphere for each entity */
+body.threat-kind-light .threat-silhouette:before{width:62px;height:54px;clip-path:polygon(50% 0,65% 28%,100% 15%,78% 50%,100% 82%,60% 72%,50% 100%,37% 72%,0 82%,22% 50%,0 15%,36% 28%);border-radius:0;box-shadow:0 0 30px #e5c36a77}
+body.threat-kind-light .threat-silhouette span,body.threat-kind-light .threat-silhouette i{background:#ffe7a1;box-shadow:0 0 14px 5px #f6d78c}
+body.threat-kind-sound .threat-silhouette:before{width:38px;height:78px;clip-path:polygon(35% 0,65% 0,100% 24%,70% 42%,90% 100%,50% 78%,10% 100%,30% 42%,0 24%);filter:blur(1px);box-shadow:0 0 25px #65c9d777}
+body.threat-kind-sound .threat-silhouette:after{content:"";position:absolute;inset:15px 0;border:1px solid #6cc9db66;border-radius:50%;transform:scaleX(1.35);animation:echo-pulse 1.2s infinite}
+body.threat-kind-dweller .threat-silhouette:before{width:54px;height:90px;clip-path:polygon(25% 0,75% 0,85% 25%,100% 100%,60% 76%,50% 100%,40% 76%,0 100%,15% 25%);box-shadow:0 0 30px #df435777}
+@keyframes echo-pulse{0%{transform:scale(.7);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+body.threat-active .radar-signal{color:#ff8790;animation:signal-blink .6s infinite alternate}
+@keyframes signal-blink{to{opacity:.35}}
