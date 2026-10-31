@@ -458,11 +458,6 @@ export class ImmersionScene {
     this.invEl.innerHTML = '';
     const count = document.getElementById('inventoryCount');
     if (count) count.textContent = this.state.inventory.length + ' / 12';
-    if (!this.state.inventory.length) {
-      this.invEl.innerHTML = '<div class="inv-empty">ИНВЕНТАРЬ ПУСТ</div>';
-      this.syncHand();
-      return;
-    }
     for (const id of this.state.inventory) {
       const def = ITEMS[id];
       const slot = document.createElement('button');
