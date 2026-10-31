@@ -15,7 +15,12 @@ export type ItemId =
   | 'ryokan_key'
   | 'kokeshi_note'
   | 'silk_thread'
-  | 'matchbox';
+  | 'matchbox'
+  | 'medicinal_herbs'
+  | 'copper_bell'
+  | 'herbal_poultice'
+  | 'warding_charm'
+  | 'ember_lantern';
 
 export interface GameState {
   location: LocationId;
