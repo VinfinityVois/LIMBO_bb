@@ -200,6 +200,10 @@ export class ImmersionScene {
     document.getElementById('combatItem')?.addEventListener('click', () => this.combatAction('item'));
     document.getElementById('combatNoise')?.addEventListener('click', () => this.combatAction('noise'));
     document.getElementById('combatFlee')?.addEventListener('click', () => this.combatAction('flee'));
+    document.querySelectorAll<HTMLButtonElement>('[data-hit-zone]').forEach(b => b.addEventListener('click', () => {
+      const zone = b.dataset.hitZone;
+      if (zone === 'head' || zone === 'torso' || zone === 'arms' || zone === 'legs') this.selectCombatTarget(zone);
+    }));
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
