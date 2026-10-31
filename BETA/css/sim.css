@@ -890,3 +890,68 @@ html, body.immerse {
   .sim-stage { inset-bottom: 46vh; }
   .hotspot-layer, .exit-layer { inset: 0 0 46vh 0 !important; }
 }
+
+
+/* ── Combat UI: survival RPG / readable tactical choices ── */
+.combat-screen { padding:18px; overflow:auto; }
+.combat-panel {
+  width:min(900px, calc(100vw - 32px));
+  max-height:calc(100dvh - 36px);
+  overflow:auto;
+  padding:clamp(12px,2vw,22px);
+  border-color:rgba(61,185,207,.62);
+  background:
+    radial-gradient(ellipse at 20% 10%,rgba(27,92,112,.22),transparent 46%),
+    linear-gradient(145deg,rgba(8,20,30,.985),rgba(2,6,12,.99));
+  box-shadow:0 28px 100px #000e,0 0 44px rgba(0,194,220,.09),inset 0 0 0 1px #ffffff0b;
+}
+.combat-top { position:sticky;top:-22px;z-index:5;background:rgba(5,14,22,.96);padding:8px 0 12px; }
+.combat-top strong { color:#eaf8fb; }
+.combat-arena { grid-template-columns:minmax(180px, .78fr) minmax(0,1.4fr); min-height:220px; }
+.combat-monster-art { height:clamp(180px,27vh,260px); isolation:isolate; }
+.combat-monster-art:before,.combat-monster-art:after { opacity:.08; }
+.combat-monster-art .combat-sprite {
+  position:absolute;inset:2%;width:96%;height:96%;object-fit:contain;
+  z-index:2;filter:brightness(1.24) contrast(1.2) drop-shadow(0 0 22px rgba(220,66,93,.55));
+}
+.combat-monster-art.combat-beast-light .combat-sprite { filter:brightness(1.28) contrast(1.2) drop-shadow(0 0 24px #e7bb6b99); }
+.combat-monster-art.combat-beast-sound .combat-sprite { filter:brightness(1.3) contrast(1.22) drop-shadow(0 0 24px #57d9e899); }
+.combat-monster-art.combat-beast-dweller .combat-sprite { filter:brightness(1.25) contrast(1.2) drop-shadow(0 0 24px #e44d7099); }
+.combat-stats { gap:12px; }
+.combat-stats>strong { font-size:clamp(15px,2vw,20px); }
+.combat-player { display:grid;gap:8px; }
+.initiative-row { display:grid;grid-template-columns:90px minmax(0,1fr) 54px minmax(0,1fr);gap:8px;align-items:center;color:#8ea9b8;font:8px var(--mono);letter-spacing:.1em; }
+.combat-bar.initiative i { background:linear-gradient(90deg,#168ea1,#55e1e8);box-shadow:0 0 12px #30d5e555; }
+.combat-bar.enemy-initiative i { background:linear-gradient(90deg,#81283e,#ef5268); }
+.enemy-telegraph { display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;color:#e8a0a9;font:8px var(--mono);letter-spacing:.1em; }
+.enemy-telegraph>i { display:block;height:7px;background:#2b1a22;border:1px solid #713342;overflow:hidden; }
+.enemy-telegraph>i>b { display:block;width:100%;height:100%;background:linear-gradient(90deg,#a92d47,#ff6678); }
+.combat-wounds { padding:8px 10px;border-left:2px solid #bd5266;background:rgba(133,35,54,.12);color:#d6a3ab;font:9px var(--mono); }
+.combat-targets { margin-top:10px; }
+.combat-targets button { min-width:78px;min-height:34px; }
+.combat-actions { grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px; }
+.combat-actions button { min-height:48px;padding:8px 5px;position:relative; }
+.combat-actions button:nth-child(1) { border-color:#b74c5e;color:#ffdce1;background:linear-gradient(180deg,#3b1721,#160b11); }
+.combat-actions button:nth-child(2).dodge-window { border-color:#55e5ed;color:#e9ffff;background:#0d3c46;box-shadow:0 0 20px #38d9e855;animation:dodge-pulse .55s ease-in-out infinite alternate; }
+.combat-actions button:nth-child(3) { border-color:#7d9caa; }
+.combat-actions button:nth-child(4) { border-color:#a58b55;color:#e8d5a4; }
+.combat-actions button:nth-child(5) { border-color:#8262a8;color:#d8c2ef; }
+@keyframes dodge-pulse { to { box-shadow:0 0 26px #38d9e899,inset 0 0 12px #38d9e822; } }
+.combat-monster-art.attack .combat-sprite { animation:combat-sprite-lunge .34s cubic-bezier(.2,.8,.2,1); }
+.combat-monster-art.hit .combat-sprite { animation:combat-sprite-hit .32s ease-out; }
+@keyframes combat-sprite-lunge { 50% { transform:translateX(24px) scale(1.06);filter:brightness(1.65) drop-shadow(0 0 28px #ff526e); } }
+@keyframes combat-sprite-hit { 25% { transform:translateX(-12px) rotate(-3deg);filter:brightness(2) saturate(.45); } }
+body.player-hit .combat-panel { animation:combat-impact .26s ease-out; }
+@keyframes combat-impact { 25% { transform:translateX(5px);border-color:#ed526b; } 60% { transform:translateX(-4px); } }
+body.combat-active .world-hud,body.combat-active .sense-feed,body.combat-active .zone-whisper { filter:brightness(.35); }
+body.combat-active .game-hud { opacity:.22; }
+@media(max-width:680px) {
+  .combat-screen { padding:8px; }
+  .combat-panel { width:calc(100vw - 16px);max-height:calc(100dvh - 16px); }
+  .combat-arena { grid-template-columns:110px minmax(0,1fr);gap:8px;min-height:150px;padding:8px 0; }
+  .combat-monster-art { height:145px; }
+  .initiative-row { grid-template-columns:74px minmax(0,1fr); }
+  .initiative-row>span:nth-of-type(2) { display:none; }
+  .combat-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .combat-actions button:last-child { grid-column:1/-1; }
+}
