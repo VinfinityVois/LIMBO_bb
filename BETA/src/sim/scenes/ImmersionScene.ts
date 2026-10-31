@@ -34,6 +34,8 @@ export class ImmersionScene {
   invEl: HTMLElement;
   hoverCard: HTMLElement;
   private eventTimer = 0 as ReturnType<typeof setInterval> | number;
+  private threatActive = false;
+  private threatCooldown = 0;
   private diving = true;
 
   constructor() {
@@ -170,6 +172,8 @@ export class ImmersionScene {
       this.openItemExam(this.state.selected);
     });
     document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
+    document.getElementById('btnHide')?.addEventListener('click', () => this.resolveThreat('hide'));
+    document.getElementById('btnConfront')?.addEventListener('click', () => this.resolveThreat('confront'));
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
@@ -181,17 +185,52 @@ export class ImmersionScene {
   private scheduleEvents() {
     if (this.eventTimer) clearInterval(this.eventTimer as number);
     this.eventTimer = setInterval(() => {
-      const loc = this.state.location;
-      if ((loc === 'garden' || loc === 'engawa') && Math.random() > 0.45) {
-        simAudio.steps(this.state.muted);
-        this.notify('Сверху — шаги. Доски не должны так звучать.', 'warn');
-        this.pulseMatrix('alert');
-        this.state.flags.heard_steps = true;
-        this.state.sanity = Math.max(0, this.state.sanity - 4);
-        saveState(this.state);
-        this.renderVitals();
-      }
-    }, 40000);
+      if (this.threatActive || Date.now() < this.threatCooldown) return;
+      if (Math.random() < .48) return;
+      const roll = Math.random();
+      if (roll < .38) { simAudio.steps(this.state.muted); this.showSense('♬','Шаги на мокром камне…',false); this.state.flags.heard_steps = true; this.state.sanity = Math.max(0,this.state.sanity-2); }
+      else if (roll < .62) { simAudio.creak(this.state.muted); this.showSense('⌁','Где-то рядом скрипнула древесина',false); }
+      else if (roll < .8) { simAudio.whisper(this.state.muted); this.showSense('◉','Шёпот произнёс твоё имя',true); this.state.sanity = Math.max(0,this.state.sanity-3); }
+      else if (['garden','engawa','hall','storage'].includes(this.state.location)) this.startThreat();
+      saveState(this.state); this.renderVitals();
+    }, 18000);
+  }
+
+  private showSense(icon: string, message: string, warning: boolean) {
+    const feed = document.getElementById('senseFeed'); if (!feed) return;
+    const el = document.createElement('div'); el.className = 'sense-event' + (warning ? ' warning' : '');
+    el.innerHTML = '<span class="sense-icon"></span><span></span><span class="sound-wave"><i></i><i></i><i></i><i></i></span>';
+    el.querySelector('.sense-icon')!.textContent = icon;
+    el.querySelector('span:nth-child(2)')!.textContent = message;
+    feed.prepend(el); while (feed.children.length > 4) feed.lastElementChild?.remove();
+    setTimeout(() => el.remove(), 6500);
+  }
+
+  private startThreat() {
+    this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
+    simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
+    document.body.classList.add('threat-active');
+    const panel=document.getElementById('threatOverlay');
+    const title=document.getElementById('threatTitle');
+    const copy=document.getElementById('threatText');
+    if(title) title.textContent=Math.random()>.5?'СУЩЕСТВО У ВОРОТ':'СУСТАВЫ СКРИПЯТ В ТЕМНОТЕ';
+    if(copy) copy.textContent='Оно ещё не заметило тебя. Решай быстро: затаиться или попытаться отогнать его.';
+    panel?.classList.add('open'); panel?.setAttribute('aria-hidden','false');
+  }
+
+  private resolveThreat(choice: 'hide' | 'confront') {
+    if(!this.threatActive)return;
+    this.threatActive=false; this.threatCooldown=Date.now()+35000;
+    document.getElementById('threatOverlay')?.classList.remove('open');
+    document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
+    document.body.classList.remove('threat-active');
+    if(choice==='hide') {
+      if(Math.random()<.78){simAudio.whisper(this.state.muted);this.notify('Ты затаился. Шаги медленно удаляются.','ok');this.state.sanity=Math.max(0,this.state.sanity-1);}
+      else{simAudio.monster(this.state.muted);this.notify('Оно заметило движение!','warn');this.state.health=Math.max(0,this.state.health-9);this.state.sanity=Math.max(0,this.state.sanity-7);}
+    } else if(this.state.selected==='ember_lantern') {
+      simAudio.whoosh(this.state.muted);this.notify('Свет фонаря заставил существо отступить.','ok');this.state.sanity=Math.min(100,this.state.sanity+2);
+    } else {simAudio.deny(this.state.muted);this.notify('Без подходящего средства ты лишь разозлил его.','warn');this.state.health=Math.max(0,this.state.health-14);this.state.sanity=Math.max(0,this.state.sanity-8);}
+    saveState(this.state);this.renderVitals();
   }
 
   private startMatrixStreams() {
@@ -389,65 +428,40 @@ export class ImmersionScene {
   }
 
   private openModal(hs: HotspotDef) {
-    const modal = document.getElementById('simModal')!;
-    document.getElementById('modalTitle')!.textContent = hs.label;
-    const body = document.getElementById('modalBody')!;
-    const visual = document.getElementById('modalVisual');
-    if (visual) {
-      if (hs.item) visual.innerHTML = itemSvgMarkup(hs.item, 96);
-      else if (hs.complete)
-        visual.innerHTML = `<svg viewBox="0 0 64 64" width="96" height="96"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>`;
-      else visual.innerHTML = '';
+    const modal=document.getElementById('simModal')!;
+    document.getElementById('modalTitle')!.textContent=hs.label;
+    const body=document.getElementById('modalBody')!;
+    const visual=document.getElementById('modalVisual');
+    const item=hs.item?ITEMS[hs.item]:null;
+    if(visual) visual.innerHTML=hs.item?itemSvgMarkup(hs.item,224):hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
+    body.textContent=item?item.name+'\\n\\n'+hs.examine:hs.examine;
+    if(hs.item==='black_seed'||hs.item==='stitched_mask'){
+      const risk=document.createElement('span');risk.className='item-risk';risk.textContent='НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';body.appendChild(risk);
     }
-    body.textContent = hs.examine;
-    const actions = document.getElementById('modalActions')!;
-    actions.innerHTML = '';
-
-    const close = document.createElement('button');
-    close.className = 'btn';
-    close.textContent = 'ЗАКРЫТЬ';
-    close.onclick = () => this.closeModal();
-    actions.appendChild(close);
-
-    if (hs.item && hs.takenFlag && !this.state.flags[hs.takenFlag]) {
-      const take = document.createElement('button');
-      take.className = 'btn solid';
-      take.textContent = 'ВЗЯТЬ';
-      take.onclick = () => {
-        if (!this.state.inventory.includes(hs.item!)) this.state.inventory.push(hs.item!);
-        this.state.flags[hs.takenFlag!] = true;
-        saveState(this.state);
-        simAudio.take(this.state.muted);
-        this.notify('Получено: ' + ITEMS[hs.item!].name, 'ok');
-        this.pulseMatrix('ok');
-        this.closeModal();
-        this.buildHotspots();
-        this.renderInv();
-      };
-      actions.appendChild(take);
+    const actions=document.getElementById('modalActions')!;actions.innerHTML='';
+    const add=(label:string,cls:string,fn:()=>void)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=label;b.onclick=fn;actions.appendChild(b);};
+    add('НЕ ТРОГАТЬ','danger',()=>this.closeModal());
+    if(item&&hs.item&&hs.takenFlag&&!this.state.flags[hs.takenFlag]){
+      add('ИЗУЧИТЬ','',()=>{
+        const detail=document.createElement('div');detail.className='item-detail';
+        detail.textContent=hs.item==='black_seed'?'Под плёнкой видны тонкие жилки. Они шевелятся в ответ на тепло руки. Ты чувствуешь чужую мысль: «посади меня».':hs.item==='stitched_mask'?'Нить прошита изнутри. На бумаге проступает отпечаток лица, хотя маска лежит неподвижно. Не надевай её.':'Ты замечаешь мелкие детали, которые не были видны издалека.';
+        body.appendChild(detail);simAudio.whisper(this.state.muted);this.showSense('◉','Ты внимательно изучил находку',false);
+      });
+      add('ВЗЯТЬ','solid',()=>{
+        if(this.state.inventory.length>=12){this.notify('Инвентарь заполнен','warn');return;}
+        this.state.inventory.push(hs.item!);this.state.flags[hs.takenFlag!]=true;
+        if(hs.item==='black_seed'){this.state.sanity=Math.max(0,this.state.sanity-13);this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.','warn');simAudio.whisper(this.state.muted);}
+        else if(hs.item==='stitched_mask'){this.state.sanity=Math.max(0,this.state.sanity-8);this.notify('Из маски донёсся короткий вдох.','warn');simAudio.whisper(this.state.muted);}
+        else this.notify('Получено: '+item.name,'ok');
+        saveState(this.state);simAudio.take(this.state.muted);this.pulseMatrix('ok');this.closeModal();this.buildHotspots();this.renderInv();this.renderVitals();
+      });
     }
-
-    if (hs.complete) {
-      const win = document.createElement('button');
-      win.className = 'btn solid';
-      win.textContent = 'СТАБИЛИЗИРОВАТЬ';
-      win.onclick = () => {
-        this.state.completed = true;
-        saveState(this.state);
-        markSceneDone();
-        simAudio.complete(this.state.muted);
-        this.notify('Сектор стабилизирован · Сцена 01', 'ok');
-        this.pulseMatrix('ok');
-        this.closeModal();
-        setTimeout(() => {
-          window.location.href = '/scene-ryokan.html';
-        }, 1600);
-      };
-      actions.appendChild(win);
-    }
-
-    modal.classList.add('open');
-    simAudio.open(this.state.muted);
+    if(hs.complete)add('СТАБИЛИЗИРОВАТЬ','solid',()=>{
+      this.state.completed=true;saveState(this.state);markSceneDone();simAudio.complete(this.state.muted);
+      this.notify('Сектор стабилизирован · Сцена 01','ok');this.pulseMatrix('ok');this.closeModal();
+      setTimeout(()=>{window.location.href='/scene-ryokan.html';},1600);
+    });
+    modal.classList.add('open');simAudio.open(this.state.muted);
   }
 
   private closeModal() {
@@ -565,8 +579,8 @@ export class ImmersionScene {
     const modal = document.getElementById('simModal')!;
     document.getElementById('modalTitle')!.textContent = def.name;
     const visual = document.getElementById('modalVisual');
-    if (visual) visual.innerHTML = itemSvgMarkup(id, 96);
-    document.getElementById('modalBody')!.textContent = def.examine;
+    if (visual) visual.innerHTML = itemSvgMarkup(id, 224);
+    document.getElementById('modalBody')!.textContent = def.name + '\\n\\n' + def.examine;
     const actions = document.getElementById('modalActions')!;
     actions.innerHTML = '';
     const close = document.createElement('button');
