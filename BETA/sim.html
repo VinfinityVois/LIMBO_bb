@@ -96,7 +96,15 @@
         <div class="combat-monster-art" id="combatMonsterArt"><i></i><b></b></div>
         <div class="combat-stats"><strong id="combatMonsterName">СЛУШАТЕЛЬ</strong><span>ЗДОРОВЬЕ СУЩЕСТВА <b id="monsterHpText">42 / 42</b></span><div class="combat-bar monster"><i id="monsterHpFill"></i></div><p id="combatLog">Оно приближается.</p></div>
       </div>
-      <div class="combat-player"><span>ТВОЁ ЗДОРОВЬЕ <b id="combatPlayerHp">100</b></span><div class="combat-bar player"><i id="combatPlayerFill"></i></div></div>
+      <div class="combat-player">
+        <span>ТВОЁ ЗДОРОВЬЕ <b id="combatPlayerHp">100</b></span><div class="combat-bar player"><i id="combatPlayerFill"></i></div>
+        <div class="initiative-row"><span>ИНИЦИАТИВА</span><div class="combat-bar initiative"><i id="initiativeFill"></i></div><span>УГРОЗА</span><div class="combat-bar enemy-initiative"><i id="enemyInitiativeFill"></i></div></div>
+        <div class="enemy-telegraph"><span>ТЕЛЕГРАФ АТАКИ</span><i><b id="enemyTelegraph"></b></i></div>
+        <div class="combat-wounds" id="combatWounds">ТЯЖЁЛЫХ РАН НЕТ</div>
+      </div>
+      <div class="combat-targets"><span>ЦЕЛЬ УДАРА</span>
+        <button type="button" data-hit-zone="head">ГОЛОВА</button><button type="button" data-hit-zone="torso" class="selected">КОРПУС</button><button type="button" data-hit-zone="arms">РУКИ</button><button type="button" data-hit-zone="legs">НОГИ</button>
+      </div>
       <div class="combat-actions"><button id="combatAttack" type="button">АТАКОВАТЬ</button><button id="combatDodge" type="button" disabled>УКЛОНИТЬСЯ</button><button id="combatGuard" type="button">ЗАЩИТИТЬСЯ</button><button id="combatItem" type="button">ПРЕДМЕТ</button><button id="combatNoise" type="button">ОТВЛЕЧЬ</button></div>
     </div>
   </section>
