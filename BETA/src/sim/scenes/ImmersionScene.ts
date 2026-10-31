@@ -59,6 +59,9 @@ export class ImmersionScene {
   private sanityTier = -1;
   private hallucinationTimer: ReturnType<typeof setInterval> | number = 0;
   private thoughtIndex = 0;
+  private threatApproachTimer: ReturnType<typeof setInterval> | number = 0;
+  private threatStartedAt = 0;
+  private hallucinationCount = 0;
   private diving = true;
 
   constructor() {
@@ -282,9 +285,11 @@ export class ImmersionScene {
   private showSense(icon: string, message: string, warning: boolean) {
     const feed = document.getElementById('senseFeed'); if (!feed) return;
     const el = document.createElement('div'); el.className = 'sense-event' + (warning ? ' warning' : '');
-    el.innerHTML = '<span class="sense-icon"></span><span></span><span class="sound-wave"><i></i><i></i><i></i><i></i></span>';
-    el.querySelector('.sense-icon')!.textContent = icon;
-    el.querySelector('span:nth-child(2)')!.textContent = message;
+    const glyph = document.createElement('span'); glyph.className = 'sense-icon'; glyph.textContent = icon;
+    const copy = document.createElement('span'); copy.className = 'sense-copy'; copy.textContent = message;
+    const wave = document.createElement('span'); wave.className = 'sound-wave';
+    for (let i=0;i<4;i++) wave.appendChild(document.createElement('i'));
+    el.append(glyph,copy,wave);
     feed.prepend(el); while (feed.children.length > 4) feed.lastElementChild?.remove();
     setTimeout(() => el.remove(), 6500);
   }
@@ -303,10 +308,13 @@ export class ImmersionScene {
     if(title) title.textContent=kind==='light'?'СЛЕПОЙ ИДЁТ НА СВЕТ':kind==='sound'?'СЛУШАТЕЛЬ ИДЁТ НА ШУМ':'ЖИЛЕЦ ВЫХОДИТ ИЗ СТЕНЫ';
     if(copy) copy.textContent=kind==='light'?'Существо тянется к источнику света. Погаси фонарь и не двигайся.':kind==='sound'?'Оно услышало тебя и приближается на звук. Замри или попробуй отвлечь его.':'Ты слишком долго оставался в одной комнате. Оно уже здесь.';
     panel?.classList.add('open'); panel?.setAttribute('aria-hidden','false');
+    this.startThreatApproach();
   }
 
   private resolveThreat(choice: 'hide' | 'confront') {
     if(!this.threatActive)return;
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    this.threatApproachTimer = 0;
     if (choice === 'confront') { this.startCombat(); return; }
     this.threatActive=false; this.threatCooldown=Date.now()+35000;
     document.getElementById('threatOverlay')?.classList.remove('open');
@@ -357,13 +365,16 @@ export class ImmersionScene {
     if (!host) return;
     const n = document.createElement('div');
     n.className = 'notify ' + kind;
+    n.setAttribute('role','status');
     n.textContent = msg;
+    n.style.setProperty('--notice-index', String(host.children.length));
     host.appendChild(n);
+    while (host.children.length > 4) host.firstElementChild?.remove();
     requestAnimationFrame(() => n.classList.add('show'));
     setTimeout(() => {
       n.classList.remove('show');
       setTimeout(() => n.remove(), 400);
-    }, 3200);
+    }, 4200);
   }
 
   private showHover(hs: HotspotDef, el: HTMLElement) {
@@ -686,6 +697,8 @@ export class ImmersionScene {
   }
 
   private startCombat() {
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    this.threatApproachTimer = 0;
     this.threatActive = false;
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
@@ -859,11 +872,126 @@ export class ImmersionScene {
     document.body.classList.toggle('mind-collapse', tier >= 3);
     const voice = document.getElementById('innerVoice');
     if (voice) voice.textContent = tier === 0 ? 'Мысли ровные. Пока.' :
-      tier === 1 ? 'Что-то не сходится. Тени двигаются не в такт.' :
-      tier === 2 ? 'Я уже проходил здесь. Или это место повторяет меня?' :
-      'Не смотри на отражение. Оно моргает позже.';
-    if (tier >= 1) this.showSense('◉', tier === 1 ? 'Краем глаза замечаешь движение.' : tier === 2 ? 'Комната будто стала длиннее.' : 'Ты слышишь второй ритм собственного сердца.', true);
-    if (tier >= 2) simAudio.whisper(this.state.muted);
+      tier === 1 ? 'Тени двигаются отдельно от предметов. Не смотри на них долго.' :
+      tier === 2 ? 'Комната меняет размеры, когда мы моргаем. В кармане что-то шевелится.' :
+      'Это не мой голос. Он говорит изо рта, которого здесь нет.';
+    this.showSense('◉', tier === 0 ? 'Восприятие стабилизировалось.' : tier === 1 ? 'Краем глаза замечаешь движение.' : tier === 2 ? 'Контуры комнаты плывут.' : 'Ты слышишь чужой голос внутри головы.', tier > 0);
+    if (tier >= 1) this.spawnMovingShadow();
+    if (tier >= 2) { simAudio.whisper(this.state.muted); this.triggerImageDistortion(tier); }
+    if (tier >= 3) { simAudio.maskWhisper(this.state.muted, 1.5); this.showFalseSilhouette(); this.mirrorInventory(); }
+  }
+
+  private triggerImageDistortion(tier: number) {
+    document.body.classList.remove('hallucination-hit');
+    void document.body.offsetWidth;
+    document.body.classList.add('hallucination-hit');
+    window.setTimeout(() => document.body.classList.remove('hallucination-hit'), tier >= 3 ? 1500 : 850);
+  }
+
+  private spawnMovingShadow() {
+    if (document.body.classList.contains('combat-active') || this.threatActive) return;
+    const shadow = document.createElement('div');
+    shadow.className = 'sanity-shadow';
+    shadow.setAttribute('aria-hidden','true');
+    shadow.style.setProperty('--shadow-y', (12 + Math.random()*66) + '%');
+    shadow.style.setProperty('--shadow-x', (8 + Math.random()*82) + '%');
+    this.stage.appendChild(shadow);
+    window.setTimeout(() => shadow.remove(), 4200);
+  }
+
+  private showFalseSilhouette() {
+    if (document.getElementById('falsePresence')) return;
+    const ghost = document.createElement('div');
+    ghost.id = 'falsePresence';
+    ghost.className = 'false-presence';
+    ghost.setAttribute('aria-hidden','true');
+    this.stage.appendChild(ghost);
+    window.setTimeout(() => ghost.remove(), 2600);
+  }
+
+  private mirrorInventory() {
+    const inv = document.getElementById('invSlots');
+    if (!inv || document.getElementById('inventoryMirage')) return;
+    const mirage = document.createElement('div');
+    mirage.id = 'inventoryMirage';
+    mirage.className = 'inventory-mirage';
+    mirage.textContent = Math.random() > .5 ? 'ЭТО НЕ ТВОИ ВЕЩИ' : 'СЛОТЫ ПЕРЕСТАВЛЕНЫ';
+    inv.appendChild(mirage);
+    inv.classList.add('inventory-haunted');
+    window.setTimeout(() => { mirage.remove(); inv.classList.remove('inventory-haunted'); }, 3200);
+    // The actual inventory/state is never changed by a hallucination.
+  }
+
+  private startThreatApproach() {
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    this.threatStartedAt = Date.now();
+    const panel = document.getElementById('threatOverlay');
+    if (!panel) return;
+    let meter = document.getElementById('threatApproachMeter');
+    if (!meter) {
+      meter = document.createElement('div');
+      meter.id = 'threatApproachMeter';
+      meter.className = 'threat-approach-meter';
+      meter.innerHTML = '<div class="threat-approach-label"><span>ДИСТАНЦИЯ ДО СУЩЕСТВА</span><b id="threatApproachTime">08.0</b></div><div class="threat-approach-track"><i id="threatApproachFill"></i></div>';
+      panel.querySelector('.threat-copy')?.appendChild(meter);
+    }
+    const duration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    const tick = () => {
+      if (!this.threatActive) return;
+      const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
+      const fill = document.getElementById('threatApproachFill') as HTMLElement|null;
+      const time = document.getElementById('threatApproachTime');
+      if (fill) fill.style.width = (progress*100)+'%';
+      if (time) time.textContent = Math.max(0,(duration-(Date.now()-this.threatStartedAt))/1000).toFixed(1);
+      const creature = document.getElementById('sceneCreature');
+      if (creature) {
+        creature.style.setProperty('--approach', String(progress));
+        creature.classList.toggle('closing-in', progress > .35);
+      }
+      panel.style.setProperty('--threat-progress', String(progress));
+      if (progress >= 1) {
+        clearInterval(this.threatApproachTimer as number);
+        this.threatApproachTimer = 0;
+        this.showSense('◉','Оно уже слишком близко.',true);
+        simAudio.monster(this.state.muted);
+        this.startCombat();
+      }
+    };
+    tick();
+    this.threatApproachTimer = window.setInterval(tick, 90);
+  }
+
+  private startSanityDistortions() {
+    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
+    this.hallucinationTimer = setInterval(() => {
+      const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
+      if (sanity >= 65 || this.threatActive || document.getElementById('combatScreen')?.classList.contains('open')) return;
+      const tier = sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
+      const thoughts = tier === 1
+        ? ['Не оборачивайся. Там просто дождь.', 'Шаги повторяют твой темп.', 'На секунду показалось, что фонарь погас.']
+        : tier === 2
+        ? ['Дверь была дальше. Почему она ближе?', 'Кто-то произнёс твоё имя изнутри стены.', 'Предмет в кармане кажется тёплым.']
+        : ['Это не выход. Это воспоминание о выходе.', 'Не доверяй силуэтам. Один из них — твой.', 'Ты забыл, сколько пальцев на руке.'];
+      const line = thoughts[this.thoughtIndex++ % thoughts.length];
+      const voice = document.getElementById('innerVoice');
+      if (voice) voice.textContent = line;
+      this.showSense('◉', line, true);
+      if (tier >= 1) this.spawnMovingShadow();
+      if (tier >= 2) {
+        this.triggerImageDistortion(tier);
+        if (Math.random() < .58) { simAudio.steps(this.state.muted); this.showSense('♬','Шаги звучат прямо за спиной.',true); }
+        else { simAudio.creak(this.state.muted); this.showSense('⌁','Дерево скрипит там, где нет пола.',true); }
+      }
+      if (tier >= 3) {
+        if (Math.random() < .72) { simAudio.maskWhisper(this.state.muted, 1.35); this.showSense('◉','Чужой голос произносит твоё имя.',true); }
+        if (Math.random() < .62) this.showFalseSilhouette();
+        if (Math.random() < .48) this.mirrorInventory();
+        if (Math.random() < .3) {
+          const caption = document.getElementById('soundCaption');
+          if (caption) caption.textContent = 'НЕ ТВОЙ ГОЛОС · совсем рядом';
+        }
+      }
+    }, 7200);
   }
 
   private startSanityDistortions() {
