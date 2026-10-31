@@ -20,7 +20,9 @@ export type ItemId =
   | 'copper_bell'
   | 'herbal_poultice'
   | 'warding_charm'
-  | 'ember_lantern';
+  | 'ember_lantern'
+  | 'black_seed'
+  | 'stitched_mask';
 
 export interface GameState {
   location: LocationId;
