@@ -49,6 +49,8 @@ export class ImmersionScene {
   private enemyTurnTimer: ReturnType<typeof setTimeout> | number = 0;
   private combatTarget: 'head' | 'torso' | 'arms' | 'legs' = 'torso';
   private enemyAttackPattern = '';
+  private enemyAttackStartedAt = 0;
+  private enemyAttackWindowMs = 1100;
   private initiative = 100;
   private enemyArmsWeakened = false;
   private enemyLegsSlowed = false;
@@ -209,7 +211,18 @@ export class ImmersionScene {
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.closeModal();
+      if (e.key === 'Escape') {
+        if (document.getElementById('combatScreen')?.classList.contains('open')) this.combatAction('flee');
+        else this.closeModal();
+        return;
+      }
+      if (!document.getElementById('combatScreen')?.classList.contains('open') || e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (key === '1' || key === 'a') this.combatAction('attack');
+      else if (key === '2' || key === ' ') this.combatDodge();
+      else if (key === '3' || key === 'g') this.combatAction('guard');
+      else if (key === '4' || key === 'i') this.combatAction('item');
+      else if (key === '5' || key === 'f') this.combatAction('flee');
     });
     window.addEventListener('pointerdown', () => simAudio.unlock(), { once: true });
   }
@@ -655,6 +668,8 @@ export class ImmersionScene {
     this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
     this.combatTurn = 0; this.combatTarget = 'torso';
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
+    const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
+    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller') + '.png';
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -696,7 +711,8 @@ export class ImmersionScene {
     let log = '';
     if (action === 'flee') { this.state.health = Math.max(0, this.state.health - 5); this.finishCombat('Ты отступил, получив ранение.'); return; }
     if (action === 'attack') {
-      const base = this.state.selected === 'ryokan_key' ? 18 : this.state.selected === 'stitched_mask' ? 3 : 11 + Math.floor(Math.random()*5);
+      const weaponDamage: Partial<Record<ItemId, number>> = { ryokan_key:7, wet_key_half:5, wet_key_other:5, ember_lantern:8, copper_bell:4, paper_lantern_shard:13, medicinal_herbs:2, stitched_mask:3 };
+      const base = this.state.selected ? (weaponDamage[this.state.selected] ?? 10) : 8 + Math.floor(Math.random()*4);
       const armPenalty = this.state.injuries.includes('arm') ? 4 : 0;
       const accuracy: Record<string,number> = {head:.48,torso:.82,arms:.72,legs:.68};
       const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg') ? .08 : 0);
@@ -714,9 +730,32 @@ export class ImmersionScene {
       }
     } else if (action === 'guard') { this.guarding = true; this.initiative = Math.min(100,this.initiative+12); log = 'Ты закрываешься. Следующий удар будет слабее.'; }
     else if (action === 'item') {
-      if (this.state.selected === 'herbal_poultice') { this.state.health=Math.min(100,this.state.health+22); this.state.inventory=this.state.inventory.filter(x=>x!=='herbal_poultice'); this.state.selected=null; log='Повязка стягивает рану. +22 здоровья.'; }
-      else if (this.state.selected === 'warding_charm') { this.state.sanity=Math.min(100,this.state.sanity+16); this.state.inventory=this.state.inventory.filter(x=>x!=='warding_charm'); this.state.selected=null; log='Оберег вспыхнул холодным светом. +16 рассудка.'; }
-      else { this.updateCombatHud('В руке нет подходящего предмета.'); return; }
+      const id = this.state.selected;
+      if (!id) { this.updateCombatHud('Выбери предмет в инвентаре, затем нажми ПРЕДМЕТ.'); return; }
+      if (id === 'herbal_poultice') {
+        this.state.health = Math.min(100, this.state.health + 22);
+        this.state.injuries = this.state.injuries.filter(x => x !== 'bleed');
+        log = 'Ты затянул рану повязкой. +22 HP · кровотечение остановлено.';
+      } else if (id === 'warding_charm') {
+        this.state.sanity = Math.min(100, this.state.sanity + 16);
+        log = 'Оберег поглотил шёпот. +16 рассудка.';
+      } else if (id === 'matchbox') {
+        this.initiative = Math.min(100, this.initiative + 28);
+        this.monsterHp = Math.max(0, this.monsterHp - 4);
+        log = 'Вспышка спугнула существо. +28 инициативы · 4 урона.';
+      } else if (id === 'ember_lantern') {
+        this.monsterHp = Math.max(0, this.monsterHp - (this.threatKind === 'light' ? 2 : 14));
+        this.initiative = Math.min(100, this.initiative + 18);
+        log = this.threatKind === 'light' ? 'Слепой не боится света. Он бросается ближе.' : 'Пламя обжигает тварь. +18 инициативы.';
+      } else if (id === 'stitched_mask') {
+        this.state.sanity = Math.max(0, this.state.sanity - 6);
+        this.monsterHp = Math.max(0, this.monsterHp - 12);
+        log = 'Маска отвечает чужим голосом. Существо отшатывается, но рассудок -6.';
+      } else {
+        this.updateCombatHud('Этот предмет нельзя безопасно использовать в бою. Попробуй другой.'); return;
+      }
+      if (['herbal_poultice','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
+      this.state.selected = null;
       this.renderInv(); this.renderVitals();
     } else { this.noiseUntil=Date.now()+12000; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
     if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
@@ -739,19 +778,23 @@ export class ImmersionScene {
     if(dodge){dodge.disabled=false;dodge.classList.add('dodge-window');}
     const phase=document.getElementById('combatPhase'); if(phase) phase.textContent=this.threatKind==='light'?'ПРЫЖОК · УКЛОНИСЬ':this.threatKind==='sound'?'ЗВУКОВОЙ ИМПУЛЬС · ЗАЩИТИСЬ':'ЗАХВАТ · УКЛОНИСЬ';
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
-    const windowMs=this.state.injuries.includes('leg')?720:this.enemyLegsSlowed?1450:this.threatKind==='light'?850:1150;
+    const windowMs=this.state.injuries.includes('leg')?680:this.enemyLegsSlowed?1550:this.threatKind==='light'?900:this.threatKind==='sound'?1250:1050;
+    this.enemyAttackStartedAt = Date.now();
+    this.enemyAttackWindowMs = windowMs;
     const bar=document.getElementById('enemyTelegraph') as HTMLElement|null; if(bar){bar.style.transition='none';bar.style.width='100%';requestAnimationFrame(()=>{bar.style.transition='width '+windowMs+'ms linear';bar.style.width='0%';});}
     simAudio.monster(this.state.muted);
     this.enemyTurnTimer=setTimeout(()=>this.resolveEnemyAttack(false),windowMs);
   }
 
   private combatDodge() {
-    if(!this.dodgeReady)return;
-    if(this.enemyTurnTimer)clearTimeout(this.enemyTurnTimer as number);
-    this.resolveEnemyAttack(true);
+    if (!this.dodgeReady) return;
+    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    const progress = Math.min(1, (Date.now() - this.enemyAttackStartedAt) / this.enemyAttackWindowMs);
+    const perfect = progress >= .62 && progress <= .88;
+    this.resolveEnemyAttack(perfect, perfect ? 'perfect' : progress < .62 ? 'early' : 'late');
   }
 
-  private resolveEnemyAttack(evaded:boolean) {
+  private resolveEnemyAttack(evaded:boolean, timing: 'perfect'|'early'|'late' = 'late') {
     if(!this.dodgeReady)return;
     this.dodgeReady=false;
     const dodge=document.getElementById('combatDodge') as HTMLButtonElement|null;
@@ -763,7 +806,7 @@ export class ImmersionScene {
     if(this.threatKind==='light'&&!evaded) wound='leg';
     if(this.threatKind==='sound'&&!evaded){this.state.sanity=Math.max(0,this.state.sanity-9);wound='arm';}
     if(this.threatKind==='dweller'&&!evaded) wound='bleed';
-    const damage=evaded?0:this.guarding?Math.ceil(incoming*.28):incoming;
+    const damage=evaded?0:this.guarding?Math.ceil(incoming*.28):timing === 'early' ? Math.ceil(incoming * .55) : timing === 'late' ? Math.ceil(incoming * .8) : incoming;
     this.guarding=false; this.enemyArmsWeakened=false; this.enemyLegsSlowed=false;
     if(!evaded){
       this.state.health=Math.max(0,this.state.health-damage);
@@ -772,7 +815,7 @@ export class ImmersionScene {
       document.body.classList.remove('player-hit');void document.body.clientWidth;document.body.classList.add('player-hit');setTimeout(()=>document.body.classList.remove('player-hit'),360);
     }else{simAudio.evade(this.state.muted);art?.classList.add('miss');setTimeout(()=>art?.classList.remove('miss'),380);this.initiative=Math.min(100,this.initiative+18);}
     this.renderVitals();this.renderCombatWounds();
-    const detail=evaded?'Ты ушёл с линии атаки. Инициатива возвращается.':'Удар достиг цели: -'+damage+' HP.'+(wound?' Получено состояние: '+wound+'.':'');
+    const detail=evaded?'ИДЕАЛЬНОЕ УКЛОНЕНИЕ · ты ушёл с линии атаки. Инициатива возвращается.':(timing === 'early' ? 'РАННЕЕ УКЛОНЕНИЕ · ' : 'НЕУДАЧНЫЙ РЫВОК · ')+'Удар достиг цели: -'+damage+' HP.'+(wound?' Получено состояние: '+wound+'.':'');
     this.updateCombatHud(detail);
     saveState(this.state);
     if(this.state.health<=0)this.finishCombat('Ты падаешь. Сознание гаснет…');
