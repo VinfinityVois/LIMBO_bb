@@ -693,7 +693,7 @@ export class ImmersionScene {
       const base = this.state.selected === 'ryokan_key' ? 18 : this.state.selected === 'stitched_mask' ? 3 : 11 + Math.floor(Math.random()*5);
       const armPenalty = this.state.injuries.includes('arm') ? 4 : 0;
       const accuracy: Record<string,number> = {head:.48,torso:.82,arms:.72,legs:.68};
-      const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg')?.08:0);
+      const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg') ? .08 : 0);
       if (!hit) log = 'Ты промахнулся. Существо успело сместиться.';
       else {
         const critChance = this.combatTarget === 'head' ? .38 : .08;
