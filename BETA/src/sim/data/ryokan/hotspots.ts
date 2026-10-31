@@ -101,6 +101,18 @@ export const HOTSPOTS: HotspotDef[] = [
     takenFlag: 'took_bell',
   },
   {
+    id: 'hs_seed', location: 'garden', x: 82, y: 56, w: 8, h: 10,
+    label: 'Чёрное семя',
+    examine: 'Между корнями лежит тёмное семя. Вокруг него дождевые капли стекают вверх по коре.',
+    item: 'black_seed', takenFlag: 'took_black_seed',
+  },
+  {
+    id: 'hs_mask', location: 'storage', x: 70, y: 43, w: 10, h: 14,
+    label: 'Сшитая маска',
+    examine: 'На полке сидит бумажная маска. Чёрная нить прошивает глазницы. Изнутри доносится слабое дыхание.',
+    item: 'stitched_mask', takenFlag: 'took_stitched_mask',
+  },
+  {
     id: 'hs_anchor',
     location: 'storage',
     x: 50, y: 48, w: 16, h: 20,
