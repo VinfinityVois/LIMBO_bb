@@ -712,7 +712,7 @@ body.combat-active .game-hud,body.combat-active .float-ctrl{filter:brightness(.4
 @keyframes dodge-pulse{to{box-shadow:0 0 28px #ff9d4caa;filter:brightness(1.3)}}
 body.player-hit .combat-panel{animation:player-impact .32s ease-out}
 @keyframes player-impact{0%,100%{transform:translateX(0)}18%{transform:translateX(-9px)}42%{transform:translateX(7px)}68%{transform:translateX(-4px)}}
-body.mask-worn .stage:after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#4b1d3322 100%);mix-blend-mode:screen;animation:mask-pulse 7s ease-in-out infinite}
+body.mask-worn .sim-stage:after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#4b1d3322 100%);mix-blend-mode:screen;animation:mask-pulse 7s ease-in-out infinite}
 body.mask-worn .zone-whisper{color:#d5a2b3;text-shadow:0 0 10px #b63d6c66}
 @keyframes mask-pulse{0%,100%{opacity:.2}50%{opacity:.8}}
 @media(prefers-reduced-motion:reduce){.scene-creature,.scene-creature:after,.combat-monster-art:before,.combat-monster-art:after,.combat-actions #combatDodge.dodge-window,body.player-hit .combat-panel{animation:none!important}}
