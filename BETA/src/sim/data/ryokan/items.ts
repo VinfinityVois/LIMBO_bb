@@ -122,6 +122,14 @@ export const ITEMS: Record<ItemId, ItemDef> = {
     color: '#e6a64f',
     svg: `<path d="M20 20 Q32 8 44 20 L48 39 Q32 54 16 39 Z" fill="#9d6332" fill-opacity=".35" stroke="#e6a64f" stroke-width="2"/><path d="M32 14 Q22 29 32 38 Q42 29 32 14" fill="#ffd17b" stroke="#fff0bf" stroke-width="1.5"/><path d="M24 45 H40" stroke="#e6a64f" stroke-width="2"/>`,
   },
+  black_seed: {
+    id: 'black_seed', name: 'Чёрное семя', short: 'СЕМЯ', examine: 'Маленькое семя, покрытое маслянистой плёнкой. Оно пульсирует в такт сердцу, хотя ты не касаешься его.', color: '#a65c78',
+    svg: `<path d="M32 8 Q55 23 42 48 Q30 62 18 43 Q7 21 32 8Z" fill="#17121b" stroke="#b15d79" stroke-width="2"/><path d="M32 15 Q25 31 37 46" fill="none" stroke="#e07a91" stroke-width="2"/><circle cx="29" cy="28" r="3" fill="#d85b75"/>`,
+  },
+  stitched_mask: {
+    id: 'stitched_mask', name: 'Сшитая маска', short: 'МАСКА', examine: 'Детская маска из сырой бумаги. Глазницы зашиты чёрной нитью. На внутренней стороне свежая надпись: «НЕ НАДЕВАЙ».', color: '#b7a98f',
+    svg: `<path d="M13 17 Q32 5 51 17 L47 44 Q32 60 17 44 Z" fill="#b7a98f" fill-opacity=".2" stroke="#cbbda4" stroke-width="2"/><path d="M20 29 L29 34 M44 29 L35 34 M20 25 L30 37 M44 25 L34 37" stroke="#11151a" stroke-width="2"/><path d="M26 45 Q32 41 38 45" fill="none" stroke="#a85c65" stroke-width="2"/>`,
+  },
 };
 
 export const RECIPES = [
