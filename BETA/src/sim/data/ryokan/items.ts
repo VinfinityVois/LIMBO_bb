@@ -90,11 +90,37 @@ export const ITEMS: Record<ItemId, ItemDef> = {
     short: 'СПИЧКИ',
     examine: 'Пустой на вид. Внутри одна сырая спичка. На крышке печать штаба Востока, перечёркнутая красным.',
     color: '#e02848',
-    svg: `<rect x="12" y="20" width="40" height="24" rx="2" fill="none" stroke="#e02848" stroke-width="2"/>
-      <rect x="16" y="24" width="32" height="16" fill="none" stroke="#8a2030" stroke-width="1"/>
-      <path d="M20 28 H44 M20 36 H36" stroke="#6a7590" stroke-width="1"/>
-      <path d="M22 22 L42 42 M42 22 L22 42" stroke="#e02848" stroke-width="1.5" opacity="0.7"/>
-      <line x1="48" y1="18" x2="52" y2="14" stroke="#e8a020" stroke-width="1.5"/>`,
+    svg: `<rect x="12" y="20" width="40" height="24" rx="2" fill="none" stroke="#e02848" stroke-width="2"/><rect x="16" y="24" width="32" height="16" fill="none" stroke="#8a2030" stroke-width="1"/><path d="M20 28 H44 M20 36 H36" stroke="#6a7590" stroke-width="1.2"/><path d="M22 22 L42 42 M42 22 L22 42" stroke="#e02848" stroke-width="1.5" opacity="0.7"/>`,
+  },
+  medicinal_herbs: {
+    id: 'medicinal_herbs', name: 'Горькие травы', short: 'ТРАВЫ',
+    examine: 'Пучок горьких листьев, перевязанный сухим стеблем. Пахнет землёй и полынью. Если растереть листья, сок остановит кровь.',
+    color: '#91b66c',
+    svg: `<path d="M32 54 Q26 35 12 20 Q31 20 32 43 Q36 19 53 13 Q52 36 34 48" fill="#668b55" stroke="#a9c98a" stroke-width="2"/><path d="M32 54 Q31 35 32 16 M32 38 L20 28 M33 32 L45 22" stroke="#c5d99a" stroke-width="2" fill="none"/>`,
+  },
+  copper_bell: {
+    id: 'copper_bell', name: 'Медный колокольчик', short: 'ЗВОНОК',
+    examine: 'Старый колокольчик с трещиной у края. Внутри нет язычка. Даже без звука от него становится спокойнее.',
+    color: '#c58a52',
+    svg: `<path d="M18 42 Q20 35 22 24 Q32 10 42 24 Q44 35 46 42 Z" fill="#8e633f" stroke="#d9ae78" stroke-width="2"/><path d="M15 43 H49 M29 48 Q32 53 35 48" stroke="#d9ae78" stroke-width="2" fill="none"/><circle cx="32" cy="22" r="3" fill="#e9c18b"/>`,
+  },
+  herbal_poultice: {
+    id: 'herbal_poultice', name: 'Травяная повязка', short: 'ПОВЯЗКА',
+    examine: 'Свежие листья, плотно обёрнутые шёлковой нитью. Пахнет горечью. Повязка может восстановить 25 единиц здоровья.',
+    color: '#9ab77a',
+    svg: `<path d="M15 24 Q32 12 49 24 L45 43 Q32 53 19 43 Z" fill="#718e5a" stroke="#c2d39a" stroke-width="2"/><path d="M18 30 L46 38 M20 39 L43 27" stroke="#e0d5b0" stroke-width="3"/>`,
+  },
+  warding_charm: {
+    id: 'warding_charm', name: 'Тихий оберег', short: 'ОБЕРЕГ',
+    examine: 'Осколок фонаря, обмотанный шёлком. На бумаге проступил знак, которого раньше не было. Оберег возвращает 20 единиц рассудка.',
+    color: '#d0b77a',
+    svg: `<path d="M32 8 L49 25 L32 56 L15 25 Z" fill="#b49b65" fill-opacity=".25" stroke="#d8c48d" stroke-width="2"/><path d="M32 16 V48 M22 29 H42 M25 39 L39 23" stroke="#e9d8a8" stroke-width="2"/>`,
+  },
+  ember_lantern: {
+    id: 'ember_lantern', name: 'Тлеющий фонарь', short: 'ФОНАРЬ',
+    examine: 'Спичка обожгла край бумаги, но не погасла. Внутри дрожит слабый огонёк. Свет помогает удержать мысли в темноте и возвращает 12 единиц рассудка.',
+    color: '#e6a64f',
+    svg: `<path d="M20 20 Q32 8 44 20 L48 39 Q32 54 16 39 Z" fill="#9d6332" fill-opacity=".35" stroke="#e6a64f" stroke-width="2"/><path d="M32 14 Q22 29 32 38 Q42 29 32 14" fill="#ffd17b" stroke="#fff0bf" stroke-width="1.5"/><path d="M24 45 H40" stroke="#e6a64f" stroke-width="2"/>`,
   },
 };
 
@@ -104,6 +130,21 @@ export const RECIPES = [
     b: 'wet_key_other' as ItemId,
     result: 'ryokan_key' as ItemId,
     message: 'Половины сомкнулись с тихим щелчком. Ключ целый. Металл на мгновение теплеет.',
+  },
+  {
+    a: 'medicinal_herbs' as ItemId, b: 'silk_thread' as ItemId,
+    result: 'herbal_poultice' as ItemId,
+    message: 'Ты растираешь листья и стягиваешь их шёлковой нитью. Получилась лечебная повязка.',
+  },
+  {
+    a: 'paper_lantern_shard' as ItemId, b: 'silk_thread' as ItemId,
+    result: 'warding_charm' as ItemId,
+    message: 'Нить легла на бумагу странным знаком. Получился тихий оберег.',
+  },
+  {
+    a: 'paper_lantern_shard' as ItemId, b: 'matchbox' as ItemId,
+    result: 'ember_lantern' as ItemId,
+    message: 'Сырая спичка вспыхнула неестественно ровно. Осколок фонаря удержал огонёк.',
   },
 ];
 
