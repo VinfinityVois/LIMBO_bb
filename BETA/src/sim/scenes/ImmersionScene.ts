@@ -401,6 +401,28 @@ export class ImmersionScene {
   }
 
   private itemAsset(id: ItemId): string {
+    // The legacy fox_mask.png is an atlas fragment, not a standalone sprite.
+    // Render a self-contained transparent vector until a clean painted asset is supplied.
+    if (id === 'stitched_mask') {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280">
+        <defs>
+          <linearGradient id="paper" x2="0.8" y2="1"><stop stop-color="#e3d5bd"/><stop offset=".48" stop-color="#a9957c"/><stop offset="1" stop-color="#54463e"/></linearGradient>
+          <linearGradient id="ink" x2="1" y2="1"><stop stop-color="#17191c"/><stop offset="1" stop-color="#05070a"/></linearGradient>
+          <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
+        </defs>
+        <ellipse cx="120" cy="252" rx="70" ry="12" fill="#000" opacity=".55" filter="url(#shadow)"/>
+        <path d="M42 72 Q10 26 20 10 Q64 22 85 52 M198 72 Q230 26 220 10 Q176 22 155 52" fill="none" stroke="#6d2929" stroke-width="5" stroke-linecap="round"/>
+        <path d="M120 22 C85 30 48 70 42 125 Q38 196 120 252 Q202 196 198 125 C192 70 155 30 120 22Z" fill="url(#paper)" stroke="#2b2523" stroke-width="8"/>
+        <path d="M120 31 C90 54 69 92 68 143 Q68 196 120 235 Q172 196 172 143 C171 92 150 54 120 31Z" fill="none" stroke="#453a34" stroke-width="2" opacity=".8"/>
+        <path d="M53 112 Q86 77 108 119 Q88 144 55 132Z M187 112 Q154 77 132 119 Q152 144 185 132Z" fill="url(#ink)" stroke="#2b2422" stroke-width="4"/>
+        <path d="M120 100 L105 156 L120 171 L135 156Z" fill="#3b302d" stroke="#1b1717" stroke-width="3"/>
+        <path d="M80 179 Q120 198 160 179 M95 196 Q120 210 145 196" fill="none" stroke="#6b282b" stroke-width="4" stroke-linecap="round"/>
+        <path d="M120 25 L120 245" stroke="#eee0c8" stroke-width="2" stroke-dasharray="4 8" opacity=".65"/>
+        <path d="M43 126 Q32 146 47 164 M197 126 Q208 146 193 164" fill="none" stroke="#7d292d" stroke-width="3"/>
+        <circle cx="120" cy="58" r="5" fill="#7c252b"/><circle cx="120" cy="58" r="2" fill="#e8c7a5"/>
+      </svg>`;
+      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+    }
     const files: Partial<Record<ItemId,string>> = {
       ryokan_key:'key', wet_key_half:'key', wet_key_other:'key', paper_lantern_shard:'mirror_shard',
       kokeshi_note:'sealed_scroll', silk_thread:'red_cord', matchbox:'matches',
