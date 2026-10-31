@@ -169,11 +169,7 @@ export class ImmersionScene {
       if (!this.state.selected) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
       this.openItemExam(this.state.selected);
     });
-    document.getElementById('btnUseItem')?.addEventListener('click', () => {
-      if (!this.state.selected) { this.notify('Выбери предмет, который хочешь применить', 'warn'); return; }
-      this.notify('Предмет готов. Выбери объект или точку взаимодействия в сцене.', 'info');
-      this.pulseMatrix('ok');
-    });
+    document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
@@ -461,7 +457,7 @@ export class ImmersionScene {
   private renderInv() {
     this.invEl.innerHTML = '';
     const count = document.getElementById('inventoryCount');
-    if (count) count.textContent = this.state.inventory.length + ' / 8';
+    if (count) count.textContent = this.state.inventory.length + ' / 12';
     if (!this.state.inventory.length) {
       this.invEl.innerHTML = '<div class="inv-empty">ИНВЕНТАРЬ ПУСТ</div>';
       this.syncHand();
@@ -480,6 +476,12 @@ export class ImmersionScene {
         this.openItemExam(id);
       });
       this.invEl.appendChild(slot);
+    }
+    for (let i = this.state.inventory.length; i < 12; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'inv-slot inv-slot-empty';
+      empty.setAttribute('aria-hidden', 'true');
+      this.invEl.appendChild(empty);
     }
     this.syncHand();
     this.renderVitals();
@@ -504,6 +506,38 @@ export class ImmersionScene {
     sel.textContent = this.state.selected
       ? 'В РУКАХ: ' + ITEMS[this.state.selected].name
       : 'В РУКАХ: —';
+    const preview = document.getElementById('selectedItemPreview');
+    if (preview) preview.textContent = this.state.selected
+      ? ITEMS[this.state.selected].name + ' · ' + ITEMS[this.state.selected].examine
+      : 'Выбери предмет в инвентаре, чтобы увидеть описание и действия.';
+  }
+
+  private useSelectedItem() {
+    const id = this.state.selected;
+    if (!id) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
+    const effects: Partial<Record<ItemId, { field: 'health' | 'sanity'; amount: number; message: string }>> = {
+      herbal_poultice: { field: 'health', amount: 25, message: 'Ты перевязал рану. Боль отступает.' },
+      warding_charm: { field: 'sanity', amount: 20, message: 'Оберег холодеет в ладони. Мысли становятся яснее.' },
+      ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
+    };
+    const effect = effects[id];
+    if (!effect) {
+      this.notify('Выбери объект сцены и нажми на него, чтобы применить предмет.', 'info');
+      return;
+    }
+    const before = this.state[effect.field];
+    this.state[effect.field] = Math.min(100, before + effect.amount);
+    if (this.state[effect.field] === before) {
+      this.notify('Сейчас это не требуется.', 'info');
+      return;
+    }
+    this.state.inventory = this.state.inventory.filter((item) => item !== id);
+    this.state.selected = null;
+    saveState(this.state);
+    simAudio.take(this.state.muted);
+    this.notify(effect.message, 'ok');
+    this.renderInv();
+    this.renderVitals();
   }
 
   private onInv(id: ItemId) {
