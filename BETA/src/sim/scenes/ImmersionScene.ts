@@ -63,6 +63,8 @@ export class ImmersionScene {
   private threatStartedAt = 0;
   private hallucinationCount = 0;
   private diving = true;
+  private defeatShown = false;
+  private sanityCollapseTick = 0;
 
   constructor() {
     this.state = loadState();
@@ -110,6 +112,7 @@ export class ImmersionScene {
     this.buildExits();
     this.renderInv();
     this.renderVitals();
+    this.checkDefeat();
     this.renderMinimap();
     this.updateZone();
     this.startWorldClock();
@@ -240,6 +243,14 @@ export class ImmersionScene {
       if (this.threatActive || Date.now() < this.threatCooldown) return;
       const stayed = Date.now() - this.roomEnteredAt;
       this.tickMaskEffects();
+      if (this.state.sanity <= 0 && !this.state.defeated) {
+        this.sanityCollapseTick += 1;
+        this.state.health = Math.max(0, this.state.health - 8);
+        this.notify('Рассудок исчез. Тело больше не различает реальность.', 'warn');
+        this.renderVitals();
+        saveState(this.state);
+        if (this.state.health <= 0) return;
+      } else this.sanityCollapseTick = 0;
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
@@ -598,12 +609,61 @@ export class ImmersionScene {
         saveState(this.state);simAudio.take(this.state.muted);this.pulseMatrix('ok');this.closeModal();this.buildHotspots();this.renderInv();this.renderVitals();
       });
     }
-    if(hs.complete)add('СТАБИЛИЗИРОВАТЬ','solid',()=>{
-      this.state.completed=true;saveState(this.state);markSceneDone();simAudio.complete(this.state.muted);
-      this.notify('Сектор стабилизирован · Сцена 01','ok');this.pulseMatrix('ok');this.closeModal();
-      setTimeout(()=>{window.location.href='/scene-ryokan.html';},1600);
+    if(hs.complete)add('ВЫБРАТЬ ИСХОД','solid',()=>{
+      const title=document.getElementById('modalTitle'); if(title) title.textContent='ПОСЛЕДНИЙ ВЫБОР';
+      const body=document.getElementById('modalBody'); if(body) body.textContent='Канал отвечает твоим голосом. Мы можем очистить его, связать себя с ним или разрушить узел. Этот выбор останется с нами в следующих секторах.';
+      const visual=document.getElementById('modalVisual'); if(visual) visual.innerHTML='<div class="ending-sigil" aria-hidden="true">◇</div>';
+      const actions=document.getElementById('modalActions'); if(!actions)return; actions.innerHTML='';
+      const options=[
+        ['ОЧИСТИТЬ КАНАЛ','clear','Мы сохраняем себя. Следующая сцена начнётся с более ясным рассудком.'],
+        ['ПРИНЯТЬ СВЯЗЬ','bind','Маска останется частью нас. Мы получим доступ к закрытым голосам, но начнём следующую сцену с меньшим рассудком.'],
+        ['РАЗРУШИТЬ УЗЕЛ','break','Угроза ослабнет, но часть найденных вещей будет потеряна. Следующая сцена начнётся с ранения.']
+      ] as const;
+      for(const [label,ending,hint] of options){
+        const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent=label; b.title=hint;
+        b.addEventListener('click',()=>this.chooseEnding(ending)); actions.appendChild(b);
+      }
+      const note=document.getElementById('modalNote'); if(note) note.textContent='Выбор необратим в рамках текущего прохождения.';
     });
     modal.classList.add('open');simAudio.open(this.state.muted);
+  }
+
+  private chooseEnding(ending: 'clear'|'bind'|'break') {
+    this.state.completed = true;
+    this.state.ending = ending;
+    this.state.flags.ending_clear = ending === 'clear';
+    this.state.flags.ending_bind = ending === 'bind';
+    this.state.flags.ending_break = ending === 'break';
+    if (ending === 'clear') {
+      this.state.sanity = Math.min(100, this.state.sanity + 18);
+      this.state.flags.channel_clean = true;
+      this.state.flags.mask_voice_known = false;
+    } else if (ending === 'bind') {
+      this.state.maskWorn = true;
+      this.maskWorn = true;
+      this.state.sanity = Math.max(1, this.state.sanity - 12);
+      this.state.flags.mask_voice_known = true;
+      this.state.flags.channel_bound = true;
+      document.body.classList.add('mask-worn');
+    } else {
+      this.state.health = Math.max(1, this.state.health - 12);
+      this.state.inventory = this.state.inventory.filter(id => id !== 'black_seed');
+      this.state.selected = this.state.inventory.includes(this.state.selected as ItemId) ? this.state.selected : null;
+      this.state.flags.channel_broken = true;
+      this.state.flags.creatures_weakened = true;
+    }
+    saveState(this.state);
+    markSceneDone();
+    simAudio.complete(this.state.muted);
+    this.closeModal();
+    this.renderInv();
+    this.renderVitals();
+    const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
+      ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
+      'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
+    this.notify(copy,'ok');
+    this.showSense('◇',copy,ending !== 'clear');
+    window.setTimeout(()=>{ window.location.href='/scene-ryokan.html'; },1800);
   }
 
   private closeModal() {
@@ -650,6 +710,30 @@ export class ImmersionScene {
     if (healthValue) healthValue.textContent = String(health);
     if (sanityValue) sanityValue.textContent = String(sanity);
     this.applySanityTier(sanity);
+    this.checkDefeat();
+  }
+
+  private checkDefeat() {
+    if (this.defeatShown || this.state.defeated || this.state.health > 0) return;
+    this.defeatShown = true;
+    this.state.health = 0;
+    this.state.defeated = true;
+    saveState(this.state);
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    this.threatActive = false;
+    document.getElementById('threatOverlay')?.classList.remove('open');
+    document.getElementById('combatScreen')?.classList.remove('open');
+    document.getElementById('sceneCreature')?.remove();
+    document.body.classList.remove('combat-active','threat-active');
+    const overlay = document.createElement('section');
+    overlay.className = 'limbo-defeat';
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.innerHTML = '<div class="limbo-defeat-panel"><span>СИГНАЛ ПОТЕРЯН · RK-01</span><h1>СУБЪЕКТ ПОТЕРЯН</h1><p>Тело больше не отвечает. Сектор завершился поражением.</p><button type="button" id="defeatRestart">НАЧАТЬ ЗАНОВО</button><a href="/scene-ryokan.html">ВЕРНУТЬСЯ К ДОСЬЕ</a></div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#defeatRestart')?.addEventListener('click', () => { resetSim(); window.location.reload(); });
+    simAudio.deny(this.state.muted);
   }
 
   private syncHand() {
@@ -959,39 +1043,6 @@ export class ImmersionScene {
     };
     tick();
     this.threatApproachTimer = window.setInterval(tick, 90);
-  }
-
-  private startSanityDistortions() {
-    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
-    this.hallucinationTimer = setInterval(() => {
-      const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
-      if (sanity >= 65 || this.threatActive || document.getElementById('combatScreen')?.classList.contains('open')) return;
-      const tier = sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
-      const thoughts = tier === 1
-        ? ['Не оборачивайся. Там просто дождь.', 'Шаги повторяют твой темп.', 'На секунду показалось, что фонарь погас.']
-        : tier === 2
-        ? ['Дверь была дальше. Почему она ближе?', 'Кто-то произнёс твоё имя изнутри стены.', 'Предмет в кармане кажется тёплым.']
-        : ['Это не выход. Это воспоминание о выходе.', 'Не доверяй силуэтам. Один из них — твой.', 'Ты забыл, сколько пальцев на руке.'];
-      const line = thoughts[this.thoughtIndex++ % thoughts.length];
-      const voice = document.getElementById('innerVoice');
-      if (voice) voice.textContent = line;
-      this.showSense('◉', line, true);
-      if (tier >= 1) this.spawnMovingShadow();
-      if (tier >= 2) {
-        this.triggerImageDistortion(tier);
-        if (Math.random() < .58) { simAudio.steps(this.state.muted); this.showSense('♬','Шаги звучат прямо за спиной.',true); }
-        else { simAudio.creak(this.state.muted); this.showSense('⌁','Дерево скрипит там, где нет пола.',true); }
-      }
-      if (tier >= 3) {
-        if (Math.random() < .72) { simAudio.maskWhisper(this.state.muted, 1.35); this.showSense('◉','Чужой голос произносит твоё имя.',true); }
-        if (Math.random() < .62) this.showFalseSilhouette();
-        if (Math.random() < .48) this.mirrorInventory();
-        if (Math.random() < .3) {
-          const caption = document.getElementById('soundCaption');
-          if (caption) caption.textContent = 'НЕ ТВОЙ ГОЛОС · совсем рядом';
-        }
-      }
-    }, 7200);
   }
 
   private startSanityDistortions() {
