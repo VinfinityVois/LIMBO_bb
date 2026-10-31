@@ -25,7 +25,7 @@
   <div id="notifyHost" class="notify-host"></div>
   <div id="hoverCard" class="hover-card"></div>
   <div id="revealFlash" class="reveal-flash" aria-hidden="true"></div>
-  <header class="world-hud"><div class="world-clock"><span class="clock-mark">◔</span><strong id="worldTime">04:37</strong><small id="worldDate">15.10.2025</small></div><div class="sound-readout"><span>◖))</span><div class="sound-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="soundCaption">Шаги… (далеко)</small></div></header>
+  <header class="world-hud"><div class="world-clock"><span class="clock-mark">◔</span><strong id="worldTime">04:37</strong><small id="worldDate">15.10.2025</small></div><div class="sound-readout"><span>◖))</span><div class="sound-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="soundCaption">Шаги… (далеко)</small></div><div class="danger-readout"><span>УГРОЗА</span><b id="dangerValue">НИЗКАЯ</b><i><em id="dangerFill"></em></i><small id="watchValue">ЗА ВАМИ НЕ СЛЕДЯТ</small></div></header>
   <div class="sense-feed" id="senseFeed" aria-live="polite"></div>
   <section class="threat-overlay" id="threatOverlay" aria-live="assertive" aria-hidden="true">
     <div class="threat-silhouette" aria-hidden="true"><span></span><i></i></div>
@@ -36,7 +36,7 @@
   <div class="float-ctrl">
     <button type="button" id="btnExit" title="Выход">✕</button>
     <button type="button" id="btnMute">SFX ON</button>
-    <button type="button" id="btnReset" title="Сброс">↻</button>
+    <button type="button" id="btnReset" title="Сброс">↻</button><button type="button" id="btnCall" title="Окликнуть">ЭХО</button>
   </div>
 
   <div class="zone-whisper">
@@ -88,6 +88,18 @@
     <aside class="hud-radar"><div class="radar-heading">ОРИЕНТИР</div><div id="miniMap" class="mini"></div><div class="radar-signal" id="radarSignal">СИГНАЛ СТАБИЛЕН</div></aside>
   </section>
 
+  <section class="combat-screen" id="combatScreen" aria-hidden="true">
+    <div class="combat-backdrop"></div>
+    <div class="combat-panel">
+      <div class="combat-top"><span class="hud-eyebrow">КОНТАКТ · RK-01</span><strong id="combatPhase">СУЩЕСТВО НАПАДАЕТ</strong><button id="combatFlee" type="button">ОТСТУПИТЬ</button></div>
+      <div class="combat-arena">
+        <div class="combat-monster-art" id="combatMonsterArt"><i></i><b></b></div>
+        <div class="combat-stats"><strong id="combatMonsterName">СЛУШАТЕЛЬ</strong><span>ЗДОРОВЬЕ СУЩЕСТВА <b id="monsterHpText">42 / 42</b></span><div class="combat-bar monster"><i id="monsterHpFill"></i></div><p id="combatLog">Оно приближается.</p></div>
+      </div>
+      <div class="combat-player"><span>ТВОЁ ЗДОРОВЬЕ <b id="combatPlayerHp">100</b></span><div class="combat-bar player"><i id="combatPlayerFill"></i></div></div>
+      <div class="combat-actions"><button id="combatAttack" type="button">АТАКОВАТЬ</button><button id="combatGuard" type="button">ЗАЩИТИТЬСЯ</button><button id="combatItem" type="button">ПРЕДМЕТ</button><button id="combatNoise" type="button">ОТВЛЕЧЬ</button></div>
+    </div>
+  </section>
   <div class="sim-modal" id="simModal">
     <div class="sim-modal-backdrop" id="modalBackdrop"></div>
     <div class="sim-modal-panel">
