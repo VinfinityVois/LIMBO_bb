@@ -66,6 +66,9 @@ export const simAudio = {
     this.tone(m, 75, 0.06, 'sine', 0.016);
     setTimeout(() => this.tone(m, 65, 0.05, 'sine', 0.012), 160);
   },
+  creak(m: boolean) { this.tone(m,145,.32,'sawtooth',.018,48); this.noiseBurst(m,.22,.012); },
+  whisper(m: boolean) { this.noiseBurst(m,.42,.018); this.tone(m,430,.35,'sine',.009,170); },
+  monster(m: boolean) { this.noiseBurst(m,.75,.055); this.tone(m,58,.9,'sawtooth',.045,24); setTimeout(() => this.tone(m,92,.45,'triangle',.026,38),180); },
   complete(m: boolean) {
     this.tone(m, 392, 0.1, 'sine', 0.035);
     setTimeout(() => this.tone(m, 523, 0.12, 'sine', 0.03), 100);
