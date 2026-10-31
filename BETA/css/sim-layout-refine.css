@@ -1,0 +1,176 @@
+/* LIMBO — compact, edge-aligned exploration HUD */
+:root{
+  --dock-h:166px;
+  --dock-bg:rgba(4,11,18,.96);
+  --dock-panel:linear-gradient(155deg,rgba(10,24,35,.96),rgba(4,12,20,.97));
+  --dock-line:rgba(67,155,181,.32);
+  --dock-cyan:#36d8ed;
+}
+html,body.immerse{width:100%;height:100%;height:100dvh;min-height:0;overflow:hidden}
+body.immerse{background:#03080d}
+.matrix-rail{display:none!important}
+.sim-stage{position:fixed!important;inset:0 0 var(--dock-h) 0!important;height:auto!important}
+.sim-stage canvas{width:100%;height:100%;object-fit:cover}
+
+/* Header: align clock and acoustic readout to the same top-right rail. */
+.world-hud{
+  position:fixed!important;inset:14px 18px auto auto!important;
+  width:auto!important;height:auto!important;z-index:80;
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  pointer-events:none;
+}
+.world-clock,.sound-readout{
+  position:static!important;display:flex!important;align-items:center;
+  width:auto!important;height:34px;gap:0!important;
+  padding:3px;background:rgba(3,12,20,.82);
+  border:1px solid rgba(58,143,169,.34);border-radius:4px;
+  box-shadow:0 8px 24px #0006;backdrop-filter:blur(12px);
+}
+.clock-mark{width:27px!important;height:26px!important;border:0!important;background:transparent!important}
+.world-clock strong{height:26px!important;line-height:26px!important;padding:0 10px!important;border:0!important;background:transparent!important}
+.world-clock small{align-self:center!important;margin:0 8px!important;font-size:9px!important}
+.sound-readout{gap:7px!important;padding:0 10px!important}
+.sound-readout>span{font-size:12px!important}
+.sound-meter{width:94px;height:13px;gap:3px!important}
+.sound-meter i{border-radius:2px;opacity:.82}
+.sound-readout small{margin:0 0 0 8px!important;white-space:nowrap;font-size:9px!important}
+.zone-whisper{left:24px!important;top:18px!important}
+#zoneLabel{font-size:15px!important;letter-spacing:.16em!important}
+#zoneSub{font-size:9px!important;letter-spacing:.12em!important}
+.sense-feed{left:20px!important;top:112px!important;width:min(220px,24vw)!important}
+.sense-feed>*{height:29px!important;padding-inline:9px!important;font-size:10px!important}
+.float-ctrl{top:14px!important;left:50%!important}
+
+/* Remove the location selector/map clutter. Navigation remains in the world itself. */
+.hud-radar,.radar-heading,.radar-tools,.radar-signal{display:none!important}
+
+/* One continuous dock: vitals | inventory | selected item. */
+.game-hud{
+  position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+  width:100%!important;height:var(--dock-h)!important;max-height:var(--dock-h)!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+  display:grid!important;
+  grid-template-columns:minmax(205px, .78fr) minmax(390px, 1.62fr) minmax(270px, .95fr)!important;
+  gap:8px!important;padding:8px 12px 10px!important;
+  background:linear-gradient(180deg,rgba(5,14,22,.97),rgba(2,7,12,.99))!important;
+  border-top:1px solid rgba(64,161,188,.34)!important;
+  box-shadow:0 -14px 38px #0008!important;
+}
+.game-hud>*{
+  min-width:0!important;min-height:0!important;height:100%!important;
+  box-sizing:border-box!important;padding:10px 12px!important;
+  overflow:hidden!important;border:1px solid var(--dock-line)!important;
+  border-radius:5px!important;background:var(--dock-panel)!important;
+  box-shadow:inset 0 1px #ffffff08,0 5px 16px #0003!important;
+}
+.hud-vitals{display:flex!important;flex-direction:column!important;justify-content:center!important;gap:9px!important}
+.hud-player{gap:10px!important;margin:0 0 2px!important}
+.hud-avatar{width:34px!important;height:34px!important;flex:0 0 34px!important}
+.hud-player strong{font-size:11px!important;letter-spacing:.15em!important}
+.hud-eyebrow{font-size:8px!important;letter-spacing:.17em!important}
+.vital-label{font-size:9px!important;letter-spacing:.1em!important}
+.vital-track{height:7px!important;margin-top:4px!important;border-radius:8px!important;overflow:hidden}
+.vital-track span{border-radius:8px!important}
+.vital-row+.vital-row{margin-top:1px!important}
+
+/* Inventory stays on one line on desktop; no clipped or half-hidden slots. */
+.hud-inventory{display:flex!important;flex-direction:column!important;justify-content:space-between!important}
+.inventory-heading{min-height:18px!important;margin:0!important}
+.inventory-heading strong,.utility-heading strong{font-size:11px!important;letter-spacing:.17em!important}
+.inventory-count{font-size:9px!important}
+.hud-inventory .inv{
+  display:grid!important;grid-template-columns:repeat(10,minmax(0,1fr))!important;
+  grid-auto-rows:64px!important;gap:5px!important;
+  width:100%!important;min-height:0!important;max-height:68px!important;
+  margin:4px 0 0!important;padding:2px!important;
+  overflow-x:hidden!important;overflow-y:hidden!important;
+}
+.hud-inventory .inv>*{
+  min-width:0!important;min-height:0!important;height:62px!important;
+  padding:4px!important;border-radius:4px!important;
+  background:linear-gradient(155deg,rgba(24,45,57,.92),rgba(7,17,26,.96))!important;
+  border:1px solid rgba(106,157,175,.34)!important;
+}
+.hud-inventory .inv>*:hover{border-color:rgba(54,216,237,.7)!important;background:#102c3a!important}
+.hud-inventory .inv>.selected,.hud-inventory .inv>.sel,.hud-inventory .inv>.active,.hud-inventory .inv>[aria-pressed=true]{
+  border:1px solid var(--dock-cyan)!important;
+  box-shadow:0 0 0 1px #36d8ed35,0 0 16px #36d8ed30!important;
+}
+.hud-inventory .inv img,.hud-inventory .inv-slot svg{
+  max-width:100%!important;max-height:43px!important;width:auto!important;height:auto!important;
+  object-fit:contain!important;filter:drop-shadow(0 3px 5px #000b)
+}
+.hud-inventory .inv>*::after{bottom:1px!important;font-size:8px!important}
+.inventory-hint{
+  display:flex!important;justify-content:flex-start!important;gap:12px!important;
+  margin:2px 0 0!important;padding:0!important;white-space:nowrap!important;
+  font-size:8px!important;letter-spacing:.06em!important
+}
+.inventory-hint kbd{height:15px!important;min-width:18px!important;font-size:8px!important;margin-right:4px!important}
+
+/* Selected item: compact, readable, action buttons never fall below the viewport. */
+.hud-utility{
+  display:grid!important;grid-template-columns:82px minmax(0,1fr)!important;
+  grid-template-rows:18px minmax(0,1fr) 28px!important;column-gap:11px!important;
+  align-content:stretch!important;
+}
+.utility-heading{grid-column:1/-1!important;min-width:0!important}
+.selected-item-card{display:contents!important}
+.selected-art{
+  grid-column:1!important;grid-row:2/4!important;align-self:center!important;
+  width:82px!important;height:88px!important;max-height:88px!important;margin:0!important;
+  border:0!important;border-radius:4px!important;
+  background:radial-gradient(ellipse,rgba(39,105,125,.2),rgba(3,11,18,.2) 72%)!important;
+}
+.selected-art img{max-width:100%!important;max-height:100%!important;object-fit:contain!important;filter:drop-shadow(0 5px 8px #000b)}
+.selected-copy{
+  grid-column:2!important;grid-row:2!important;min-width:0!important;
+  margin:3px 0 0!important;font-size:10px!important;line-height:1.4!important;
+  overflow:hidden!important;color:#a9bfca!important
+}
+.selected-copy strong{font-size:10px!important;letter-spacing:.1em!important}
+.selected-copy small{font-size:9px!important;line-height:1.35!important}
+.hud-actions{
+  grid-column:2!important;grid-row:3!important;display:flex!important;
+  align-self:end!important;gap:7px!important;margin:0!important;min-width:0!important
+}
+.hud-actions .hud-action{
+  height:26px!important;min-width:0!important;flex:1 1 0!important;
+  padding:0 7px!important;font-size:8px!important;letter-spacing:.08em!important;
+  white-space:nowrap!important;border-radius:3px!important
+}
+.interact-prompt{max-width:190px}
+#simModal .sim-modal-panel{max-width:calc(100vw - 28px)!important}
+
+/* Laptop and narrow windows: preserve the one-row dock as long as possible. */
+@media(max-width:1180px){
+  :root{--dock-h:154px}
+  .game-hud{grid-template-columns:minmax(175px,.72fr) minmax(330px,1.45fr) minmax(235px,.9fr)!important;gap:6px!important;padding:6px 8px 8px!important}
+  .game-hud>*{padding:8px!important}
+  .hud-inventory .inv{grid-template-columns:repeat(10,minmax(0,1fr))!important}
+  .inventory-hint{gap:7px!important;font-size:7px!important}
+  .world-hud{right:12px!important;top:10px!important}
+  .zone-whisper{left:16px!important;top:14px!important}
+}
+@media(max-width:900px){
+  :root{--dock-h:148px}
+  .game-hud{grid-template-columns:minmax(145px,.7fr) minmax(0,1.3fr)!important}
+  .hud-utility{display:none!important}
+  .hud-inventory .inv{grid-template-columns:repeat(10,minmax(0,1fr))!important}
+  .world-hud{gap:5px!important}
+  .sound-readout small{display:none!important}
+  .sound-meter{width:62px!important}
+}
+@media(max-height:760px){
+  :root{--dock-h:136px}
+  .game-hud{padding:5px 8px 7px!important}
+  .game-hud>*{padding:7px 9px!important}
+  .hud-inventory .inv{grid-auto-rows:54px!important;max-height:57px!important}
+  .hud-inventory .inv>*{height:52px!important}
+  .hud-inventory .inv img,.hud-inventory .inv-slot svg{max-height:36px!important}
+  .inventory-hint{display:none!important}
+  .selected-art{height:70px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-hud,.game-hud *{transition:none!important;animation:none!important}
+}
