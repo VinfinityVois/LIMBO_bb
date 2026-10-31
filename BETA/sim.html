@@ -317,7 +317,14 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
       <div class="combat-targets"><span>ЦЕЛЬ УДАРА</span>
         <button type="button" data-hit-zone="head">ГОЛОВА</button><button type="button" data-hit-zone="torso" class="selected">КОРПУС</button><button type="button" data-hit-zone="arms">РУКИ</button><button type="button" data-hit-zone="legs">НОГИ</button>
       </div>
-      <div class="combat-actions"><button id="combatAttack" type="button">АТАКОВАТЬ</button><button id="combatDodge" type="button" disabled>УКЛОНИТЬСЯ</button><button id="combatGuard" type="button">ЗАЩИТИТЬСЯ</button><button id="combatItem" type="button">ПРЕДМЕТ</button><button id="combatNoise" type="button">ОТВЛЕЧЬ</button></div>
+      <div class="combat-actions" aria-label="Боевые действия">
+        <button id="combatAttack" type="button" title="Клавиша 1 · A"><kbd>1</kbd> АТАКОВАТЬ</button>
+        <button id="combatDodge" type="button" disabled title="Клавиша 2 · Пробел"><kbd>2</kbd> УКЛОНИТЬСЯ</button>
+        <button id="combatGuard" type="button" title="Клавиша 3 · G"><kbd>3</kbd> ЗАЩИТИТЬСЯ</button>
+        <button id="combatItem" type="button" title="Клавиша 4 · I"><kbd>4</kbd> ПРЕДМЕТ</button>
+        <button id="combatNoise" type="button" title="Отвлекающий шум"><kbd>5</kbd> ОТВЛЕЧЬ</button>
+      </div>
+      <div class="combat-controls-hint">ВЫБЕРИ ЗОНУ ПОПАДАНИЯ · ЖМИ УКЛОНИТЬСЯ В МОМЕНТ УДАРА · ESC — ОТСТУПИТЬ</div>
     </div>
   </section>
 
