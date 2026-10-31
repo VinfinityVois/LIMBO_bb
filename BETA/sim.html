@@ -46,11 +46,41 @@
     <div class="scan" aria-hidden="true"></div>
   </div>
 
-  <div class="dock">
-    <div class="mini" id="miniMap"></div>
-    <div class="inv" id="invSlots"></div>
-    <div class="hand" id="handLabel">В РУКАХ: —</div>
-  </div>
+  <section class="game-hud" aria-label="Игровой интерфейс">
+    <div class="hud-vitals">
+      <div class="hud-player">
+        <div class="hud-avatar" aria-hidden="true">RK</div>
+        <div><span class="hud-eyebrow">СОСТОЯНИЕ</span><strong>СУБЪЕКТ 01</strong></div>
+      </div>
+      <div class="vital-row health">
+        <div class="vital-label"><span>♡ ЗДОРОВЬЕ</span><b id="healthValue">100</b></div>
+        <div class="vital-track"><span id="healthFill" style="width:100%"></span></div>
+      </div>
+      <div class="vital-row sanity">
+        <div class="vital-label"><span>◈ РАССУДОК</span><b id="sanityValue">100</b></div>
+        <div class="vital-track"><span id="sanityFill" style="width:100%"></span></div>
+      </div>
+    </div>
+
+    <div class="hud-inventory">
+      <div class="inventory-heading">
+        <div><span class="hud-eyebrow">СНАРЯЖЕНИЕ</span><strong>ИНВЕНТАРЬ</strong></div>
+        <span class="inventory-count" id="inventoryCount">0 / 8</span>
+      </div>
+      <div class="inv" id="invSlots" aria-label="Слоты предметов"></div>
+      <div class="inventory-hint">Выберите предмет · выберите второй для комбинации · ПКМ — осмотр</div>
+    </div>
+
+    <div class="hud-utility">
+      <div class="utility-heading"><span class="hud-eyebrow">НАВИГАЦИЯ</span><strong>МАРШРУТ</strong></div>
+      <div class="mini" id="miniMap"></div>
+      <div class="hand" id="handLabel">В РУКАХ: —</div>
+      <div class="hud-actions">
+        <button type="button" class="hud-action" id="btnInspectItem">ОСМОТРЕТЬ</button>
+        <button type="button" class="hud-action primary" id="btnUseItem">ПРИМЕНИТЬ</button>
+      </div>
+    </div>
+  </section>
 
   <div class="sim-modal" id="simModal">
     <div class="sim-modal-backdrop" id="modalBackdrop"></div>
