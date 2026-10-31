@@ -25,6 +25,12 @@
   <div id="notifyHost" class="notify-host"></div>
   <div id="hoverCard" class="hover-card"></div>
   <div id="revealFlash" class="reveal-flash" aria-hidden="true"></div>
+  <div class="sense-feed" id="senseFeed" aria-live="polite"></div>
+  <section class="threat-overlay" id="threatOverlay" aria-live="assertive" aria-hidden="true">
+    <div class="threat-silhouette" aria-hidden="true"><span></span><i></i></div>
+    <div class="threat-copy"><span class="hud-eyebrow">ДВИЖЕНИЕ В ТЕМНОТЕ</span><strong id="threatTitle">ЧТО-ТО ПРИБЛИЖАЕТСЯ</strong><p id="threatText">Не двигайся. Не смотри прямо на него.</p></div>
+    <div class="threat-actions"><button type="button" class="hud-action" id="btnHide">ЗАТАИТЬСЯ</button><button type="button" class="hud-action primary" id="btnConfront">ОТОГНАТЬ</button></div>
+  </section>
 
   <div class="float-ctrl">
     <button type="button" id="btnExit" title="Выход">✕</button>
