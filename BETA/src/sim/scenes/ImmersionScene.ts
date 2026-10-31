@@ -204,6 +204,17 @@ export class ImmersionScene {
     this.eventTimer = setInterval(() => {
       if (this.threatActive || Date.now() < this.threatCooldown) return;
       const stayed = Date.now() - this.roomEnteredAt;
+      const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
+      const dangerValue = document.getElementById('dangerValue');
+      const watchValue = document.getElementById('watchValue');
+      const activeNoise = Date.now() < this.noiseUntil;
+      const watched = this.threatActive || (activeNoise && Math.random() < .35);
+      if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
+      if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : activeNoise ? 'ПОВЫШЕНА' : watched ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
+      if (watchValue) watchValue.textContent = this.threatActive ? 'ОНО ВИДИТ ВАС' : watched ? 'ЗА ВАМИ НАБЛЮДАЮТ' : 'ЗА ВАМИ НЕ СЛЕДЯТ';
+      if (!activeNoise && !this.threatActive) {
+        const caption = document.getElementById('soundCaption'); if (caption) caption.textContent = 'Тишина… (слышен дождь)';
+      }
       // Each creature has its own trigger condition.
       if (this.lightActive && ['garden','engawa','hall'].includes(this.state.location) && Math.random() < .16) {
         this.startThreat('light'); return;
