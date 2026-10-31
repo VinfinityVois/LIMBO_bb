@@ -240,9 +240,6 @@ export class ImmersionScene {
   private scheduleEvents() {
     if (this.eventTimer) clearInterval(this.eventTimer as number);
     this.eventTimer = setInterval(() => {
-      if (this.threatActive || Date.now() < this.threatCooldown) return;
-      const stayed = Date.now() - this.roomEnteredAt;
-      this.tickMaskEffects();
       if (this.state.sanity <= 0 && !this.state.defeated) {
         this.sanityCollapseTick += 1;
         this.state.health = Math.max(0, this.state.health - 8);
@@ -251,6 +248,9 @@ export class ImmersionScene {
         saveState(this.state);
         if (this.state.health <= 0) return;
       } else this.sanityCollapseTick = 0;
+      if (this.threatActive || Date.now() < this.threatCooldown || this.state.defeated) return;
+      const stayed = Date.now() - this.roomEnteredAt;
+      this.tickMaskEffects();
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
@@ -634,6 +634,12 @@ export class ImmersionScene {
     this.state.flags.ending_clear = ending === 'clear';
     this.state.flags.ending_bind = ending === 'bind';
     this.state.flags.ending_break = ending === 'break';
+    // Persistent story flags are read by later scenes; they deliberately survive scene transitions.
+    this.state.flags.next_scene_clean_signal = ending === 'clear';
+    this.state.flags.next_scene_mask_bound = ending === 'bind';
+    this.state.flags.next_scene_wounded = ending === 'break';
+    this.state.flags.next_scene_creatures_weakened = ending === 'break';
+    this.state.flags.next_scene_whispers = ending === 'bind';
     if (ending === 'clear') {
       this.state.sanity = Math.min(100, this.state.sanity + 18);
       this.state.flags.channel_clean = true;
@@ -714,7 +720,7 @@ export class ImmersionScene {
   }
 
   private checkDefeat() {
-    if (this.defeatShown || this.state.defeated || this.state.health > 0) return;
+    if (this.defeatShown || (!this.state.defeated && this.state.health > 0)) return;
     this.defeatShown = true;
     this.state.health = 0;
     this.state.defeated = true;
@@ -750,6 +756,25 @@ export class ImmersionScene {
         preview.querySelector('.selected-art')!.innerHTML = `<img class="item-art-image" src="${this.itemAsset(this.state.selected)}" alt="">`;
         preview.querySelector('strong')!.textContent = def.name;
         preview.querySelector('.selected-copy span')!.textContent = def.examine;
+        const help: Partial<Record<ItemId, string>> = {
+          herbal_poultice: 'ИСПОЛЬЗОВАТЬ: восстановит 25 HP · расходуется',
+          warding_charm: 'ИСПОЛЬЗОВАТЬ: восстановит 20 рассудка · расходуется',
+          ember_lantern: 'ИСПОЛЬЗОВАТЬ: включить/выключить свет · свет привлекает существ',
+          stitched_mask: 'ИСПОЛЬЗОВАТЬ: надеть/снять · защита от взгляда, но рассудок постепенно падает',
+          medicinal_herbs: 'ПРИМЕНЕНИЕ: использовать на подходящем объекте или изучить',
+          matchbox: 'ПРИМЕНЕНИЕ: зажечь источник света, если он найден',
+          copper_bell: 'ПРИМЕНЕНИЕ: отвлечь существо звуком — но шум может привлечь другое',
+          black_seed: 'ПРИМЕНЕНИЕ: пока неизвестно. Не держи долго в руках',
+          ryokan_key: 'ПРИМЕНЕНИЕ: открыть соответствующий замок на локации',
+          wet_key_half: 'ПРИМЕНЕНИЕ: соединить со второй половиной ключа',
+          wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
+          paper_lantern_shard: 'ПРИМЕНЕНИЕ: осмотреть источники света и отражающие поверхности',
+          kokeshi_note: 'ПРИМЕНЕНИЕ: изучить; подсказка к тайнику или механизму',
+          silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
+        };
+        let hint = preview.querySelector('.selected-copy small');
+        if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
+        if (hint) hint.textContent = help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
       }
