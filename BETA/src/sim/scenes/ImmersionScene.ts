@@ -79,6 +79,7 @@ export class ImmersionScene {
     this.buildHotspots();
     this.buildExits();
     this.renderInv();
+    this.renderVitals();
     this.renderMinimap();
     this.updateZone();
     this.pulseMatrix('ok');
@@ -158,10 +159,20 @@ export class ImmersionScene {
         this.buildHotspots();
         this.buildExits();
         this.renderInv();
+        this.renderVitals();
         this.renderMinimap();
         this.updateZone();
         this.notify('Симуляция сброшена', 'warn');
       });
+    });
+    document.getElementById('btnInspectItem')?.addEventListener('click', () => {
+      if (!this.state.selected) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
+      this.openItemExam(this.state.selected);
+    });
+    document.getElementById('btnUseItem')?.addEventListener('click', () => {
+      if (!this.state.selected) { this.notify('Выбери предмет, который хочешь применить', 'warn'); return; }
+      this.notify('Предмет готов. Выбери объект или точку взаимодействия в сцене.', 'info');
+      this.pulseMatrix('ok');
     });
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
@@ -180,7 +191,9 @@ export class ImmersionScene {
         this.notify('Сверху — шаги. Доски не должны так звучать.', 'warn');
         this.pulseMatrix('alert');
         this.state.flags.heard_steps = true;
+        this.state.sanity = Math.max(0, this.state.sanity - 4);
         saveState(this.state);
+        this.renderVitals();
       }
     }, 40000);
   }
@@ -447,6 +460,8 @@ export class ImmersionScene {
 
   private renderInv() {
     this.invEl.innerHTML = '';
+    const count = document.getElementById('inventoryCount');
+    if (count) count.textContent = this.state.inventory.length + ' / 8';
     if (!this.state.inventory.length) {
       this.invEl.innerHTML = '<div class="inv-empty">ИНВЕНТАРЬ ПУСТ</div>';
       this.syncHand();
@@ -467,6 +482,20 @@ export class ImmersionScene {
       this.invEl.appendChild(slot);
     }
     this.syncHand();
+    this.renderVitals();
+  }
+
+  private renderVitals() {
+    const health = Math.max(0, Math.min(100, this.state.health ?? 100));
+    const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
+    const healthFill = document.getElementById('healthFill') as HTMLElement | null;
+    const sanityFill = document.getElementById('sanityFill') as HTMLElement | null;
+    const healthValue = document.getElementById('healthValue');
+    const sanityValue = document.getElementById('sanityValue');
+    if (healthFill) healthFill.style.width = health + '%';
+    if (sanityFill) sanityFill.style.width = sanity + '%';
+    if (healthValue) healthValue.textContent = String(health);
+    if (sanityValue) sanityValue.textContent = String(sanity);
   }
 
   private syncHand() {
