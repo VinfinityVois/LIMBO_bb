@@ -736,7 +736,9 @@ export class ImmersionScene {
     overlay.className = 'limbo-defeat';
     overlay.setAttribute('role','dialog');
     overlay.setAttribute('aria-modal','true');
-    overlay.innerHTML = '<div class="limbo-defeat-panel"><span>СИГНАЛ ПОТЕРЯН · RK-01</span><h1>СУБЪЕКТ ПОТЕРЯН</h1><p>Тело больше не отвечает. Сектор завершился поражением.</p><button type="button" id="defeatRestart">НАЧАТЬ ЗАНОВО</button><a href="/scene-ryokan.html">ВЕРНУТЬСЯ К ДОСЬЕ</a></div>';
+    const defeatReason = this.state.sanity <= 0 ? 'Рассудок обрушился. Тело не выдержало и остановилось.' : 'Здоровье исчерпано. Тело больше не отвечает.';
+    overlay.innerHTML = '<div class="limbo-defeat-panel"><span>СИГНАЛ ПОТЕРЯН · RK-01</span><h1>СУБЪЕКТ ПОТЕРЯН</h1><p></p><button type="button" id="defeatRestart">НАЧАТЬ ЗАНОВО</button><a href="/scene-ryokan.html">ВЕРНУТЬСЯ К ДОСЬЕ</a></div>';
+    const reason = overlay.querySelector('p'); if (reason) reason.textContent = defeatReason;
     document.body.appendChild(overlay);
     overlay.querySelector('#defeatRestart')?.addEventListener('click', () => { resetSim(); window.location.reload(); });
     simAudio.deny(this.state.muted);
