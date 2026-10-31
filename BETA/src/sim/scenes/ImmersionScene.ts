@@ -236,7 +236,9 @@ export class ImmersionScene {
     this.threatKind = kind;
     this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
-    document.body.classList.add('threat-active');
+    document.body.classList.remove('threat-kind-light','threat-kind-sound','threat-kind-dweller');
+    document.body.classList.add('threat-active','threat-kind-' + kind);
+    const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = kind === 'light' ? 'СВЕТ ОБНАРУЖЕН' : kind === 'sound' ? 'ШУМ ЗАСЕЧЁН' : 'ПРИСУТСТВИЕ РЯДОМ';
     const panel=document.getElementById('threatOverlay');
     const title=document.getElementById('threatTitle');
     const copy=document.getElementById('threatText');
@@ -250,7 +252,8 @@ export class ImmersionScene {
     this.threatActive=false; this.threatCooldown=Date.now()+35000;
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
-    document.body.classList.remove('threat-active');
+    document.body.classList.remove('threat-active','threat-kind-light','threat-kind-sound','threat-kind-dweller');
+    const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = 'СИГНАЛ СТАБИЛЕН';
     if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Слепой потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
     else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Слушатель потерял источник шума.','ok'); }
     else if(choice==='hide') {
