@@ -682,3 +682,37 @@ body.threat-active .radar-signal{color:#ff8790;animation:signal-blink .6s infini
 .combat-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.combat-actions button{min-height:42px;border:1px solid #327c8b;background:#0b202b;color:#a9d0d8;font:600 10px var(--mono);letter-spacing:.1em;cursor:pointer;transition:background .15s,border-color .15s}.combat-actions button:hover{background:#164050;border-color:#48d3e4;color:#fff}
 body.combat-active .game-hud,body.combat-active .float-ctrl{filter:brightness(.45);pointer-events:none}
 @media(max-width:600px){.world-hud{left:8px;right:8px;gap:5px}.danger-readout{min-width:100px}.combat-arena{grid-template-columns:100px 1fr;gap:8px}.combat-monster-art{height:150px}.combat-monster-art:before{transform:scale(.72)}.combat-actions{grid-template-columns:repeat(2,1fr)}}
+
+/* Combat animation pass: readable telegraphs, weight and recovery */
+.scene-creature{animation:creature-breathe 3.8s ease-in-out infinite}
+.scene-creature.visible{animation:creature-arrive .9s cubic-bezier(.16,.8,.2,1) both,creature-breathe 3.8s 0.9s ease-in-out infinite}
+.scene-creature-light:after{content:"";position:absolute;inset:-18px;background:radial-gradient(ellipse,#d6b16a22,transparent 68%);animation:light-hunt 2s ease-in-out infinite alternate}
+.scene-creature-sound:after{content:"";position:absolute;inset:18% -20%;border:1px solid #6cc9db55;border-radius:50%;animation:creature-echo 1.6s ease-out infinite}
+.scene-creature-dweller:before{animation:dweller-unfold 1.5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes creature-arrive{0%{opacity:0;transform:translateY(35px) scale(.55);filter:blur(8px)}65%{opacity:1;transform:translateY(-4px) scale(1.04);filter:blur(0)}100%{opacity:.94;transform:translateY(0) scale(1)}}
+@keyframes creature-breathe{0%,100%{translate:0 0}50%{translate:0 -7px}}
+@keyframes light-hunt{to{opacity:.25;transform:scale(1.25)}}
+@keyframes creature-echo{0%{transform:scale(.65);opacity:0}35%{opacity:.65}100%{transform:scale(1.5);opacity:0}}
+@keyframes dweller-unfold{0%{transform:scaleY(.08) scaleX(.5);filter:blur(12px)}55%{transform:scaleY(1.08) scaleX(1.05)}100%{transform:scale(1);filter:blur(0)}}
+.combat-monster-art{isolation:isolate}
+.combat-monster-art:before{animation:monster-idle 2.7s ease-in-out infinite;transform-origin:50% 90%}
+.combat-monster-art:after{animation:eyes-flicker 3.4s infinite}
+.combat-monster-art.hit:before{animation:monster-stagger .32s ease-out}
+.combat-monster-art.attack:before{animation:monster-strike .46s cubic-bezier(.2,.8,.2,1)}
+.combat-monster-art.attack:after{animation:eyes-charge .46s ease-out}
+.combat-monster-art.miss:before{animation:monster-miss .38s ease-out}
+@keyframes monster-idle{0%,100%{transform:translateY(0) scaleX(1)}50%{transform:translateY(-5px) scaleX(.97)}}
+@keyframes eyes-flicker{0%,42%,46%,100%{opacity:1}44%{opacity:.15}72%{opacity:.6}}
+@keyframes monster-stagger{0%{transform:translateX(0) rotate(0)}25%{transform:translateX(-18px) rotate(-7deg);filter:brightness(2.3)}65%{transform:translateX(9px) rotate(4deg)}100%{transform:translateX(0) rotate(0)}}
+@keyframes monster-strike{0%{transform:translateX(0) scale(1)}38%{transform:translateX(54px) scale(1.16,1.08)}68%{transform:translateX(35px) scale(1.08)}100%{transform:translateX(0) scale(1)}}
+@keyframes eyes-charge{0%,100%{filter:brightness(1)}35%{filter:brightness(3) drop-shadow(0 0 9px #ff425a)}}
+@keyframes monster-miss{0%{transform:translateX(0)}45%{transform:translateX(62px) rotate(14deg)}100%{transform:translateX(0) rotate(0)}}
+.combat-actions button:disabled{opacity:.28;cursor:not-allowed}
+.combat-actions #combatDodge.dodge-window{border-color:#ffb45c;color:#ffe0a8;background:#492b1d;box-shadow:0 0 18px #ff9d4c66;animation:dodge-pulse .42s ease-in-out infinite alternate}
+@keyframes dodge-pulse{to{box-shadow:0 0 28px #ff9d4caa;filter:brightness(1.3)}}
+body.player-hit .combat-panel{animation:player-impact .32s ease-out}
+@keyframes player-impact{0%,100%{transform:translateX(0)}18%{transform:translateX(-9px)}42%{transform:translateX(7px)}68%{transform:translateX(-4px)}}
+body.mask-worn .stage:after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#4b1d3322 100%);mix-blend-mode:screen;animation:mask-pulse 7s ease-in-out infinite}
+body.mask-worn .zone-whisper{color:#d5a2b3;text-shadow:0 0 10px #b63d6c66}
+@keyframes mask-pulse{0%,100%{opacity:.2}50%{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.scene-creature,.scene-creature:after,.combat-monster-art:before,.combat-monster-art:after,.combat-actions #combatDodge.dodge-window,body.player-hit .combat-panel{animation:none!important}}
