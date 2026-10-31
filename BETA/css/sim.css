@@ -716,3 +716,10 @@ body.mask-worn .sim-stage:after{content:"";position:absolute;inset:0;z-index:8;p
 body.mask-worn .zone-whisper{color:#d5a2b3;text-shadow:0 0 10px #b63d6c66}
 @keyframes mask-pulse{0%,100%{opacity:.2}50%{opacity:.8}}
 @media(prefers-reduced-motion:reduce){.scene-creature,.scene-creature:after,.combat-monster-art:before,.combat-monster-art:after,.combat-actions #combatDodge.dodge-window,body.player-hit .combat-panel{animation:none!important}}
+
+.combat-monster-art.combat-beast-light:before{width:132px;height:154px;background:linear-gradient(160deg,#5a4b32,#17130e 62%,#050608);clip-path:polygon(50% 0,63% 16%,100% 8%,79% 37%,100% 67%,66% 63%,50% 100%,34% 63%,0 67%,21% 37%,0 8%,37% 16%);filter:drop-shadow(0 0 20px #d4ad6377)}
+.combat-monster-art.combat-beast-light:after{top:74px;left:calc(50% - 19px);width:6px;height:6px;background:#ffe1a1;box-shadow:32px 0 0 #ffe1a1,0 0 15px 6px #e6b95d,32px 0 15px 6px #e6b95d}
+.combat-monster-art.combat-beast-sound:before{width:92px;height:196px;background:linear-gradient(90deg,#152d37,#071117 60%,#030609);clip-path:polygon(38% 0,62% 0,78% 12%,70% 31%,100% 52%,73% 61%,88% 100%,50% 78%,12% 100%,27% 61%,0 52%,30% 31%,22% 12%);filter:drop-shadow(0 0 18px #62d4e477)}
+.combat-monster-art.combat-beast-sound:after{top:61px;left:calc(50% - 17px);width:5px;height:3px;background:#a5f5f2;box-shadow:28px 0 0 #a5f5f2,0 0 12px 4px #63d9df,28px 0 12px 4px #63d9df}
+.combat-monster-art.combat-beast-dweller:before{width:142px;height:210px;background:linear-gradient(180deg,#301923,#09090f 65%);clip-path:polygon(22% 0,78% 0,88% 12%,72% 34%,100% 100%,63% 76%,50% 100%,37% 76%,0 100%,28% 34%,12% 12%);filter:drop-shadow(0 0 22px #b52f5277)}
+.combat-monster-art.combat-beast-dweller:after{top:66px;left:calc(50% - 25px);width:8px;height:4px;background:#ff405d;box-shadow:42px 0 0 #ff405d,0 0 14px 5px #e82e4b,42px 0 14px 5px #e82e4b}
