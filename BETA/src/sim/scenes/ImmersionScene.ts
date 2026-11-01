@@ -61,6 +61,7 @@ export class ImmersionScene {
   private thoughtIndex = 0;
   private threatApproachTimer: ReturnType<typeof setInterval> | number = 0;
   private threatStartedAt = 0;
+  private lastApproachCue = 0;
   private hallucinationCount = 0;
   private diving = true;
   private defeatShown = false;
@@ -260,6 +261,7 @@ export class ImmersionScene {
       this.openItemExam(this.state.selected);
     });
     document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
+    document.getElementById('btnDropItem')?.addEventListener('click', () => this.dropSelectedItem());
     document.getElementById('btnHide')?.addEventListener('click', () => this.resolveThreat('hide'));
     document.getElementById('btnConfront')?.addEventListener('click', () => this.startCombat());
     document.getElementById('btnCall')?.addEventListener('click', () => { simAudio.call(this.state.muted); this.makeNoise('Ты громко окликнул кого-то в темноте.'); });
@@ -369,6 +371,7 @@ export class ImmersionScene {
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
     this.threatKind = kind;
+    this.lastApproachCue = 0;
     this.threatActive = true;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     if (kind === 'light') simAudio.monsterBlind(this.state.muted);
@@ -1027,7 +1030,10 @@ export class ImmersionScene {
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
-      slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
+      slot.title = def.name + ' · нажми: выбрать · двойной щелчок: использовать · ПКМ: изучить';
+      slot.setAttribute('aria-label', def.name + (id === 'stitched_mask' ? (this.maskWorn ? ' · маска надета' : ' · маска снята') : ''));
+      slot.setAttribute('aria-pressed', this.state.selected === id ? 'true' : 'false');
+      slot.addEventListener('dblclick', () => { this.state.selected = id; saveState(this.state); this.renderInv(); this.useSelectedItem(); });
       slot.addEventListener('click', () => this.onInv(id));
       slot.addEventListener('focus', () => simAudio.hover(this.state.muted));
       slot.addEventListener('contextmenu', (e) => {
@@ -1055,6 +1061,8 @@ export class ImmersionScene {
     const sanityValue = document.getElementById('sanityValue');
     if (healthFill) healthFill.style.width = health + '%';
     if (sanityFill) sanityFill.style.width = sanity + '%';
+    const maskStatus = document.getElementById('maskStatus');
+    if (maskStatus) { maskStatus.textContent = this.maskWorn ? 'МАСКА · НАДЕТА' : 'МАСКА · СНЯТА'; maskStatus.classList.toggle('worn', this.maskWorn); }
     if (healthValue) healthValue.textContent = String(health);
     if (sanityValue) sanityValue.textContent = String(sanity);
     this.applySanityTier(sanity);
@@ -1118,9 +1126,15 @@ export class ImmersionScene {
         };
         let hint = preview.querySelector('.selected-copy small');
         if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
-        if (hint) hint.textContent = help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        if (hint) hint.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СТАТУС: НАДЕТА · нажми «СНЯТЬ МАСКУ»' : 'СТАТУС: СНЯТА · нажми «НАДЕТЬ МАСКУ»') : help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        const useButton = document.getElementById('btnUseItem');
+        if (useButton) useButton.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СНЯТЬ МАСКУ' : 'НАДЕТЬ МАСКУ') : this.state.selected === 'ember_lantern' ? (this.lightActive ? 'ПОГАСИТЬ' : 'ЗАЖЕЧЬ') : 'ИСПОЛЬЗОВАТЬ';
+        const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null;
+        if (dropButton) dropButton.disabled = this.state.selected === 'stitched_mask' && this.maskWorn;
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
+        const useButton = document.getElementById('btnUseItem'); if (useButton) useButton.textContent = 'ИСПОЛЬЗОВАТЬ';
+        const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null; if (dropButton) dropButton.disabled = true;
       }
     }
   }
@@ -1202,13 +1216,34 @@ export class ImmersionScene {
     simAudio.click(this.state.muted);
   }
 
+  private creatureName(): string {
+    return this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+  }
+
+  private creatureAsset(): string {
+    const file = this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger';
+    return '/assets/game/creatures/' + file + '.png';
+  }
+
   private showCreatureInScene() {
     document.getElementById('sceneCreature')?.remove();
     const el = document.createElement('div');
     el.id = 'sceneCreature';
     el.className = 'scene-creature scene-creature-' + this.threatKind;
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
-    el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
+    const img = document.createElement('img');
+    img.className = 'creature-sprite';
+    img.src = this.creatureAsset();
+    img.alt = this.creatureName();
+    img.draggable = false;
+    const name = document.createElement('span');
+    name.className = 'creature-name';
+    name.textContent = this.creatureName();
+    const eyes = document.createElement('span');
+    eyes.className = 'creature-eyes';
+    el.append(img, name, eyes, document.createElement('i'), document.createElement('b'));
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', this.creatureName());
+    el.title = this.creatureName();
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
   }
@@ -1223,11 +1258,11 @@ export class ImmersionScene {
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+    this.monsterName = this.creatureName();
     this.combatTurn = 0; this.combatTarget = 'torso';
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
-    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller') + '.png';
+    if (sprite) { sprite.src = this.creatureAsset(); sprite.alt = this.monsterName; }
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -1477,6 +1512,12 @@ export class ImmersionScene {
     const tick = () => {
       if (!this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
+      const cueStage = progress >= .84 ? 4 : progress >= .62 ? 3 : progress >= .34 ? 2 : progress >= .08 ? 1 : 0;
+      if (cueStage > this.lastApproachCue) {
+        this.lastApproachCue = cueStage;
+        simAudio.monsterApproach(this.state.muted, this.threatKind, cueStage / 4);
+        if (cueStage >= 2) this.showSense('◉', cueStage >= 4 ? 'Оно уже рядом. Слышно дыхание.' : 'Тяжёлые шаги становятся ближе.', true);
+      }
       const fill = document.getElementById('threatApproachFill') as HTMLElement|null;
       const time = document.getElementById('threatApproachTime');
       if (fill) fill.style.width = (progress*100)+'%';
@@ -1603,6 +1644,23 @@ export class ImmersionScene {
     this.notify(effect.message, 'ok');
     this.renderInv();
     this.renderVitals();
+  }
+
+  private dropSelectedItem() {
+    const id = this.state.selected;
+    if (!id) { this.notify('Сначала выбери предмет в инвентаре.', 'warn'); return; }
+    if (id === 'stitched_mask' && this.maskWorn) {
+      this.notify('Нельзя выбросить маску, пока она надета. Сначала сними её.', 'warn');
+      simAudio.deny(this.state.muted);
+      return;
+    }
+    const name = ITEMS[id]?.name || 'Предмет';
+    this.state.inventory = this.state.inventory.filter(item => item !== id);
+    this.state.selected = null;
+    saveState(this.state);
+    simAudio.take(this.state.muted);
+    this.notify('Оставлено: ' + name + '.', 'info');
+    this.renderInv();
   }
 
   private onInv(id: ItemId) {
