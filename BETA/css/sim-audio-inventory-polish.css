@@ -1,0 +1,23 @@
+/* LIMBO · sound, inventory controls and creature identity polish */
+.sound-readout .sound-meter{height:17px!important;align-items:flex-end!important;gap:3px!important}
+.sound-readout .sound-meter i{display:block!important;flex:1 1 0!important;min-width:2px!important;height:var(--bar-height,3%)!important;min-height:2px!important;max-height:100%!important;opacity:var(--bar-opacity,.24)!important;background:var(--bar-color,#55b8c9)!important;box-shadow:0 0 var(--bar-glow,1px) var(--bar-color,#55b8c9)!important;border-radius:2px 2px 0 0!important;transition:height .12s linear,background-color .2s,opacity .12s!important}
+.sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.2)}
+.sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.05)}
+.mask-status{align-self:flex-start;margin-top:2px;padding:4px 7px;border:1px solid rgba(110,169,188,.24);background:rgba(8,22,34,.5);color:#7d9aa8;font:600 8px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em}
+.mask-status.worn{border-color:rgba(224,82,102,.58);background:rgba(91,19,33,.2);color:#ff8291;box-shadow:0 0 12px rgba(224,55,79,.12)}
+.hud-actions{flex-wrap:wrap!important;align-items:center!important}
+.hud-actions .hud-action{min-width:88px!important}
+.hud-actions .hud-action:disabled{opacity:.28!important;cursor:not-allowed!important;filter:grayscale(1)}
+.hud-actions .hud-action.danger{color:#f08a98!important;border-color:rgba(222,76,98,.45)!important;background:rgba(110,22,38,.12)!important}
+.inv .inv-slot{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;overflow:hidden}
+.inv .inv-slot img{display:block;width:54px;height:48px;max-width:78%;max-height:68%;object-fit:contain;pointer-events:none}
+.inv .inv-slot .n{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 7px/1.1 'JetBrains Mono',monospace;letter-spacing:.04em;color:#a9c5ce}
+.inv .inv-slot-empty{cursor:default!important}
+.inv .inv-slot[aria-pressed="true"]{outline:1px solid #32d4e8;outline-offset:1px}
+.creature-sprite{display:block;width:auto!important;height:auto!important;max-width:min(34vw,330px)!important;max-height:min(58vh,520px)!important;object-fit:contain!important;object-position:center bottom!important;background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;filter:drop-shadow(0 18px 24px rgba(0,0,0,.65)) drop-shadow(0 0 16px rgba(155,35,54,.2))!important}
+.scene-creature{background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+.creature-name{position:absolute;left:50%;top:calc(100% + 7px);transform:translateX(-50%);padding:4px 8px;border:1px solid rgba(195,74,88,.48);background:rgba(8,5,9,.88);color:#f0b7bf;font:600 9px/1.2 'JetBrains Mono',monospace;letter-spacing:.16em;white-space:nowrap;text-shadow:0 0 8px rgba(224,62,80,.35)}
+.combat-monster-art .combat-sprite{width:auto!important;height:auto!important;max-width:min(32vw,360px)!important;max-height:34vh!important;object-fit:contain!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#btnDropItem{white-space:nowrap}
+@media(max-width:900px){.mask-status{font-size:7px}.hud-actions .hud-action{min-width:74px!important;padding-inline:8px!important}.creature-sprite{max-width:55vw!important;max-height:44vh!important}}
+@media(prefers-reduced-motion:reduce){.sound-readout .sound-meter i{transition:none!important}}
