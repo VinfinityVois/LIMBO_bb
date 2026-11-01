@@ -11,6 +11,9 @@ export interface HotspotDef {
   examine: string;
   item?: ItemId;
   takenFlag?: string;
+  /** Multiple independently inspectable finds at one search point. */
+  items?: ItemId[];
+  takenFlags?: string[];
   useWith?: ItemId[];
   useFlag?: string;
   useSuccess?: string;
