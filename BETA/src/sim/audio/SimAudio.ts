@@ -18,6 +18,7 @@ export const simAudio = {
   meterFrame: 0,
   pendingAmbient: '',
   ambientMuted: false,
+  lastApproachAt: 0,
 
   init() {
     if (this.ctx) return;
@@ -93,27 +94,27 @@ export const simAudio = {
     src.start();
   },
 
-  click(m: boolean) { this.tone(m, 480, 0.045, 'square', 0.018, 180); },
-  hover(m: boolean) { this.tone(m, 920, 0.025, 'sine', 0.008); },
+  click(m: boolean) { this.tone(m, 480, 0.055, 'triangle', 0.042, 180); },
+  hover(m: boolean) { this.tone(m, 920, 0.035, 'sine', 0.014); },
   take(m: boolean) {
-    this.noiseBurst(m, 0.08, 0.018, 'highpass', 1700);
-    this.tone(m, 340, 0.07, 'triangle', 0.028, 520);
-    setTimeout(() => this.tone(m, 600, 0.05, 'sine', 0.016), 70);
+    this.noiseBurst(m, 0.08, 0.026, 'highpass', 1700);
+    this.tone(m, 340, 0.07, 'triangle', 0.046, 520);
+    setTimeout(() => this.tone(m, 600, 0.05, 'sine', 0.03), 70);
   },
   combine(m: boolean) {
-    this.tone(m, 220, 0.1, 'sine', 0.03, 440);
-    setTimeout(() => this.tone(m, 550, 0.1, 'sine', 0.025), 90);
-    setTimeout(() => this.tone(m, 780, 0.08, 'triangle', 0.02), 180);
+    this.tone(m, 220, 0.1, 'sine', 0.05, 440);
+    setTimeout(() => this.tone(m, 550, 0.1, 'sine', 0.042), 90);
+    setTimeout(() => this.tone(m, 780, 0.08, 'triangle', 0.035), 180);
   },
-  deny(m: boolean) { this.tone(m, 110, 0.12, 'sawtooth', 0.028, 55); },
+  deny(m: boolean) { this.tone(m, 110, 0.12, 'sawtooth', 0.042, 55); },
   door(m: boolean) {
-    this.noiseBurst(m, 0.16, 0.025, 'lowpass', 420);
-    this.tone(m, 90, 0.14, 'square', 0.035);
+    this.noiseBurst(m, 0.16, 0.038, 'lowpass', 420);
+    this.tone(m, 90, 0.14, 'square', 0.052);
     setTimeout(() => this.tone(m, 160, 0.1, 'triangle', 0.02), 110);
   },
   steps(m: boolean) {
-    this.noiseBurst(m, 0.085, 0.024, 'lowpass', 480);
-    this.tone(m, 72, 0.075, 'sine', 0.025, 48);
+    this.noiseBurst(m, 0.085, 0.036, 'lowpass', 480);
+    this.tone(m, 72, 0.075, 'sine', 0.044, 48);
     setTimeout(() => {
       this.noiseBurst(m, 0.07, 0.018, 'lowpass', 620);
       this.tone(m, 61, 0.06, 'sine', 0.018, 42);
@@ -144,6 +145,22 @@ export const simAudio = {
     this.noiseBurst(m, 1.1, 0.05, 'lowpass', 380);
     this.tone(m, 38, 1.05, 'sawtooth', 0.05, 16);
     setTimeout(() => this.tone(m, 165, 0.66, 'sawtooth', 0.022, 28), 210);
+  },
+  monsterApproach(m: boolean, kind: 'light' | 'sound' | 'dweller', intensity: number) {
+    const heat = Math.max(0, Math.min(1, intensity));
+    const now = Date.now();
+    if (now - this.lastApproachAt < 520) return;
+    this.lastApproachAt = now;
+    const low = kind === 'dweller' ? 34 : kind === 'light' ? 46 : 58;
+    this.noiseBurst(m, 0.22 + heat * 0.22, 0.012 + heat * 0.022, 'lowpass', 180 + heat * 360);
+    this.tone(m, low + heat * 18, 0.34 + heat * 0.22, 'sine', 0.012 + heat * 0.03, Math.max(18, low - 18));
+    if (kind === 'sound') {
+      setTimeout(() => this.noiseBurst(m, 0.2, 0.008 + heat * 0.014, 'bandpass', 900 + heat * 800), 120);
+    } else if (kind === 'light') {
+      setTimeout(() => this.tone(m, 130 + heat * 80, 0.18, 'sawtooth', 0.008 + heat * 0.012, 42), 110);
+    } else {
+      setTimeout(() => this.tone(m, 28 + heat * 12, 0.42, 'triangle', 0.018 + heat * 0.018, 16), 140);
+    }
   },
   call(m: boolean) {
     this.noiseBurst(m, 0.38, 0.028, 'bandpass', 780);
@@ -217,7 +234,7 @@ export const simAudio = {
     for (let i = 0; i < length; i++) {
       const white = Math.random() * 2 - 1;
       last = last * 0.94 + white * 0.06;
-      data[i] = last * 2.7;
+      data[i] = last * 1.35;
     }
     const source = this.ctx.createBufferSource();
     const filter = this.ctx.createBiquadFilter();
@@ -227,7 +244,7 @@ export const simAudio = {
     filter.type = kind.toLowerCase().includes('rain') ? 'bandpass' : 'lowpass';
     filter.frequency.value = kind.toLowerCase().includes('rain') ? 2450 : 720;
     filter.Q.value = kind.toLowerCase().includes('rain') ? 0.32 : 0.45;
-    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.085 : 0.026;
+    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.0048 : 0.0065;
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.analyser || this.ctx.destination);
@@ -241,7 +258,7 @@ export const simAudio = {
     const roomGain = this.ctx.createGain();
     room.type = 'sine';
     room.frequency.value = kind.toLowerCase().includes('wood') ? 57 : 43;
-    roomGain.gain.value = 0.00075;
+    roomGain.gain.value = 0.00012;
     room.connect(roomGain);
     roomGain.connect(this.analyser || this.ctx.destination);
     room.start();
@@ -253,13 +270,14 @@ export const simAudio = {
     const drip = () => {
       if (m || !this.ctx || this.ctx.state !== 'running') return;
       if (rain && Math.random() < 0.78) {
-        this.tone(false, 1050 + Math.random() * 1750, 0.045 + Math.random() * 0.07, 'sine', 0.009);
+        this.noiseBurst(false, 0.055 + Math.random() * 0.045, 0.012 + Math.random() * 0.009, 'bandpass', 1650 + Math.random() * 2100);
+        this.tone(false, 1150 + Math.random() * 900, 0.035 + Math.random() * 0.035, 'sine', 0.012);
       } else if (!rain && Math.random() < 0.38) {
         this.noiseBurst(false, 0.11, 0.006, 'bandpass', 500 + Math.random() * 1100);
       }
     };
     drip();
-    this.ambientId = window.setInterval(drip, rain ? 420 : 1250);
+    this.ambientId = window.setInterval(drip, rain ? 980 : 1650);
     this.startMeter();
   },
 
