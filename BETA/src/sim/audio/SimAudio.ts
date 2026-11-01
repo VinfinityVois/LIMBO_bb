@@ -196,6 +196,7 @@ export const simAudio = {
     filter.connect(gain);
     gain.connect(this.analyser || this.ctx.destination);
     source.start();
+    document.body.classList.add('audio-ready');
     this.ambientSource = source;
     this.ambientFilter = filter;
     this.ambientGain = gain;
