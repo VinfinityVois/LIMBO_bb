@@ -18,6 +18,7 @@ export const simAudio = {
   meterFrame: 0,
   pendingAmbient: '',
   ambientMuted: false,
+  master: null as DynamicsCompressorNode | null,
 
   init() {
     if (this.ctx) return;
@@ -27,7 +28,14 @@ export const simAudio = {
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 64;
     this.analyser.smoothingTimeConstant = 0.78;
-    this.analyser.connect(this.ctx.destination);
+    this.master = this.ctx.createDynamicsCompressor();
+    this.master.threshold.value = -24;
+    this.master.knee.value = 18;
+    this.master.ratio.value = 3.2;
+    this.master.attack.value = 0.012;
+    this.master.release.value = 0.24;
+    this.analyser.connect(this.master);
+    this.master.connect(this.ctx.destination);
   },
 
   unlock() {
@@ -59,7 +67,7 @@ export const simAudio = {
     g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g);
-    g.connect(this.analyser || this.ctx.destination);
+    g.connect(this.analyser || this.master || this.ctx.destination);
     o.start(t0);
     o.stop(t0 + dur + 0.04);
   },
@@ -126,9 +134,29 @@ export const simAudio = {
     setTimeout(() => this.noiseBurst(m, 0.38, 0.009, 'bandpass', 2100), 240);
   },
   monster(m: boolean) {
-    this.noiseBurst(m, 0.9, 0.05, 'lowpass', 620);
-    this.tone(m, 58, 0.95, 'sawtooth', 0.04, 24);
-    setTimeout(() => this.tone(m, 92, 0.48, 'triangle', 0.024, 38), 180);
+    this.noiseBurst(m, 1.05, 0.075, 'lowpass', 520);
+    this.tone(m, 48, 1.15, 'sawtooth', 0.065, 19);
+    setTimeout(() => this.tone(m, 86, 0.62, 'triangle', 0.04, 31), 180);
+  },
+  monsterApproach(m: boolean, kind: 'blind' | 'listener' | 'lodger', intensity = 1) {
+    const v = Math.max(0.35, Math.min(1.8, intensity));
+    if (kind === 'blind') {
+      this.noiseBurst(m, 0.46, 0.026 * v, 'bandpass', 1450 - v * 250);
+      this.tone(m, 64 - v * 13, 0.72, 'sawtooth', 0.024 * v, 28 - v * 5);
+    } else if (kind === 'listener') {
+      this.noiseBurst(m, 0.62, 0.03 * v, 'bandpass', 780 + v * 260);
+      this.tone(m, 92 - v * 22, 0.82, 'triangle', 0.028 * v, 17);
+      setTimeout(() => this.noiseBurst(m, 0.18, 0.018 * v, 'highpass', 2300), 240);
+    } else {
+      this.noiseBurst(m, 0.8, 0.038 * v, 'lowpass', 340);
+      this.tone(m, 34 - v * 7, 0.96, 'sawtooth', 0.036 * v, 13);
+      setTimeout(() => this.tone(m, 145, 0.44, 'sawtooth', 0.018 * v, 24), 260);
+    }
+  },
+  bell(m: boolean) {
+    this.tone(m, 640, 0.42, 'sine', 0.032, 430);
+    setTimeout(() => this.tone(m, 910, 0.55, 'sine', 0.018, 690), 65);
+    setTimeout(() => this.tone(m, 430, 0.7, 'triangle', 0.012, 310), 160);
   },
   monsterBlind(m: boolean) {
     this.noiseBurst(m, 0.72, 0.036, 'bandpass', 1450);
@@ -225,12 +253,12 @@ export const simAudio = {
     source.buffer = buffer;
     source.loop = true;
     filter.type = kind.toLowerCase().includes('rain') ? 'bandpass' : 'lowpass';
-    filter.frequency.value = kind.toLowerCase().includes('rain') ? 2450 : 720;
-    filter.Q.value = kind.toLowerCase().includes('rain') ? 0.32 : 0.45;
-    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.085 : 0.026;
+    filter.frequency.value = kind.toLowerCase().includes('rain') ? 1650 : 520;
+    filter.Q.value = kind.toLowerCase().includes('rain') ? 0.48 : 0.55;
+    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.008 : 0.0055;
     source.connect(filter);
     filter.connect(gain);
-    gain.connect(this.analyser || this.ctx.destination);
+    gain.connect(this.analyser || this.master || this.ctx.destination);
     source.start();
     document.body.classList.add('audio-ready');
     this.ambientSource = source;
@@ -241,9 +269,9 @@ export const simAudio = {
     const roomGain = this.ctx.createGain();
     room.type = 'sine';
     room.frequency.value = kind.toLowerCase().includes('wood') ? 57 : 43;
-    roomGain.gain.value = 0.00075;
+    roomGain.gain.value = 0.00018;
     room.connect(roomGain);
-    roomGain.connect(this.analyser || this.ctx.destination);
+    roomGain.connect(this.analyser || this.master || this.ctx.destination);
     room.start();
     this.roomTone = room;
     this.roomToneGain = roomGain;
@@ -252,14 +280,16 @@ export const simAudio = {
     const rain = kind.toLowerCase().includes('rain');
     const drip = () => {
       if (m || !this.ctx || this.ctx.state !== 'running') return;
-      if (rain && Math.random() < 0.78) {
-        this.tone(false, 1050 + Math.random() * 1750, 0.045 + Math.random() * 0.07, 'sine', 0.009);
-      } else if (!rain && Math.random() < 0.38) {
-        this.noiseBurst(false, 0.11, 0.006, 'bandpass', 500 + Math.random() * 1100);
+      if (rain && Math.random() < 0.82) {
+        const pitch = 1250 + Math.random() * 1850;
+        this.noiseBurst(false, 0.035 + Math.random() * 0.045, 0.018, 'highpass', pitch);
+        this.tone(false, pitch, 0.055 + Math.random() * 0.045, 'sine', 0.014);
+      } else if (!rain && Math.random() < 0.28) {
+        this.noiseBurst(false, 0.14, 0.009, 'bandpass', 420 + Math.random() * 900);
       }
     };
     drip();
-    this.ambientId = window.setInterval(drip, rain ? 420 : 1250);
+    this.ambientId = window.setInterval(drip, rain ? 1180 : 1750);
     this.startMeter();
   },
 
