@@ -29,7 +29,7 @@ export const LOCATIONS: Record<LocationId, LocationDef> = {
     subtitle: 'Пруд · мох',
     image: '/sim/img/ryokan/lok1/1.png',
     ambient: 'rain_soft',
-    filter: 'saturate(0.65) hue-rotate(-8deg) brightness(0.88)',
+    filter: 'saturate(0.78) hue-rotate(-5deg) brightness(0.96)',
     exits: [
       { to: 'gate', label: '← Ворота', x: 12, y: 68 },
       { to: 'engawa', label: 'Веранда →', x: 82, y: 55 },
@@ -41,7 +41,7 @@ export const LOCATIONS: Record<LocationId, LocationDef> = {
     subtitle: 'Мокрые доски',
     image: '/sim/img/ryokan/lok1/2.png',
     ambient: 'wood',
-    filter: 'saturate(0.7) contrast(1.1) brightness(0.85)',
+    filter: 'saturate(0.78) contrast(1.06) brightness(0.94)',
     exits: [
       { to: 'garden', label: '← Сад', x: 14, y: 62 },
       {
@@ -61,7 +61,7 @@ export const LOCATIONS: Record<LocationId, LocationDef> = {
     subtitle: 'Камень · лак',
     image: '/sim/img/ryokan/lok1/0.png',
     ambient: 'interior',
-    filter: 'saturate(0.55) brightness(0.8) contrast(1.12)',
+    filter: 'saturate(0.72) brightness(0.9) contrast(1.06)',
     exits: [
       { to: 'engawa', label: '← Веранда', x: 15, y: 58 },
       { to: 'hall', label: 'Коридор →', x: 78, y: 50 },
@@ -73,7 +73,7 @@ export const LOCATIONS: Record<LocationId, LocationDef> = {
     subtitle: 'Узкий · эхо',
     image: '/sim/img/ryokan/lok1/screen.png',
     ambient: 'interior_low',
-    filter: 'saturate(0.4) brightness(0.55) contrast(1.2) hue-rotate(15deg)',
+    filter: 'saturate(0.72) brightness(0.82) contrast(1.08) hue-rotate(8deg)',
     exits: [
       { to: 'genkan', label: '← Генкан', x: 12, y: 55 },
       { to: 'storage', label: 'Чулан →', x: 80, y: 52 },
@@ -85,7 +85,7 @@ export const LOCATIONS: Record<LocationId, LocationDef> = {
     subtitle: 'Якорь сцены',
     image: '/sim/img/ryokan/lok1/0.png',
     ambient: 'interior_low',
-    filter: 'saturate(0.35) brightness(0.45) contrast(1.25)',
+    filter: 'saturate(0.68) brightness(0.78) contrast(1.08)',
     exits: [{ to: 'hall', label: '← Коридор', x: 18, y: 58 }],
   },
 };
