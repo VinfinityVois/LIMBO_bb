@@ -1,0 +1,113 @@
+/* LIMBO — inspection presentation, interaction targets and atmospheric dressing */
+:root{--inspect-cyan:#39d8ec;--inspect-ice:#c4e3eb;--inspect-dim:#7896a5;--inspect-red:#ec6178}
+
+/* The eye is a clean, drawn eye — not a rotated lozenge or broken sprite. */
+.awareness-indicator{position:fixed!important;z-index:140!important;top:13px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;display:flex!important;align-items:center!important;gap:9px!important;padding:7px 13px!important;border:1px solid rgba(85,145,162,.33)!important;border-radius:2px!important;background:linear-gradient(180deg,rgba(4,17,26,.92),rgba(2,9,15,.88))!important;color:#9abac7!important;font:600 9px/1 'JetBrains Mono',monospace!important;letter-spacing:.16em!important;box-shadow:0 5px 20px #0006!important;backdrop-filter:none!important}
+.awareness-eye{display:block!important;width:29px!important;height:18px!important;overflow:visible!important;transform:none!important}
+.awareness-eye .eye-outline{fill:none;stroke:currentColor;stroke-width:1.55;stroke-linejoin:round}
+.awareness-eye .eye-iris{fill:none;stroke:currentColor;stroke-width:1.5;transition:opacity .18s,transform .18s;transform-box:fill-box;transform-origin:center}
+.awareness-eye .eye-pupil{fill:currentColor;transition:opacity .18s}
+.awareness-eye .eye-lid{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;opacity:0;transition:opacity .18s}
+.awareness-indicator[data-state="hidden"] .eye-iris,.awareness-indicator[data-state="hidden"] .eye-pupil{opacity:0}
+.awareness-indicator[data-state="hidden"] .eye-lid{opacity:1}
+.awareness-indicator[data-state="near"]{color:#e9bc72!important;border-color:#aa793d!important;box-shadow:0 0 18px #bd873133!important}
+.awareness-indicator[data-state="near"] .eye-iris{clip-path:inset(0 0 48% 0)}
+.awareness-indicator[data-state="near"] .eye-lid{opacity:.82}
+.awareness-indicator[data-state="seen"]{color:#ff7187!important;border-color:#d74861!important;box-shadow:0 0 22px #cf2f4b55!important;animation:eye-confirm .85s ease-in-out infinite alternate}
+.awareness-indicator[data-state="seen"] .eye-iris,.awareness-indicator[data-state="seen"] .eye-pupil{opacity:1}
+.awareness-indicator[data-state="seen"] .eye-lid{opacity:0}
+@keyframes eye-confirm{to{box-shadow:0 0 28px #ed345966!important}}
+
+/* Event notifications stay on the left and occupy only a slim vertical stack. */
+#notifyHost,.notify-host{position:fixed!important;left:24px!important;right:auto!important;top:78px!important;transform:none!important;width:min(320px,calc(100vw - 48px))!important;max-height:25vh!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;overflow:hidden!important;z-index:96!important}
+#notifyHost .notify{box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;padding:7px 10px!important;font:500 10px/1.42 'Space Grotesk',sans-serif!important;letter-spacing:.02em!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;border-radius:2px!important;transform:translateX(-8px);backdrop-filter:none!important}
+#notifyHost .notify.show{transform:translateX(0)}
+#senseFeed{position:fixed!important;left:24px!important;right:auto!important;top:clamp(190px,25vh,270px)!important;width:min(330px,calc(100vw - 48px))!important;max-width:calc(100vw - 48px)!important;max-height:25vh!important;height:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:6px!important;overflow:hidden!important;z-index:80!important;pointer-events:none!important}
+#senseFeed>.sense-event{display:grid!important;grid-template-columns:20px minmax(0,1fr) 20px!important;align-items:center!important;gap:8px!important;width:100%!important;min-width:0!important;max-width:100%!important;min-height:34px!important;height:auto!important;max-height:64px!important;box-sizing:border-box!important;padding:7px 9px!important;flex:none!important;white-space:normal!important;overflow:hidden!important;backdrop-filter:none!important;font:500 10px/1.4 'Space Grotesk',sans-serif!important}
+#senseFeed>.sense-event:before{content:none!important;display:none!important}
+#senseFeed>.sense-event .sense-copy{display:block!important;grid-column:2!important;min-width:0!important;width:100%!important;max-width:none!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.4!important}
+#senseFeed>.sense-event .sound-wave{grid-column:3!important;width:20px!important;min-width:20px!important}
+@media(max-width:900px){#senseFeed{display:flex!important;top:clamp(160px,22vh,220px)!important}#notifyHost{left:12px!important;top:64px!important;width:min(300px,calc(100vw - 24px))!important}}
+@media(max-width:560px){#senseFeed{left:12px!important;width:calc(100vw - 24px)!important;top:170px!important}}
+
+/* Exploration targets are reticles, not giant empty rectangles. */
+.hotspot{display:grid!important;place-items:center!important;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;border-radius:50%!important;overflow:visible!important}
+.hotspot:before{content:"";position:absolute;inset:18%;border:1px solid rgba(82,222,240,.0);border-radius:50%;opacity:0;transform:scale(.72);transition:opacity .2s,transform .2s,border-color .2s;pointer-events:none}
+.hotspot:hover:before,.hotspot:focus-visible:before{opacity:1;transform:scale(1);border-color:rgba(78,222,241,.52);box-shadow:0 0 18px rgba(55,210,233,.2),inset 0 0 12px rgba(55,210,233,.08)}
+.hotspot:after{content:none!important}
+.hotspot .world-loot-art{position:absolute;inset:0;display:grid;place-items:center;opacity:1;transition:opacity .2s,transform .25s;filter:drop-shadow(0 4px 7px #000d) drop-shadow(0 0 8px #43d9ed55)}
+.hotspot .world-loot-art img{display:block;width:auto!important;height:auto!important;max-width:min(100%,118px)!important;max-height:min(100%,126px)!important;object-fit:contain!important;opacity:1!important;filter:brightness(1.13) contrast(1.12) saturate(1.12)!important;transition:filter .2s,transform .25s}
+.hotspot:hover .world-loot-art,.hotspot:focus-visible .world-loot-art{transform:translateY(-3px) scale(1.1);filter:drop-shadow(0 0 12px #40dced) drop-shadow(0 0 22px #34cee655)}
+.hotspot.being-inspected .world-loot-art{opacity:0;transform:scale(.72);pointer-events:none}
+.hotspot .hotspot-world-label{position:absolute;left:50%;top:calc(100% + 5px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:3px;max-width:220px;padding:5px 8px;border:1px solid rgba(63,180,201,.32);background:rgba(2,11,17,.88);color:#c8e8ef;font:9px 'JetBrains Mono',monospace;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none}
+.hotspot .hotspot-world-label small{color:#6dc7d4;font-size:7px;letter-spacing:.11em}
+.hotspot:hover .hotspot-world-label,.hotspot:focus-visible .hotspot-world-label{opacity:1}
+.hotspot .hotspot-reticle{position:absolute;width:25px;height:25px;border:1px solid rgba(74,211,231,.65);border-radius:50%;box-shadow:0 0 14px #2ad5e344;display:grid;place-items:center}
+.hotspot .hotspot-reticle:before,.hotspot .hotspot-reticle:after{content:"";position:absolute;background:#8cebf5}
+.hotspot .hotspot-reticle:before{width:1px;height:33px}.hotspot .hotspot-reticle:after{height:1px;width:33px}
+.hotspot .hotspot-reticle i{width:4px;height:4px;border-radius:50%;background:#c4fbff;box-shadow:0 0 9px #49dced}
+
+/* Search modal: anchored to the right, readable scene remains visible behind it. */
+#simModal{z-index:130!important}
+#simModal .sim-modal-backdrop{position:absolute!important;inset:0!important;background:rgba(1,5,9,.24)!important;backdrop-filter:none!important;pointer-events:auto!important}
+#simModal .sim-modal-panel{position:absolute!important;left:auto!important;right:clamp(20px,4vw,72px)!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;width:min(610px,calc(100vw - 48px))!important;max-width:610px!important;max-height:min(78vh,680px)!important;overflow:auto!important;box-sizing:border-box!important;display:grid!important;grid-template-columns:minmax(132px,175px) minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;grid-template-areas:"vis title" "vis body" "vis acts" "vis note"!important;column-gap:clamp(16px,2vw,26px)!important;row-gap:0!important;padding:20px 24px 18px!important;border:1px solid rgba(63,184,208,.48)!important;border-radius:3px!important;background:linear-gradient(145deg,rgba(5,19,29,.97),rgba(3,10,17,.97))!important;box-shadow:0 24px 80px #000a,0 0 32px rgba(48,199,222,.12),inset 0 1px #ffffff0b!important;backdrop-filter:none!important}
+#simModal .smp-body-row{display:contents!important}
+#simModal .smp-h{grid-area:title!important;display:flex!important;align-items:center!important;justify-content:space-between!important;min-width:0!important;padding:6px 22px 13px 0!important;border:0!important;background:none!important;color:#bce6ee!important}
+#simModal #modalTitle{font:700 clamp(15px,1.25vw,19px)/1.25 'Space Grotesk',sans-serif!important;letter-spacing:.16em!important;overflow-wrap:anywhere!important}
+#simModal #modalClose{position:absolute!important;right:12px!important;top:10px!important;width:24px!important;height:24px!important;padding:0!important;border:0!important;background:transparent!important;color:#83a9b7!important;font-size:17px!important;line-height:1!important}
+#simModal .smp-visual{grid-area:vis!important;align-self:center!important;display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important;width:100%!important;height:230px!important;min-height:160px!important;max-height:280px!important;margin:0!important;padding:0!important;overflow:hidden!important;border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important}
+#simModal .smp-visual img{display:block!important;width:auto!important;height:auto!important;max-width:100%!important;max-height:245px!important;object-fit:contain!important;border:0!important;outline:0!important;background:transparent!important;filter:drop-shadow(0 12px 18px #000d) drop-shadow(0 0 12px #50d6e955)!important}
+#simModal .smp-b{grid-area:body!important;min-width:0!important;margin:0!important;padding:0 0 12px!important;color:#b8cbd3!important;font:400 13px/1.62 'Space Grotesk',sans-serif!important;white-space:normal!important;overflow-wrap:anywhere!important}
+#simModal .inspection-description{margin:0 0 12px!important;white-space:pre-line!important;line-height:1.65!important}
+#simModal .discovery-heading{display:flex;align-items:center;justify-content:space-between;margin:7px 0 3px;padding-bottom:7px;border-bottom:1px solid rgba(108,170,188,.2);color:#74bdca;font:9px 'JetBrains Mono',monospace;letter-spacing:.16em}
+#simModal .discovery-heading b{color:#c5e7ed;font-size:11px}
+#simModal .discovery-list{display:flex!important;flex-direction:column!important;gap:0!important;margin:5px 0 10px!important;max-height:26vh!important;overflow:auto!important}
+#simModal .discovery-row{appearance:none!important;width:100%!important;display:grid!important;grid-template-columns:48px minmax(0,1fr) 22px!important;align-items:center!important;gap:11px!important;min-width:0!important;padding:8px 2px!important;border:0!important;border-bottom:1px solid rgba(107,166,185,.17)!important;border-radius:0!important;background:transparent!important;color:#d3e8ec!important;text-align:left!important;cursor:pointer!important;transition:background .18s,padding .18s!important}
+#simModal .discovery-row:hover{padding-left:8px!important;background:linear-gradient(90deg,rgba(45,198,221,.11),transparent)!important}
+#simModal .discovery-row img{width:45px!important;height:45px!important;object-fit:contain!important;border:0!important;background:transparent!important;filter:drop-shadow(0 4px 8px #000a) drop-shadow(0 0 8px #35cce344)!important}
+#simModal .discovery-copy{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important}
+#simModal .discovery-copy strong{font:600 12px/1.3 'Space Grotesk',sans-serif!important;color:#d9eef2!important}
+#simModal .discovery-copy small{font:8px 'JetBrains Mono',monospace!important;color:#56c6d8!important;letter-spacing:.12em!important}
+#simModal .discovery-arrow{color:#60d4e5;font-size:17px;text-align:right}
+#simModal .discovery-empty{font-size:12px;line-height:1.6;color:#849eaa}
+
+/* The square keycaps were generated by the old ::before content rule. Remove them entirely. */
+#simModal .smp-a{grid-area:acts!important;display:flex!important;flex-wrap:wrap!important;gap:8px!important;justify-content:flex-start!important;align-items:center!important;padding:10px 0 0!important;border:0!important;background:none!important}
+#simModal .smp-a:before{content:none!important;display:none!important}
+#simModal .smp-a button,#simModal .smp-a .btn,#simModal .inspection-action{appearance:none!important;position:relative!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:1 1 145px!important;min-width:0!important;min-height:40px!important;height:auto!important;padding:9px 13px!important;border:1px solid rgba(87,174,194,.42)!important;border-radius:2px!important;background:linear-gradient(180deg,rgba(13,40,53,.84),rgba(5,18,27,.92))!important;color:#c4e2e8!important;font:600 9px/1.35 'JetBrains Mono',monospace!important;letter-spacing:.11em!important;text-align:center!important;white-space:normal!important;overflow-wrap:anywhere!important;cursor:pointer!important;box-shadow:inset 0 1px #ffffff08,0 5px 14px #0003!important;transition:border-color .16s,background .16s,box-shadow .16s,color .16s!important}
+#simModal .smp-a button:before,#simModal .smp-a button:after{content:none!important;display:none!important}
+#simModal .smp-a button:hover{border-color:#50d9ec!important;background:linear-gradient(180deg,rgba(20,66,82,.94),rgba(5,24,34,.98))!important;color:#effdff!important;box-shadow:0 0 18px #27c8e522,inset 0 1px #ffffff12!important}
+#simModal .smp-a .inspection-action.primary,#simModal .smp-a button.solid,#simModal .smp-a button.primary{border-color:#40d6ea!important;background:linear-gradient(180deg,#33cfe4,#119ab3)!important;color:#03151c!important;box-shadow:0 5px 18px #1ac4dc2b!important}
+#simModal .smp-a .inspection-action.secondary{border-color:rgba(143,178,188,.42)!important;background:rgba(10,23,31,.92)!important;color:#b8cdd3!important}
+#simModal .smp-a .inspection-action.quiet{flex:0 1 auto!important;border-color:transparent!important;background:transparent!important;color:#79adba!important;box-shadow:none!important}
+#simModal .smp-a .inspection-action.quiet:hover{border-color:rgba(76,200,220,.26)!important;background:rgba(44,178,201,.08)!important}
+#simModal .smp-note{grid-area:note!important;display:flex!important;align-items:flex-start!important;gap:9px!important;margin:12px 0 0!important;padding:8px 0 0!important;border-top:1px solid rgba(96,157,175,.16)!important;color:#79aeba!important;font:400 10px/1.5 'Space Grotesk',sans-serif!important;white-space:normal!important;overflow-wrap:anywhere!important}
+#simModal .smp-note:before{content:"i"!important;display:grid!important;place-items:center!important;flex:0 0 15px!important;width:15px!important;height:15px!important;border:1px solid currentColor!important;border-radius:50%!important;font:600 9px 'JetBrains Mono',monospace!important}
+#simModal .item-risk{display:flex!important;align-items:flex-start!important;gap:8px!important;margin:12px 0!important;padding:8px 0!important;border:0!important;border-top:1px solid rgba(224,91,112,.28)!important;border-bottom:1px solid rgba(224,91,112,.18)!important;background:transparent!important;color:#e49daa!important;font:9px/1.5 'JetBrains Mono',monospace!important}
+#simModal .risk-mark{color:#ff6f83;font-size:15px}
+#simModal .item-detail{margin:9px 0!important;padding:10px 0 0!important;border-top:1px solid rgba(112,169,185,.2)!important;color:#c1d1d6!important;font:12px/1.6 'Space Grotesk',sans-serif!important}
+#simModal .inspection-scan{position:relative;width:154px;height:154px;border:1px solid rgba(76,196,216,.34);border-radius:50%;background:radial-gradient(circle,rgba(45,188,210,.1) 0 20%,transparent 21% 42%,rgba(60,193,214,.08) 43% 44%,transparent 45%);box-shadow:0 0 35px rgba(34,183,206,.08),inset 0 0 30px rgba(34,183,206,.08);animation:scan-breathe 4.8s ease-in-out infinite}
+#simModal .inspection-scan:before,#simModal .inspection-scan:after{content:"";position:absolute;inset:13%;border:1px solid rgba(77,202,221,.18);border-radius:50%}
+#simModal .inspection-scan:after{inset:32%;border-style:dashed;animation:scan-turn 24s linear infinite}
+#simModal .inspection-scan span{position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%);border-radius:50%;background:#b5f7fc;box-shadow:0 0 14px 5px #35cde566}
+#simModal .inspection-scan i{position:absolute;left:50%;top:7%;width:1px;height:43%;transform-origin:bottom;transform:rotate(24deg);background:linear-gradient(transparent,#5de5f0);opacity:.7;animation:scan-turn 8s linear infinite}
+#simModal .inspection-scan-label{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);color:#6ba6b5;font:7px 'JetBrains Mono',monospace;letter-spacing:.17em;white-space:nowrap}
+#simModal .inspection-item-art{max-width:100%!important;max-height:270px!important;animation:inspection-art-in .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes scan-breathe{50%{box-shadow:0 0 48px rgba(34,183,206,.15),inset 0 0 42px rgba(34,183,206,.13);transform:scale(1.025)}}
+@keyframes scan-turn{to{transform:rotate(384deg)}}
+@keyframes inspection-art-in{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:700px){
+ #simModal .sim-modal-panel{left:12px!important;right:12px!important;top:50%!important;width:auto!important;max-height:86vh!important;transform:translateY(-50%)!important;grid-template-columns:92px minmax(0,1fr)!important;column-gap:13px!important;padding:15px!important}
+ #simModal .smp-visual{height:175px!important;min-height:125px!important}
+ #simModal .inspection-scan{width:100px;height:100px}
+ #simModal .smp-a button{flex-basis:100%!important}
+}
+
+/* Atmospheric dressing: subtle drifting motes and an inspection feedback burst. */
+.ambient-fx{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.ambient-particle{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);border-radius:50%;background:rgba(169,230,240,.72);box-shadow:0 0 7px 2px rgba(70,206,224,.26);opacity:0;animation:ambient-float var(--duration) ease-in-out var(--delay) infinite}
+@keyframes ambient-float{0%{opacity:0;transform:translate3d(0,20px,0) scale(.7)}18%{opacity:.55}60%{opacity:.28}100%{opacity:0;transform:translate3d(22px,-115px,0) scale(1.25)}}
+.inspect-burst{position:absolute;z-index:16;width:1px;height:1px;pointer-events:none}
+.inspect-burst i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:50%;background:#a5f7ff;box-shadow:0 0 8px 2px #38d4ea;transform:rotate(var(--particle-angle)) translateX(0);animation:inspect-spark .65s ease-out forwards}
+@keyframes inspect-spark{to{opacity:0;transform:rotate(var(--particle-angle)) translateX(var(--particle-distance)) scale(.2)}}
+.hotspot.discovery-triggered .world-loot-art{opacity:0;transform:scale(.8)}
