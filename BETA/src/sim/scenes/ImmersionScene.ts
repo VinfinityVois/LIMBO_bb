@@ -262,7 +262,7 @@ export class ImmersionScene {
     document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
     document.getElementById('btnHide')?.addEventListener('click', () => this.resolveThreat('hide'));
     document.getElementById('btnConfront')?.addEventListener('click', () => this.startCombat());
-    document.getElementById('btnCall')?.addEventListener('click', () => this.makeNoise('Ты громко окликнул кого-то в темноте.'));
+    document.getElementById('btnCall')?.addEventListener('click', () => { simAudio.call(this.state.muted); this.makeNoise('Ты громко окликнул кого-то в темноте.'); });
     document.getElementById('combatAttack')?.addEventListener('click', () => this.combatAction('attack'));
     document.getElementById('combatGuard')?.addEventListener('click', () => this.combatAction('guard'));
     document.getElementById('combatDodge')?.addEventListener('click', () => this.combatDodge());
@@ -1644,6 +1644,21 @@ export class ImmersionScene {
     examBody.classList.remove('thought-text');
     const actions = document.getElementById('modalActions')!;
     actions.innerHTML = '';
+    if (id === 'kokeshi_note') {
+      const read = document.createElement('button');
+      read.type = 'button';
+      read.className = 'inspection-action secondary note-read-action';
+      read.textContent = 'ПРОЧИТАТЬ';
+      read.onclick = () => {
+        examBody.textContent = 'ЛИЧНАЯ ЗАПИСЬ · М.\\n\\nЕсли ты читаешь это, значит, дверь уже закрылась за тобой. Не верь шагам, которые повторяют твои. Это не эхо — оно учится.\\n\\nПервый ключ лежит там, где вода не отражает небо. Вторую половину спрятали под доской с тремя царапинами. Соедини их, но не открывай дверь, пока не найдёшь нить.\\n\\nНить удерживает бумагу. Бумага помнит огонь. Колокольчик без языка всё ещё может предупредить того, кто слушает не ушами.\\n\\nМ. · если маска заговорит твоим голосом — не отвечай.';
+        this.state.flags.note_read = true;
+        this.state.flags.clue_key_halves = true;
+        saveState(this.state);
+        read.textContent = 'ПЕРЕЧИТАТЬ';
+        simAudio.whisper(this.state.muted);
+      };
+      actions.appendChild(read);
+    }
     const close = document.createElement('button');
     close.className = 'btn';
     close.textContent = 'ЗАКРЫТЬ';
