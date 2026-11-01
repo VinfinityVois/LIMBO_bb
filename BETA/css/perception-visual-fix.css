@@ -44,3 +44,13 @@ body.immerse:after{content:"";position:fixed;inset:0;z-index:120;pointer-events:
 #senseFeed>.sense-event{max-height:76px!important}
 @media(max-width:640px){.awareness-indicator{top:8px;padding:6px 9px;font-size:8px}#senseFeed{max-height:25vh!important}}
 @media(prefers-reduced-motion:reduce){.crt-interference:before,.crt-interference:after,.awareness-indicator[data-state="seen"]{animation:none!important}}
+
+
+/* Discovery list: independent finds, compact and readable without nested square cards. */
+#simModal .discovery-list{display:flex;flex-direction:column;gap:6px;margin:14px 0 4px;max-height:30vh;overflow:auto}
+#simModal .discovery-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;min-width:0;padding:7px 0;border-bottom:1px solid rgba(110,165,180,.18);background:transparent}
+#simModal .discovery-row img{width:40px;height:40px;object-fit:contain;filter:drop-shadow(0 3px 7px #000b) drop-shadow(0 0 7px #49d9ed33)}
+#simModal .discovery-row span{min-width:0;color:#d3e6ec;font:500 12px/1.35 'Space Grotesk',sans-serif;overflow-wrap:anywhere}
+#simModal .discovery-row button{padding:7px 9px;border:1px solid rgba(48,190,215,.42);background:transparent;color:#8ce7f2;font:8px 'JetBrains Mono',monospace;letter-spacing:.08em;cursor:pointer}
+#simModal .discovery-row button:hover{border-color:#2bd6f2;color:#e1fbff}
+#simModal .discovery-empty{color:#91aab5;font-size:12px;line-height:1.5}
