@@ -491,7 +491,10 @@ export class ImmersionScene {
   private buildHotspots() {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
-      if (hs.takenFlag && this.state.flags[hs.takenFlag]) continue;
+      const allFinds = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
+      const allFlags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
+      if (allFinds.length && allFlags.length && allFinds.every((_, i) => !!this.state.flags[allFlags[i] || ''])) continue;
+      if (!allFinds.length && hs.takenFlag && this.state.flags[hs.takenFlag]) continue;
       const b = document.createElement('button');
       b.type = 'button';
       b.className =
@@ -503,7 +506,7 @@ export class ImmersionScene {
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
       b.style.height = hs.h + '%';
-      if (hs.item) { const art = this.itemAsset(hs.item); b.innerHTML = `<span class="world-loot-art"><img src="${art}" alt="" draggable="false"></span><span class="world-loot-name">${hs.label}</span>`; }
+      if (allFinds.length) { const art = this.itemAsset(allFinds[0]); b.innerHTML = `<span class="world-loot-art"><img src="${art}" alt="" draggable="false"></span><span class="world-loot-name">${hs.label} · ОСМОТРЕТЬ</span>`; }
       else b.innerHTML = `<span class="world-object-mark">${hs.complete ? '◇' : '⌖'}</span><span class="world-loot-name">${hs.label}</span>`;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
