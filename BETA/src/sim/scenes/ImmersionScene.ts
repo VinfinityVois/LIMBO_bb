@@ -104,6 +104,7 @@ export class ImmersionScene {
 
   async start() {
     this.bindChrome();
+    this.ensurePerceptionOverlay();
     this.resize();
     this.parallax.start();
     await this.playDiveIn();
@@ -255,7 +256,7 @@ export class ImmersionScene {
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
       const activeNoise = Date.now() < this.noiseUntil;
-      const watched = this.threatActive || (activeNoise && Math.random() < .35);
+      const watched = activeNoise && Math.random() < .35;
       this.updateAwareness(this.threatActive ? 2 : watched || activeNoise ? 1 : 0);
       if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
       if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : activeNoise ? 'ПОВЫШЕНА' : watched ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
@@ -343,6 +344,26 @@ export class ImmersionScene {
       simAudio.whoosh(this.state.muted);this.notify('Свет фонаря заставил существо отступить.','ok');this.state.sanity=Math.min(100,this.state.sanity+2);
     } else {simAudio.deny(this.state.muted);this.notify('Без подходящего средства ты лишь разозлил его.','warn');this.state.health=Math.max(0,this.state.health-14);this.state.sanity=Math.max(0,this.state.sanity-8);}
     saveState(this.state);this.renderVitals();
+  }
+
+  private ensurePerceptionOverlay() {
+    if (!document.getElementById('awarenessIndicator')) {
+      const eye = document.createElement('div');
+      eye.id = 'awarenessIndicator';
+      eye.className = 'awareness-indicator';
+      eye.dataset.state = 'hidden';
+      eye.setAttribute('role', 'status');
+      eye.setAttribute('aria-live', 'polite');
+      eye.innerHTML = '<span class="awareness-eye" aria-hidden="true"><i></i></span><span data-eye-label>НЕ ЗАМЕЧЕНЫ</span>';
+      document.body.appendChild(eye);
+    }
+    if (!document.getElementById('crtInterference')) {
+      const crt = document.createElement('div');
+      crt.id = 'crtInterference';
+      crt.className = 'crt-interference';
+      crt.setAttribute('aria-hidden', 'true');
+      this.stage.appendChild(crt);
+    }
   }
 
   private updateAwareness(level: 0 | 1 | 2) {
@@ -1043,6 +1064,8 @@ export class ImmersionScene {
     if (tier === this.sanityTier) return;
     this.sanityTier = tier;
     document.body.dataset.sanity = String(tier);
+    const crt = document.getElementById('crtInterference');
+    if (crt) crt.dataset.level = String(tier);
     document.body.classList.toggle('mind-frayed', tier >= 1);
     document.body.classList.toggle('mind-fractured', tier >= 2);
     document.body.classList.toggle('mind-collapse', tier >= 3);
@@ -1158,10 +1181,10 @@ export class ImmersionScene {
         document.body.classList.add('hallucination-hit');
         setTimeout(() => document.body.classList.remove('hallucination-hit'), 900);
       }
-      if (tier === 3 && Math.random() < .28) {
+      if (tier >= 2 && Math.random() < (tier === 2 ? .34 : .62)) {
         const caption = document.getElementById('soundCaption');
-        if (caption) caption.textContent = 'ТВОЙ ГОЛОС · позади';
-        simAudio.maskWhisper(this.state.muted, 1.35);
+        if (caption) caption.textContent = tier === 3 ? 'ЧУЖОЙ ГОЛОС · прямо за спиной' : 'ШЁПОТ · неразборчиво';
+        simAudio.maskWhisper(this.state.muted, tier === 3 ? 1.7 : 1.15);
         // A brief false silhouette: visual only, never starts combat or deals damage.
         if (!document.getElementById('falsePresence')) {
           const ghost = document.createElement('div');
