@@ -166,3 +166,45 @@ body[data-sanity="3"] .inv-slot:nth-child(3n){filter:hue-rotate(145deg) saturate
 @keyframes inventory-haunt{0%,90%,100%{transform:translate(0,0)}92%{transform:translate(2px,-1px)}94%{transform:translate(-2px,1px)}}
 @media(max-width:760px){.awareness-indicator{top:52px;left:auto;right:12px;transform:none;min-width:130px;height:29px}#senseFeed{left:12px!important;top:92px!important;width:min(270px,calc(100vw - 24px))!important}}
 @media(prefers-reduced-motion:reduce){.sim-stage canvas,.sim-stage:before,.sim-stage:after,body[data-sanity="3"].immerse:after,.inv-slot{animation:none!important;transition:none!important}}
+
+
+/* Dynamic acoustic threat HUD — silence is calm, loud actions raise danger. */
+.sound-readout{--noise-alert:0;transition:color .18s,border-color .18s,filter .18s}
+.sound-readout .sound-meter{height:15px;gap:3px;align-items:flex-end}
+.sound-readout .sound-meter i{height:5%;min-height:2px;transition:height .12s linear,background-color .2s,opacity .2s;box-shadow:0 0 7px currentColor}
+.sound-readout[data-level="mid"]>span,.sound-readout[data-level="mid"] small{color:#e2b66f}
+.sound-readout[data-level="high"]>span,.sound-readout[data-level="high"] small{color:#ff6477}
+.sound-readout[data-level="high"]{filter:drop-shadow(0 0 8px rgba(255,55,78,.26))}
+.sound-readout[data-level="high"] .sound-meter i{box-shadow:0 0 8px rgba(255,65,86,.5)}
+.danger-readout{--danger-heat:var(--noise-alert,0)}
+.danger-readout b{color:color-mix(in srgb,#72d7e6 calc((1 - var(--danger-heat))*100%),#ff596f)!important}
+.danger-readout em{background:linear-gradient(90deg,#31c9df,#f1b45d 58%,#f04460)!important;transition:width .18s linear}
+.awareness-indicator .awareness-eye{width:29px!important;height:18px!important;flex:0 0 29px!important;overflow:visible!important;border:0!important;border-radius:0!important;background:none!important}
+.awareness-indicator .awareness-eye .eye-outline{fill:none!important;stroke:currentColor!important;stroke-width:1.65!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+.awareness-indicator .awareness-eye .eye-iris{fill:none!important;stroke:currentColor!important;stroke-width:1.5!important;transition:opacity .18s,transform .18s!important}
+.awareness-indicator .awareness-eye .eye-pupil{fill:currentColor!important;stroke:none!important}
+.awareness-indicator .awareness-eye .eye-lid{fill:none!important;stroke:currentColor!important;stroke-width:2.4!important;stroke-linecap:round!important;opacity:0;transition:opacity .18s!important}
+.awareness-indicator[data-state="hidden"] .eye-iris,.awareness-indicator[data-state="hidden"] .eye-pupil{opacity:0!important}
+.awareness-indicator[data-state="hidden"] .eye-lid{opacity:1!important}
+.awareness-indicator[data-state="near"] .eye-iris{opacity:.6!important;clip-path:inset(0 0 42% 0)}
+.awareness-indicator[data-state="near"] .eye-lid{opacity:.8!important}
+.awareness-indicator[data-state="seen"]{color:#ff6479!important;border-color:#e54860!important;box-shadow:0 0 20px rgba(238,50,75,.32),inset 0 0 14px rgba(238,50,75,.08)!important}
+.awareness-indicator[data-state="seen"] .eye-iris,.awareness-indicator[data-state="seen"] .eye-pupil{opacity:1!important}
+.awareness-indicator[data-state="seen"] .eye-lid{opacity:0!important}
+.awareness-indicator[data-state="seen"] .eye-outline{stroke-width:2!important}
+body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow:inset 0 0 0 1px var(--mind-red,transparent),inset 0 0 34px var(--mind-red,transparent)!important;transition:box-shadow .25s,border-color .25s}
+#simModal .sim-modal-panel{right:clamp(16px,3vw,38px)!important;top:50%!important;left:auto!important;width:min(760px,calc(100vw - 32px))!important;max-width:760px!important;max-height:min(82vh,720px)!important;overflow:auto!important;transform:translateY(-50%)!important;grid-template-columns:minmax(120px,170px) minmax(0,1fr)!important;column-gap:22px!important;row-gap:0!important;padding:20px!important;border-radius:7px!important}
+#simModal .smp-visual{width:100%!important;min-width:0!important;height:220px!important;min-height:180px!important;align-self:center!important;border:0!important;background:radial-gradient(ellipse at center,rgba(32,91,111,.26),transparent 72%)!important}
+#simModal .smp-visual img{max-width:100%!important;max-height:210px!important;object-fit:contain!important;filter:drop-shadow(0 12px 20px rgba(0,0,0,.5))!important}
+#simModal .smp-a{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:stretch!important;gap:9px!important;width:100%!important;min-width:0!important;padding:8px 0 0!important}
+#simModal .smp-a button,#simModal .smp-a .inspection-action{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;min-height:44px!important;height:auto!important;padding:10px 12px!important;white-space:normal!important;line-height:1.35!important;border-radius:4px!important}
+#simModal .smp-a .inspection-action.quiet{flex:1 1 0!important}
+#simModal .smp-a button.primary{background:linear-gradient(180deg,#39d5e8,#139cb6)!important;color:#04151b!important}
+#simModal .smp-a button.secondary{background:linear-gradient(180deg,rgba(18,42,54,.95),rgba(7,19,28,.98))!important}
+#simModal .smp-note{grid-area:note!important;margin-top:12px!important}
+@media(max-width:640px){
+ #simModal .sim-modal-panel{left:12px!important;right:12px!important;width:auto!important;max-height:88vh!important;top:50%!important;transform:translateY(-50%)!important;grid-template-columns:88px minmax(0,1fr)!important;column-gap:12px!important;padding:14px!important}
+ #simModal .smp-visual{height:150px!important;min-height:120px!important}
+ #simModal .smp-a{flex-wrap:wrap!important}
+ #simModal .smp-a button,#simModal .smp-a .inspection-action{flex:1 1 calc(50% - 6px)!important}
+}
