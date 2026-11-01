@@ -1012,18 +1012,21 @@ export class ImmersionScene {
         Array.from(meter.querySelectorAll<HTMLElement>('i')).forEach((bar, index) => {
           // The columns behave like a real playback equalizer: almost flat in silence,
           // increasingly tall and lively as our noise rises. Their profiles stay distinct.
-          const shape = [.28,.52,.38,.78,.47,.66,.32,.94,.44,.72,.36,.58][index % 12];
+          const shape = [.18,.42,.27,.72,.34,.58,.22,.9,.31,.66,.24,.49][index % 12];
           const amplitude = this.currentSoundLevel / 100;
-          const pulse = (Math.sin(now / 175 + index * 1.17) + 1) * .5;
-          const height = 2.5 + shape * amplitude * 84 + pulse * amplitude * 9;
-          const hue = amplitude < .55
-            ? 190 - (amplitude / .55) * 135
-            : 55 - ((amplitude - .55) / .45) * 55;
-          const lightness = 58 - amplitude * 12;
-          bar.style.setProperty('--bar-height', height.toFixed(1) + '%');
-          bar.style.setProperty('--bar-opacity', String(.22 + amplitude * .76));
-          bar.style.setProperty('--bar-color', `hsl(${hue.toFixed(0)} 82% ${lightness.toFixed(0)}%)`);
-          bar.style.setProperty('--bar-glow', (2 + amplitude * 7).toFixed(1) + 'px');
+          const pulse = (Math.sin(now / (210 + index * 13) + index * 1.31) + 1) * .5;
+          // Silence is almost a flat baseline. Noise opens each frequency column
+          // independently, like a music player spectrum rather than a row of LEDs.
+          const floor = 1.5 + shape * 2.2;
+          const height = floor + Math.pow(amplitude, .82) * shape * 88 + pulse * amplitude * 13;
+          const hue = amplitude < .72
+            ? 218 - (amplitude / .72) * 163
+            : 55 - ((amplitude - .72) / .28) * 55;
+          const lightness = 62 - amplitude * 17;
+          bar.style.setProperty('--bar-height', Math.min(100, height).toFixed(1) + '%');
+          bar.style.setProperty('--bar-opacity', String(.28 + amplitude * .72));
+          bar.style.setProperty('--bar-color', `hsl(${hue.toFixed(0)} 86% ${lightness.toFixed(0)}%)`);
+          bar.style.setProperty('--bar-glow', (1 + amplitude * 9).toFixed(1) + 'px');
         });
       }
       if (readout) {
