@@ -371,7 +371,7 @@ export class ImmersionScene {
       eye.dataset.state = 'hidden';
       eye.setAttribute('role', 'status');
       eye.setAttribute('aria-live', 'polite');
-      eye.innerHTML = '<span class="awareness-eye" aria-hidden="true"><i></i></span><span data-eye-label>НЕ ЗАМЕЧЕНЫ</span>';
+      eye.innerHTML = '<svg class="awareness-eye" viewBox="0 0 32 20" aria-hidden="true" focusable="false"><path class="eye-outline" d="M1 10 C5 3.8 10.2 1 16 1 C21.8 1 27 3.8 31 10 C27 16.2 21.8 19 16 19 C10.2 19 5 16.2 1 10Z"/><circle class="eye-iris" cx="16" cy="10" r="4.2"/><circle class="eye-pupil" cx="16" cy="10" r="1.8"/><path class="eye-lid" d="M1 10 Q16 10 31 10"/></svg><span data-eye-label>НЕ ЗАМЕЧЕНЫ</span>';
       document.body.appendChild(eye);
     }
     if (!document.getElementById('ambientFx')) {
@@ -538,12 +538,18 @@ export class ImmersionScene {
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
       b.style.height = hs.h + '%';
+      const firstAvailable = allFinds.find((id, index) => {
+        const flag = allFlags[index] || hs.takenFlag;
+        return !flag || !this.state.flags[flag];
+      });
       const inspected = !!this.state.flags['inspected_' + hs.id];
       b.dataset.hotspotId = hs.id;
       b.setAttribute('aria-label', (allFinds.length ? 'Осмотреть находку: ' : 'Осмотреть: ') + hs.label);
       if (inspected) b.classList.add('inspected');
-      // The item itself is deliberately NOT rendered in the world. It is revealed inside the inspection panel.
-      b.innerHTML = `<span class="hotspot-reticle" aria-hidden="true"><i></i></span><span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
+      const itemMarkup = firstAvailable
+        ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
+        : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
+      b.innerHTML = itemMarkup + `<span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
         this.showHover(hs, b);
@@ -631,7 +637,7 @@ export class ImmersionScene {
     simAudio.click(this.state.muted);
     this.state.flags['inspected_' + hs.id] = true;
     saveState(this.state);
-    element?.classList.add('inspected','discovery-triggered');
+    element?.classList.add('inspected','discovery-triggered','being-inspected');
     this.spawnInspectBurst(hs.x, hs.y);
 
     if (this.state.selected && hs.useWith?.length) {
@@ -868,6 +874,7 @@ export class ImmersionScene {
   private closeModal() {
     document.getElementById('simModal')?.classList.remove('open');
     document.body.classList.remove('inspection-open');
+    document.querySelectorAll('.hotspot.being-inspected').forEach(node => node.classList.remove('being-inspected'));
   }
 
   private renderInv() {
