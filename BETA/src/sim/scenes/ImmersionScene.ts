@@ -70,6 +70,10 @@ export class ImmersionScene {
   private noiseDuration = 0;
   private noisePeak = 0;
   private currentSoundLevel = 3;
+  private notificationQueue: Array<{ message: string; kind: 'info' | 'warn' | 'ok' }> = [];
+  private notificationBusy = false;
+  private lastNotification = '';
+  private lastNotificationAt = 0;
 
   constructor() {
     this.state = loadState();
@@ -139,9 +143,20 @@ export class ImmersionScene {
         resolve();
         return;
       }
-      overlay.classList.add('active');
       const log = document.getElementById('diveLog');
-      const lines = [
+      if (log) log.innerHTML = '';
+      const reboot = document.body.classList.contains('system-reboot');
+      overlay.dataset.mode = reboot ? 'reboot' : 'initial';
+      const title = overlay.querySelector<HTMLElement>('.dive-title');
+      if (title) title.textContent = reboot ? 'ПЕРЕЗАПУСК СЕКТОРА' : 'ПОГРУЖЕНИЕ';
+      overlay.classList.add('active');
+      const lines = reboot ? [
+        { t: 'ЦЕФЕЙ · ПОЛНЫЙ СБРОС СЕАНСА', c: 'dim' },
+        { t: 'ОЧИСТКА ПАМЯТИ ТЕКУЩЕГО ПРОХОДА', c: '' },
+        { t: 'ПЕРЕЗАГРУЗКА НЕЙРО-МОСТА', c: 'cyan' },
+        { t: 'ВОССТАНОВЛЕНИЕ КАРТЫ СЕКТОРА', c: '' },
+        { t: 'СОЕДИНЕНИЕ УСТАНОВЛЕНО', c: 'hi' },
+      ] : [
         { t: 'ЦЕФЕЙ · HANDSHAKE', c: 'dim' },
         { t: 'НЕЙРО-МОСТ · ОТКРЫТИЕ КАНАЛА', c: '' },
         { t: 'СЕКТОР RK-01 · РЁКАН', c: 'cyan' },
@@ -202,8 +217,16 @@ export class ImmersionScene {
     overlay.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
     overlay.querySelector('[data-confirm-accept]')?.addEventListener('click', () => {
-      if (isExit) window.location.href = '/scene-ryokan.html';
-      else { resetSim(); window.location.reload(); }
+      if (isExit) {
+        overlay.classList.add('leaving');
+        window.setTimeout(() => { window.location.href = '/scene-ryokan.html'; }, 320);
+      } else {
+        overlay.classList.add('rebooting');
+        document.body.classList.add('system-reboot');
+        const panel = overlay.querySelector('.system-confirm-panel');
+        if (panel) panel.innerHTML = '<div class="system-confirm-kicker">ЦЕФЕЙ · ПЕРЕЗАПУСК</div><h2>СЕАНС ЗАВЕРШАЕТСЯ</h2><p>Стираем состояние текущего прохода и восстанавливаем сектор. Подключение будет установлено заново.</p><div class="system-reboot-progress"><i></i></div>';
+        window.setTimeout(() => { resetSim(); window.location.reload(); }, 720);
+      }
     });
   }
 
@@ -461,17 +484,34 @@ export class ImmersionScene {
   notify(msg: string, kind: 'info' | 'warn' | 'ok' = 'info') {
     const host = document.getElementById('notifyHost');
     if (!host) return;
+    const now = Date.now();
+    // Suppress identical events emitted by two systems during the same update.
+    if (msg === this.lastNotification && now - this.lastNotificationAt < 1400) return;
+    this.lastNotification = msg;
+    this.lastNotificationAt = now;
+    this.notificationQueue.push({ message: msg, kind });
+    if (!this.notificationBusy) this.showNextNotification();
+  }
+
+  private showNextNotification() {
+    const host = document.getElementById('notifyHost');
+    if (!host || this.notificationBusy || !this.notificationQueue.length) return;
+    this.notificationBusy = true;
+    const entry = this.notificationQueue.shift()!;
     const n = document.createElement('div');
-    n.className = 'notify ' + kind;
-    n.setAttribute('role','status');
-    n.textContent = msg;
-    host.appendChild(n);
-    while (host.children.length > 4) host.firstElementChild?.remove();
+    n.className = 'notify ' + entry.kind;
+    n.setAttribute('role', 'status');
+    n.textContent = entry.message;
+    host.replaceChildren(n);
     requestAnimationFrame(() => n.classList.add('show'));
     window.setTimeout(() => {
       n.classList.add('leaving');
-      window.setTimeout(() => n.remove(), 260);
-    }, 4200);
+      window.setTimeout(() => {
+        n.remove();
+        this.notificationBusy = false;
+        this.showNextNotification();
+      }, 300);
+    }, 2600);
   }
 
   private showHover(hs: HotspotDef, el: HTMLElement) {
@@ -628,7 +668,7 @@ export class ImmersionScene {
     this.stage.classList.remove('fade');
     this.stage.classList.add('reveal');
     setTimeout(() => this.stage.classList.remove('reveal'), 600);
-    this.notify(LOCATIONS[to].title, 'info');
+    // The location title is already shown in the fixed scene header; do not duplicate it as a toast.
     this.pulseMatrix('ok');
     simAudio.open(this.state.muted);
   }
