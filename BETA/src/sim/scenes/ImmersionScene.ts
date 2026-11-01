@@ -237,15 +237,20 @@ export class ImmersionScene {
   }
 
   private bindChrome() {
-    document.getElementById('btnMute')?.addEventListener('click', () => {
+    const muteButton = document.getElementById('btnMute');
+    if (muteButton) muteButton.textContent = this.state.muted ? 'SFX OFF' : 'SFX ON';
+    document.body.classList.toggle('audio-muted', this.state.muted);
+    muteButton?.addEventListener('click', () => {
       setMuted(this.state, !this.state.muted);
       const b = document.getElementById('btnMute');
       if (b) b.textContent = this.state.muted ? 'SFX OFF' : 'SFX ON';
+      document.body.classList.toggle('audio-muted', this.state.muted);
       simAudio.unlock();
       if (!this.state.muted) {
         simAudio.click(false);
         const loc = LOCATIONS[this.state.location];
         simAudio.startAmbient(false, loc.ambient);
+        document.body.classList.add('audio-ready');
       } else simAudio.stopAmbient();
     });
     document.getElementById('btnExit')?.addEventListener('click', () => this.showSystemConfirm('exit'));
@@ -284,7 +289,10 @@ export class ImmersionScene {
       else if (key === '4' || key === 'i') this.combatAction('item');
       else if (key === '5' || key === 'f') this.combatAction('flee');
     });
-    window.addEventListener('pointerdown', () => simAudio.unlock(), { once: true });
+    // Keep audio unlocked after the first trusted user gesture and when returning to the tab.
+    const unlockAudio = () => simAudio.unlock();
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
   }
 
   private scheduleEvents() {
@@ -595,6 +603,8 @@ export class ImmersionScene {
         ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
         : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
       b.innerHTML = itemMarkup + `<span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
+      b.setAttribute('aria-label', 'Осмотреть: ' + hs.label);
+      b.title = 'Можно осмотреть: ' + hs.label;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
         this.showHover(hs, b);
@@ -650,7 +660,11 @@ export class ImmersionScene {
   }
 
   private async go(to: LocationId) {
-    simAudio.whoosh(this.state.muted);
+    // Distinct footsteps before the transition, followed by a soft movement whoosh.
+    simAudio.steps(this.state.muted);
+    window.setTimeout(() => simAudio.steps(this.state.muted), 230);
+    window.setTimeout(() => simAudio.steps(this.state.muted), 470);
+    window.setTimeout(() => simAudio.whoosh(this.state.muted), 590);
     this.makeNoise('Шаги эхом разнеслись по локации.');
     this.state.location = to;
     this.roomEnteredAt = Date.now();
@@ -935,6 +949,7 @@ export class ImmersionScene {
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
       slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
       slot.addEventListener('click', () => this.onInv(id));
+      slot.addEventListener('focus', () => simAudio.hover(this.state.muted));
       slot.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         this.openItemExam(id);
