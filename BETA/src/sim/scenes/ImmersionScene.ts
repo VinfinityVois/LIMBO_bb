@@ -65,6 +65,11 @@ export class ImmersionScene {
   private diving = true;
   private defeatShown = false;
   private sanityCollapseTick = 0;
+  private soundUiTimer: ReturnType<typeof setInterval> | number = 0;
+  private noiseStartedAt = 0;
+  private noiseDuration = 0;
+  private noisePeak = 0;
+  private currentSoundLevel = 3;
 
   constructor() {
     this.state = loadState();
@@ -117,6 +122,7 @@ export class ImmersionScene {
     this.renderMinimap();
     this.updateZone();
     this.startWorldClock();
+    this.startSoundDynamics();
     this.startSanityDistortions();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
@@ -255,8 +261,8 @@ export class ImmersionScene {
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
-      const activeNoise = Date.now() < this.noiseUntil;
-      const watched = activeNoise && Math.random() < .35;
+      const activeNoise = this.currentSoundLevel >= 38;
+      const watched = activeNoise && Math.random() < Math.min(.72, this.currentSoundLevel / 115);
       this.updateAwareness(this.threatActive ? 2 : watched || activeNoise ? 1 : 0);
       if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
       if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : activeNoise ? 'ПОВЫШЕНА' : watched ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
@@ -268,10 +274,12 @@ export class ImmersionScene {
       if (this.lightActive && !this.maskWorn && ['garden','engawa','hall'].includes(this.state.location) && Math.random() < .16) {
         this.startThreat('light'); return;
       }
-      if (Date.now() < this.noiseUntil && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < .2) {
+      const soundChance = Math.min(.48, .035 + this.currentSoundLevel * .0055);
+      if (this.currentSoundLevel >= 34 && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < soundChance) {
         this.startThreat('sound'); return;
       }
-      if (stayed > (this.maskWorn ? 60000 : 90000) && ['hall','storage','genkan'].includes(this.state.location) && Math.random() < .16) {
+      const ambientThreatChance = Math.min(.34, .12 + this.currentSoundLevel * .0022);
+      if (stayed > (this.maskWorn ? 60000 : 90000) && ['hall','storage','genkan'].includes(this.state.location) && Math.random() < ambientThreatChance) {
         this.startThreat('dweller'); return;
       }
       if (this.maskWorn && Math.random() < .28) { simAudio.maskWhisper(this.state.muted, Math.min(2, 0.6 + this.state.maskExposure / 80)); this.showSense('◉','Маска шепчет твоим голосом…',true); }
@@ -404,7 +412,7 @@ export class ImmersionScene {
     const eye = document.getElementById('awarenessIndicator');
     if (!eye) return;
     eye.dataset.state = level === 2 ? 'seen' : level === 1 ? 'near' : 'hidden';
-    const label = eye.querySelector('[data-eye-label]');
+    const label = eye.querySelector('[data-eye-label], #awarenessLabel');
     if (label) label.textContent = level === 2 ? 'ОБНАРУЖЕНЫ' : level === 1 ? 'КТО-ТО РЯДОМ' : 'НЕ ЗАМЕЧЕНЫ';
     eye.setAttribute('aria-label', level === 2 ? 'Существо заметило нас' : level === 1 ? 'Кто-то приближается' : 'Нас не заметили');
   }
@@ -609,7 +617,8 @@ export class ImmersionScene {
     this.makeNoise('Шаги эхом разнеслись по локации.');
     this.state.location = to;
     this.roomEnteredAt = Date.now();
-    this.noiseUntil = Date.now() + 4500;
+    this.noiseStartedAt = Date.now(); this.noiseDuration = 4500; this.noisePeak = 58;
+    this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
     if (!this.state.visited.includes(to)) this.state.visited.push(to);
     saveState(this.state);
     this.stage.classList.add('fade');
@@ -985,10 +994,60 @@ export class ImmersionScene {
   }
 
 
+
+  /** The sound meter measures how much noise we make, not speaker volume. */
+  private startSoundDynamics() {
+    if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
+    const update = () => {
+      const now = Date.now();
+      const elapsed = this.noiseDuration > 0 ? (now - this.noiseStartedAt) / this.noiseDuration : 1;
+      const fadingNoise = elapsed < 1 ? this.noisePeak * (1 - Math.max(0, elapsed)) : 0;
+      const level = Math.max(this.lightActive ? 30 : 2, fadingNoise);
+      this.currentSoundLevel = Math.max(0, Math.min(100, level));
+      const meter = document.querySelector<HTMLElement>('.sound-meter');
+      const readout = document.querySelector<HTMLElement>('.sound-readout');
+      if (meter) {
+        meter.style.setProperty('--sound-activity', String(this.currentSoundLevel / 100));
+        meter.dataset.level = this.currentSoundLevel >= 68 ? 'high' : this.currentSoundLevel >= 34 ? 'mid' : 'low';
+        Array.from(meter.querySelectorAll<HTMLElement>('i')).forEach((bar, index) => {
+          const shape = [.34,.62,.46,.88,.55,.74,.4,.96,.58,.78,.48,.68][index % 12];
+          const amplitude = this.currentSoundLevel / 100;
+          const height = 5 + shape * amplitude * 95;
+          bar.style.height = height + '%';
+          bar.style.opacity = String(.18 + amplitude * .78);
+          bar.style.backgroundColor = `hsl(${190 - amplitude * 168} 76% ${58 - amplitude * 10}%)`;
+        });
+      }
+      if (readout) {
+        readout.dataset.level = this.currentSoundLevel >= 68 ? 'high' : this.currentSoundLevel >= 34 ? 'mid' : 'low';
+        readout.style.setProperty('--noise-alert', String(this.currentSoundLevel / 100));
+      }
+      const caption = document.getElementById('soundCaption');
+      if (caption && !this.threatActive) {
+        caption.textContent = this.currentSoundLevel >= 68 ? 'ШУМ ВЫСОКИЙ · нас легко услышать' :
+          this.currentSoundLevel >= 34 ? 'ШУМ СРЕДНИЙ · кто-то может услышать' :
+          this.lightActive ? 'ТИХИЙ ГУЛ · горит фонарь' : 'ТИХО · слышен только дождь';
+      }
+      if (!this.threatActive) {
+        this.updateAwareness(this.currentSoundLevel >= 68 ? 1 : 0);
+      }
+      const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
+      const dangerValue = document.getElementById('dangerValue');
+      if (dangerFill) dangerFill.style.width = Math.max(4, this.currentSoundLevel) + '%';
+      if (dangerValue) dangerValue.textContent = this.currentSoundLevel >= 68 ? 'ВЫСОКАЯ' :
+        this.currentSoundLevel >= 34 ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
+    };
+    update();
+    this.soundUiTimer = window.setInterval(update, 140);
+  }
+
   private makeNoise(message: string) {
-    this.noiseUntil = Date.now() + 9000;
+    this.noiseStartedAt = Date.now();
+    this.noiseDuration = 9000;
+    this.noisePeak = 86;
+    this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
     const caption = document.getElementById('soundCaption');
-    if (caption) caption.textContent = 'ШУМ: ВЫСОКИЙ · источник — ты';
+    if (caption) caption.textContent = 'ШУМ · источник — ты';
     const danger = document.getElementById('dangerValue');
     if (danger) danger.textContent = 'ПОВЫШЕНА';
     const fill = document.getElementById('dangerFill') as HTMLElement | null;
@@ -1177,7 +1236,9 @@ export class ImmersionScene {
   private applySanityTier(sanity: number) {
     const tier = sanity >= 65 ? 0 : sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
     document.documentElement.style.setProperty('--sanity-loss', String(1 - sanity / 100));
-    document.body.style.setProperty('--sanity-red', String(Math.min(1, (65 - sanity) / 65)));
+    const red = Math.max(0, Math.min(1, (65 - sanity) / 65));
+    document.body.style.setProperty('--sanity-red', String(red));
+    document.body.style.setProperty('--mind-red', `rgba(232, 43, 66, ${Math.pow(red, 1.12) * .78})`);
     if (tier === this.sanityTier) return;
     this.sanityTier = tier;
     document.body.dataset.sanity = String(tier);
@@ -1372,7 +1433,7 @@ export class ImmersionScene {
       ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
     };
     if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; document.body.classList.toggle('mask-worn', this.maskWorn); this.state.maskWorn = this.maskWorn; this.state.maskExposure = Math.max(0,this.state.maskExposure || 0); this.maskLastTick = Date.now(); this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Слепой хуже различает твой силуэт, но маска начинает запоминать тебя.' : 'Ты снял маску. Шёпот стих, но на внутренней стороне проступило твоё имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · воздействие нарастает' : 'Маска снята · влияние ослабевает', this.maskWorn); simAudio.maskWhisper(this.state.muted, this.maskWorn ? 1.2 : .5); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderVitals(); return; }
-    if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseUntil = Date.now() + 7000; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
+    if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseStartedAt = Date.now(); this.noiseDuration = 7000; this.noisePeak = this.lightActive ? 38 : 4; this.noiseUntil = this.noiseStartedAt + this.noiseDuration; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
     const effect = effects[id];
     if (!effect) {
       this.notify('Выбери объект сцены и нажми на него, чтобы применить предмет.', 'info');
