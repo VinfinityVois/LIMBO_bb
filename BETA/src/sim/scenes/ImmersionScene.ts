@@ -179,6 +179,34 @@ export class ImmersionScene {
     this.parallax.resize(r.width, r.height);
   }
 
+  private showSystemConfirm(mode: 'exit' | 'reset') {
+    document.getElementById('systemConfirm')?.remove();
+    const isExit = mode === 'exit';
+    const overlay = document.createElement('section');
+    overlay.id = 'systemConfirm';
+    overlay.className = 'system-confirm';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML = `
+      <div class="system-confirm-panel">
+        <div class="system-confirm-kicker">ЦЕФЕЙ · СИСТЕМНОЕ ПОДТВЕРЖДЕНИЕ</div>
+        <h2>${isExit ? 'ЗАВЕРШИТЬ СЕАНС?' : 'ПЕРЕЗАПУСТИТЬ СЕКТОР?'}</h2>
+        <p>${isExit ? 'Текущий прогресс сохранится. Вернуться к досье и покинуть симуляцию?' : 'Текущий проход будет стёрт. Сектор запустится заново с полной последовательностью загрузки.'}</p>
+        <div class="system-confirm-actions">
+          <button type="button" data-confirm-cancel>ОСТАТЬСЯ</button>
+          <button type="button" class="danger" data-confirm-accept>${isExit ? 'ВЫЙТИ ИЗ СИМУЛЯЦИИ' : 'ПЕРЕЗАПУСК'}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+    overlay.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
+    overlay.querySelector('[data-confirm-accept]')?.addEventListener('click', () => {
+      if (isExit) window.location.href = '/scene-ryokan.html';
+      else { resetSim(); window.location.reload(); }
+    });
+  }
+
   private bindChrome() {
     document.getElementById('btnMute')?.addEventListener('click', () => {
       setMuted(this.state, !this.state.muted);
@@ -191,22 +219,8 @@ export class ImmersionScene {
         simAudio.startAmbient(false, loc.ambient);
       } else simAudio.stopAmbient();
     });
-    document.getElementById('btnExit')?.addEventListener('click', () => {
-      window.location.href = '/scene-ryokan.html';
-    });
-    document.getElementById('btnReset')?.addEventListener('click', () => {
-      if (!confirm('Сбросить симуляцию Рёкана?')) return;
-      this.state = resetSim();
-      void this.loadLoc('gate').then(() => {
-        this.buildHotspots();
-        this.buildExits();
-        this.renderInv();
-        this.renderVitals();
-        this.renderMinimap();
-        this.updateZone();
-        this.notify('Симуляция сброшена', 'warn');
-      });
-    });
+    document.getElementById('btnExit')?.addEventListener('click', () => this.showSystemConfirm('exit'));
+    document.getElementById('btnReset')?.addEventListener('click', () => this.showSystemConfirm('reset'));
     document.getElementById('btnInspectItem')?.addEventListener('click', () => {
       if (!this.state.selected) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
       this.openItemExam(this.state.selected);
@@ -451,13 +465,12 @@ export class ImmersionScene {
     n.className = 'notify ' + kind;
     n.setAttribute('role','status');
     n.textContent = msg;
-    n.style.setProperty('--notice-index', String(host.children.length));
     host.appendChild(n);
     while (host.children.length > 4) host.firstElementChild?.remove();
     requestAnimationFrame(() => n.classList.add('show'));
-    setTimeout(() => {
-      n.classList.remove('show');
-      setTimeout(() => n.remove(), 400);
+    window.setTimeout(() => {
+      n.classList.add('leaving');
+      window.setTimeout(() => n.remove(), 260);
     }, 4200);
   }
 
@@ -496,36 +509,14 @@ export class ImmersionScene {
   }
 
   private itemAsset(id: ItemId): string {
-    // The legacy fox_mask.png is an atlas fragment, not a standalone sprite.
-    // Render a self-contained transparent vector until a clean painted asset is supplied.
-    if (id === 'stitched_mask') {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 280">
-        <defs>
-          <linearGradient id="paper" x2="0.8" y2="1"><stop stop-color="#e3d5bd"/><stop offset=".48" stop-color="#a9957c"/><stop offset="1" stop-color="#54463e"/></linearGradient>
-          <linearGradient id="ink" x2="1" y2="1"><stop stop-color="#17191c"/><stop offset="1" stop-color="#05070a"/></linearGradient>
-          <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
-        </defs>
-        <ellipse cx="120" cy="252" rx="70" ry="12" fill="#000" opacity=".55" filter="url(#shadow)"/>
-        <path d="M42 72 Q10 26 20 10 Q64 22 85 52 M198 72 Q230 26 220 10 Q176 22 155 52" fill="none" stroke="#6d2929" stroke-width="5" stroke-linecap="round"/>
-        <path d="M120 22 C85 30 48 70 42 125 Q38 196 120 252 Q202 196 198 125 C192 70 155 30 120 22Z" fill="url(#paper)" stroke="#2b2523" stroke-width="8"/>
-        <path d="M120 31 C90 54 69 92 68 143 Q68 196 120 235 Q172 196 172 143 C171 92 150 54 120 31Z" fill="none" stroke="#453a34" stroke-width="2" opacity=".8"/>
-        <path d="M53 112 Q86 77 108 119 Q88 144 55 132Z M187 112 Q154 77 132 119 Q152 144 185 132Z" fill="url(#ink)" stroke="#2b2422" stroke-width="4"/>
-        <path d="M120 100 L105 156 L120 171 L135 156Z" fill="#3b302d" stroke="#1b1717" stroke-width="3"/>
-        <path d="M80 179 Q120 198 160 179 M95 196 Q120 210 145 196" fill="none" stroke="#6b282b" stroke-width="4" stroke-linecap="round"/>
-        <path d="M120 25 L120 245" stroke="#eee0c8" stroke-width="2" stroke-dasharray="4 8" opacity=".65"/>
-        <path d="M43 126 Q32 146 47 164 M197 126 Q208 146 193 164" fill="none" stroke="#7d292d" stroke-width="3"/>
-        <circle cx="120" cy="58" r="5" fill="#7c252b"/><circle cx="120" cy="58" r="2" fill="#e8c7a5"/>
-      </svg>`;
-      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-    }
-    const files: Partial<Record<ItemId,string>> = {
-      ryokan_key:'key', wet_key_half:'key', wet_key_other:'key', paper_lantern_shard:'mirror_shard',
-      kokeshi_note:'sealed_scroll', silk_thread:'red_cord', matchbox:'matches',
-      medicinal_herbs:'herbs', copper_bell:'bell', herbal_poultice:'bandage',
-      warding_charm:'ward_tag', ember_lantern:'old_lantern', black_seed:'toxic_flower',
-      stitched_mask:'fox_mask'
+    const files: Record<ItemId, string> = {
+      paper_lantern_shard: 'lantern_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
+      ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
+      medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
+      warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
+      stitched_mask: 'doll',
     };
-    return '/assets/game/items/' + (files[id] || 'sealed_scroll') + '.png';
+    return '/assets/game/items/' + (files[id] || 'mirror_shard') + '.png';
   }
 
   private buildHotspots() {
@@ -554,7 +545,7 @@ export class ImmersionScene {
       b.dataset.hotspotId = hs.id;
       b.setAttribute('aria-label', (allFinds.length ? 'Осмотреть находку: ' : 'Осмотреть: ') + hs.label);
       if (inspected) b.classList.add('inspected');
-      const itemMarkup = firstAvailable
+      const itemMarkup = inspected && firstAvailable
         ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
         : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
       b.innerHTML = itemMarkup + `<span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
@@ -646,7 +637,7 @@ export class ImmersionScene {
     simAudio.click(this.state.muted);
     this.state.flags['inspected_' + hs.id] = true;
     saveState(this.state);
-    element?.classList.add('inspected','discovery-triggered','being-inspected');
+    this.buildHotspots();
     this.spawnInspectBurst(hs.x, hs.y);
 
     if (this.state.selected && hs.useWith?.length) {
@@ -895,7 +886,7 @@ export class ImmersionScene {
       const slot = document.createElement('button');
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
-      slot.innerHTML = `${itemSvgMarkup(id, 36)}<span class="n">${def.short}</span>`;
+      slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
       slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
       slot.addEventListener('click', () => this.onInv(id));
       slot.addEventListener('contextmenu', (e) => {
@@ -1074,7 +1065,7 @@ export class ImmersionScene {
     const el = document.createElement('div');
     el.id = 'sceneCreature';
     el.className = 'scene-creature scene-creature-' + this.threatKind;
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
+    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
     el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
