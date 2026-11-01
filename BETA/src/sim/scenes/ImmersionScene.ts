@@ -309,7 +309,8 @@ export class ImmersionScene {
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
     this.threatKind = kind;
-    this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
+    this.threatActive = true;
+    this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
     this.showCreatureInScene();
     document.body.classList.remove('threat-kind-light','threat-kind-sound','threat-kind-dweller');
@@ -333,6 +334,7 @@ export class ImmersionScene {
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     document.body.classList.remove('threat-active','threat-kind-light','threat-kind-sound','threat-kind-dweller');
+    this.updateAwareness(Date.now() < this.noiseUntil ? 1 : 0);
     document.getElementById('sceneCreature')?.remove();
     const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = 'СИГНАЛ СТАБИЛЕН';
     if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Слепой потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
