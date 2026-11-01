@@ -1,0 +1,37 @@
+/* Atmospheric weather + sanity response. Kept readable at every tier. */
+#limboWeatherFx{position:fixed;inset:0;z-index:18;pointer-events:none;overflow:hidden;opacity:.52;mix-blend-mode:screen}
+#limboWeatherFx::before{content:"";position:absolute;inset:-35% -15%;opacity:.28;
+ background:repeating-linear-gradient(104deg,transparent 0 34px,rgba(164,211,225,.22) 35px,transparent 36px 72px);
+ transform:translate3d(-3%,0,0);animation:limbo-rain-drift 8s linear infinite}
+#limboWeatherFx::after{content:"";position:absolute;inset:0;opacity:.12;
+ background:radial-gradient(ellipse at 50% 15%,transparent 20%,rgba(0,0,0,.35) 100%);
+ animation:limbo-wind-pulse 11s ease-in-out infinite}
+#limboWeatherFx i{position:absolute;left:var(--x);top:var(--y);width:1px;height:var(--h);background:linear-gradient(transparent,rgba(174,222,235,.65),transparent);opacity:var(--o);animation:limbo-rain-fall var(--d) linear var(--delay) infinite}
+#limboMindShade{position:fixed;inset:0;z-index:19;pointer-events:none;opacity:0;
+ background:radial-gradient(ellipse at 50% 45%,transparent 28%,rgba(5,0,5,.12) 100%);
+ transition:opacity 2.5s ease,filter 2.5s ease}
+body[data-sanity="1"] #limboMindShade{opacity:.12}
+body[data-sanity="2"] #limboMindShade{opacity:.22}
+body[data-sanity="3"] #limboMindShade{opacity:.34}
+body[data-sanity="1"] #simStage{filter:saturate(.94) contrast(1.025)}
+body[data-sanity="2"] #simStage{filter:saturate(.88) contrast(1.07)}
+body[data-sanity="3"] #simStage{filter:saturate(.82) contrast(1.1)}
+body[data-sanity="2"] #limboWeatherFx{opacity:.72}
+body[data-sanity="3"] #limboWeatherFx{opacity:.9}
+body[data-sanity="2"] #limboWeatherFx::before{opacity:.42;animation-duration:5.5s}
+body[data-sanity="3"] #limboWeatherFx::before{opacity:.55;animation-duration:3.8s}
+body[data-sanity="1"] #limboMindShade{box-shadow:inset 0 0 90px rgba(170,28,42,.12)}
+body[data-sanity="2"] #limboMindShade{box-shadow:inset 0 0 150px rgba(190,22,42,.22)}
+body[data-sanity="3"] #limboMindShade{box-shadow:inset 0 0 210px rgba(210,12,35,.32)}
+#simModal .ending-depart{min-width:190px}
+#simModal .ending-reveal-kicker{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.2em;color:#63d8c1;margin:0 0 14px}
+#simModal .ending-reveal-copy{line-height:1.75}
+#simModal .ending-outcome-copy{border-left:2px solid rgba(90,190,210,.65);padding:10px 14px;background:rgba(30,75,90,.12);line-height:1.65}
+#simModal .final-core.is-clear{filter:drop-shadow(0 0 22px rgba(72,220,190,.5))}
+#simModal .final-core.is-broken{filter:drop-shadow(0 0 22px rgba(235,55,75,.6));animation:limbo-core-fracture 2.5s steps(2,end) infinite}
+body[data-ending="break"] #limboMindShade{opacity:.48}
+@keyframes limbo-rain-fall{from{transform:translate3d(12px,-20vh,0)}to{transform:translate3d(-18px,120vh,0)}}
+@keyframes limbo-rain-drift{from{background-position:0 -40vh}to{background-position:90px 80vh}}
+@keyframes limbo-wind-pulse{0%,100%{transform:translateX(-1.2%);opacity:.08}50%{transform:translateX(1.2%);opacity:.18}}
+@keyframes limbo-core-fracture{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+@media(prefers-reduced-motion:reduce){#limboWeatherFx *,#limboWeatherFx::before,#limboWeatherFx::after{animation:none!important}}
