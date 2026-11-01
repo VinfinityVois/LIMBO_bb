@@ -121,6 +121,28 @@ export const simAudio = {
     }, 210);
   },
   creak(m: boolean) { this.tone(m, 145, 0.42, 'sawtooth', 0.02, 42); this.noiseBurst(m, 0.3, 0.014, 'bandpass', 700); },
+  wind(m: boolean, intensity = 1) {
+    const v = Math.max(0.5, Math.min(1.5, intensity));
+    this.noiseBurst(m, 1.65, 0.009 * v, 'lowpass', 520);
+    setTimeout(() => this.noiseBurst(m, 1.1, 0.006 * v, 'bandpass', 980), 260);
+    this.tone(m, 82, 1.4, 'sine', 0.006 * v, 48);
+  },
+  howl(m: boolean, intensity = 1) {
+    const v = Math.max(0.5, Math.min(1.5, intensity));
+    this.noiseBurst(m, 1.25, 0.012 * v, 'bandpass', 680);
+    this.tone(m, 310, 1.35, 'sawtooth', 0.008 * v, 96);
+    setTimeout(() => this.tone(m, 176, 0.9, 'triangle', 0.009 * v, 62), 420);
+    setTimeout(() => this.noiseBurst(m, 0.65, 0.008 * v, 'bandpass', 1250), 760);
+  },
+  scream(m: boolean, intensity = 1) {
+    const v = Math.max(0.45, Math.min(1.25, intensity));
+    this.noiseBurst(m, 0.92, 0.014 * v, 'bandpass', 1850);
+    this.tone(m, 720, 0.82, 'sawtooth', 0.008 * v, 260);
+    setTimeout(() => {
+      this.noiseBurst(m, 0.62, 0.012 * v, 'highpass', 2350);
+      this.tone(m, 460, 0.58, 'triangle', 0.007 * v, 145);
+    }, 360);
+  },
   whisper(m: boolean) {
     this.noiseBurst(m, 0.72, 0.016, 'bandpass', 1450);
     this.tone(m, 420, 0.58, 'sine', 0.008, 155);
