@@ -186,6 +186,7 @@ export class ImmersionScene {
         simAudio.whoosh(this.state.muted);
         setTimeout(() => {
           overlay.classList.remove('active', 'out');
+          document.body.classList.remove('system-reboot');
           this.diving = false;
           resolve();
         }, 700);
