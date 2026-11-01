@@ -278,7 +278,6 @@ export const simAudio = {
     };
     drip();
     this.ambientId = window.setInterval(drip, rain ? 980 : 1650);
-    this.startMeter();
   },
 
   startMeter() {
