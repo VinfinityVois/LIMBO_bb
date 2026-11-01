@@ -911,6 +911,62 @@ export class ImmersionScene {
     simAudio.open(this.state.muted);
   }
 
+  private showEndingChoices() {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    if (title) title.textContent = 'ЯКОРЬ RK-01 · ПОСЛЕДНЕЕ РЕШЕНИЕ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (body) {
+      body.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'inspection-description';
+      p.textContent = 'Канал раскрывается. За ним — не выход, а запись о том, как сектор был создан. Цефей просит выбрать, что оставить по ту сторону.';
+      body.appendChild(p);
+      const req = document.createElement('ul');
+      req.className = 'ending-requirements';
+      const requirements = [
+        ['Записка прочитана', !!this.state.flags.note_read],
+        ['Дверь генкана открыта', !!this.state.flags.door_unlocked],
+        ['Нить найдена', !!this.state.flags.took_silk],
+        ['Колокольчик найден', !!this.state.flags.took_bell],
+        ['Оберег собран', !!this.state.flags.crafted_warding_charm],
+        ['Фонарь восстановлен', !!this.state.flags.crafted_ember_lantern],
+      ];
+      requirements.forEach(([label, met]) => {
+        const li = document.createElement('li');
+        li.textContent = (met ? '✓ ' : '— ') + label;
+        li.className = met ? 'met' : 'missing';
+        req.appendChild(li);
+      });
+      body.appendChild(req);
+      const outcome = document.createElement('p');
+      outcome.className = 'ending-outcome-copy';
+      const good = requirements.every(([, met]) => Boolean(met));
+      outcome.textContent = good
+        ? 'Все следы сходятся. Можно очистить канал, не оставляя голос внутри.'
+        : 'Данных недостаточно. Можно разорвать канал сейчас, но сектор уйдёт вместе с частью нашей памяти.';
+      body.appendChild(outcome);
+    }
+    if (actions) {
+      actions.innerHTML = '';
+      const add = (label: string, cls: string, fn: () => void, disabled = false) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'inspection-action ' + cls; b.textContent = label;
+        b.disabled = disabled; b.addEventListener('click', fn); actions.appendChild(b);
+      };
+      const ready = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
+        !!this.state.flags.took_silk && !!this.state.flags.took_bell &&
+        !!this.state.flags.crafted_warding_charm && !!this.state.flags.crafted_ember_lantern;
+      add('ОЧИСТИТЬ КАНАЛ · ХОРОШИЙ КОНЕЦ', 'primary ending-good', () => this.chooseEnding('clear'), !ready);
+      add('РАЗОРВАТЬ КАНАЛ · ПЛОХОЙ КОНЕЦ', 'secondary ending-bad', () => this.chooseEnding('break'));
+      add('ОСТАТЬСЯ И ПРОВЕРИТЬ ВЕЩИ', 'quiet', () => this.closeModal());
+    }
+    if (note) note.textContent = 'Хороший исход требует собрать улики и подготовить два защитных предмета. Плохой исход доступен всегда.';
+  }
+
   private chooseEnding(ending: 'clear'|'bind'|'break') {
     this.state.completed = true;
     this.state.ending = ending;
