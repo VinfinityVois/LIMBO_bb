@@ -234,7 +234,10 @@ export class ImmersionScene {
       else if (key === '4' || key === 'i') this.combatAction('item');
       else if (key === '5' || key === 'f') this.combatAction('flee');
     });
-    window.addEventListener('pointerdown', () => simAudio.unlock(), { once: true });
+    // Keep audio unlocked after the first trusted user gesture and when returning to the tab.
+    const unlockAudio = () => simAudio.unlock();
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
   }
 
   private scheduleEvents() {
@@ -481,6 +484,8 @@ export class ImmersionScene {
       b.style.height = hs.h + '%';
       if (hs.item) { const art = this.itemAsset(hs.item); b.innerHTML = `<span class="world-loot-art"><img src="${art}" alt="" draggable="false"></span><span class="world-loot-name">${hs.label}</span>`; }
       else b.innerHTML = `<span class="world-object-mark">${hs.complete ? '◇' : '⌖'}</span><span class="world-loot-name">${hs.label}</span>`;
+      b.setAttribute('aria-label', 'Осмотреть: ' + hs.label);
+      b.title = 'Можно осмотреть: ' + hs.label;
       b.addEventListener('mouseenter', () => {
         simAudio.hover(this.state.muted);
         this.showHover(hs, b);
@@ -536,7 +541,11 @@ export class ImmersionScene {
   }
 
   private async go(to: LocationId) {
-    simAudio.whoosh(this.state.muted);
+    // Distinct footsteps before the transition, followed by a soft movement whoosh.
+    simAudio.steps(this.state.muted);
+    window.setTimeout(() => simAudio.steps(this.state.muted), 230);
+    window.setTimeout(() => simAudio.steps(this.state.muted), 470);
+    window.setTimeout(() => simAudio.whoosh(this.state.muted), 590);
     this.makeNoise('Шаги эхом разнеслись по локации.');
     this.state.location = to;
     this.roomEnteredAt = Date.now();
@@ -699,6 +708,7 @@ export class ImmersionScene {
       slot.innerHTML = `${itemSvgMarkup(id, 36)}<span class="n">${def.short}</span>`;
       slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
       slot.addEventListener('click', () => this.onInv(id));
+      slot.addEventListener('focus', () => simAudio.hover(this.state.muted));
       slot.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         this.openItemExam(id);
