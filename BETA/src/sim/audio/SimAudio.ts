@@ -244,6 +244,7 @@ export const simAudio = {
         const height = floor + value * 88;
         bar.style.height = height + '%';
         bar.style.opacity = String(0.28 + value * 0.72);
+        bar.style.backgroundColor = value > 0.72 ? '#ef596b' : value > 0.38 ? '#e4b65b' : '#52c7dc';
       });
       this.meterFrame = requestAnimationFrame(draw);
     };
