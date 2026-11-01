@@ -72,6 +72,7 @@ export class ImmersionScene {
   private noisePeak = 0;
   private currentSoundLevel = 3;
   private notificationQueue: Array<{ message: string; kind: 'info' | 'warn' | 'ok' }> = [];
+  private ambienceTimer: ReturnType<typeof setTimeout> | number = 0;
   private notificationBusy = false;
   private lastNotification = '';
   private lastNotificationAt = 0;
@@ -133,6 +134,7 @@ export class ImmersionScene {
     this.startWorldClock();
     this.startSoundDynamics();
     this.startSanityDistortions();
+    this.scheduleAtmosphericAudio();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
     this.scheduleEvents();
@@ -935,54 +937,78 @@ export class ImmersionScene {
     const visual = document.getElementById('modalVisual');
     const actions = document.getElementById('modalActions');
     const note = document.getElementById('modalNote');
-    if (title) title.textContent = 'ЯКОРЬ RK-01 · ПОСЛЕДНЕЕ РЕШЕНИЕ';
-    if (visual) visual.innerHTML = '<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (title) title.textContent = 'ВЫХОД ИЗ СЕКТОРА';
+    if (visual) visual.innerHTML = '<div class="ending-core-art departure-core" aria-hidden="true"><i></i><b></b><span></span></div>';
     if (body) {
       body.innerHTML = '';
       const p = document.createElement('p');
       p.className = 'inspection-description';
-      p.textContent = 'Канал раскрывается. За ним — не выход, а запись о том, как сектор был создан. Цефей просит выбрать, что оставить по ту сторону.';
+      p.textContent = 'Канал больше не сопротивляется. За ним нет света — только слабый сигнал, который повторяет наши последние слова. Мы можем уйти. Что именно уйдёт вместе с нами, пока неизвестно.';
       body.appendChild(p);
-      const req = document.createElement('ul');
-      req.className = 'ending-requirements';
-      const requirements = [
-        ['Записка прочитана', !!this.state.flags.note_read],
-        ['Дверь генкана открыта', !!this.state.flags.door_unlocked],
-        ['Нить найдена', !!this.state.flags.took_silk],
-        ['Колокольчик найден', !!this.state.flags.took_bell],
-        ['Оберег собран', !!this.state.flags.crafted_warding_charm],
-        ['Фонарь восстановлен', !!this.state.flags.crafted_ember_lantern],
-      ];
-      requirements.forEach(([label, met]) => {
-        const li = document.createElement('li');
-        li.textContent = (met ? '✓ ' : '— ') + label;
-        li.className = met ? 'met' : 'missing';
-        req.appendChild(li);
-      });
-      body.appendChild(req);
-      const outcome = document.createElement('p');
-      outcome.className = 'ending-outcome-copy';
-      const good = requirements.every(([, met]) => Boolean(met));
-      outcome.textContent = good
-        ? 'Все следы сходятся. Можно очистить канал, не оставляя голос внутри.'
-        : 'Данных недостаточно. Можно разорвать канал сейчас, но сектор уйдёт вместе с частью нашей памяти.';
-      body.appendChild(outcome);
+      const detail = document.createElement('p');
+      detail.className = 'ending-outcome-copy';
+      detail.textContent = 'Цефей молчит. Впервые решение не предлагается системой — его принимаем мы.';
+      body.appendChild(detail);
     }
     if (actions) {
       actions.innerHTML = '';
-      const add = (label: string, cls: string, fn: () => void, disabled = false) => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'inspection-action ' + cls; b.textContent = label;
-        b.disabled = disabled; b.addEventListener('click', fn); actions.appendChild(b);
-      };
-      const ready = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
-        !!this.state.flags.took_silk && !!this.state.flags.took_bell &&
-        !!this.state.flags.crafted_warding_charm && !!this.state.flags.crafted_ember_lantern;
-      add('ОЧИСТИТЬ КАНАЛ · ХОРОШИЙ КОНЕЦ', 'primary ending-good', () => this.chooseEnding('clear'), !ready);
-      add('РАЗОРВАТЬ КАНАЛ · ПЛОХОЙ КОНЕЦ', 'secondary ending-bad', () => this.chooseEnding('break'));
-      add('ОСТАТЬСЯ И ПРОВЕРИТЬ ВЕЩИ', 'quiet', () => this.closeModal());
+      const leave = document.createElement('button');
+      leave.type = 'button';
+      leave.className = 'inspection-action primary ending-depart';
+      leave.textContent = 'ПОКИНУТЬ СЕКТОР';
+      leave.addEventListener('click', () => this.confirmSectorExit());
+      const stay = document.createElement('button');
+      stay.type = 'button';
+      stay.className = 'inspection-action quiet';
+      stay.textContent = 'ВЕРНУТЬСЯ К ОСМОТРУ';
+      stay.addEventListener('click', () => this.closeModal());
+      actions.append(leave, stay);
     }
-    if (note) note.textContent = 'Хороший исход требует собрать улики и подготовить два защитных предмета. Плохой исход доступен всегда.';
+    if (note) note.textContent = 'Финал не будет показан, пока мы действительно не подтвердим уход.';
+  }
+
+  private confirmSectorExit() {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    if (title) title.textContent = 'ПОДТВЕРДИТЬ ВОЗВРАЩЕНИЕ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art departure-core warning-core" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (body) {
+      body.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'inspection-description';
+      p.textContent = 'Когда канал закроется, повторно войти в этот сектор уже не получится. Мы унесём с собой только то, что смогли понять, сохранить и не потерять.';
+      body.appendChild(p);
+      const second = document.createElement('p');
+      second.className = 'ending-outcome-copy';
+      second.textContent = 'Ты уверен, что пора уходить?';
+      body.appendChild(second);
+    }
+    if (actions) {
+      actions.innerHTML = '';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'inspection-action quiet';
+      cancel.textContent = 'ОСТАТЬСЯ';
+      cancel.addEventListener('click', () => this.showEndingChoices());
+      const accept = document.createElement('button');
+      accept.type = 'button';
+      accept.className = 'inspection-action primary ending-depart';
+      accept.textContent = 'ДА. МЫ УХОДИМ';
+      accept.addEventListener('click', () => {
+        const cluesReady = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
+          !!this.state.flags.took_silk && !!this.state.flags.took_bell;
+        const protectionsReady = !!this.state.flags.crafted_warding_charm &&
+          !!this.state.flags.crafted_ember_lantern;
+        const survived = this.state.health >= 35 && this.state.sanity >= 25 && !this.state.defeated;
+        this.chooseEnding(cluesReady && protectionsReady && survived ? 'clear' : 'break');
+      });
+      actions.append(cancel, accept);
+    }
+    if (note) note.textContent = 'Подтверждение необратимо. Последствия станут известны после закрытия канала.';
+    simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
@@ -991,7 +1017,6 @@ export class ImmersionScene {
     this.state.flags.ending_clear = ending === 'clear';
     this.state.flags.ending_bind = ending === 'bind';
     this.state.flags.ending_break = ending === 'break';
-    // Persistent story flags are read by later scenes; they deliberately survive scene transitions.
     this.state.flags.next_scene_clean_signal = ending === 'clear';
     this.state.flags.next_scene_mask_bound = ending === 'bind';
     this.state.flags.next_scene_wounded = ending === 'break';
@@ -1017,16 +1042,52 @@ export class ImmersionScene {
     }
     saveState(this.state);
     markSceneDone();
-    simAudio.complete(this.state.muted);
-    this.closeModal();
     this.renderInv();
     this.renderVitals();
-    const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
-      ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
-      'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
-    this.notify(copy,'ok');
-    this.showSense('◇',copy,ending !== 'clear');
-    window.setTimeout(()=>{ window.location.href='/scene-ryokan.html'; },1800);
+
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    const good = ending === 'clear';
+    if (title) title.textContent = good ? 'СИГНАЛ СОХРАНЁН' : 'СЕКТОР ЗАМОЛКАЕТ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art final-core ' + (good ? 'is-clear' : 'is-broken') + '" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (body) {
+      body.innerHTML = '';
+      const heading = document.createElement('p');
+      heading.className = 'ending-reveal-kicker';
+      heading.textContent = good ? 'ВОЗВРАЩЕНИЕ · СВЯЗЬ УСТОЙЧИВА' : 'ВОЗВРАЩЕНИЕ · ПОТЕРЯ ДАННЫХ';
+      const story = document.createElement('p');
+      story.className = 'inspection-description ending-reveal-copy';
+      story.textContent = good
+        ? 'Мы уходим не одни: в памяти остаётся полная последовательность событий. Записка, ключи и защитные предметы складываются в одну историю. За спиной канал закрывается тихо — впервые Цефей не повторяет наши слова.'
+        : 'Мы успеваем выйти, но канал схлопывается раньше, чем мы понимаем его устройство. Часть воспоминаний остаётся внутри. На записи Цефея слышен чужой крик, а после него — наши шаги, хотя мы уже далеко.';
+      const consequence = document.createElement('p');
+      consequence.className = 'ending-outcome-copy';
+      consequence.textContent = good
+        ? 'В следующей сцене сохранится чистый сигнал: некоторые двери и записи откликнутся на собранные улики.'
+        : 'В следующей сцене нас встретят ослабленные, но не исчезнувшие существа; в сигнале останутся шёпот и повреждённые фрагменты памяти.';
+      body.append(heading, story, consequence);
+    }
+    if (actions) {
+      actions.innerHTML = '';
+      const next = document.createElement('button');
+      next.type = 'button';
+      next.className = 'inspection-action primary ending-depart';
+      next.textContent = 'ПРОДОЛЖИТЬ';
+      next.addEventListener('click', () => {
+        this.closeModal();
+        window.location.href = '/scene-ryokan.html';
+      });
+      actions.appendChild(next);
+    }
+    if (note) note.textContent = good
+      ? 'Хороший исход достигнут нашими действиями, а не выбран в меню.'
+      : 'Мы вышли. Но сектор забрал больше, чем мы рассчитывали.';
+    document.body.dataset.ending = good ? 'clear' : 'break';
+    if (good) simAudio.complete(this.state.muted);
+    else { simAudio.scream(this.state.muted, 0.8); simAudio.whoosh(this.state.muted); }
   }
 
   private closeModal() {
@@ -1557,6 +1618,41 @@ export class ImmersionScene {
     };
     tick();
     this.threatApproachTimer = window.setInterval(tick, 90);
+  }
+
+  private scheduleAtmosphericAudio() {
+    if (this.ambienceTimer) clearTimeout(this.ambienceTimer as number);
+    const schedule = () => {
+      const delay = 6500 + Math.random() * 12500;
+      this.ambienceTimer = window.setTimeout(() => {
+        if (!this.state.muted && !document.hidden && !this.threatActive &&
+            !document.getElementById('combatScreen')?.classList.contains('open')) {
+          const sanity = this.state.sanity;
+          const roll = Math.random();
+          if (roll < 0.26) {
+            simAudio.wind(false, sanity < 25 ? 1.35 : sanity < 45 ? 1.1 : 0.8);
+            this.showSense('⌁', 'Порыв ветра прошёл вдоль стены.', false);
+          } else if (roll < 0.48) {
+            simAudio.steps(false);
+            this.showSense('♬', Math.random() < 0.5 ? 'Шаги остановились за перегородкой.' : 'Кто-то прошёл рядом. Слишком близко.', sanity < 45);
+          } else if (roll < 0.66) {
+            simAudio.creak(false);
+            this.showSense('⌁', 'Дерево протяжно скрипнуло под чьим-то весом.', sanity < 45);
+          } else if (roll < 0.82) {
+            simAudio.howl(false, sanity < 25 ? 1.25 : 0.9);
+            this.showSense('◉', 'За пределами сада прокатилось протяжное завывание.', true);
+          } else if (sanity < 55 && roll < 0.94) {
+            simAudio.whisper(false);
+            this.showSense('◉', 'Чужой голос произнёс что-то неразборчивое.', true);
+          } else if (sanity < 35) {
+            simAudio.scream(false, 0.65 + (35 - sanity) / 60);
+            this.showSense('◉', 'Крик разорвал тишину — и оборвался слишком резко.', true);
+          }
+        }
+        schedule();
+      }, delay);
+    };
+    schedule();
   }
 
   private startSanityDistortions() {
