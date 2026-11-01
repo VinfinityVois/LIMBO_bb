@@ -66,6 +66,30 @@ export const simAudio = {
     this.tone(m, 75, 0.06, 'sine', 0.016);
     setTimeout(() => this.tone(m, 65, 0.05, 'sine', 0.012), 160);
   },
+  creak(m: boolean) { this.tone(m,145,.32,'sawtooth',.018,48); this.noiseBurst(m,.22,.012); },
+  whisper(m: boolean) { this.noiseBurst(m,.42,.018); this.tone(m,430,.35,'sine',.009,170); },
+  monster(m: boolean) { this.noiseBurst(m,.75,.055); this.tone(m,58,.9,'sawtooth',.045,24); setTimeout(() => this.tone(m,92,.45,'triangle',.026,38),180); },
+  attack(m: boolean) {
+    this.noiseBurst(m, .16, .045);
+    this.tone(m, 150, .22, 'sawtooth', .035, 42);
+  },
+  impact(m: boolean) {
+    this.noiseBurst(m, .11, .06);
+    this.tone(m, 68, .18, 'square', .05, 28);
+  },
+  evade(m: boolean) {
+    this.noiseBurst(m, .2, .025);
+    this.tone(m, 260, .16, 'triangle', .025, 720);
+  },
+  maskWhisper(m: boolean, intensity = 1) {
+    this.noiseBurst(m, .5, .012 * intensity);
+    this.tone(m, 510, .42, 'sine', .009 * intensity, 115);
+    setTimeout(() => this.tone(m, 190, .3, 'triangle', .008 * intensity, 80), 180);
+  },
+  heartbeat(m: boolean) {
+    this.tone(m, 54, .12, 'sine', .025, 42);
+    setTimeout(() => this.tone(m, 48, .16, 'sine', .018, 38), 170);
+  },
   complete(m: boolean) {
     this.tone(m, 392, 0.1, 'sine', 0.035);
     setTimeout(() => this.tone(m, 523, 0.12, 'sine', 0.03), 100);

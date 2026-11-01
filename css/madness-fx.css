@@ -1,0 +1,100 @@
+/* madness-fx.css — подключать ПОСЛЕДНИМ (после sanity-effects.css).
+   Переменные --g (искажение, рассудок < 65%) и --u (тревога) ставит madness-fx.js */
+
+/* ---------- 1. УВЕДОМЛЕНИЯ: текст больше не вылезает из рамки ---------- */
+.notify-host>*{box-sizing:border-box;width:auto!important;height:auto!important;min-width:260px;
+    max-width:min(400px,calc(100vw - 32px))!important;display:flex;align-items:center;gap:12px;
+    padding:10px 14px;line-height:1.35;white-space:normal!important;overflow:visible!important}
+  .notify-host>* *{min-width:0;max-width:100%;white-space:normal!important;overflow-wrap:anywhere;text-overflow:clip!important}
+  .notify-host>* :is(span,p,b,strong,div):last-child{flex:1 1 auto}
+  .sense-feed{width:340px}
+  .sense-feed>*{height:auto;min-height:34px;padding:7px 14px 7px 12px;white-space:normal;line-height:1.3;
+    transition:opacity .6s,transform .6s}
+  .sense-feed>*::before{flex:none}
+  .sense-feed>[data-k=mind]::before{content:"✺";color:#e0a0b8}
+  .sense-feed>[data-k=ear]::before{content:"◖))"}
+  .sense-feed>[data-k=mask]::before{content:"●";color:#e0414f}
+  .sense-feed>[data-k=voice]::before{content:"∥∥";letter-spacing:-2px}
+  .sense-feed>[data-k=glitch]::before{content:"▤";color:#d84cc8}
+  .sense-feed>[data-k=body]::before{content:"♡";color:#e0414f}
+  .sense-feed>.out{opacity:0;transform:translateX(-14px)}
+  
+  /* ---------- 2. ИСКАЖЕНИЕ МИРА ---------- */
+  #simCanvas{transition:filter .5s}
+  body[data-fx] #simCanvas{
+    filter:saturate(calc(1 - var(--g)*.5)) contrast(calc(1 + var(--g)*.25)) hue-rotate(calc(var(--g)*-16deg));
+    animation:rkBreath calc(8s - var(--g)*4s) ease-in-out infinite}
+  @keyframes rkBreath{50%{transform:scale(calc(1.012 + var(--g)*.03)) rotate(calc(var(--g)*.5deg))}}
+  body.fx-burst #simCanvas{filter:url(#rkWarp) saturate(1.5) contrast(1.35)}
+  body.fx-inv #simStage{filter:invert(1) hue-rotate(180deg)}
+  body.fx-burst :is(.game-hud,.world-hud,.zone-whisper,.sense-feed){
+    text-shadow:3px 0 rgba(255,0,60,.85),-3px 0 rgba(0,255,255,.85);transform:translate(var(--jx,2px),0)}
+  body[data-fx] :is(.game-hud,.world-hud,.zone-whisper){animation:rkJit calc(3s - var(--g)*1.8s) steps(1) infinite}
+  @keyframes rkJit{0%,90%,100%{transform:none}92%{transform:translate(3px,-1px)}95%{transform:translate(-4px,1px);opacity:.82}97%{transform:translate(2px,0)}}
+  
+  .fx-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:6}
+  #fxGrain{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;
+    mix-blend-mode:overlay;opacity:calc(var(--g)*.3)}
+  #fxVein{position:absolute;inset:0;box-shadow:inset 0 0 calc(60px + var(--u)*60px + var(--g)*160px) rgba(110,0,24,calc(var(--u)*.25 + var(--g)*.55));
+    animation:rkPulse calc(2.4s - var(--g)*1.3s) ease-in-out infinite}
+  @keyframes rkPulse{50%{opacity:.55}}
+  #fxRoll{position:absolute;left:0;right:0;height:90px;opacity:calc(var(--g)*.5);
+    background:linear-gradient(transparent,rgba(160,230,255,.12),transparent);animation:rkRoll 5s linear infinite}
+  @keyframes rkRoll{from{top:-100px}to{top:100%}}
+  
+  /* тени */
+  .fx-shadow{position:absolute;background:radial-gradient(ellipse at 50% 100%,#000 0,rgba(0,0,0,.88) 35%,transparent 72%);
+    filter:blur(9px);border-radius:50% 50% 0 0;mix-blend-mode:multiply}
+  /* ложные силуэты */
+  .fx-sil{position:absolute;opacity:0;filter:blur(1.3px) drop-shadow(0 0 14px #000);
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 180'%3E%3Ccircle cx='30' cy='16' r='13' fill='%23000'/%3E%3Cpath d='M12 36Q30 28 48 36L54 100 44 104 42 178 32 178 30 110 28 178 18 178 16 104 6 100Z' fill='%23000'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+  .fx-sil.eyes::before{content:"";position:absolute;left:33%;top:6%;width:34%;height:3%;
+    background:radial-gradient(circle,#ff2a3c 0 30%,transparent 35%) 0 50%/45% 100% no-repeat,
+               radial-gradient(circle,#ff2a3c 0 30%,transparent 35%) 100% 50%/45% 100% no-repeat;
+    filter:drop-shadow(0 0 4px #f00)}
+  .fx-eyes{position:absolute;width:46px;height:12px;opacity:0;
+    background:radial-gradient(circle,#ff3b4a 0 28%,transparent 34%) 0 50%/40% 100% no-repeat,
+               radial-gradient(circle,#ff3b4a 0 28%,transparent 34%) 100% 50%/40% 100% no-repeat;
+    filter:drop-shadow(0 0 5px #f00)}
+  /* лик-галлюцинация и чужой голос */
+  .fx-face{position:absolute;right:2%;top:4%;height:46%;opacity:0;mix-blend-mode:screen;
+    filter:invert(1) contrast(1.5) blur(1.4px) hue-rotate(200deg)}
+  .fx-whisper{position:absolute;right:50px;top:320px;padding:16px 38px;background:rgba(5,10,18,.6);
+    border:1px solid rgba(255,255,255,.08);font:400 15px var(--sans);color:#dfe6ea;opacity:0;text-shadow:2px 0 #f0336a,-2px 0 #2bd6f2}
+  
+  /* инвентарь */
+  .inv>.fx-q{position:relative}
+  .inv>.fx-q>*{opacity:.12}
+  .inv>.fx-q::before,.inv>.fx-eye::before{content:"?";position:absolute;inset:0;z-index:2;display:grid;place-items:center;
+    font:600 28px var(--mono);color:#c0202c;text-shadow:0 0 10px #f00}
+  .inv>.fx-eye::before{content:"◉"}
+  .inv>.fx-melt{filter:blur(2px) hue-rotate(120deg);transform:skewX(-9deg) scaleY(1.1)}
+  .inv>.fx-fake{pointer-events:none;opacity:.7;filter:hue-rotate(180deg) blur(.6px)}
+  
+  /* ---------- 3. МОНСТР ПРИБЛИЖАЕТСЯ ---------- */
+  .combat-screen,.threat-overlay{--ap:0}
+  .combat-monster-art,.threat-silhouette{transform-origin:50% 100%;
+    transform:scale(calc(.7 + var(--ap)*.9));transition:transform .15s linear,filter .15s linear;
+    filter:brightness(calc(.5 + var(--ap)*.7)) blur(calc((1 - var(--ap))*1.6px))}
+  .combat-screen[data-near]{box-shadow:inset 0 0 160px rgba(180,0,30,.55);animation:rkPulse .6s ease-in-out infinite}
+  .approach{margin:4px 0 10px;font:500 10px var(--mono);letter-spacing:.14em;color:#e8909a;display:flex;justify-content:space-between}
+  .approach i{display:block;flex-basis:100%;order:3;height:4px;margin-top:6px;background:rgba(255,255,255,.1)}
+  .approach i b{display:block;height:100%;width:calc(var(--ap)*100%);background:linear-gradient(90deg,#c9a23a,#e03a46)}
+  body.fx-hit .sim-stage{animation:rkShake .32s steps(2) 1}
+  body.fx-hit::after{content:"";position:fixed;inset:0;z-index:99;pointer-events:none;background:rgba(190,0,30,.35)}
+  @keyframes rkShake{25%{transform:translate(-9px,5px)}50%{transform:translate(8px,-6px)}75%{transform:translate(-5px,-3px)}}
+  
+  /* меню боя как на макете */
+  .combat-actions{position:fixed;right:48px;top:44%;z-index:70;width:370px;display:flex!important;flex-direction:column;
+    padding:8px;background:rgba(5,15,25,.9);border:1px solid var(--line);box-shadow:0 0 24px rgba(43,214,242,.12)}
+  .combat-actions button{display:flex;align-items:center;gap:16px;height:42px;padding:0 12px;text-align:left;cursor:pointer;
+    background:none;border:0;border-bottom:1px solid rgba(110,169,188,.18);color:#e4eef2;font:500 13px var(--sans);letter-spacing:.06em}
+  .combat-actions button:disabled{opacity:.4;cursor:default}
+  .combat-actions button:first-child{background:linear-gradient(90deg,rgba(43,214,242,.22),rgba(43,214,242,.05));outline:1px solid var(--cyan)}
+  .combat-actions button::before{width:20px;text-align:center;font-size:17px;color:var(--cyan-d)}
+  #combatAttack::before{content:"⚔"}#combatDodge::before{content:"»"}#combatGuard::before{content:"⛨"}
+  #combatItem::before{content:"⚗"}#combatNoise::before{content:"☻"}
+  
+  @media (prefers-reduced-motion:reduce){
+    body[data-fx] #simCanvas,#fxVein,#fxRoll,body[data-fx] :is(.game-hud,.world-hud,.zone-whisper){animation:none}
+  }
