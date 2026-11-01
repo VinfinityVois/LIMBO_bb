@@ -1033,9 +1033,11 @@ export class ImmersionScene {
       }
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
+      const dangerReadout = document.querySelector<HTMLElement>('.danger-readout');
+      const levelName = this.currentSoundLevel >= 68 ? 'high' : this.currentSoundLevel >= 34 ? 'mid' : 'low';
+      if (dangerReadout) { dangerReadout.dataset.level = levelName; dangerReadout.style.setProperty('--danger-heat', String(this.currentSoundLevel / 100)); }
       if (dangerFill) dangerFill.style.width = Math.max(4, this.currentSoundLevel) + '%';
-      if (dangerValue) dangerValue.textContent = this.currentSoundLevel >= 68 ? 'ВЫСОКАЯ' :
-        this.currentSoundLevel >= 34 ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
+      if (dangerValue) dangerValue.textContent = levelName === 'high' ? 'ВЫСОКАЯ' : levelName === 'mid' ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
     };
     update();
     this.soundUiTimer = window.setInterval(update, 140);
