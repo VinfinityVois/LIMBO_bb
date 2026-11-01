@@ -305,9 +305,18 @@ export class ImmersionScene {
     setTimeout(() => el.remove(), 6500);
   }
 
+  private setAwareness(level: 'hidden' | 'suspected' | 'seen') {
+    const indicator = document.getElementById('awarenessIndicator');
+    const label = document.getElementById('awarenessLabel');
+    if (!indicator) return;
+    indicator.dataset.state = level;
+    indicator.setAttribute('aria-label', level === 'hidden' ? 'Нас не заметили' : level === 'suspected' ? 'Кто-то подозревает наше присутствие' : 'Нас заметили');
+    if (label) label.textContent = level === 'hidden' ? 'НЕ ЗАМЕЧЕНЫ' : level === 'suspected' ? 'ПОДОЗРЕВАЕТ' : 'НАС ЗАМЕТИЛИ';
+  }
+
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
     this.threatKind = kind;
-    this.threatActive = true; this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
+    this.threatActive = true; this.setAwareness('suspected'); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
     this.showCreatureInScene();
     document.body.classList.remove('threat-kind-light','threat-kind-sound','threat-kind-dweller');
@@ -581,6 +590,8 @@ export class ImmersionScene {
 
   private openModal(hs: HotspotDef) {
     const modal=document.getElementById('simModal')!;
+    const riskyFind = hs.item === 'black_seed' || hs.item === 'stitched_mask';
+    modal.classList.toggle('risk-modal', riskyFind);
     document.getElementById('modalTitle')!.textContent=hs.label;
     const body=document.getElementById('modalBody')!;
     const visual=document.getElementById('modalVisual');
@@ -673,7 +684,7 @@ export class ImmersionScene {
   }
 
   private closeModal() {
-    document.getElementById('simModal')?.classList.remove('open');
+    document.getElementById('simModal')?.classList.remove('open', 'risk-modal');
   }
 
   private renderInv() {
@@ -811,6 +822,7 @@ export class ImmersionScene {
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     this.threatApproachTimer = 0;
     this.threatActive = false;
+    this.setAwareness('seen');
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
@@ -989,7 +1001,7 @@ export class ImmersionScene {
     this.showSense('◉', tier === 0 ? 'Восприятие стабилизировалось.' : tier === 1 ? 'Краем глаза замечаешь движение.' : tier === 2 ? 'Контуры комнаты плывут.' : 'Ты слышишь чужой голос внутри головы.', tier > 0);
     if (tier >= 1) this.spawnMovingShadow();
     if (tier >= 2) { simAudio.whisper(this.state.muted); this.triggerImageDistortion(tier); }
-    if (tier >= 3) { simAudio.maskWhisper(this.state.muted, 1.5); this.showFalseSilhouette(); this.mirrorInventory(); }
+    if (tier >= 3) { simAudio.maskWhisper(this.state.muted, 1.8); this.showFalseSilhouette(); this.mirrorInventory(); }
   }
 
   private triggerImageDistortion(tier: number) {
@@ -1046,7 +1058,7 @@ export class ImmersionScene {
       meter.innerHTML = '<div class="threat-approach-label"><span>ДИСТАНЦИЯ ДО СУЩЕСТВА</span><b id="threatApproachTime">08.0</b></div><div class="threat-approach-track"><i id="threatApproachFill"></i></div>';
       panel.querySelector('.threat-copy')?.appendChild(meter);
     }
-    const duration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    const duration = this.threatKind === 'light' ? 10500 : this.threatKind === 'sound' ? 9000 : 8200;
     const tick = () => {
       if (!this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
@@ -1059,6 +1071,7 @@ export class ImmersionScene {
         creature.style.setProperty('--approach', String(progress));
         creature.classList.toggle('closing-in', progress > .35);
       }
+      this.setAwareness(progress > .76 ? 'seen' : progress > .24 ? 'suspected' : 'hidden');
       panel.style.setProperty('--threat-progress', String(progress));
       if (progress >= 1) {
         clearInterval(this.threatApproachTimer as number);
@@ -1093,7 +1106,11 @@ export class ImmersionScene {
         document.body.classList.add('hallucination-hit');
         setTimeout(() => document.body.classList.remove('hallucination-hit'), 900);
       }
-      if (tier === 3 && Math.random() < .28) {
+      if (tier === 2 && Math.random() < .22) {
+        this.showFalseSilhouette();
+        simAudio.whisper(this.state.muted);
+      }
+      if (tier === 3 && Math.random() < .5) {
         const caption = document.getElementById('soundCaption');
         if (caption) caption.textContent = 'ТВОЙ ГОЛОС · позади';
         simAudio.maskWhisper(this.state.muted, 1.35);
@@ -1107,7 +1124,7 @@ export class ImmersionScene {
           setTimeout(() => ghost.remove(), 1800);
         }
       }
-    }, 12500);
+    }, 7200);
   }
 
   private tickMaskEffects() {
@@ -1211,6 +1228,7 @@ export class ImmersionScene {
     close.textContent = 'ЗАКРЫТЬ';
     close.onclick = () => this.closeModal();
     actions.appendChild(close);
+    modal.classList.toggle('risk-modal', id === 'black_seed' || id === 'stitched_mask');
     modal.classList.add('open');
     simAudio.open(this.state.muted);
   }
