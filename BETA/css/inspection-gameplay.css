@@ -208,3 +208,70 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
  #simModal .smp-a{flex-wrap:wrap!important}
  #simModal .smp-a button,#simModal .smp-a .inspection-action{flex:1 1 calc(50% - 6px)!important}
 }
+
+
+/* ── HUD alignment + genuinely reactive equalizer ── */
+/* Keep the location title as plain scene typography; never let global card rules box it in. */
+.zone-whisper{
+  position:fixed!important;left:24px!important;top:22px!important;z-index:120!important;
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  width:max-content!important;max-width:min(42vw,360px)!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;
+  text-align:left!important;pointer-events:none!important;transform:none!important;
+}
+.zone-whisper:before,.zone-whisper:after{content:none!important;display:none!important}
+.zone-whisper #zoneLabel{
+  display:block!important;width:auto!important;max-width:100%!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-left:0!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  color:var(--cyan,#36d9ee)!important;font:700 17px/1.15 'Space Grotesk',sans-serif!important;
+  letter-spacing:.16em!important;text-shadow:0 0 14px rgba(44,211,232,.24)!important;
+}
+.zone-whisper #zoneSub{
+  display:block!important;margin:6px 0 0!important;padding:0!important;border:0!important;
+  background:transparent!important;box-shadow:none!important;color:#c1d2d9!important;
+  font:600 9px/1.2 'Space Grotesk',sans-serif!important;letter-spacing:.13em!important;
+}
+
+/* Both event streams begin below the title/time row and cannot cover the location label. */
+#senseFeed,.sense-feed{
+  position:fixed!important;left:24px!important;right:auto!important;
+  top:112px!important;width:min(320px,calc(100vw - 48px))!important;
+  max-width:320px!important;max-height:22vh!important;height:auto!important;
+  overflow:hidden!important;z-index:70!important;pointer-events:none!important;
+}
+#notifyHost,.notify-host{
+  position:fixed!important;left:24px!important;right:auto!important;top:112px!important;
+  width:min(320px,calc(100vw - 48px))!important;max-width:320px!important;
+  max-height:22vh!important;overflow:hidden!important;z-index:72!important;
+}
+#senseFeed>.sense-event,.sense-feed>*,
+#notifyHost .notify{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  height:auto!important;min-height:30px!important;max-height:54px!important;
+  padding:6px 9px!important;white-space:normal!important;overflow:hidden!important;
+  overflow-wrap:anywhere!important;line-height:1.35!important;
+}
+@media(max-width:760px){
+  .zone-whisper{left:14px!important;top:14px!important}
+  #senseFeed,.sense-feed,#notifyHost,.notify-host{left:14px!important;top:88px!important;width:min(280px,calc(100vw - 28px))!important}
+}
+
+/* Each equalizer column receives its own live height from the sound simulation. */
+.sound-readout .sound-meter{
+  height:17px!important;gap:3px!important;align-items:flex-end!important;
+  overflow:hidden!important;
+}
+.sound-readout .sound-meter i{
+  display:block!important;flex:1 1 0!important;min-width:2px!important;max-width:6px!important;
+  height:var(--bar-height,3%)!important;min-height:1px!important;max-height:100%!important;
+  opacity:var(--bar-opacity,.2)!important;
+  background:var(--bar-color,#72aebb)!important;
+  border-radius:2px 2px 0 0!important;
+  box-shadow:0 0 var(--bar-glow,2px) var(--bar-color,#72aebb)!important;
+  transform-origin:bottom!important;
+  transition:height .13s linear,opacity .16s ease,background-color .2s ease,box-shadow .2s ease!important;
+}
+.sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.12)}
+.sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.35)}
