@@ -322,16 +322,17 @@ export class ImmersionScene {
         const caption = document.getElementById('soundCaption'); if (caption) caption.textContent = 'Тишина… (слышен дождь)';
       }
       // Each creature has its own trigger condition.
-      if (this.lightActive && !this.maskWorn && ['garden','engawa','hall'].includes(this.state.location) && Math.random() < .16) {
-        this.startThreat('light'); return;
-      }
-      const soundChance = Math.min(.48, .035 + this.currentSoundLevel * .0055);
-      if (this.currentSoundLevel >= 34 && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < soundChance) {
-        this.startThreat('sound'); return;
-      }
-      const ambientThreatChance = Math.min(.34, .12 + this.currentSoundLevel * .0022);
-      if (stayed > (this.maskWorn ? 60000 : 90000) && ['hall','storage','genkan'].includes(this.state.location) && Math.random() < ambientThreatChance) {
-        this.startThreat('dweller'); return;
+      // Three independent creature behaviours, with a small shared encounter roll.
+      // The type is chosen from the player's current behaviour and room, not a single hard-coded room gate.
+      const lightChance = this.lightActive && !this.maskWorn ? .22 : 0;
+      const soundChance = this.currentSoundLevel >= 24 ? Math.min(.24, .025 + this.currentSoundLevel * .0022) : 0;
+      const dwellChance = stayed > 45000 ? Math.min(.18, .035 + stayed / 900000 + this.currentSoundLevel * .001) : 0;
+      const encounter = Math.random();
+      const totalChance = lightChance + soundChance + dwellChance;
+      if (totalChance > 0 && encounter < Math.min(.42, totalChance)) {
+        const pick = Math.random() * totalChance;
+        this.startThreat(pick < lightChance ? 'light' : pick < lightChance + soundChance ? 'sound' : 'dweller');
+        return;
       }
       if (this.maskWorn && Math.random() < .28) { simAudio.maskWhisper(this.state.muted, Math.min(2, 0.6 + this.state.maskExposure / 80)); this.showSense('◉','Маска шепчет твоим голосом…',true); }
       if (Math.random() < .24) {
@@ -370,7 +371,10 @@ export class ImmersionScene {
     this.threatKind = kind;
     this.threatActive = true;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
-    simAudio.monster(this.state.muted); this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
+    if (kind === 'light') simAudio.monsterBlind(this.state.muted);
+    else if (kind === 'sound') simAudio.monsterListener(this.state.muted);
+    else simAudio.monsterDweller(this.state.muted);
+    this.showSense('◉','Что-то движется в темноте',true); this.pulseMatrix('alert');
     this.showCreatureInScene();
     document.body.classList.remove('threat-kind-light','threat-kind-sound','threat-kind-dweller');
     document.body.classList.add('threat-active','threat-kind-' + kind);
@@ -822,6 +826,26 @@ export class ImmersionScene {
       description.className = 'inspection-description';
       description.textContent = item?.examine || 'Неизвестная находка.';
       body.append(status,description);
+      if (id === 'kokeshi_note') {
+        const read = document.createElement('button');
+        read.type = 'button';
+        read.className = 'inspection-action secondary note-read-action';
+        read.textContent = this.state.flags.note_read ? 'ПЕРЕЧИТАТЬ ЗАПИСКУ' : 'ПРОЧИТАТЬ';
+        read.addEventListener('click', () => {
+          const letter = document.createElement('article');
+          letter.className = 'note-letter';
+          letter.innerHTML = '<div class="note-letter-stamp">ЛИЧНАЯ ЗАПИСЬ · М.</div><p>Если ты читаешь это, значит, дверь уже закрылась за тобой. Не верь шагам, которые повторяют твои. Это не эхо — оно учится.</p><p>Первый ключ лежит там, где вода не отражает небо. Вторую половину спрятали под доской, отмеченной тремя короткими царапинами. Соедини их, но не открывай дверь, пока не найдёшь нить.</p><p>Нить удерживает бумагу. Бумага помнит огонь. А колокольчик без языка всё ещё может предупредить того, кто слушает не ушами.</p><p class="note-sign">М. · если маска заговорит твоим голосом — не отвечай.</p>';
+          body.querySelector('.note-letter')?.remove();
+          body.appendChild(letter);
+          this.state.flags.note_read = true;
+          this.state.flags.clue_key_halves = true;
+          saveState(this.state);
+          read.textContent = 'ПЕРЕЧИТАТЬ ЗАПИСКУ';
+          simAudio.whisper(this.state.muted);
+          this.notify('Мы запомнили порядок: ключ → нить → бумага → огонь.','ok');
+        });
+        body.appendChild(read);
+      }
 
       if (id === 'black_seed' || id === 'stitched_mask') {
         const risk = document.createElement('div');
@@ -1054,7 +1078,7 @@ export class ImmersionScene {
       const now = Date.now();
       const elapsed = this.noiseDuration > 0 ? (now - this.noiseStartedAt) / this.noiseDuration : 1;
       const fadingNoise = now < this.noiseUntil && elapsed < 1 ? this.noisePeak * (1 - Math.max(0, elapsed)) : 0;
-      const level = Math.max(this.lightActive ? 30 : 2, fadingNoise);
+      const level = Math.max(this.lightActive ? 18 : 1, fadingNoise);
       this.currentSoundLevel = Math.max(0, Math.min(100, level));
       const meter = document.querySelector<HTMLElement>('.sound-meter');
       const readout = document.querySelector<HTMLElement>('.sound-readout');
@@ -1109,7 +1133,7 @@ export class ImmersionScene {
   private makeNoise(message: string) {
     this.noiseStartedAt = Date.now();
     this.noiseDuration = 9000;
-    this.noisePeak = 86;
+    this.noisePeak = 64;
     this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
     const caption = document.getElementById('soundCaption');
     if (caption) caption.textContent = 'ШУМ · источник — ты';
@@ -1118,6 +1142,7 @@ export class ImmersionScene {
     const fill = document.getElementById('dangerFill') as HTMLElement | null;
     if (fill) fill.style.width = '72%';
     this.showSense('◖))', message, true);
+    simAudio.steps(this.state.muted);
     simAudio.click(this.state.muted);
   }
 
@@ -1156,7 +1181,9 @@ export class ImmersionScene {
     this.renderCombatWounds();
     this.updateCombatHud('Существо приближается. Выбери часть тела и действие.');
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
-    simAudio.monster(this.state.muted);
+    if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
+    else if (this.threatKind === 'sound') simAudio.monsterListener(this.state.muted);
+    else simAudio.monsterDweller(this.state.muted);
   }
 
   private updateCombatHud(log: string) {
@@ -1408,7 +1435,9 @@ export class ImmersionScene {
         clearInterval(this.threatApproachTimer as number);
         this.threatApproachTimer = 0;
         this.showSense('◉','Оно уже слишком близко.',true);
-        simAudio.monster(this.state.muted);
+        if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
+        else if (this.threatKind === 'sound') simAudio.monsterListener(this.state.muted);
+        else simAudio.monsterDweller(this.state.muted);
         this.startCombat();
       }
     };
@@ -1437,6 +1466,7 @@ export class ImmersionScene {
       const line = thoughts[this.thoughtIndex++ % thoughts.length];
       const voice = document.getElementById('innerVoice');
       if (voice) voice.textContent = line;
+      simAudio.innerVoice(this.state.muted, tier === 3 ? 1.8 : tier === 2 ? 1.2 : .7);
       this.showSense('◉', line, true);
       if (tier >= 2 && Math.random() < (tier === 2 ? .42 : .72)) {
         document.body.classList.remove('hallucination-hit');
