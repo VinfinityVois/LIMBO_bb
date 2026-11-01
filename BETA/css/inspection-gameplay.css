@@ -275,3 +275,54 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
 }
 .sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.12)}
 .sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.35)}
+
+
+/* ── Location title / notification separation + final equalizer polish ── */
+.zone-whisper{
+  left:24px!important;top:18px!important;z-index:150!important;
+  width:max-content!important;max-width:min(48vw,420px)!important;
+  padding:0!important;border:0!important;background:transparent!important;
+  box-shadow:none!important;isolation:isolate!important;
+}
+.zone-whisper #zoneLabel,.zone-whisper #zoneSub{
+  position:relative!important;display:block!important;width:auto!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;
+}
+.zone-whisper #zoneLabel{
+  font-size:18px!important;line-height:1.2!important;letter-spacing:.16em!important;
+}
+.zone-whisper #zoneSub{margin-top:5px!important;line-height:1.25!important}
+
+/* Notifications begin below the full location heading; they never sit on top of it. */
+#notifyHost,.notify-host{
+  left:24px!important;right:auto!important;top:126px!important;
+  width:min(320px,calc(100vw - 48px))!important;max-width:320px!important;
+  max-height:22vh!important;overflow:hidden!important;z-index:90!important;
+}
+#notifyHost .notify{
+  display:block!important;min-height:30px!important;max-height:54px!important;
+  padding:7px 10px!important;line-height:1.35!important;
+}
+@media(max-width:760px){
+  .zone-whisper{left:14px!important;top:12px!important}
+  #notifyHost,.notify-host{left:14px!important;top:106px!important;width:min(290px,calc(100vw - 28px))!important}
+}
+
+/* Equalizer: flat and restrained at silence, lively and taller as noise rises. */
+.sound-readout .sound-meter{
+  display:flex!important;align-items:flex-end!important;gap:3px!important;
+  height:18px!important;min-height:18px!important;padding:0!important;
+}
+.sound-readout .sound-meter i{
+  align-self:flex-end!important;flex:1 1 0!important;height:var(--bar-height,2%)!important;
+  min-height:1px!important;max-height:100%!important;
+  opacity:var(--bar-opacity,.28)!important;background:var(--bar-color,#527fbd)!important;
+  box-shadow:0 0 var(--bar-glow,1px) var(--bar-color,#527fbd)!important;
+  border-radius:2px 2px 0 0!important;
+  transition:height .12s linear,opacity .16s ease,background-color .18s linear,box-shadow .18s linear!important;
+}
+.sound-readout[data-level="low"] .sound-meter i{filter:saturate(.78)}
+.sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.08)}
+.sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.3)}
