@@ -173,15 +173,20 @@ export class ImmersionScene {
   }
 
   private bindChrome() {
-    document.getElementById('btnMute')?.addEventListener('click', () => {
+    const muteButton = document.getElementById('btnMute');
+    if (muteButton) muteButton.textContent = this.state.muted ? 'SFX OFF' : 'SFX ON';
+    document.body.classList.toggle('audio-muted', this.state.muted);
+    muteButton?.addEventListener('click', () => {
       setMuted(this.state, !this.state.muted);
       const b = document.getElementById('btnMute');
       if (b) b.textContent = this.state.muted ? 'SFX OFF' : 'SFX ON';
+      document.body.classList.toggle('audio-muted', this.state.muted);
       simAudio.unlock();
       if (!this.state.muted) {
         simAudio.click(false);
         const loc = LOCATIONS[this.state.location];
         simAudio.startAmbient(false, loc.ambient);
+        document.body.classList.add('audio-ready');
       } else simAudio.stopAmbient();
     });
     document.getElementById('btnExit')?.addEventListener('click', () => {
