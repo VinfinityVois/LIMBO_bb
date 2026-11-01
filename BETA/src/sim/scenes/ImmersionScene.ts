@@ -1618,6 +1618,7 @@ export class ImmersionScene {
       if (recipe) {
         this.state.inventory = this.state.inventory.filter((x) => x !== recipe.a && x !== recipe.b);
         if (!this.state.inventory.includes(recipe.result)) this.state.inventory.push(recipe.result);
+        this.state.flags['crafted_' + recipe.result] = true;
         this.state.selected = recipe.result;
         saveState(this.state);
         simAudio.combine(this.state.muted);
