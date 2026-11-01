@@ -256,6 +256,7 @@ export class ImmersionScene {
       const watchValue = document.getElementById('watchValue');
       const activeNoise = Date.now() < this.noiseUntil;
       const watched = this.threatActive || (activeNoise && Math.random() < .35);
+      this.updateAwareness(this.threatActive ? 2 : watched || activeNoise ? 1 : 0);
       if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
       if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : activeNoise ? 'ПОВЫШЕНА' : watched ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
       if (watchValue) watchValue.textContent = this.threatActive ? 'ОНО ВИДИТ ВАС' : watched ? 'ЗА ВАМИ НАБЛЮДАЮТ' : 'ЗА ВАМИ НЕ СЛЕДЯТ';
@@ -342,6 +343,15 @@ export class ImmersionScene {
       simAudio.whoosh(this.state.muted);this.notify('Свет фонаря заставил существо отступить.','ok');this.state.sanity=Math.min(100,this.state.sanity+2);
     } else {simAudio.deny(this.state.muted);this.notify('Без подходящего средства ты лишь разозлил его.','warn');this.state.health=Math.max(0,this.state.health-14);this.state.sanity=Math.max(0,this.state.sanity-8);}
     saveState(this.state);this.renderVitals();
+  }
+
+  private updateAwareness(level: 0 | 1 | 2) {
+    const eye = document.getElementById('awarenessIndicator');
+    if (!eye) return;
+    eye.dataset.state = level === 2 ? 'seen' : level === 1 ? 'near' : 'hidden';
+    const label = eye.querySelector('[data-eye-label]');
+    if (label) label.textContent = level === 2 ? 'ОБНАРУЖЕНЫ' : level === 1 ? 'КТО-ТО РЯДОМ' : 'НЕ ЗАМЕЧЕНЫ';
+    eye.setAttribute('aria-label', level === 2 ? 'Существо заметило нас' : level === 1 ? 'Кто-то приближается' : 'Нас не заметили');
   }
 
   private startMatrixStreams() {
@@ -580,52 +590,105 @@ export class ImmersionScene {
   }
 
   private openModal(hs: HotspotDef) {
-    const modal=document.getElementById('simModal')!;
-    document.getElementById('modalTitle')!.textContent=hs.label;
-    const body=document.getElementById('modalBody')!;
-    const visual=document.getElementById('modalVisual');
-    const item=hs.item?ITEMS[hs.item]:null;
-    if(visual) visual.innerHTML=hs.item?`<img class="item-art-image" src="${this.itemAsset(hs.item)}" alt="${item?.name || hs.label}">`:hs.complete?'<svg viewBox="0 0 64 64" width="210" height="210"><rect x="16" y="16" width="32" height="32" fill="none" stroke="#1ec99a" stroke-width="2"/><text x="32" y="38" text-anchor="middle" fill="#1ec99a" font-size="10" font-family="monospace">RK-01</text></svg>':'';
-    body.textContent=item?item.name+'\n\n'+hs.examine:hs.examine;
-    body.classList.remove('thought-text');
-    if(hs.item==='black_seed'||hs.item==='stitched_mask'){
-      const risk=document.createElement('span');risk.className='item-risk';risk.textContent='НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';body.appendChild(risk);
-    }
-    const actions=document.getElementById('modalActions')!;actions.innerHTML='';
-    const add=(label:string,cls:string,fn:()=>void)=>{const b=document.createElement('button');b.className='btn '+cls;b.textContent=label;b.onclick=fn;actions.appendChild(b);};
-    add('НЕ ТРОГАТЬ','danger',()=>this.closeModal());
-    if(item&&hs.item&&hs.takenFlag&&!this.state.flags[hs.takenFlag]){
-      add('ИЗУЧИТЬ','',()=>{
-        const detail=document.createElement('div');detail.className='item-detail';
-        detail.textContent=hs.item==='black_seed'?'Под плёнкой видны тонкие жилки. Они шевелятся в ответ на тепло руки. Ты чувствуешь чужую мысль: «посади меня».':hs.item==='stitched_mask'?'Нить прошита изнутри. На бумаге проступает отпечаток лица, хотя маска лежит неподвижно. Не надевай её.':'Ты замечаешь мелкие детали, которые не были видны издалека.';
-        body.appendChild(detail);simAudio.whisper(this.state.muted);this.showSense('◉','Ты внимательно изучил находку',false);
+    const modal = document.getElementById('simModal')!;
+    const title = document.getElementById('modalTitle')!;
+    const body = document.getElementById('modalBody')!;
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions')!;
+    const note = document.getElementById('modalNote');
+    const found = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
+    const flags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
+    const add = (label: string, cls: string, fn: () => void) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn ' + cls; b.textContent = label;
+      b.addEventListener('click', fn); actions.appendChild(b);
+    };
+    const showArea = () => {
+      title.textContent = 'ОСМОТР МЕСТА · ' + hs.label;
+      if (visual) visual.innerHTML = '';
+      body.textContent = hs.examine;
+      actions.innerHTML = '';
+      const available = found.filter((id, i) => !flags[i] || !this.state.flags[flags[i]]);
+      if (available.length) {
+        const list = document.createElement('div');
+        list.className = 'discovery-list';
+        available.forEach((id) => {
+          const item = ITEMS[id];
+          const row = document.createElement('div'); row.className = 'discovery-row';
+          const art = document.createElement('img'); art.src = this.itemAsset(id); art.alt = '';
+          const copy = document.createElement('span'); copy.textContent = item?.name || 'Неизвестный предмет';
+          const inspect = document.createElement('button'); inspect.type = 'button'; inspect.textContent = 'ОСМОТРЕТЬ';
+          inspect.addEventListener('click', () => showItem(id));
+          row.append(art, copy, inspect); list.appendChild(row);
+        });
+        body.appendChild(list);
+        add('ОСТАВИТЬ КАК ЕСТЬ', '', () => this.closeModal());
+      } else if (hs.complete) {
+        add('ВЫБРАТЬ ИСХОД', 'solid', () => this.showEndingChoices());
+      } else {
+        const empty = document.createElement('p'); empty.className = 'discovery-empty';
+        empty.textContent = 'Больше ничего заметного. Но ощущение чужого присутствия не исчезает.';
+        body.appendChild(empty);
+        add('ЗАКРЫТЬ', '', () => this.closeModal());
+      }
+      if (note) note.textContent = available.length ? 'Сначала осмотри находку. Решение взять её остаётся за нами.' : 'Мы осмотрели это место.';
+    };
+    const showItem = (id: ItemId) => {
+      const item = ITEMS[id];
+      const index = found.indexOf(id);
+      const flag = flags[index] || hs.takenFlag;
+      title.textContent = item?.name || hs.label;
+      if (visual) visual.innerHTML = '<img class="item-art-image" src="' + this.itemAsset(id) + '" alt="">';
+      body.textContent = (item?.examine || 'Неизвестная находка.') + '\n\n' + hs.examine;
+      body.classList.remove('thought-text');
+      if (id === 'black_seed' || id === 'stitched_mask') {
+        const risk = document.createElement('span'); risk.className = 'item-risk';
+        risk.textContent = 'НЕИЗВЕСТНЫЙ ОБЪЕКТ · Возможна психическая реакция';
+        body.appendChild(risk);
+      }
+      actions.innerHTML = '';
+      add('НАЗАД К НАХОДКАМ', '', showArea);
+      add('ИЗУЧИТЬ', '', () => {
+        const detail = document.createElement('div'); detail.className = 'item-detail';
+        detail.textContent = id === 'black_seed'
+          ? 'Под плёнкой видны тонкие жилки. Они шевелятся в ответ на тепло руки. Мы слышим мысль: «посади меня».'
+          : id === 'stitched_mask'
+          ? 'Нить прошита изнутри. На бумаге проступает отпечаток лица, хотя маска лежит неподвижно. Не надевай её.'
+          : 'Мы поворачиваем находку в руках. На поверхности видны следы чужого использования.';
+        body.appendChild(detail); simAudio.whisper(this.state.muted);
+        this.showSense('◉', 'Мы изучили: ' + (item?.name || 'находку'), false);
       });
-      add('ВЗЯТЬ','solid',()=>{
-        if(this.state.inventory.length>=12){this.notify('Инвентарь заполнен','warn');return;}
-        this.state.inventory.push(hs.item!);this.state.flags[hs.takenFlag!]=true;
-        if(hs.item==='black_seed'){this.state.sanity=Math.max(0,this.state.sanity-13);this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.','warn');simAudio.whisper(this.state.muted);}
-        else if(hs.item==='stitched_mask'){this.state.sanity=Math.max(0,this.state.sanity-8);this.notify('Из маски донёсся короткий вдох.','warn');simAudio.whisper(this.state.muted);}
-        else this.notify('Получено: '+item.name,'ok');
-        saveState(this.state);simAudio.take(this.state.muted);this.pulseMatrix('ok');this.closeModal();this.buildHotspots();this.renderInv();this.renderVitals();
+      if (!flag || !this.state.flags[flag]) add('ВЗЯТЬ', 'solid', () => {
+        if (this.state.inventory.length >= 12) { this.notify('Инвентарь заполнен', 'warn'); return; }
+        this.state.inventory.push(id);
+        if (flag) this.state.flags[flag] = true;
+        if (id === 'black_seed') { this.state.sanity = Math.max(0, this.state.sanity - 13); this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.', 'warn'); simAudio.whisper(this.state.muted); }
+        else if (id === 'stitched_mask') { this.state.sanity = Math.max(0, this.state.sanity - 8); this.notify('Из маски донёсся короткий вдох.', 'warn'); simAudio.maskWhisper(this.state.muted, 1.1); }
+        else this.notify('Получено: ' + (item?.name || 'предмет'), 'ok');
+        saveState(this.state); simAudio.take(this.state.muted); this.pulseMatrix('ok');
+        this.closeModal(); this.buildHotspots(); this.renderInv(); this.renderVitals();
       });
-    }
-    if(hs.complete)add('ВЫБРАТЬ ИСХОД','solid',()=>{
-      const title=document.getElementById('modalTitle'); if(title) title.textContent='ПОСЛЕДНИЙ ВЫБОР';
-      const body=document.getElementById('modalBody'); if(body) body.textContent='Канал отвечает твоим голосом. Мы можем очистить его, связать себя с ним или разрушить узел. Этот выбор останется с нами в следующих секторах.';
-      const visual=document.getElementById('modalVisual'); if(visual) visual.innerHTML='<div class="ending-sigil" aria-hidden="true">◇</div>';
-      const actions=document.getElementById('modalActions'); if(!actions)return; actions.innerHTML='';
-      const options=[
+      if (note) note.textContent = id === 'stitched_mask' || id === 'black_seed' ? 'Неизвестный риск. Мы не уверены, что это безопасно.' : 'Предмет можно забрать или оставить на месте.';
+    };
+    const showEndingChoices = () => {
+      title.textContent = 'ПОСЛЕДНИЙ ВЫБОР';
+      if (visual) visual.innerHTML = '<div class="ending-sigil" aria-hidden="true">◇</div>';
+      body.textContent = 'Канал отвечает нашим голосом. Мы можем очистить его, связать себя с ним или разрушить узел. Этот выбор останется с нами в следующих секторах.';
+      actions.innerHTML = '';
+      const options = [
         ['ОЧИСТИТЬ КАНАЛ','clear','Мы сохраняем себя. Следующая сцена начнётся с более ясным рассудком.'],
         ['ПРИНЯТЬ СВЯЗЬ','bind','Маска останется частью нас. Мы получим доступ к закрытым голосам, но начнём следующую сцену с меньшим рассудком.'],
-        ['РАЗРУШИТЬ УЗЕЛ','break','Угроза ослабнет, но часть найденных вещей будет потеряна. Следующая сцена начнётся с ранения.']
+        ['РАЗРУШИТЬ УЗЕЛ','break','Угроза ослабнет, но часть найденных вещей будет потеряна. Следующая сцена начнётся с ранением.']
       ] as const;
-      for(const [label,ending,hint] of options){
-        const b=document.createElement('button'); b.type='button'; b.className='primary'; b.textContent=label; b.title=hint;
-        b.addEventListener('click',()=>this.chooseEnding(ending)); actions.appendChild(b);
+      for (const [label, ending, hint] of options) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'primary'; b.textContent = label; b.title = hint;
+        b.addEventListener('click', () => this.chooseEnding(ending)); actions.appendChild(b);
       }
-      const note=document.getElementById('modalNote'); if(note) note.textContent='Выбор необратим в рамках текущего прохождения.';
-    });
-    modal.classList.add('open');simAudio.open(this.state.muted);
+      if (note) note.textContent = 'Выбор необратим в рамках текущего прохождения.';
+    };
+    body.classList.remove('thought-text');
+    showArea();
+    modal.classList.add('open'); simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
@@ -975,6 +1038,8 @@ export class ImmersionScene {
 
   private applySanityTier(sanity: number) {
     const tier = sanity >= 65 ? 0 : sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
+    document.documentElement.style.setProperty('--sanity-loss', String(1 - sanity / 100));
+    document.body.style.setProperty('--sanity-red', String(Math.min(1, (65 - sanity) / 65)));
     if (tier === this.sanityTier) return;
     this.sanityTier = tier;
     document.body.dataset.sanity = String(tier);
