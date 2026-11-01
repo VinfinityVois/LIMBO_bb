@@ -145,6 +145,11 @@ export const simAudio = {
     this.tone(m, 38, 1.05, 'sawtooth', 0.05, 16);
     setTimeout(() => this.tone(m, 165, 0.66, 'sawtooth', 0.022, 28), 210);
   },
+  call(m: boolean) {
+    this.noiseBurst(m, 0.38, 0.028, 'bandpass', 780);
+    this.tone(m, 185, 0.34, 'triangle', 0.018, 125);
+    setTimeout(() => this.tone(m, 235, 0.24, 'sine', 0.012, 165), 170);
+  },
   innerVoice(m: boolean, intensity = 1) {
     // Abstract breath/formant-like response: deliberately not intelligible speech.
     this.noiseBurst(m, 0.48, 0.009 * intensity, 'bandpass', 1150);
@@ -222,7 +227,7 @@ export const simAudio = {
     filter.type = kind.toLowerCase().includes('rain') ? 'bandpass' : 'lowpass';
     filter.frequency.value = kind.toLowerCase().includes('rain') ? 2450 : 720;
     filter.Q.value = kind.toLowerCase().includes('rain') ? 0.32 : 0.45;
-    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.052 : 0.032;
+    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.085 : 0.026;
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.analyser || this.ctx.destination);
@@ -248,7 +253,7 @@ export const simAudio = {
     const drip = () => {
       if (m || !this.ctx || this.ctx.state !== 'running') return;
       if (rain && Math.random() < 0.78) {
-        this.tone(false, 1050 + Math.random() * 1750, 0.045 + Math.random() * 0.07, 'sine', 0.006);
+        this.tone(false, 1050 + Math.random() * 1750, 0.045 + Math.random() * 0.07, 'sine', 0.009);
       } else if (!rain && Math.random() < 0.38) {
         this.noiseBurst(false, 0.11, 0.006, 'bandpass', 500 + Math.random() * 1100);
       }
