@@ -1142,13 +1142,15 @@ export class ImmersionScene {
         let hint = preview.querySelector('.selected-copy small');
         if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
         if (hint) hint.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СТАТУС: НАДЕТА · нажми «СНЯТЬ МАСКУ»' : 'СТАТУС: СНЯТА · нажми «НАДЕТЬ МАСКУ»') : help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
-        const useButton = document.getElementById('btnUseItem');
-        if (useButton) useButton.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СНЯТЬ МАСКУ' : 'НАДЕТЬ МАСКУ') : this.state.selected === 'ember_lantern' ? (this.lightActive ? 'ПОГАСИТЬ' : 'ЗАЖЕЧЬ') : 'ИСПОЛЬЗОВАТЬ';
+        const useButton = document.getElementById('btnUseItem') as HTMLButtonElement | null;
+        if (useButton) { useButton.disabled = false; useButton.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СНЯТЬ МАСКУ' : 'НАДЕТЬ МАСКУ') : this.state.selected === 'ember_lantern' ? (this.lightActive ? 'ПОГАСИТЬ' : 'ЗАЖЕЧЬ') : 'ИСПОЛЬЗОВАТЬ'; }
+        const inspectButton = document.getElementById('btnInspectItem') as HTMLButtonElement | null; if (inspectButton) inspectButton.disabled = false;
         const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null;
         if (dropButton) dropButton.disabled = this.state.selected === 'stitched_mask' && this.maskWorn;
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
-        const useButton = document.getElementById('btnUseItem'); if (useButton) useButton.textContent = 'ИСПОЛЬЗОВАТЬ';
+        const useButton = document.getElementById('btnUseItem') as HTMLButtonElement | null; if (useButton) { useButton.textContent = 'ИСПОЛЬЗОВАТЬ'; useButton.disabled = true; }
+        const inspectButton = document.getElementById('btnInspectItem') as HTMLButtonElement | null; if (inspectButton) inspectButton.disabled = true;
         const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null; if (dropButton) dropButton.disabled = true;
       }
     }
