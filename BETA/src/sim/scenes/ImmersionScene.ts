@@ -61,6 +61,7 @@ export class ImmersionScene {
   private thoughtIndex = 0;
   private threatApproachTimer: ReturnType<typeof setInterval> | number = 0;
   private threatStartedAt = 0;
+  private lastApproachCue = 0;
   private hallucinationCount = 0;
   private diving = true;
   private defeatShown = false;
@@ -71,6 +72,7 @@ export class ImmersionScene {
   private noisePeak = 0;
   private currentSoundLevel = 3;
   private notificationQueue: Array<{ message: string; kind: 'info' | 'warn' | 'ok' }> = [];
+  private ambienceTimer: ReturnType<typeof setTimeout> | number = 0;
   private notificationBusy = false;
   private lastNotification = '';
   private lastNotificationAt = 0;
@@ -132,6 +134,7 @@ export class ImmersionScene {
     this.startWorldClock();
     this.startSoundDynamics();
     this.startSanityDistortions();
+    this.scheduleAtmosphericAudio();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
     this.scheduleEvents();
@@ -260,6 +263,7 @@ export class ImmersionScene {
       this.openItemExam(this.state.selected);
     });
     document.getElementById('btnUseItem')?.addEventListener('click', () => this.useSelectedItem());
+    document.getElementById('btnDropItem')?.addEventListener('click', () => this.dropSelectedItem());
     document.getElementById('btnHide')?.addEventListener('click', () => this.resolveThreat('hide'));
     document.getElementById('btnConfront')?.addEventListener('click', () => this.startCombat());
     document.getElementById('btnCall')?.addEventListener('click', () => { simAudio.call(this.state.muted); this.makeNoise('Ты громко окликнул кого-то в темноте.'); });
@@ -276,13 +280,28 @@ export class ImmersionScene {
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
     document.addEventListener('keydown', (e) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ['INPUT','TEXTAREA','SELECT'].includes(target.tagName))) return;
       if (e.key === 'Escape') {
         if (document.getElementById('combatScreen')?.classList.contains('open')) this.combatAction('flee');
         else this.closeModal();
         return;
       }
-      if (!document.getElementById('combatScreen')?.classList.contains('open') || e.repeat) return;
+      if (e.repeat) return;
       const key = e.key.toLowerCase();
+      const combatOpen = document.getElementById('combatScreen')?.classList.contains('open');
+      if (!combatOpen) {
+        if (/^[1-9]$/.test(key)) {
+          const item = this.state.inventory[Number(key) - 1];
+          if (item) { this.state.selected = item; saveState(this.state); this.renderInv(); simAudio.click(this.state.muted); }
+        } else if (key === '0') {
+          const item = this.state.inventory[9];
+          if (item) { this.state.selected = item; saveState(this.state); this.renderInv(); simAudio.click(this.state.muted); }
+        } else if (key === 'r') this.useSelectedItem();
+        else if (key === 'f') { if (this.state.selected) this.openItemExam(this.state.selected); }
+        else if (key === 'q') this.dropSelectedItem();
+        return;
+      }
       if (key === '1' || key === 'a') this.combatAction('attack');
       else if (key === '2' || key === ' ') this.combatDodge();
       else if (key === '3' || key === 'g') this.combatAction('guard');
@@ -369,6 +388,7 @@ export class ImmersionScene {
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
     this.threatKind = kind;
+    this.lastApproachCue = 0;
     this.threatActive = true;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
     if (kind === 'light') simAudio.monsterBlind(this.state.muted);
@@ -427,6 +447,19 @@ export class ImmersionScene {
   }
 
   private ensurePerceptionOverlay() {
+    const weather = document.getElementById('limboWeatherFx');
+    if (weather && !weather.children.length) {
+      for (let i = 0; i < 42; i++) {
+        const drop = document.createElement('i');
+        drop.style.setProperty('--x', (Math.random() * 100) + '%');
+        drop.style.setProperty('--y', (Math.random() * 100) + '%');
+        drop.style.setProperty('--h', (12 + Math.random() * 24) + 'px');
+        drop.style.setProperty('--o', (0.18 + Math.random() * 0.38).toFixed(2));
+        drop.style.setProperty('--d', (1.8 + Math.random() * 2.6) + 's');
+        drop.style.setProperty('--delay', (-Math.random() * 5) + 's');
+        weather.appendChild(drop);
+      }
+    }
     if (!document.getElementById('awarenessIndicator')) {
       const eye = document.createElement('div');
       eye.id = 'awarenessIndicator';
@@ -917,54 +950,78 @@ export class ImmersionScene {
     const visual = document.getElementById('modalVisual');
     const actions = document.getElementById('modalActions');
     const note = document.getElementById('modalNote');
-    if (title) title.textContent = 'ЯКОРЬ RK-01 · ПОСЛЕДНЕЕ РЕШЕНИЕ';
-    if (visual) visual.innerHTML = '<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (title) title.textContent = 'ВЫХОД ИЗ СЕКТОРА';
+    if (visual) visual.innerHTML = '<div class="ending-core-art departure-core" aria-hidden="true"><i></i><b></b><span></span></div>';
     if (body) {
       body.innerHTML = '';
       const p = document.createElement('p');
       p.className = 'inspection-description';
-      p.textContent = 'Канал раскрывается. За ним — не выход, а запись о том, как сектор был создан. Цефей просит выбрать, что оставить по ту сторону.';
+      p.textContent = 'Канал больше не сопротивляется. За ним нет света — только слабый сигнал, который повторяет наши последние слова. Мы можем уйти. Что именно уйдёт вместе с нами, пока неизвестно.';
       body.appendChild(p);
-      const req = document.createElement('ul');
-      req.className = 'ending-requirements';
-      const requirements = [
-        ['Записка прочитана', !!this.state.flags.note_read],
-        ['Дверь генкана открыта', !!this.state.flags.door_unlocked],
-        ['Нить найдена', !!this.state.flags.took_silk],
-        ['Колокольчик найден', !!this.state.flags.took_bell],
-        ['Оберег собран', !!this.state.flags.crafted_warding_charm],
-        ['Фонарь восстановлен', !!this.state.flags.crafted_ember_lantern],
-      ];
-      requirements.forEach(([label, met]) => {
-        const li = document.createElement('li');
-        li.textContent = (met ? '✓ ' : '— ') + label;
-        li.className = met ? 'met' : 'missing';
-        req.appendChild(li);
-      });
-      body.appendChild(req);
-      const outcome = document.createElement('p');
-      outcome.className = 'ending-outcome-copy';
-      const good = requirements.every(([, met]) => Boolean(met));
-      outcome.textContent = good
-        ? 'Все следы сходятся. Можно очистить канал, не оставляя голос внутри.'
-        : 'Данных недостаточно. Можно разорвать канал сейчас, но сектор уйдёт вместе с частью нашей памяти.';
-      body.appendChild(outcome);
+      const detail = document.createElement('p');
+      detail.className = 'ending-outcome-copy';
+      detail.textContent = 'Цефей молчит. Впервые решение не предлагается системой — его принимаем мы.';
+      body.appendChild(detail);
     }
     if (actions) {
       actions.innerHTML = '';
-      const add = (label: string, cls: string, fn: () => void, disabled = false) => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'inspection-action ' + cls; b.textContent = label;
-        b.disabled = disabled; b.addEventListener('click', fn); actions.appendChild(b);
-      };
-      const ready = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
-        !!this.state.flags.took_silk && !!this.state.flags.took_bell &&
-        !!this.state.flags.crafted_warding_charm && !!this.state.flags.crafted_ember_lantern;
-      add('ОЧИСТИТЬ КАНАЛ · ХОРОШИЙ КОНЕЦ', 'primary ending-good', () => this.chooseEnding('clear'), !ready);
-      add('РАЗОРВАТЬ КАНАЛ · ПЛОХОЙ КОНЕЦ', 'secondary ending-bad', () => this.chooseEnding('break'));
-      add('ОСТАТЬСЯ И ПРОВЕРИТЬ ВЕЩИ', 'quiet', () => this.closeModal());
+      const leave = document.createElement('button');
+      leave.type = 'button';
+      leave.className = 'inspection-action primary ending-depart';
+      leave.textContent = 'ПОКИНУТЬ СЕКТОР';
+      leave.addEventListener('click', () => this.confirmSectorExit());
+      const stay = document.createElement('button');
+      stay.type = 'button';
+      stay.className = 'inspection-action quiet';
+      stay.textContent = 'ВЕРНУТЬСЯ К ОСМОТРУ';
+      stay.addEventListener('click', () => this.closeModal());
+      actions.append(leave, stay);
     }
-    if (note) note.textContent = 'Хороший исход требует собрать улики и подготовить два защитных предмета. Плохой исход доступен всегда.';
+    if (note) note.textContent = 'Финал не будет показан, пока мы действительно не подтвердим уход.';
+  }
+
+  private confirmSectorExit() {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    if (title) title.textContent = 'ПОДТВЕРДИТЬ ВОЗВРАЩЕНИЕ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art departure-core warning-core" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (body) {
+      body.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'inspection-description';
+      p.textContent = 'Когда канал закроется, повторно войти в этот сектор уже не получится. Мы унесём с собой только то, что смогли понять, сохранить и не потерять.';
+      body.appendChild(p);
+      const second = document.createElement('p');
+      second.className = 'ending-outcome-copy';
+      second.textContent = 'Ты уверен, что пора уходить?';
+      body.appendChild(second);
+    }
+    if (actions) {
+      actions.innerHTML = '';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'inspection-action quiet';
+      cancel.textContent = 'ОСТАТЬСЯ';
+      cancel.addEventListener('click', () => this.showEndingChoices());
+      const accept = document.createElement('button');
+      accept.type = 'button';
+      accept.className = 'inspection-action primary ending-depart';
+      accept.textContent = 'ДА. МЫ УХОДИМ';
+      accept.addEventListener('click', () => {
+        const cluesReady = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
+          !!this.state.flags.took_silk && !!this.state.flags.took_bell;
+        const protectionsReady = !!this.state.flags.crafted_warding_charm &&
+          !!this.state.flags.crafted_ember_lantern;
+        const survived = this.state.health >= 35 && this.state.sanity >= 25 && !this.state.defeated;
+        this.chooseEnding(cluesReady && protectionsReady && survived ? 'clear' : 'break');
+      });
+      actions.append(cancel, accept);
+    }
+    if (note) note.textContent = 'Подтверждение необратимо. Последствия станут известны после закрытия канала.';
+    simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
@@ -973,7 +1030,6 @@ export class ImmersionScene {
     this.state.flags.ending_clear = ending === 'clear';
     this.state.flags.ending_bind = ending === 'bind';
     this.state.flags.ending_break = ending === 'break';
-    // Persistent story flags are read by later scenes; they deliberately survive scene transitions.
     this.state.flags.next_scene_clean_signal = ending === 'clear';
     this.state.flags.next_scene_mask_bound = ending === 'bind';
     this.state.flags.next_scene_wounded = ending === 'break';
@@ -999,16 +1055,52 @@ export class ImmersionScene {
     }
     saveState(this.state);
     markSceneDone();
-    simAudio.complete(this.state.muted);
-    this.closeModal();
     this.renderInv();
     this.renderVitals();
-    const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
-      ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
-      'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
-    this.notify(copy,'ok');
-    this.showSense('◇',copy,ending !== 'clear');
-    window.setTimeout(()=>{ window.location.href='/scene-ryokan.html'; },1800);
+
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    const good = ending === 'clear';
+    if (title) title.textContent = good ? 'СИГНАЛ СОХРАНЁН' : 'СЕКТОР ЗАМОЛКАЕТ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art final-core ' + (good ? 'is-clear' : 'is-broken') + '" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (body) {
+      body.innerHTML = '';
+      const heading = document.createElement('p');
+      heading.className = 'ending-reveal-kicker';
+      heading.textContent = good ? 'ВОЗВРАЩЕНИЕ · СВЯЗЬ УСТОЙЧИВА' : 'ВОЗВРАЩЕНИЕ · ПОТЕРЯ ДАННЫХ';
+      const story = document.createElement('p');
+      story.className = 'inspection-description ending-reveal-copy';
+      story.textContent = good
+        ? 'Мы уходим не одни: в памяти остаётся полная последовательность событий. Записка, ключи и защитные предметы складываются в одну историю. За спиной канал закрывается тихо — впервые Цефей не повторяет наши слова.'
+        : 'Мы успеваем выйти, но канал схлопывается раньше, чем мы понимаем его устройство. Часть воспоминаний остаётся внутри. На записи Цефея слышен чужой крик, а после него — наши шаги, хотя мы уже далеко.';
+      const consequence = document.createElement('p');
+      consequence.className = 'ending-outcome-copy';
+      consequence.textContent = good
+        ? 'В следующей сцене сохранится чистый сигнал: некоторые двери и записи откликнутся на собранные улики.'
+        : 'В следующей сцене нас встретят ослабленные, но не исчезнувшие существа; в сигнале останутся шёпот и повреждённые фрагменты памяти.';
+      body.append(heading, story, consequence);
+    }
+    if (actions) {
+      actions.innerHTML = '';
+      const next = document.createElement('button');
+      next.type = 'button';
+      next.className = 'inspection-action primary ending-depart';
+      next.textContent = 'ПРОДОЛЖИТЬ';
+      next.addEventListener('click', () => {
+        this.closeModal();
+        window.location.href = '/scene-ryokan.html';
+      });
+      actions.appendChild(next);
+    }
+    if (note) note.textContent = good
+      ? 'Хороший исход достигнут нашими действиями, а не выбран в меню.'
+      : 'Мы вышли. Но сектор забрал больше, чем мы рассчитывали.';
+    document.body.dataset.ending = good ? 'clear' : 'break';
+    if (good) simAudio.complete(this.state.muted);
+    else { simAudio.scream(this.state.muted, 0.8); simAudio.whoosh(this.state.muted); }
   }
 
   private closeModal() {
@@ -1027,7 +1119,10 @@ export class ImmersionScene {
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
-      slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
+      slot.title = def.name + ' · нажми: выбрать · двойной щелчок: использовать · ПКМ: изучить';
+      slot.setAttribute('aria-label', def.name + (id === 'stitched_mask' ? (this.maskWorn ? ' · маска надета' : ' · маска снята') : ''));
+      slot.setAttribute('aria-pressed', this.state.selected === id ? 'true' : 'false');
+      slot.addEventListener('dblclick', () => { this.state.selected = id; saveState(this.state); this.renderInv(); this.useSelectedItem(); });
       slot.addEventListener('click', () => this.onInv(id));
       slot.addEventListener('focus', () => simAudio.hover(this.state.muted));
       slot.addEventListener('contextmenu', (e) => {
@@ -1055,6 +1150,8 @@ export class ImmersionScene {
     const sanityValue = document.getElementById('sanityValue');
     if (healthFill) healthFill.style.width = health + '%';
     if (sanityFill) sanityFill.style.width = sanity + '%';
+    const maskStatus = document.getElementById('maskStatus');
+    if (maskStatus) { maskStatus.textContent = this.maskWorn ? 'МАСКА · НАДЕТА' : 'МАСКА · СНЯТА'; maskStatus.classList.toggle('worn', this.maskWorn); }
     if (healthValue) healthValue.textContent = String(health);
     if (sanityValue) sanityValue.textContent = String(sanity);
     this.applySanityTier(sanity);
@@ -1118,9 +1215,17 @@ export class ImmersionScene {
         };
         let hint = preview.querySelector('.selected-copy small');
         if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
-        if (hint) hint.textContent = help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        if (hint) hint.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СТАТУС: НАДЕТА · нажми «СНЯТЬ МАСКУ»' : 'СТАТУС: СНЯТА · нажми «НАДЕТЬ МАСКУ»') : help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        const useButton = document.getElementById('btnUseItem') as HTMLButtonElement | null;
+        if (useButton) { useButton.disabled = false; useButton.textContent = this.state.selected === 'stitched_mask' ? (this.maskWorn ? 'СНЯТЬ МАСКУ' : 'НАДЕТЬ МАСКУ') : this.state.selected === 'ember_lantern' ? (this.lightActive ? 'ПОГАСИТЬ' : 'ЗАЖЕЧЬ') : 'ИСПОЛЬЗОВАТЬ'; }
+        const inspectButton = document.getElementById('btnInspectItem') as HTMLButtonElement | null; if (inspectButton) inspectButton.disabled = false;
+        const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null;
+        if (dropButton) dropButton.disabled = this.state.selected === 'stitched_mask' && this.maskWorn;
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
+        const useButton = document.getElementById('btnUseItem') as HTMLButtonElement | null; if (useButton) { useButton.textContent = 'ИСПОЛЬЗОВАТЬ'; useButton.disabled = true; }
+        const inspectButton = document.getElementById('btnInspectItem') as HTMLButtonElement | null; if (inspectButton) inspectButton.disabled = true;
+        const dropButton = document.getElementById('btnDropItem') as HTMLButtonElement | null; if (dropButton) dropButton.disabled = true;
       }
     }
   }
@@ -1202,13 +1307,34 @@ export class ImmersionScene {
     simAudio.click(this.state.muted);
   }
 
+  private creatureName(): string {
+    return this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+  }
+
+  private creatureAsset(): string {
+    const file = this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger';
+    return '/assets/game/creatures/' + file + '.png';
+  }
+
   private showCreatureInScene() {
     document.getElementById('sceneCreature')?.remove();
     const el = document.createElement('div');
     el.id = 'sceneCreature';
     el.className = 'scene-creature scene-creature-' + this.threatKind;
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
-    el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
+    const img = document.createElement('img');
+    img.className = 'creature-sprite';
+    img.src = this.creatureAsset();
+    img.alt = this.creatureName();
+    img.draggable = false;
+    const name = document.createElement('span');
+    name.className = 'creature-name';
+    name.textContent = this.creatureName();
+    const eyes = document.createElement('span');
+    eyes.className = 'creature-eyes';
+    el.append(img, name, eyes, document.createElement('i'), document.createElement('b'));
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', this.creatureName());
+    el.title = this.creatureName();
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
   }
@@ -1223,11 +1349,11 @@ export class ImmersionScene {
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+    this.monsterName = this.creatureName();
     this.combatTurn = 0; this.combatTarget = 'torso';
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
-    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller') + '.png';
+    if (sprite) { sprite.src = this.creatureAsset(); sprite.alt = this.monsterName; }
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -1477,6 +1603,12 @@ export class ImmersionScene {
     const tick = () => {
       if (!this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
+      const cueStage = progress >= .84 ? 4 : progress >= .62 ? 3 : progress >= .34 ? 2 : progress >= .08 ? 1 : 0;
+      if (cueStage > this.lastApproachCue) {
+        this.lastApproachCue = cueStage;
+        simAudio.monsterApproach(this.state.muted, this.threatKind, cueStage / 4);
+        if (cueStage >= 2) this.showSense('◉', cueStage >= 4 ? 'Оно уже рядом. Слышно дыхание.' : 'Тяжёлые шаги становятся ближе.', true);
+      }
       const fill = document.getElementById('threatApproachFill') as HTMLElement|null;
       const time = document.getElementById('threatApproachTime');
       if (fill) fill.style.width = (progress*100)+'%';
@@ -1499,6 +1631,41 @@ export class ImmersionScene {
     };
     tick();
     this.threatApproachTimer = window.setInterval(tick, 90);
+  }
+
+  private scheduleAtmosphericAudio() {
+    if (this.ambienceTimer) clearTimeout(this.ambienceTimer as number);
+    const schedule = () => {
+      const delay = 6500 + Math.random() * 12500;
+      this.ambienceTimer = window.setTimeout(() => {
+        if (!this.state.muted && !document.hidden && !this.threatActive &&
+            !document.getElementById('combatScreen')?.classList.contains('open')) {
+          const sanity = this.state.sanity;
+          const roll = Math.random();
+          if (roll < 0.26) {
+            simAudio.wind(false, sanity < 25 ? 1.35 : sanity < 45 ? 1.1 : 0.8);
+            this.showSense('⌁', 'Порыв ветра прошёл вдоль стены.', false);
+          } else if (roll < 0.48) {
+            simAudio.steps(false);
+            this.showSense('♬', Math.random() < 0.5 ? 'Шаги остановились за перегородкой.' : 'Кто-то прошёл рядом. Слишком близко.', sanity < 45);
+          } else if (roll < 0.66) {
+            simAudio.creak(false);
+            this.showSense('⌁', 'Дерево протяжно скрипнуло под чьим-то весом.', sanity < 45);
+          } else if (roll < 0.82) {
+            simAudio.howl(false, sanity < 25 ? 1.25 : 0.9);
+            this.showSense('◉', 'За пределами сада прокатилось протяжное завывание.', true);
+          } else if (sanity < 55 && roll < 0.94) {
+            simAudio.whisper(false);
+            this.showSense('◉', 'Чужой голос произнёс что-то неразборчивое.', true);
+          } else if (sanity < 35) {
+            simAudio.scream(false, 0.65 + (35 - sanity) / 60);
+            this.showSense('◉', 'Крик разорвал тишину — и оборвался слишком резко.', true);
+          }
+        }
+        schedule();
+      }, delay);
+    };
+    schedule();
   }
 
   private startSanityDistortions() {
@@ -1583,7 +1750,7 @@ export class ImmersionScene {
       warding_charm: { field: 'sanity', amount: 20, message: 'Оберег холодеет в ладони. Мысли становятся яснее.' },
       ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
     };
-    if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; document.body.classList.toggle('mask-worn', this.maskWorn); this.state.maskWorn = this.maskWorn; this.state.maskExposure = Math.max(0,this.state.maskExposure || 0); this.maskLastTick = Date.now(); this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Слепой хуже различает твой силуэт, но маска начинает запоминать тебя.' : 'Ты снял маску. Шёпот стих, но на внутренней стороне проступило твоё имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · воздействие нарастает' : 'Маска снята · влияние ослабевает', this.maskWorn); simAudio.maskWhisper(this.state.muted, this.maskWorn ? 1.2 : .5); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderVitals(); return; }
+    if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; document.body.classList.toggle('mask-worn', this.maskWorn); this.state.maskWorn = this.maskWorn; this.state.maskExposure = Math.max(0,this.state.maskExposure || 0); this.maskLastTick = Date.now(); this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Слепой хуже различает твой силуэт, но маска начинает запоминать тебя.' : 'Ты снял маску. Шёпот стих, но на внутренней стороне проступило твоё имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · воздействие нарастает' : 'Маска снята · влияние ослабевает', this.maskWorn); simAudio.maskWhisper(this.state.muted, this.maskWorn ? 1.2 : .5); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderInv(); return; }
     if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseStartedAt = Date.now(); this.noiseDuration = 7000; this.noisePeak = this.lightActive ? 38 : 4; this.noiseUntil = this.noiseStartedAt + this.noiseDuration; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
     const effect = effects[id];
     if (!effect) {
@@ -1603,6 +1770,23 @@ export class ImmersionScene {
     this.notify(effect.message, 'ok');
     this.renderInv();
     this.renderVitals();
+  }
+
+  private dropSelectedItem() {
+    const id = this.state.selected;
+    if (!id) { this.notify('Сначала выбери предмет в инвентаре.', 'warn'); return; }
+    if (id === 'stitched_mask' && this.maskWorn) {
+      this.notify('Нельзя выбросить маску, пока она надета. Сначала сними её.', 'warn');
+      simAudio.deny(this.state.muted);
+      return;
+    }
+    const name = ITEMS[id]?.name || 'Предмет';
+    this.state.inventory = this.state.inventory.filter(item => item !== id);
+    this.state.selected = null;
+    saveState(this.state);
+    simAudio.take(this.state.muted);
+    this.notify('Оставлено: ' + name + '.', 'info');
+    this.renderInv();
   }
 
   private onInv(id: ItemId) {

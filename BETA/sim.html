@@ -203,6 +203,8 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 <link rel="stylesheet" href="/css/inspection-gameplay.css" />
 <link rel="stylesheet" href="/css/sim-audio-visual-fix.css" />
 <link rel="stylesheet" href="/css/sim-story-readability.css" />
+<link rel="stylesheet" href="/css/sim-audio-inventory-polish.css" />
+  <link rel="stylesheet" href="/css/limbo-weather-sanity-fx.css" />
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
@@ -218,6 +220,8 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
   <div class="matrix-rail left" id="matrixLeft" aria-hidden="true"></div>
   <div class="matrix-rail right" id="matrixRight" aria-hidden="true"></div>
 
+  <div id="limboWeatherFx" aria-hidden="true"></div>
+  <div id="limboMindShade" aria-hidden="true"></div>
   <div id="notifyHost" class="notify-host"></div>
   <div id="hoverCard" class="hover-card"></div>
   <div id="revealFlash" class="reveal-flash" aria-hidden="true"></div>
@@ -278,6 +282,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
         <div class="vital-track"><span id="sanityFill" style="width:100%"></span></div>
       </div>
       <div class="hand" id="handLabel">В РУКАХ: —</div>
+      <div class="mask-status" id="maskStatus" aria-live="polite">МАСКА · СНЯТА</div>
     </aside>
     <div class="hud-inventory">
       <div class="inventory-heading">
@@ -289,7 +294,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
         <span><kbd>1 - 0</kbd>выбрать предмет</span>
         <span><kbd>R</kbd>использовать</span>
         <span><kbd>F</kbd>изучить</span>
-        <span><kbd>Q</kbd>выбросить</span>
+        <span><kbd>Q</kbd>выбросить</span><span class="inventory-hint-note">двойной щелчок · быстро использовать</span>
       </div>
     </div>
     <aside class="hud-utility">
@@ -299,6 +304,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
       <div class="hud-actions">
         <button type="button" class="hud-action primary" id="btnUseItem">ИСПОЛЬЗОВАТЬ</button>
         <button type="button" class="hud-action" id="btnInspectItem">ИЗУЧИТЬ</button>
+        <button type="button" class="hud-action danger" id="btnDropItem" disabled>ВЫБРОСИТЬ</button>
       </div>
     </aside>
     <aside class="hud-radar">
