@@ -1234,7 +1234,20 @@ export class ImmersionScene {
     mirage.textContent = Math.random() > .5 ? 'ЭТО НЕ ТВОИ ВЕЩИ' : 'СЛОТЫ ПЕРЕСТАВЛЕНЫ';
     inv.appendChild(mirage);
     inv.classList.add('inventory-haunted');
-    window.setTimeout(() => { mirage.remove(); inv.classList.remove('inventory-haunted'); }, 3200);
+    // Shuffle only rendered DOM slots for a moment; saved inventory data stays intact.
+    const slots = Array.from(inv.children).filter((node): node is HTMLElement =>
+      node instanceof HTMLElement && node.id !== 'inventoryMirage'
+    );
+    for (let i = slots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
+    }
+    slots.forEach(slot => inv.insertBefore(slot, mirage));
+    window.setTimeout(() => {
+      mirage.remove();
+      inv.classList.remove('inventory-haunted');
+      this.renderInv();
+    }, 2800);
     // The actual inventory/state is never changed by a hallucination.
   }
 
@@ -1283,6 +1296,13 @@ export class ImmersionScene {
       const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
       if (sanity >= 65 || this.threatActive || document.getElementById('combatScreen')?.classList.contains('open')) return;
       const tier = sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
+      // Recurring hallucinations: visual/audio-only, never alter the saved item state.
+      if (Math.random() < (tier === 1 ? .24 : tier === 2 ? .42 : .68)) this.spawnMovingShadow();
+      if (tier >= 2 && Math.random() < (tier === 2 ? .16 : .34)) {
+        this.showFalseSilhouette();
+        simAudio.whisper(this.state.muted);
+      }
+      if (tier === 3 && Math.random() < .22) this.mirrorInventory();
       const thoughts = tier === 1
         ? ['Не оборачивайся. Там просто дождь.', 'Шаги повторяют твой темп.', 'На секунду показалось, что фонарь погас.']
         : tier === 2
