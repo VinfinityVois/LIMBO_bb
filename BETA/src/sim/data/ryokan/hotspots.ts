@@ -46,6 +46,15 @@ export const HOTSPOTS: HotspotDef[] = [
     takenFlag: 'took_silk',
   },
   {
+    id: 'hs_herbs',
+    location: 'garden',
+    x: 72, y: 78, w: 9, h: 10,
+    label: 'Травы у ступеней',
+    examine: 'Под мокрым папоротником растут горькие травы. Листья целые, корни легко поддаются.',
+    item: 'medicinal_herbs',
+    takenFlag: 'took_herbs',
+  },
+  {
     id: 'hs_board',
     location: 'engawa',
     x: 48, y: 72, w: 13, h: 10,
@@ -81,6 +90,27 @@ export const HOTSPOTS: HotspotDef[] = [
     examine: 'Приколота булавкой. «Если услышишь суставы — уже поздно. — М.»',
     item: 'kokeshi_note',
     takenFlag: 'took_note',
+  },
+  {
+    id: 'hs_bell',
+    location: 'hall',
+    x: 61, y: 61, w: 8, h: 11,
+    label: 'Колокольчик без языка',
+    examine: 'Под полкой лежит медный колокольчик. Язычка нет, но металл почему-то тёплый.',
+    item: 'copper_bell',
+    takenFlag: 'took_bell',
+  },
+  {
+    id: 'hs_seed', location: 'garden', x: 82, y: 56, w: 8, h: 10,
+    label: 'Чёрное семя',
+    examine: 'Между корнями лежит тёмное семя. Вокруг него дождевые капли стекают вверх по коре.',
+    item: 'black_seed', takenFlag: 'took_black_seed',
+  },
+  {
+    id: 'hs_mask', location: 'storage', x: 70, y: 43, w: 10, h: 14,
+    label: 'Сшитая маска',
+    examine: 'На полке сидит бумажная маска. Чёрная нить прошивает глазницы. Изнутри доносится слабое дыхание.',
+    item: 'stitched_mask', takenFlag: 'took_stitched_mask',
   },
   {
     id: 'hs_anchor',

@@ -8,6 +8,35 @@
 <link rel="stylesheet" href="css/experience-polish.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+
+<style id="breach-fix">
+#scene1, #scene1 * { pointer-events: auto; }
+#scene1 .breach-bg, #scene1 .warning-scanline, #scene1 .warning-icon-pulse { pointer-events: none !important; }
+#btnProceed {
+  position: relative !important;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+.core-mark {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+.av-reticle {
+  pointer-events: none;
+  z-index: 5;
+}
+.av-core { z-index: 2; }
+.noise, .scanlines, .vignette, .ambient-grid, #matrixCanvas,
+.rgb-split, .glitch-overlay, .glitch-flash, .scan-beam, .chroma, .breach-flash {
+  pointer-events: none !important;
+}
+.cursor, .cursor-dot { pointer-events: none !important; }
+</style>
+
 </head>
 <body class="breach-mode">
 <!-- ═══ OVERLAYS ═══ -->
@@ -67,8 +96,8 @@
       <div class="core-ring ring-c"></div>
       <div class="core-ring ring-d"></div>
       <div class="ring-pulse"></div>
+      <div class="core-mark" id="coreMark">П</div>
     </div>
-    <div class="core-mark" id="coreMark">П</div>
     <div class="core-status">P.R.I.N.C. // SIGNAL ACQUISITION</div>
     <div class="core-line">
       <span id="signalText">INITIALIZING UPLINK</span><i class="caret"></i>
@@ -278,7 +307,27 @@
      SCENE 4 — FINAL AUTH
      ═══════════════════════════════════════════ -->
 <section class="scene" id="scene4">
-  <div class="auth-final" id="alignStage">
+  
+<!-- ALIGN RULES GATE -->
+<div id="alignRules" class="align-rules" hidden>
+  <div class="align-rules-panel">
+    <div class="ar-tag">// ПРОТОКОЛ ЗАХВАТА ЦЕЛИ</div>
+    <h2>КАК ПРОЙТИ</h2>
+    <ol>
+      <li>Наведите <b>прицел</b> в центр круга (ядро).</li>
+      <li>Удерживайте его в центре — шкала заполняется.</li>
+      <li>Если уйдёте — прогресс медленно падает.</li>
+      <li>Доведите шкалу до 100% — канал откроется.</li>
+    </ol>
+    <p class="ar-note">Прицел следует за курсором. Держите мышь у центра экрана.</p>
+    <button type="button" class="cyber-btn" id="btnStartAlign" data-cursor>
+      <span class="btn-label">НАЧАТЬ ЗАХВАТ</span>
+      <em>→</em>
+    </button>
+  </div>
+</div>
+
+  <div class="auth-final" id="alignStage" hidden>
     <div class="align-vortex" id="alignVortex">
       <div class="av-ring r1"></div>
       <div class="av-ring r2"></div>
@@ -297,9 +346,52 @@
   </div>
 </section>
 <style>
-.align-vortex {
-  position: relative; width: 280px; height: 280px; margin: 0 auto 24px;
+.align-rules {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(2,4,10,0.88); backdrop-filter: blur(8px);
 }
+.align-rules[hidden] { display: none !important; }
+.align-rules-panel {
+  width: min(420px, 92vw);
+  padding: 1.6rem 1.5rem 1.4rem;
+  background: linear-gradient(160deg, rgba(10,16,28,0.98), rgba(4,6,12,0.98));
+  border: 1px solid rgba(0,212,232,0.35);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,232,0.08);
+  font-family: var(--font-mono, monospace);
+}
+.align-rules-panel .ar-tag {
+  font-size: 0.58rem; letter-spacing: 0.14em; color: rgba(0,212,232,0.55); margin-bottom: 0.6rem;
+}
+.align-rules-panel h2 {
+  font-family: Orbitron, sans-serif; font-size: 1.1rem; letter-spacing: 0.12em;
+  color: #00d4e8; margin: 0 0 1rem;
+}
+.align-rules-panel ol {
+  margin: 0 0 1rem 1.1rem; padding: 0;
+  color: #9aa8bc; font-size: 0.78rem; line-height: 1.65; letter-spacing: 0.03em;
+}
+.align-rules-panel ol b { color: #00d4e8; }
+.align-rules-panel .ar-note {
+  font-size: 0.65rem; color: #5a6a80; margin-bottom: 1.1rem; letter-spacing: 0.06em;
+}
+.align-rules-panel .cyber-btn {
+  width: 100%; justify-content: center;
+  display: inline-flex; align-items: center;
+  padding: 0.9rem 1rem;
+  background: rgba(0,212,232,0.12);
+  border: 1px solid rgba(0,212,232,0.45);
+  color: #00d4e8; cursor: pointer;
+  font: 600 0.7rem var(--font-mono, monospace); letter-spacing: 0.12em;
+}
+.align-rules-panel .cyber-btn:hover { background: rgba(0,212,232,0.22); }
+
+.align-vortex {
+  position: relative; width: min(320px, 70vw); height: min(320px, 70vw); margin: 0 auto 24px;
+  touch-action: none;
+}
+.auth-final[hidden] { display: none !important; }
+
 .av-ring {
   position: absolute; left: 50%; top: 50%; border-radius: 50%;
   border: 1px solid rgba(0,232,255,0.25);
@@ -793,16 +885,26 @@
     }, 800);
   }
 
-  $('#btnProceed').addEventListener('click', async () => {
+  async function proceedBreach() {
     ensureAudio();
     tone(70, 0.18, 'sawtooth', 0.05);
     glitchBurst(1);
-    $('#warningMeter').style.width = '100%';
-    $('#warningMeter').style.background = 'linear-gradient(90deg, var(--red), #fff)';
-    await sleep(260);
+    const meter = $('#warningMeter');
+    if (meter) {
+      meter.style.width = '100%';
+      meter.style.background = 'linear-gradient(90deg, var(--red), #fff)';
+    }
+    await sleep(200);
     scene('#scene2');
     runTerminal();
-  });
+  }
+  const btnProceed = $('#btnProceed');
+  if (btnProceed) {
+    btnProceed.style.pointerEvents = 'auto';
+    btnProceed.style.zIndex = '100';
+    btnProceed.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); proceedBreach(); });
+    btnProceed.addEventListener('pointerdown', (e) => { e.stopPropagation(); });
+  }
 
   // ─── SCENE 2 — TERMINAL ───
   const terminalLines = [
@@ -1107,51 +1209,88 @@
       cl.appendChild(row);
     });
 
-    // Interactive ALIGN: hold reticle in center
+    // Rules gate first — game does not run until player confirms
+    const rules = document.getElementById('alignRules');
+    const stage = document.getElementById('alignStage');
+    if (rules) rules.hidden = false;
+    if (stage) stage.hidden = true;
+
+    await new Promise((resolve) => {
+      const btn = document.getElementById('btnStartAlign');
+      const go = () => {
+        if (rules) rules.hidden = true;
+        if (stage) stage.hidden = false;
+        btn && btn.removeEventListener('click', go);
+        resolve();
+      };
+      if (btn) btn.addEventListener('click', go);
+      else go();
+    });
+
+    // ALIGN: reticle = cursor position inside vortex (1:1, no lag)
     const vortex = document.getElementById('alignVortex');
     const reticle = document.getElementById('alignReticle');
     const core = document.getElementById('alignCore');
     let lockProgress = 0;
     let aligned = false;
+    let lastX = 0.5, lastY = 0.5;
+
+    const placeReticle = (nx, ny) => {
+      // nx,ny in 0..1 relative to vortex
+      if (!reticle || !vortex) return;
+      const x = nx * 100;
+      const y = ny * 100;
+      reticle.style.left = x + '%';
+      reticle.style.top = y + '%';
+      reticle.style.transform = 'translate(-50%,-50%)';
+      const dist = Math.hypot(nx - 0.5, ny - 0.5);
+      // generous hit zone (~28% of radius)
+      aligned = dist < 0.18;
+      reticle.classList.toggle('aligned', aligned);
+      if (core) core.classList.toggle('locked', aligned);
+    };
+    placeReticle(0.5, 0.5);
+
     const onMove = (e) => {
       if (!vortex) return;
       const r = vortex.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      // reticle follows mouse with lag relative to center
-      const dx = (e.clientX - cx) * 0.35;
-      const dy = (e.clientY - cy) * 0.35;
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      if (reticle) {
-        reticle.style.left = `calc(50% + ${dx}px)`;
-        reticle.style.top = `calc(50% + ${dy}px)`;
-      }
-      aligned = dist < 42;
-      if (reticle) reticle.classList.toggle('aligned', aligned);
-      if (core) core.classList.toggle('locked', aligned);
+      const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
+      const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
+      lastX = nx; lastY = ny;
+      placeReticle(nx, ny);
+    };
+    const onTouch = (e) => {
+      if (!e.touches || !e.touches[0] || !vortex) return;
+      const t = e.touches[0];
+      const r = vortex.getBoundingClientRect();
+      const nx = clamp((t.clientX - r.left) / r.width, 0, 1);
+      const ny = clamp((t.clientY - r.top) / r.height, 0, 1);
+      placeReticle(nx, ny);
     };
     window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onTouch, { passive: true });
 
-    // progress only while aligned
+    // easier: fill fast, drain slow, large zone
     while (lockProgress < 100) {
       if (aligned) {
-        lockProgress = Math.min(100, lockProgress + 1.8);
-        if (Math.random() > 0.85) tone(rand(600, 1200), 0.015, 'sine', 0.008);
+        lockProgress = Math.min(100, lockProgress + 3.2);
+        if (Math.random() > 0.9) tone(rand(700, 1100), 0.012, 'sine', 0.007);
       } else {
-        lockProgress = Math.max(0, lockProgress - 0.6);
+        lockProgress = Math.max(0, lockProgress - 0.25);
       }
       const i = Math.floor(lockProgress);
       $('#finalBar').style.width = i + '%';
       $('#finalPercent').textContent = String(i).padStart(2, '0') + '%';
-      $('#finalCode').textContent = 'TRACK::' + hex(6);
-      if (i >= 12 && i < 30) markChk(0, 'CHECK');
-      else if (i >= 30 && i < 50) markChk(1, 'CHECK');
-      else if (i >= 50 && i < 70) markChk(2, 'CHECK');
-      else if (i >= 70 && i < 88) markChk(3, 'CHECK');
-      else if (i >= 88) markChk(4, 'CHECK');
-      await sleep(40);
+      if (i % 8 === 0) $('#finalCode').textContent = 'TRACK::' + hex(6);
+      if (i >= 10 && i < 28) markChk(0, 'CHECK');
+      else if (i >= 28 && i < 48) markChk(1, 'CHECK');
+      else if (i >= 48 && i < 68) markChk(2, 'CHECK');
+      else if (i >= 68 && i < 85) markChk(3, 'CHECK');
+      else if (i >= 85) markChk(4, 'CHECK');
+      await sleep(32);
     }
     window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('touchmove', onTouch);
     checkpoints.forEach((_, i) => markChk(i, 'OK'));
 
     lockBeep();
