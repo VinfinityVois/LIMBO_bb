@@ -447,6 +447,19 @@ export class ImmersionScene {
   }
 
   private ensurePerceptionOverlay() {
+    const weather = document.getElementById('limboWeatherFx');
+    if (weather && !weather.children.length) {
+      for (let i = 0; i < 42; i++) {
+        const drop = document.createElement('i');
+        drop.style.setProperty('--x', (Math.random() * 100) + '%');
+        drop.style.setProperty('--y', (Math.random() * 100) + '%');
+        drop.style.setProperty('--h', (12 + Math.random() * 24) + 'px');
+        drop.style.setProperty('--o', (0.18 + Math.random() * 0.38).toFixed(2));
+        drop.style.setProperty('--d', (1.8 + Math.random() * 2.6) + 's');
+        drop.style.setProperty('--delay', (-Math.random() * 5) + 's');
+        weather.appendChild(drop);
+      }
+    }
     if (!document.getElementById('awarenessIndicator')) {
       const eye = document.createElement('div');
       eye.id = 'awarenessIndicator';
