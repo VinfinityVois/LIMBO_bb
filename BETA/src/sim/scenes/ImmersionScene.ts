@@ -1010,12 +1010,20 @@ export class ImmersionScene {
         meter.style.setProperty('--sound-activity', String(this.currentSoundLevel / 100));
         meter.dataset.level = this.currentSoundLevel >= 68 ? 'high' : this.currentSoundLevel >= 34 ? 'mid' : 'low';
         Array.from(meter.querySelectorAll<HTMLElement>('i')).forEach((bar, index) => {
-          const shape = [.34,.62,.46,.88,.55,.74,.4,.96,.58,.78,.48,.68][index % 12];
+          // The columns behave like a real playback equalizer: almost flat in silence,
+          // increasingly tall and lively as our noise rises. Their profiles stay distinct.
+          const shape = [.28,.52,.38,.78,.47,.66,.32,.94,.44,.72,.36,.58][index % 12];
           const amplitude = this.currentSoundLevel / 100;
-          const height = 5 + shape * amplitude * 95;
-          bar.style.height = height + '%';
-          bar.style.opacity = String(.18 + amplitude * .78);
-          bar.style.backgroundColor = `hsl(${190 - amplitude * 168} 76% ${58 - amplitude * 10}%)`;
+          const pulse = (Math.sin(now / 175 + index * 1.17) + 1) * .5;
+          const height = 2.5 + shape * amplitude * 84 + pulse * amplitude * 9;
+          const hue = amplitude < .55
+            ? 190 - (amplitude / .55) * 135
+            : 55 - ((amplitude - .55) / .45) * 55;
+          const lightness = 58 - amplitude * 12;
+          bar.style.setProperty('--bar-height', height.toFixed(1) + '%');
+          bar.style.setProperty('--bar-opacity', String(.22 + amplitude * .76));
+          bar.style.setProperty('--bar-color', `hsl(${hue.toFixed(0)} 82% ${lightness.toFixed(0)}%)`);
+          bar.style.setProperty('--bar-glow', (2 + amplitude * 7).toFixed(1) + 'px');
         });
       }
       if (readout) {
