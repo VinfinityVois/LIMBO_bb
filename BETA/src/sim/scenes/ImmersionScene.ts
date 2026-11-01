@@ -114,6 +114,10 @@ export class ImmersionScene {
   async start() {
     this.bindChrome();
     this.ensurePerceptionOverlay();
+    if (sessionStorage.getItem('limbo-sector-reboot') === '1') {
+      sessionStorage.removeItem('limbo-sector-reboot');
+      document.body.classList.add('system-reboot');
+    }
     this.resize();
     this.parallax.start();
     await this.playDiveIn();
@@ -223,6 +227,7 @@ export class ImmersionScene {
       } else {
         overlay.classList.add('rebooting');
         document.body.classList.add('system-reboot');
+        sessionStorage.setItem('limbo-sector-reboot', '1');
         const panel = overlay.querySelector('.system-confirm-panel');
         if (panel) panel.innerHTML = '<div class="system-confirm-kicker">ЦЕФЕЙ · ПЕРЕЗАПУСК</div><h2>СЕАНС ЗАВЕРШАЕТСЯ</h2><p>Стираем состояние текущего прохода и восстанавливаем сектор. Подключение будет установлено заново.</p><div class="system-reboot-progress"><i></i></div>';
         window.setTimeout(() => { resetSim(); window.location.reload(); }, 720);
