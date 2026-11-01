@@ -1001,7 +1001,7 @@ export class ImmersionScene {
     const update = () => {
       const now = Date.now();
       const elapsed = this.noiseDuration > 0 ? (now - this.noiseStartedAt) / this.noiseDuration : 1;
-      const fadingNoise = elapsed < 1 ? this.noisePeak * (1 - Math.max(0, elapsed)) : 0;
+      const fadingNoise = now < this.noiseUntil && elapsed < 1 ? this.noisePeak * (1 - Math.max(0, elapsed)) : 0;
       const level = Math.max(this.lightActive ? 30 : 2, fadingNoise);
       this.currentSoundLevel = Math.max(0, Math.min(100, level));
       const meter = document.querySelector<HTMLElement>('.sound-meter');
@@ -1169,7 +1169,7 @@ export class ImmersionScene {
       if (['herbal_poultice','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
       this.state.selected = null;
       this.renderInv(); this.renderVitals();
-    } else { this.noiseUntil=Date.now()+12000; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
+    } else { this.noiseStartedAt=Date.now(); this.noiseDuration=12000; this.noisePeak=100; this.noiseUntil=this.noiseStartedAt+this.noiseDuration; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
     if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
     this.combatTurn++; this.initiative=Math.max(0,this.initiative-22);
     if (this.state.injuries.includes('bleed')) { this.state.health=Math.max(0,this.state.health-2); log+=' Кровь продолжает уходить: -2 HP.'; }
