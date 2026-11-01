@@ -199,6 +199,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 </style>
 <link rel="stylesheet" href="/css/sim-layout-refine.css" />
 <link rel="stylesheet" href="/css/sanity-effects.css" />
+<link rel="stylesheet" href="/css/sim-perception-overhaul.css" />
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
@@ -223,6 +224,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
     <div class="sound-readout"><span>◖))</span><div class="sound-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="soundCaption">Шаги… (далеко)</small></div>
     <div class="danger-readout"><span>УГРОЗА</span><b id="dangerValue">НИЗКАЯ</b><i><em id="dangerFill"></em></i><small id="watchValue">ЗА ВАМИ НЕ СЛЕДЯТ</small></div>
   </header>
+  <div class="awareness-indicator" id="awarenessIndicator" data-state="hidden" aria-live="polite" aria-label="Нас не заметили"><span class="awareness-eye" aria-hidden="true"><i></i></span><b id="awarenessLabel">НЕ ЗАМЕЧЕНЫ</b></div>
 
   <!-- В JS добавляйте элементы так: <div data-k="rain|sound|eye|smell">Текст</div> -->
   <div class="sense-feed" id="senseFeed" aria-live="polite"></div>
