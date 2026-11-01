@@ -40,6 +40,9 @@ export class ImmersionScene {
   private roomEnteredAt = Date.now();
   private lightActive = false;
   private noiseUntil = 0;
+  private noiseLevel = 4;
+  private noiseDynamicsTimer: ReturnType<typeof setInterval> | number = 0;
+  private noiseDynamicsAt = Date.now();
   private monsterHp = 42;
   private monsterMaxHp = 42;
   private monsterName = 'СЛУШАТЕЛЬ';
@@ -117,6 +120,7 @@ export class ImmersionScene {
     this.renderMinimap();
     this.updateZone();
     this.startWorldClock();
+    this.startSoundDynamics();
     this.startSanityDistortions();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
@@ -255,12 +259,13 @@ export class ImmersionScene {
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
-      const activeNoise = Date.now() < this.noiseUntil;
-      const watched = activeNoise && Math.random() < .35;
-      this.updateAwareness(this.threatActive ? 2 : watched || activeNoise ? 1 : 0);
-      if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
-      if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : activeNoise ? 'ПОВЫШЕНА' : watched ? 'СРЕДНЯЯ' : 'НИЗКАЯ';
-      if (watchValue) watchValue.textContent = this.threatActive ? 'ОНО ВИДИТ ВАС' : watched ? 'ЗА ВАМИ НАБЛЮДАЮТ' : 'ЗА ВАМИ НЕ СЛЕДЯТ';
+      const noise = Math.max(0, Math.min(100, this.noiseLevel));
+      const activeNoise = noise >= 18 && Date.now() < this.noiseUntil;
+      const watched = noise >= 24 && Math.random() < (.08 + Math.pow(noise / 100, 1.35) * .42);
+      this.updateAwareness(this.threatActive ? 2 : watched ? 1 : 0);
+      if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : Math.max(4, noise)) + '%';
+      if (dangerValue) dangerValue.textContent = this.threatActive ? 'КРИТИЧЕСКАЯ' : noise >= 72 ? 'ОПАСНЫЙ ШУМ' : noise >= 38 ? 'ПОВЫШЕНА' : noise >= 18 ? 'СЛЫШНО' : 'ТИХО';
+      if (watchValue) watchValue.textContent = this.threatActive ? 'ОНО ВИДИТ ВАС' : watched ? 'КТО-ТО УСЛЫШАЛ ВАС' : noise >= 38 ? 'ЗВУК РАЗНОСИТСЯ' : 'ВАС ПОЧТИ НЕ СЛЫШНО';
       if (!activeNoise && !this.threatActive) {
         const caption = document.getElementById('soundCaption'); if (caption) caption.textContent = 'Тишина… (слышен дождь)';
       }
@@ -268,7 +273,8 @@ export class ImmersionScene {
       if (this.lightActive && !this.maskWorn && ['garden','engawa','hall'].includes(this.state.location) && Math.random() < .16) {
         this.startThreat('light'); return;
       }
-      if (Date.now() < this.noiseUntil && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < .2) {
+      const soundThreatChance = .025 + Math.pow(noise / 100, 1.7) * .68;
+      if (noise >= 22 && ['gate','garden','engawa','genkan'].includes(this.state.location) && Math.random() < soundThreatChance) {
         this.startThreat('sound'); return;
       }
       if (stayed > (this.maskWorn ? 60000 : 90000) && ['hall','storage','genkan'].includes(this.state.location) && Math.random() < .16) {
@@ -283,6 +289,44 @@ export class ImmersionScene {
       }
       saveState(this.state); this.renderVitals();
     }, 5000);
+  }
+
+  private startSoundDynamics() {
+    if (this.noiseDynamicsTimer) clearInterval(this.noiseDynamicsTimer as number);
+    this.noiseDynamicsAt = Date.now();
+    const readout = document.querySelector<HTMLElement>('.sound-readout');
+    const bars = Array.from(document.querySelectorAll<HTMLElement>('.sound-meter i'));
+    const caption = document.getElementById('soundCaption');
+    this.noiseDynamicsTimer = window.setInterval(() => {
+      const now = Date.now();
+      const elapsed = Math.min(.5, Math.max(0, (now - this.noiseDynamicsAt) / 1000));
+      this.noiseDynamicsAt = now;
+      // Sound slowly falls away after an action; silence leaves only a faint idle pulse.
+      this.noiseLevel = Math.max(3, this.noiseLevel - elapsed * 5.4);
+      const level = Math.round(this.noiseLevel);
+      const ratio = level / 100;
+      const red = Math.round(55 + 185 * ratio);
+      const green = Math.round(194 - 132 * ratio);
+      const blue = Math.round(218 - 128 * ratio);
+      const color = 'rgb(' + red + ',' + green + ',' + blue + ')';
+      if (readout) {
+        readout.dataset.noiseBand = level >= 72 ? 'high' : level >= 38 ? 'mid' : 'low';
+        readout.style.setProperty('--noise-level', String(ratio));
+        readout.style.setProperty('--noise-color', color);
+        readout.style.borderColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + (.16 + ratio * .55) + ')';
+      }
+      bars.forEach((bar, index) => {
+        const pulse = .18 + .82 * Math.abs(Math.sin(now / (260 + index * 13) + index * 1.17));
+        const activity = ratio * pulse;
+        bar.style.height = (7 + activity * 91) + '%';
+        bar.style.opacity = String(.12 + activity * .88);
+        bar.style.backgroundColor = color;
+        bar.style.boxShadow = activity > .55 ? '0 0 9px ' + color : 'none';
+      });
+      if (caption && now >= this.noiseUntil && (caption.textContent?.startsWith('ШУМ:') || caption.textContent?.startsWith('ТИХО ·'))) {
+        caption.textContent = level < 12 ? 'ТИХО · шаги почти не слышны' : level < 38 ? 'ОТЗВУК · звук затихает' : 'ШУМ · источник ещё слышен';
+      }
+    }, 120);
   }
 
   private startWorldClock() {
@@ -364,16 +408,20 @@ export class ImmersionScene {
   }
 
   private ensurePerceptionOverlay() {
-    if (!document.getElementById('awarenessIndicator')) {
-      const eye = document.createElement('div');
+    let eye = document.getElementById('awarenessIndicator');
+    if (!eye) {
+      eye = document.createElement('div');
       eye.id = 'awarenessIndicator';
       eye.className = 'awareness-indicator';
       eye.dataset.state = 'hidden';
       eye.setAttribute('role', 'status');
       eye.setAttribute('aria-live', 'polite');
-      eye.innerHTML = '<svg class="awareness-eye" viewBox="0 0 32 20" aria-hidden="true" focusable="false"><path class="eye-outline" d="M1 10 C5 3.8 10.2 1 16 1 C21.8 1 27 3.8 31 10 C27 16.2 21.8 19 16 19 C10.2 19 5 16.2 1 10Z"/><circle class="eye-iris" cx="16" cy="10" r="4.2"/><circle class="eye-pupil" cx="16" cy="10" r="1.8"/><path class="eye-lid" d="M1 10 Q16 10 31 10"/></svg><span data-eye-label>НЕ ЗАМЕЧЕНЫ</span>';
       document.body.appendChild(eye);
     }
+    // Replace legacy rotated-oval markup with a real, symmetric SVG eye.
+    eye.innerHTML = '<svg class="awareness-eye" viewBox="0 0 32 20" aria-hidden="true" focusable="false"><path class="eye-outline" d="M1.5 10 C5.2 4.1 10.2 1.5 16 1.5 C21.8 1.5 26.8 4.1 30.5 10 C26.8 15.9 21.8 18.5 16 18.5 C10.2 18.5 5.2 15.9 1.5 10Z"/><circle class="eye-iris" cx="16" cy="10" r="4.1"/><circle class="eye-pupil" cx="16" cy="10" r="1.7"/><path class="eye-lid" d="M2 10 Q16 10 30 10"/></svg><b data-eye-label>НЕ ЗАМЕЧЕНЫ</b>';
+    eye.dataset.state = eye.dataset.state || 'hidden';
+    eye.setAttribute('aria-label', 'Нас не заметили');
     if (!document.getElementById('ambientFx')) {
       const fx = document.createElement('div');
       fx.id = 'ambientFx';
@@ -985,15 +1033,17 @@ export class ImmersionScene {
   }
 
 
-  private makeNoise(message: string) {
-    this.noiseUntil = Date.now() + 9000;
+  private makeNoise(message: string, intensity = 78) {
+    this.noiseLevel = Math.max(this.noiseLevel, Math.max(0, Math.min(100, intensity)));
+    this.noiseUntil = Date.now() + Math.max(5000, Math.round(intensity * 115));
     const caption = document.getElementById('soundCaption');
-    if (caption) caption.textContent = 'ШУМ: ВЫСОКИЙ · источник — ты';
+    if (caption) caption.textContent = 'ШУМ: ' + (intensity >= 88 ? 'КРИТИЧЕСКИЙ' : intensity >= 65 ? 'ВЫСОКИЙ' : 'ЗАМЕТНЫЙ') + ' · источник — ты';
     const danger = document.getElementById('dangerValue');
-    if (danger) danger.textContent = 'ПОВЫШЕНА';
+    if (danger) danger.textContent = intensity >= 88 ? 'ОПАСНЫЙ ШУМ' : 'ПОВЫШЕНА';
     const fill = document.getElementById('dangerFill') as HTMLElement | null;
-    if (fill) fill.style.width = '72%';
+    if (fill) fill.style.width = this.noiseLevel + '%';
     this.showSense('◖))', message, true);
+    this.updateAwareness(this.threatActive ? 2 : intensity >= 65 ? 1 : 0);
     simAudio.click(this.state.muted);
   }
 
