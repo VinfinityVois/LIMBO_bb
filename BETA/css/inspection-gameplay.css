@@ -111,3 +111,299 @@
 .inspect-burst i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:50%;background:#a5f7ff;box-shadow:0 0 8px 2px #38d4ea;transform:rotate(var(--particle-angle)) translateX(0);animation:inspect-spark .65s ease-out forwards}
 @keyframes inspect-spark{to{opacity:0;transform:rotate(var(--particle-angle)) translateX(var(--particle-distance)) scale(.2)}}
 .hotspot.discovery-triggered .world-loot-art{opacity:0;transform:scale(.8)}
+
+
+/* ── Final sanity pass: preserve scene exposure, add distortion rather than darkness ── */
+:root{--scene-exposure:1.26;--mind-red:rgba(220,45,68,0)}
+html,body.immerse{background:#071019!important}
+.sim-stage{filter:none!important;background:#101b22!important}
+.sim-stage canvas{filter:brightness(var(--scene-exposure)) contrast(1.04) saturate(.98)!important;transform-origin:50% 50%}
+.sim-stage .vignette{background:radial-gradient(ellipse at 50% 45%,transparent 67%,rgba(0,0,0,.22) 100%)!important;opacity:.72!important}
+.sim-stage .scan{opacity:.09!important}
+body[data-sanity="1"]{--mind-red:rgba(205,48,68,.18)}
+body[data-sanity="2"]{--mind-red:rgba(220,42,64,.34)}
+body[data-sanity="3"]{--mind-red:rgba(240,35,62,.58)}
+body[data-sanity="1"] .sim-stage canvas{filter:brightness(1.28) contrast(1.045) saturate(.94)!important}
+body[data-sanity="2"] .sim-stage canvas{filter:brightness(1.28) contrast(1.07) saturate(.9)!important}
+body[data-sanity="3"] .sim-stage canvas{filter:brightness(1.26) contrast(1.10) saturate(.86)!important}
+body[data-sanity="1"] .sim-stage .vignette,body[data-sanity="2"] .sim-stage .vignette,body[data-sanity="3"] .sim-stage .vignette{background:radial-gradient(ellipse at 50% 46%,transparent 70%,rgba(0,0,0,.24) 100%)!important}
+body.mind-frayed .sim-stage canvas{animation:mind-drift-soft 9s ease-in-out infinite}
+body.mind-fractured .sim-stage canvas{animation:mind-drift-soft 5s ease-in-out infinite,mind-tear 7s steps(1,end) infinite}
+body.mind-collapse .sim-stage canvas{animation:mind-drift-hard 3.2s steps(2,end) infinite,mind-tear 3.2s steps(1,end) infinite}
+@keyframes mind-drift-soft{0%,100%{transform:translate(0,0) scale(1)}35%{transform:translate(-.12%,.08%) scale(1.003)}68%{transform:translate(.12%,-.06%) scale(1.006)}}
+@keyframes mind-drift-hard{0%,84%,100%{transform:translate(0,0) scale(1)}86%{transform:translate(3px,-1px) scale(1.008)}89%{transform:translate(-3px,1px) scale(1.004)}}
+@keyframes mind-tear{0%,88%,100%{filter:brightness(1.26) contrast(1.1) saturate(.86)}90%{filter:brightness(1.34) contrast(1.2) saturate(1.05) hue-rotate(8deg)}93%{filter:brightness(1.18) contrast(1.16) saturate(.72) hue-rotate(-9deg)}}
+.sim-stage:after{content:"";position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;background:repeating-linear-gradient(0deg,rgba(225,244,250,.10) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,transparent 0 3px,rgba(80,210,230,.025) 4px,transparent 5px 8px);mix-blend-mode:screen}
+body[data-sanity="1"] .sim-stage:after{opacity:.055}
+body[data-sanity="2"] .sim-stage:after{opacity:.11;animation:crt-roll 2.4s steps(7,end) infinite}
+body[data-sanity="3"] .sim-stage:after{opacity:.17;animation:crt-roll .9s steps(8,end) infinite}
+body[data-sanity="2"] .sim-stage:before,body[data-sanity="3"] .sim-stage:before{content:"";position:absolute;inset:0;z-index:10;pointer-events:none;background:linear-gradient(transparent 0 41%,rgba(210,245,255,.12) 42%,rgba(5,12,18,.18) 44%,transparent 47%);opacity:.28;animation:crt-sweep 4.5s linear infinite}
+@keyframes crt-roll{0%,100%{background-position:0 0,0 0}25%{background-position:0 9px,3px 0}50%{background-position:0 -5px,-2px 0}75%{background-position:0 4px,1px 0}}
+@keyframes crt-sweep{0%{transform:translateY(-110%)}100%{transform:translateY(110%)}}
+body.immerse:after{border:1px solid var(--mind-red,transparent)!important;box-shadow:inset 0 0 0 1px var(--mind-red,transparent),inset 0 0 30px var(--mind-red,transparent)!important}
+body[data-sanity="3"].immerse:after{animation:mind-red-pulse 2.2s ease-in-out infinite}
+@keyframes mind-red-pulse{50%{box-shadow:inset 0 0 0 2px rgba(245,38,66,.72),inset 0 0 52px rgba(245,38,66,.18)!important}}
+/* Eye icon is a proper oval eye, not a rotated leaf. */
+.awareness-indicator{position:fixed;z-index:110;left:50%;top:14px;transform:translateX(-50%);height:32px;min-width:154px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid rgba(79,145,166,.38);background:rgba(4,13,21,.9);box-shadow:0 5px 20px #0007;color:#91aeba;pointer-events:none;transition:border-color .25s,color .25s,box-shadow .25s}
+.awareness-indicator b{font:600 9px 'JetBrains Mono',monospace;letter-spacing:.16em;white-space:nowrap}
+.awareness-eye{position:relative;display:block;flex:0 0 23px;width:23px;height:14px;box-sizing:border-box;border:1.5px solid currentColor;border-radius:50% / 68%;transform:none;overflow:hidden;opacity:.95}
+.awareness-eye i{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:currentColor;transform:translate(-50%,-50%)}
+.awareness-indicator[data-state="hidden"] .awareness-eye{height:2px;border:0;border-top:1.5px solid currentColor;border-radius:50%}
+.awareness-indicator[data-state="hidden"] .awareness-eye i{display:none}
+.awareness-indicator[data-state="suspected"] .awareness-eye:after{content:"";position:absolute;left:0;right:0;top:0;height:48%;background:rgba(4,13,21,.72);border-bottom:1px solid currentColor}
+.awareness-indicator[data-state="seen"]{color:#ff7184;border-color:rgba(239,82,105,.75);box-shadow:0 0 22px rgba(239,52,83,.18)}
+.awareness-indicator[data-state="seen"] .awareness-eye{border-width:2px;box-shadow:0 0 8px currentColor}
+.awareness-indicator[data-state="seen"] .awareness-eye i{width:7px;height:7px}
+#senseFeed{left:20px!important;top:clamp(78px,9vh,104px)!important;width:min(300px,calc(100vw - 40px))!important;max-width:300px!important;max-height:23vh!important;overflow:hidden!important;gap:5px!important;z-index:86!important}
+#senseFeed>.sense-event{min-height:30px!important;max-height:54px!important;width:100%!important;box-sizing:border-box!important;padding:6px 9px!important;grid-template-columns:18px minmax(0,1fr) 18px!important;gap:7px!important;font-size:10px!important;line-height:1.3!important}
+#senseFeed>.sense-event .sense-copy{min-width:0!important;max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;line-height:1.3!important}
+#notifyHost{top:12px!important;right:14px!important;width:min(290px,calc(100vw - 28px))!important;max-height:30vh!important}
+.notify{font-size:10px!important;line-height:1.35!important;padding:7px 10px!important}
+.sanity-shadow{mix-blend-mode:screen!important;opacity:0!important;filter:blur(4px) drop-shadow(0 0 12px rgba(73,208,225,.3))!important}
+.false-presence{mix-blend-mode:multiply!important;filter:blur(1px) drop-shadow(0 0 15px rgba(205,45,70,.42))!important}
+body[data-sanity="3"] .inv-slot:nth-child(2n){animation:inventory-haunt 2.8s steps(1,end) infinite}
+body[data-sanity="3"] .inv-slot:nth-child(3n){filter:hue-rotate(145deg) saturate(1.45)}
+@keyframes inventory-haunt{0%,90%,100%{transform:translate(0,0)}92%{transform:translate(2px,-1px)}94%{transform:translate(-2px,1px)}}
+@media(max-width:760px){.awareness-indicator{top:52px;left:auto;right:12px;transform:none;min-width:130px;height:29px}#senseFeed{left:12px!important;top:92px!important;width:min(270px,calc(100vw - 24px))!important}}
+@media(prefers-reduced-motion:reduce){.sim-stage canvas,.sim-stage:before,.sim-stage:after,body[data-sanity="3"].immerse:after,.inv-slot{animation:none!important;transition:none!important}}
+
+
+/* Dynamic acoustic threat HUD — silence is calm, loud actions raise danger. */
+.sound-readout{--noise-alert:0;transition:color .18s,border-color .18s,filter .18s}
+.sound-readout .sound-meter{height:15px;gap:3px;align-items:flex-end}
+.sound-readout .sound-meter i{height:5%;min-height:2px;transition:height .12s linear,background-color .2s,opacity .2s;box-shadow:0 0 7px currentColor}
+.sound-readout[data-level="mid"]>span,.sound-readout[data-level="mid"] small{color:#e2b66f}
+.sound-readout[data-level="high"]>span,.sound-readout[data-level="high"] small{color:#ff6477}
+.sound-readout[data-level="high"]{filter:drop-shadow(0 0 8px rgba(255,55,78,.26))}
+.sound-readout[data-level="high"] .sound-meter i{box-shadow:0 0 8px rgba(255,65,86,.5)}
+.danger-readout{--danger-heat:var(--noise-alert,0)}
+.danger-readout b{color:color-mix(in srgb,#72d7e6 calc((1 - var(--danger-heat))*100%),#ff596f)!important}
+.danger-readout em{background:linear-gradient(90deg,#31c9df,#f1b45d 58%,#f04460)!important;transition:width .18s linear}
+.awareness-indicator .awareness-eye{width:29px!important;height:18px!important;flex:0 0 29px!important;overflow:visible!important;border:0!important;border-radius:0!important;background:none!important}
+.awareness-indicator .awareness-eye .eye-outline{fill:none!important;stroke:currentColor!important;stroke-width:1.65!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+.awareness-indicator .awareness-eye .eye-iris{fill:none!important;stroke:currentColor!important;stroke-width:1.5!important;transition:opacity .18s,transform .18s!important}
+.awareness-indicator .awareness-eye .eye-pupil{fill:currentColor!important;stroke:none!important}
+.awareness-indicator .awareness-eye .eye-lid{fill:none!important;stroke:currentColor!important;stroke-width:2.4!important;stroke-linecap:round!important;opacity:0;transition:opacity .18s!important}
+.awareness-indicator[data-state="hidden"] .eye-iris,.awareness-indicator[data-state="hidden"] .eye-pupil{opacity:0!important}
+.awareness-indicator[data-state="hidden"] .eye-lid{opacity:1!important}
+.awareness-indicator[data-state="near"] .eye-iris{opacity:.6!important;clip-path:inset(0 0 42% 0)}
+.awareness-indicator[data-state="near"] .eye-lid{opacity:.8!important}
+.awareness-indicator[data-state="seen"]{color:#ff6479!important;border-color:#e54860!important;box-shadow:0 0 20px rgba(238,50,75,.32),inset 0 0 14px rgba(238,50,75,.08)!important}
+.awareness-indicator[data-state="seen"] .eye-iris,.awareness-indicator[data-state="seen"] .eye-pupil{opacity:1!important}
+.awareness-indicator[data-state="seen"] .eye-lid{opacity:0!important}
+.awareness-indicator[data-state="seen"] .eye-outline{stroke-width:2!important}
+body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow:inset 0 0 0 1px var(--mind-red,transparent),inset 0 0 34px var(--mind-red,transparent)!important;transition:box-shadow .25s,border-color .25s}
+#simModal .sim-modal-panel{right:clamp(16px,3vw,38px)!important;top:50%!important;left:auto!important;width:min(760px,calc(100vw - 32px))!important;max-width:760px!important;max-height:min(82vh,720px)!important;overflow:auto!important;transform:translateY(-50%)!important;grid-template-columns:minmax(120px,170px) minmax(0,1fr)!important;column-gap:22px!important;row-gap:0!important;padding:20px!important;border-radius:7px!important}
+#simModal .smp-visual{width:100%!important;min-width:0!important;height:220px!important;min-height:180px!important;align-self:center!important;border:0!important;background:radial-gradient(ellipse at center,rgba(32,91,111,.26),transparent 72%)!important}
+#simModal .smp-visual img{max-width:100%!important;max-height:210px!important;object-fit:contain!important;filter:drop-shadow(0 12px 20px rgba(0,0,0,.5))!important}
+#simModal .smp-a{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;justify-content:stretch!important;gap:9px!important;width:100%!important;min-width:0!important;padding:8px 0 0!important}
+#simModal .smp-a button,#simModal .smp-a .inspection-action{flex:1 1 0!important;width:auto!important;min-width:0!important;max-width:none!important;min-height:44px!important;height:auto!important;padding:10px 12px!important;white-space:normal!important;line-height:1.35!important;border-radius:4px!important}
+#simModal .smp-a .inspection-action.quiet{flex:1 1 0!important}
+#simModal .smp-a button.primary{background:linear-gradient(180deg,#39d5e8,#139cb6)!important;color:#04151b!important}
+#simModal .smp-a button.secondary{background:linear-gradient(180deg,rgba(18,42,54,.95),rgba(7,19,28,.98))!important}
+#simModal .smp-note{grid-area:note!important;margin-top:12px!important}
+@media(max-width:640px){
+ #simModal .sim-modal-panel{left:12px!important;right:12px!important;width:auto!important;max-height:88vh!important;top:50%!important;transform:translateY(-50%)!important;grid-template-columns:88px minmax(0,1fr)!important;column-gap:12px!important;padding:14px!important}
+ #simModal .smp-visual{height:150px!important;min-height:120px!important}
+ #simModal .smp-a{flex-wrap:wrap!important}
+ #simModal .smp-a button,#simModal .smp-a .inspection-action{flex:1 1 calc(50% - 6px)!important}
+}
+
+
+/* ── HUD alignment + genuinely reactive equalizer ── */
+/* Keep the location title as plain scene typography; never let global card rules box it in. */
+.zone-whisper{
+  position:fixed!important;left:24px!important;top:22px!important;z-index:120!important;
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  width:max-content!important;max-width:min(42vw,360px)!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;
+  text-align:left!important;pointer-events:none!important;transform:none!important;
+}
+.zone-whisper:before,.zone-whisper:after{content:none!important;display:none!important}
+.zone-whisper #zoneLabel{
+  display:block!important;width:auto!important;max-width:100%!important;min-height:0!important;
+  margin:0!important;padding:0!important;border:0!important;border-left:0!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  color:var(--cyan,#36d9ee)!important;font:700 17px/1.15 'Space Grotesk',sans-serif!important;
+  letter-spacing:.16em!important;text-shadow:0 0 14px rgba(44,211,232,.24)!important;
+}
+.zone-whisper #zoneSub{
+  display:block!important;margin:6px 0 0!important;padding:0!important;border:0!important;
+  background:transparent!important;box-shadow:none!important;color:#c1d2d9!important;
+  font:600 9px/1.2 'Space Grotesk',sans-serif!important;letter-spacing:.13em!important;
+}
+
+/* Both event streams begin below the title/time row and cannot cover the location label. */
+#senseFeed,.sense-feed{
+  position:fixed!important;left:24px!important;right:auto!important;
+  top:112px!important;width:min(320px,calc(100vw - 48px))!important;
+  max-width:320px!important;max-height:22vh!important;height:auto!important;
+  overflow:hidden!important;z-index:70!important;pointer-events:none!important;
+}
+#notifyHost,.notify-host{
+  position:fixed!important;left:24px!important;right:auto!important;top:112px!important;
+  width:min(320px,calc(100vw - 48px))!important;max-width:320px!important;
+  max-height:22vh!important;overflow:hidden!important;z-index:72!important;
+}
+#senseFeed>.sense-event,.sense-feed>*,
+#notifyHost .notify{
+  box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;
+  height:auto!important;min-height:30px!important;max-height:54px!important;
+  padding:6px 9px!important;white-space:normal!important;overflow:hidden!important;
+  overflow-wrap:anywhere!important;line-height:1.35!important;
+}
+@media(max-width:760px){
+  .zone-whisper{left:14px!important;top:14px!important}
+  #senseFeed,.sense-feed,#notifyHost,.notify-host{left:14px!important;top:88px!important;width:min(280px,calc(100vw - 28px))!important}
+}
+
+/* Each equalizer column receives its own live height from the sound simulation. */
+.sound-readout .sound-meter{
+  height:17px!important;gap:3px!important;align-items:flex-end!important;
+  overflow:hidden!important;
+}
+.sound-readout .sound-meter i{
+  display:block!important;flex:1 1 0!important;min-width:2px!important;max-width:6px!important;
+  height:var(--bar-height,3%)!important;min-height:1px!important;max-height:100%!important;
+  opacity:var(--bar-opacity,.2)!important;
+  background:var(--bar-color,#72aebb)!important;
+  border-radius:2px 2px 0 0!important;
+  box-shadow:0 0 var(--bar-glow,2px) var(--bar-color,#72aebb)!important;
+  transform-origin:bottom!important;
+  transition:height .13s linear,opacity .16s ease,background-color .2s ease,box-shadow .2s ease!important;
+}
+.sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.12)}
+.sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.35)}
+
+
+/* ── Location title / notification separation + final equalizer polish ── */
+.zone-whisper{
+  left:24px!important;top:18px!important;z-index:150!important;
+  width:max-content!important;max-width:min(48vw,420px)!important;
+  padding:0!important;border:0!important;background:transparent!important;
+  box-shadow:none!important;isolation:isolate!important;
+}
+.zone-whisper #zoneLabel,.zone-whisper #zoneSub{
+  position:relative!important;display:block!important;width:auto!important;
+  height:auto!important;min-height:0!important;max-height:none!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  outline:0!important;background:transparent!important;box-shadow:none!important;
+}
+.zone-whisper #zoneLabel{
+  font-size:18px!important;line-height:1.2!important;letter-spacing:.16em!important;
+}
+.zone-whisper #zoneSub{margin-top:5px!important;line-height:1.25!important}
+
+/* Notifications begin below the full location heading; they never sit on top of it. */
+#notifyHost,.notify-host{
+  left:24px!important;right:auto!important;top:126px!important;
+  width:min(320px,calc(100vw - 48px))!important;max-width:320px!important;
+  max-height:22vh!important;overflow:hidden!important;z-index:90!important;
+}
+#notifyHost .notify{
+  display:block!important;min-height:30px!important;max-height:54px!important;
+  padding:7px 10px!important;line-height:1.35!important;
+}
+@media(max-width:760px){
+  .zone-whisper{left:14px!important;top:12px!important}
+  #notifyHost,.notify-host{left:14px!important;top:106px!important;width:min(290px,calc(100vw - 28px))!important}
+}
+
+/* Equalizer: flat and restrained at silence, lively and taller as noise rises. */
+.sound-readout .sound-meter{
+  display:flex!important;align-items:flex-end!important;gap:3px!important;
+  height:18px!important;min-height:18px!important;padding:0!important;
+}
+.sound-readout .sound-meter i{
+  align-self:flex-end!important;flex:1 1 0!important;height:var(--bar-height,2%)!important;
+  min-height:1px!important;max-height:100%!important;
+  opacity:var(--bar-opacity,.28)!important;background:var(--bar-color,#527fbd)!important;
+  box-shadow:0 0 var(--bar-glow,1px) var(--bar-color,#527fbd)!important;
+  border-radius:2px 2px 0 0!important;
+  transition:height .12s linear,opacity .16s ease,background-color .18s linear,box-shadow .18s linear!important;
+}
+.sound-readout[data-level="low"] .sound-meter i{filter:saturate(.78)}
+.sound-readout[data-level="mid"] .sound-meter i{filter:saturate(1.08)}
+.sound-readout[data-level="high"] .sound-meter i{filter:saturate(1.3)}
+
+
+/* ── FINAL HUD FIX: notifications are a single-file queue, never a pile ── */
+#notifyHost{
+  position:fixed!important;left:24px!important;right:auto!important;top:104px!important;
+  transform:none!important;z-index:118!important;width:min(340px,calc(100vw - 48px))!important;
+  max-width:340px!important;max-height:23vh!important;height:auto!important;
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  justify-content:flex-start!important;gap:0!important;overflow:hidden!important;
+  pointer-events:none!important;
+}
+#notifyHost>.notify{
+  position:relative!important;inset:auto!important;display:block!important;flex:0 0 auto!important;
+  width:100%!important;min-width:0!important;max-width:100%!important;height:auto!important;
+  min-height:34px!important;max-height:72px!important;margin:0!important;padding:8px 11px!important;
+  box-sizing:border-box!important;white-space:normal!important;overflow:hidden!important;
+  overflow-wrap:anywhere!important;line-height:1.42!important;
+  transform:translateX(10px)!important;opacity:0!important;
+  transition:opacity .22s ease,transform .22s ease!important;
+}
+#notifyHost>.notify.show{opacity:1!important;transform:translateX(0)!important}
+#notifyHost>.notify.leaving{opacity:0!important;transform:translateX(-8px)!important}
+.zone-whisper{z-index:112!important;left:24px!important;top:20px!important}
+#zoneLabel{display:block!important;line-height:1.2!important}
+#zoneSub{display:block!important;line-height:1.25!important}
+@media(max-width:760px){
+  #notifyHost{left:14px!important;top:88px!important;width:min(310px,calc(100vw - 28px))!important}
+  .zone-whisper{left:14px!important;top:14px!important}
+}
+
+/* A true full-screen system boot/reboot, with a clean reset of the boot log. */
+#diveOverlay{position:fixed!important;inset:0!important;z-index:5000!important;
+  display:grid!important;place-items:center!important;background:
+  radial-gradient(ellipse at 50% 45%,rgba(9,42,57,.94),rgba(1,5,10,.99) 68%),
+  repeating-linear-gradient(0deg,transparent 0 3px,rgba(70,210,230,.035) 4px 5px)!important;
+  opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#diveOverlay.active{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+#diveOverlay .dive-core{position:relative;width:min(620px,calc(100vw - 40px))!important;
+  min-height:260px!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;padding:44px 30px!important;
+  border:1px solid rgba(55,207,232,.36)!important;background:rgba(2,11,18,.72)!important;
+  box-shadow:0 0 70px rgba(30,186,220,.13),inset 0 0 55px rgba(30,186,220,.05)!important}
+#diveOverlay .dive-title{font-size:clamp(18px,3vw,28px)!important;letter-spacing:.24em!important}
+#diveOverlay .dive-log{width:min(420px,100%)!important;margin-top:24px!important}
+#diveOverlay[data-mode="reboot"] .dive-title{color:#ff647b!important;text-shadow:0 0 20px #d92e50aa!important}
+#diveOverlay[data-mode="reboot"] .dive-core{border-color:rgba(218,58,83,.55)!important;box-shadow:0 0 90px rgba(218,40,70,.16),inset 0 0 55px rgba(218,40,70,.06)!important}
+.system-confirm{position:fixed!important;inset:0!important;z-index:4900!important;display:grid!important;place-items:center!important;
+  padding:24px!important;background:rgba(0,4,8,.78)!important;opacity:0!important;visibility:hidden!important;
+  transition:opacity .2s ease,visibility .2s ease!important}
+.system-confirm.visible{opacity:1!important;visibility:visible!important}
+.system-confirm-panel{width:min(480px,calc(100vw - 36px))!important;padding:26px!important;
+  border:1px solid rgba(67,186,210,.5)!important;background:linear-gradient(145deg,#0a1b27,#040b12)!important;
+  box-shadow:0 24px 90px #000c,0 0 35px #28c5df18!important}
+.system-confirm-kicker{color:#63cddd!important;font:9px 'JetBrains Mono',monospace!important;letter-spacing:.18em!important}
+.system-confirm-panel h2{margin:16px 0 10px!important;color:#e6f6f8!important;font:700 20px 'Space Grotesk',sans-serif!important;letter-spacing:.12em!important}
+.system-confirm-panel p{color:#a9c1cb!important;font:13px/1.6 'Space Grotesk',sans-serif!important}
+.system-confirm-actions{display:flex!important;justify-content:flex-end!important;gap:9px!important;margin-top:22px!important}
+.system-confirm-actions button{min-height:38px!important;padding:0 15px!important;border:1px solid #3d8395!important;border-radius:2px!important;background:#091b26!important;color:#c8e8ee!important;font:600 9px 'JetBrains Mono',monospace!important;letter-spacing:.1em!important;cursor:pointer!important}
+.system-confirm-actions button.danger{border-color:#b33d54!important;color:#ff9aaa!important;background:linear-gradient(90deg,#3a101d,#180b13)!important}
+.system-reboot-progress{height:3px;margin-top:22px;background:#182c36;overflow:hidden}
+.system-reboot-progress i{display:block;width:0;height:100%;background:#e34d67;box-shadow:0 0 14px #e34d67;animation:system-reboot-fill .65s ease-out forwards}
+@keyframes system-reboot-fill{to{width:100%}}
+
+/* Creatures use their real transparent sprite silhouette and natural aspect ratio,
+   not a square thumbnail or a clipped portrait card. */
+#sceneCreature.scene-creature{position:absolute!important;left:50%!important;bottom:2%!important;
+  top:auto!important;right:auto!important;width:max-content!important;height:max-content!important;
+  max-width:76vw!important;max-height:82vh!important;min-width:0!important;min-height:0!important;
+  padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;transform:translateX(-50%) translateY(calc(var(--approach,0)*8%)) scale(calc(1 + var(--approach,0)*.34))!important;
+  transform-origin:50% 100%!important;z-index:18!important;pointer-events:none!important}
+#sceneCreature .creature-sprite{display:block!important;position:relative!important;
+  width:auto!important;height:auto!important;min-width:0!important;min-height:0!important;
+  max-width:min(62vw,760px)!important;max-height:78vh!important;object-fit:contain!important;
+  object-position:center bottom!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;filter:drop-shadow(0 12px 22px #000e) drop-shadow(0 0 18px #a52b4770)!important}
+#sceneCreature .creature-eyes,#sceneCreature>i,#sceneCreature>b{display:none!important}
+#sceneCreature.closing-in .creature-sprite{filter:drop-shadow(0 15px 28px #000f) drop-shadow(0 0 26px #ed344fbb)!important}
+@media(max-width:700px){#sceneCreature .creature-sprite{max-width:82vw!important;max-height:62vh!important}}
+
+#diveOverlay.active.out{opacity:0!important;visibility:visible!important;transition:opacity .7s ease,visibility .7s ease!important}

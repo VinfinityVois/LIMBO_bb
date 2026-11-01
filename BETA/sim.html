@@ -201,6 +201,8 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 <link rel="stylesheet" href="/css/sim-layout-refine.css" />
 <link rel="stylesheet" href="/css/sanity-effects.css" />
 <link rel="stylesheet" href="/css/inspection-gameplay.css" />
+<link rel="stylesheet" href="/css/sim-audio-visual-fix.css" />
+<link rel="stylesheet" href="/css/sim-story-readability.css" />
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
@@ -225,6 +227,8 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
     <div class="sound-readout"><span>◖))</span><div class="sound-meter"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><small id="soundCaption">Шаги… (далеко)</small></div>
     <div class="danger-readout"><span>УГРОЗА</span><b id="dangerValue">НИЗКАЯ</b><i><em id="dangerFill"></em></i><small id="watchValue">ЗА ВАМИ НЕ СЛЕДЯТ</small></div>
   </header>
+
+  <div class="awareness-indicator" id="awarenessIndicator" data-state="hidden" aria-live="polite" aria-label="Нас не заметили"><svg class="awareness-eye" viewBox="0 0 32 20" aria-hidden="true" focusable="false"><path class="eye-outline" d="M1 10 C5 3.8 10.2 1 16 1 C21.8 1 27 3.8 31 10 C27 16.2 21.8 19 16 19 C10.2 19 5 16.2 1 10Z"/><circle class="eye-iris" cx="16" cy="10" r="4.2"/><circle class="eye-pupil" cx="16" cy="10" r="1.8"/><path class="eye-lid" d="M1 10 Q16 10 31 10"/></svg><b id="awarenessLabel">НЕ ЗАМЕЧЕНЫ</b></div>
 
   <!-- В JS добавляйте элементы так: <div data-k="rain|sound|eye|smell">Текст</div> -->
   <div class="sense-feed" id="senseFeed" aria-live="polite"></div>
