@@ -405,3 +405,5 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
 #sceneCreature .creature-eyes,#sceneCreature>i,#sceneCreature>b{display:none!important}
 #sceneCreature.closing-in .creature-sprite{filter:drop-shadow(0 15px 28px #000f) drop-shadow(0 0 26px #ed344fbb)!important}
 @media(max-width:700px){#sceneCreature .creature-sprite{max-width:82vw!important;max-height:62vh!important}}
+
+#diveOverlay.active.out{opacity:0!important;visibility:visible!important;transition:opacity .7s ease,visibility .7s ease!important}
