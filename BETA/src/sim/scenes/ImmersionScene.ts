@@ -749,6 +749,8 @@ export class ImmersionScene {
 
     if (this.state.selected && hs.useWith?.length) {
       if (hs.useWith.includes(this.state.selected)) {
+        this.state.flags['used_' + this.state.selected] = true;
+        this.state.flags['used_on_' + hs.id] = true;
         if (hs.useFlag) this.state.flags[hs.useFlag] = true;
         this.state.selected = null;
         saveState(this.state);
