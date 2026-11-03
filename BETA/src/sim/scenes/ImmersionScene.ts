@@ -368,6 +368,7 @@ export class ImmersionScene {
   }
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
+    if (document.body.classList.contains('combat-active') || this.threatActive) return;
     this.threatKind = kind;
     this.threatActive = true;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
@@ -1074,6 +1075,8 @@ export class ImmersionScene {
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.threatActive = false;
+    document.getElementById('sceneCreature')?.remove();
+    document.body.classList.remove('threat-active', 'threat-kind-light', 'threat-kind-sound', 'threat-kind-dweller');
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('combatScreen')?.classList.remove('open');
     document.getElementById('sceneCreature')?.remove();
@@ -1218,6 +1221,7 @@ export class ImmersionScene {
   }
 
   private startCombat() {
+    if (document.body.classList.contains('combat-active')) return;
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     this.threatApproachTimer = 0;
     this.threatActive = false;
@@ -1229,6 +1233,12 @@ export class ImmersionScene {
     this.monsterHp = this.monsterMaxHp;
     this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
     this.combatTurn = 0; this.combatTarget = 'torso';
+    const locationLabel = document.getElementById('combatLocationLabel');
+    const locationSub = document.getElementById('combatLocationSub');
+    const zoneLabel = document.getElementById('zoneLabel')?.textContent?.trim();
+    const zoneSub = document.getElementById('zoneSub')?.textContent?.trim();
+    if (locationLabel && zoneLabel) locationLabel.textContent = zoneLabel;
+    if (locationSub && zoneSub) locationSub.textContent = zoneSub;
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
     if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger') + '.png';
