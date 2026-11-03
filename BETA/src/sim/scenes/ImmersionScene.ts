@@ -1429,10 +1429,11 @@ export class ImmersionScene {
   private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
     if (!document.getElementById('combatScreen')?.classList.contains('open') || this.dodgeReady) return;
     let log = '';
-    if (action === 'flee') { this.state.health = Math.max(0, this.state.health - 5); this.finishCombat('Ты отступил, получив ранение.'); return; }
+    if (action === 'flee') { this.state.flags.combat_fled = true; this.state.health = Math.max(0, this.state.health - 5); saveState(this.state); this.finishCombat('Ты отступил, получив ранение.'); return; }
     if (action === 'attack') {
       const weaponDamage: Partial<Record<ItemId, number>> = { ryokan_key:7, wet_key_half:5, wet_key_other:5, ember_lantern:8, copper_bell:4, paper_lantern_shard:13, medicinal_herbs:2, stitched_mask:3 };
       const base = this.state.selected ? (weaponDamage[this.state.selected] ?? 10) : 8 + Math.floor(Math.random()*4);
+      if (this.state.selected && weaponDamage[this.state.selected] !== undefined) this.state.flags['used_' + this.state.selected] = true;
       const armPenalty = this.state.injuries.includes('arm') ? 4 : 0;
       const accuracy: Record<string,number> = {head:.62,torso:.92,arms:.82,legs:.8};
       const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg') ? .08 : 0);
@@ -1484,6 +1485,7 @@ export class ImmersionScene {
       } else {
         this.updateCombatHud('Этот предмет нельзя безопасно использовать в бою. Попробуй другой.'); return;
       }
+      this.state.flags['used_' + id] = true;
       if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
       this.state.selected = null;
       this.renderInv(); this.renderVitals(); this.renderCombatInventory();
