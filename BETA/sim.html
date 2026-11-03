@@ -203,6 +203,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 <link rel="stylesheet" href="/css/inspection-gameplay.css" />
 <link rel="stylesheet" href="/css/sim-audio-visual-fix.css" />
 <link rel="stylesheet" href="/css/sim-story-readability.css" />
+<link rel="stylesheet" href="/css/combat-inventory-ui.css" />
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
@@ -327,6 +328,11 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
       <div class="combat-targets"><span>ЦЕЛЬ УДАРА</span>
         <button type="button" data-hit-zone="head">ГОЛОВА</button><button type="button" data-hit-zone="torso" class="selected">КОРПУС</button><button type="button" data-hit-zone="arms">РУКИ</button><button type="button" data-hit-zone="legs">НОГИ</button>
       </div>
+      <section class="combat-inventory" aria-label="Предметы, доступные в бою">
+        <div class="combat-inventory-heading"><span>СНАРЯЖЕНИЕ</span><small>ЦВЕТНОЕ — МОЖНО ПРИМЕНИТЬ · СЕРОЕ — НЕ ПОДХОДИТ</small></div>
+        <div class="combat-inventory-items" id="combatInventoryItems"></div>
+        <p class="combat-item-hint" id="combatItemHint">Выбери подсвеченный предмет. Серые предметы сейчас бесполезны.</p>
+      </section>
       <div class="combat-actions" aria-label="Боевые действия">
         <button id="combatAttack" type="button" title="Клавиша 1 · A"><kbd>1</kbd> АТАКОВАТЬ</button>
         <button id="combatDodge" type="button" disabled title="Клавиша 2 · Пробел"><kbd>2</kbd> УКЛОНИТЬСЯ</button>
