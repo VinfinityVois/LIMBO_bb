@@ -316,23 +316,6 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
     <div class="combat-panel">
       <div class="combat-top"><div class="combat-location"><strong id="combatLocationLabel">ДЕРЕВНЯ РЁКАН</strong><span id="combatLocationSub">СТАРЫЙ РЁКАН · ДВОР</span></div><span class="hud-eyebrow">КОНТАКТ · RK-01</span><strong id="combatPhase">ТВОЙ ХОД</strong><button id="combatFlee" type="button">ОТСТУПИТЬ</button></div>
       <div class="combat-arena">
-        <aside class="combat-minimap" aria-label="Схема двора старого Рёкана">
-          <div class="combat-minimap-head"><span>СХЕМА МЕСТНОСТИ</span><small>СТАРЫЙ РЁКАН · ДВОР</small></div>
-          <svg viewBox="0 0 320 196" role="img" aria-label="План двора с главным корпусом, садом, боковыми постройками, игроком и противником">
-            <defs><pattern id="mapPaper" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M0 8L8 0" stroke="#8d704c" stroke-opacity=".10" stroke-width=".5"/></pattern></defs>
-            <rect x="1" y="1" width="318" height="194" fill="#b99b70"/><rect x="1" y="1" width="318" height="194" fill="url(#mapPaper)"/>
-            <g fill="none" stroke="#55432f" stroke-width="1.4" opacity=".8"><path d="M12 12L306 12L306 183L12 183Z" stroke-dasharray="3 3"/><path d="M20 18Q54 32 76 20T132 28Q162 35 186 20T244 25L294 17"/><path d="M18 160Q55 146 78 159T140 160Q175 147 203 163T296 158"/><path d="M34 90Q68 77 91 93T141 94M186 95Q231 77 285 93"/></g>
-            <g fill="#7c6040" stroke="#433425" stroke-width="1.6"><path d="M48 116L48 165L131 165L131 116L116 104L64 104Z"/><path d="M143 116L143 165L238 165L238 116L221 103L158 103Z"/><path d="M244 118L244 164L293 164L293 118L283 108L254 108Z"/><path d="M208 22L208 60L270 60L270 22L259 15L218 15Z"/><path d="M25 48L25 73L65 73L65 48L57 41L33 41Z"/></g>
-            <g fill="#d0b184" stroke="#4b3927" stroke-width="1"><path d="M55 121L124 121L124 158L55 158Z"/><path d="M151 121L230 121L230 158L151 158Z"/><path d="M250 123L287 123L287 157L250 157Z"/><path d="M214 27L264 27L264 55L214 55Z"/><path d="M31 52L59 52L59 68L31 68Z"/></g>
-            <g stroke="#473727" stroke-width="1" fill="none"><path d="M49 116L89 95L131 116M143 116L190 94L238 116M244 118L268 99L293 118M208 22L239 6L270 22"/><path d="M65 133H116M160 133H222M256 137H281M219 41H260"/></g>
-            <g fill="#64734a" stroke="#435035" stroke-width="1"><path d="M82 22q-14 -15 -24 0q-13 -6 -17 8q13 12 28 4q16 8 24 -5q-1 -10 -11 -7Z"/><path d="M119 32q-10 -14 -21 -2q-12 -3 -14 10q13 9 23 1q14 7 19 -4Z"/><path d="M158 33q-11 -14 -20 -1q-13 -2 -14 12q12 8 22 0q13 6 17 -5Z"/><path d="M285 76q-15 -17 -25 0q-13 -5 -15 10q13 10 25 2q14 6 18 -5Z"/><path d="M25 130q-10 -12 -18 0q-6 8 3 15q12 2 17 -7Z"/></g>
-            <g stroke="#7a5c3c" stroke-width="2" fill="none" opacity=".75"><path d="M137 181L137 169L137 98L178 77L178 61"/><path d="M238 179L238 169L238 95"/></g>
-            <g id="combatMapEnemy" transform="translate(184 85)"><circle r="9" fill="#a72d43" fill-opacity=".28"/><circle r="4.5" fill="#c3344d" stroke="#5b1726" stroke-width="1.5"/><path d="M0 -12V-7M0 7V12M-12 0H-7M7 0H12" stroke="#e15a70" stroke-width="1.3"/></g>
-            <g id="combatMapPlayer" transform="translate(137 177)"><path d="M0 -9L7 7L0 4L-7 7Z" fill="#36d5e8" stroke="#125d70" stroke-width="1.4"/><circle r="11" fill="none" stroke="#36d5e8" stroke-opacity=".65"/></g>
-            <g fill="#493b2b" font-family="monospace" font-size="7" letter-spacing=".7"><text x="214" y="70">САД</text><text x="80" y="174">КОРПУС</text><text x="246" y="174">ФЛИГЕЛЬ</text></g><text x="298" y="17" fill="#33291e" font-family="serif" font-size="12" font-weight="bold">N</text>
-          </svg>
-          <div class="combat-map-legend"><span><i class="player-dot"></i> ТЫ</span><span><i class="enemy-dot"></i> СУЩЕСТВО</span></div>
-        </aside>
         <div class="combat-monster-art" id="combatMonsterArt"><img id="combatMonsterSprite" class="combat-sprite" src="/assets/game/creatures/listener.png" alt=""><i></i><b></b></div>
         <div class="combat-stats"><strong id="combatMonsterName">СЛУШАТЕЛЬ</strong><span>ЗДОРОВЬЕ СУЩЕСТВА <b id="monsterHpText">42 / 42</b></span><div class="combat-bar monster"><i id="monsterHpFill"></i></div><p id="combatLog">Оно приближается.</p></div>
       </div>
@@ -348,14 +331,13 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
       <section class="combat-inventory" aria-label="Предметы, доступные в бою">
         <div class="combat-inventory-heading"><span>СНАРЯЖЕНИЕ</span><small>ЦВЕТНОЕ — МОЖНО ПРИМЕНИТЬ · СЕРОЕ — НЕ ПОДХОДИТ</small></div>
         <div class="combat-inventory-items" id="combatInventoryItems"></div>
-        <p class="combat-item-hint" id="combatItemHint">Выбери подсвеченный предмет. Серые предметы сейчас бесполезны.</p>
+        <p class="combat-item-hint" id="combatItemHint">Нажми на цветной предмет, чтобы применить его. Серые предметы сейчас бесполезны.</p>
       </section>
       <div class="combat-actions" aria-label="Боевые действия">
         <button id="combatAttack" type="button" title="Клавиша 1 · A"><kbd>1</kbd> АТАКОВАТЬ</button>
         <button id="combatDodge" type="button" disabled title="Клавиша 2 · Пробел"><kbd>2</kbd> УКЛОНИТЬСЯ</button>
         <button id="combatGuard" type="button" title="Клавиша 3 · G"><kbd>3</kbd> ЗАЩИТИТЬСЯ</button>
-        <button id="combatItem" type="button" title="Клавиша 4 · I"><kbd>4</kbd> ПРЕДМЕТ</button>
-        <button id="combatNoise" type="button" title="Отвлекающий шум"><kbd>5</kbd> ОТВЛЕЧЬ</button>
+        <button id="combatNoise" type="button" title="Отвлекающий шум"><kbd>4</kbd> ОТВЛЕЧЬ</button>
       </div>
       <div class="combat-controls-hint">ВЫБЕРИ ЗОНУ ПОПАДАНИЯ · ЖМИ УКЛОНИТЬСЯ В МОМЕНТ УДАРА · ESC — ОТСТУПИТЬ</div>
     </div>

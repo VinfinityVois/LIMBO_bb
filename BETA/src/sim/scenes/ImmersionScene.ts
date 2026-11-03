@@ -266,7 +266,6 @@ export class ImmersionScene {
     document.getElementById('combatAttack')?.addEventListener('click', () => this.combatAction('attack'));
     document.getElementById('combatGuard')?.addEventListener('click', () => this.combatAction('guard'));
     document.getElementById('combatDodge')?.addEventListener('click', () => this.combatDodge());
-    document.getElementById('combatItem')?.addEventListener('click', () => this.combatAction('item'));
     document.getElementById('combatNoise')?.addEventListener('click', () => this.combatAction('noise'));
     document.getElementById('combatFlee')?.addEventListener('click', () => this.combatAction('flee'));
     document.querySelectorAll<HTMLButtonElement>('[data-hit-zone]').forEach(b => b.addEventListener('click', () => {
@@ -1194,10 +1193,12 @@ export class ImmersionScene {
   }
 
   private makeNoise(message: string) {
-    this.noiseStartedAt = Date.now();
-    this.noiseDuration = 9000;
-    this.noisePeak = 64;
-    this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
+    const now = Date.now();
+    const carriedLevel = Math.max(this.currentSoundLevel, this.noisePeak * Math.max(0, 1 - (now - this.noiseStartedAt) / Math.max(1, this.noiseDuration)));
+    this.noiseStartedAt = now;
+    this.noiseDuration = 14000;
+    this.noisePeak = Math.min(100, carriedLevel + 24);
+    this.noiseUntil = now + this.noiseDuration;
     const caption = document.getElementById('soundCaption');
     if (caption) caption.textContent = 'ШУМ · источник — ты';
     const danger = document.getElementById('dangerValue');
@@ -1225,6 +1226,7 @@ export class ImmersionScene {
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     this.threatApproachTimer = 0;
     this.threatActive = false;
+    document.getElementById('sceneCreature')?.remove();
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
@@ -1317,10 +1319,8 @@ export class ImmersionScene {
   private renderCombatInventory() {
     const host = document.getElementById('combatInventoryItems');
     const hint = document.getElementById('combatItemHint');
-    const useButton = document.getElementById('combatItem') as HTMLButtonElement | null;
     if (!host) return;
     host.innerHTML = '';
-    let selectedUsable = false;
     if (!this.state.inventory.length) {
       const empty = document.createElement('p');
       empty.className = 'combat-inventory-empty';
@@ -1347,12 +1347,10 @@ export class ImmersionScene {
           saveState(this.state);
           this.renderInv();
           this.renderCombatInventory();
-          const selectedHint = document.getElementById('combatItemHint');
-          if (selectedHint) selectedHint.textContent = def.name + ' · ' + info.reason;
           simAudio.click(this.state.muted);
+          this.combatAction('item');
         });
       }
-      if (selected && info.usable) selectedUsable = true;
       host.appendChild(card);
     }
     if (hint) {
@@ -1363,7 +1361,6 @@ export class ImmersionScene {
         hint.textContent = 'Выбери подсвеченный предмет. Серые предметы сейчас бесполезны.';
       }
     }
-    if (useButton) useButton.disabled = !selectedUsable || this.dodgeReady;
   }
 
   private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
@@ -1427,7 +1424,7 @@ export class ImmersionScene {
       if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
       this.state.selected = null;
       this.renderInv(); this.renderVitals(); this.renderCombatInventory();
-    } else { this.noiseStartedAt=Date.now(); this.noiseDuration=12000; this.noisePeak=100; this.noiseUntil=this.noiseStartedAt+this.noiseDuration; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
+    } else { this.makeNoise('Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'); this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
     if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
     this.combatTurn++; this.initiative=Math.max(0,this.initiative-22);
     if (this.state.injuries.includes('bleed')) { this.state.health=Math.max(0,this.state.health-2); log+=' Кровь продолжает уходить: -2 HP.'; }

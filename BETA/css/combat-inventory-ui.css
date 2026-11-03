@@ -262,3 +262,60 @@ body.combat-active .zone-whisper{opacity:0!important;pointer-events:none!importa
  .combat-inventory-items{min-height:42px}.combat-item-card{min-height:42px;grid-template-rows:23px auto auto}
  .combat-item-card img{width:22px;height:22px}.combat-actions button{min-height:30px}
 }
+
+/* Combat refinement 2: clear full-screen scene and compact action dock */
+.combat-screen{position:fixed;inset:0;width:100%;height:100dvh;min-height:100svh;padding:0!important;overflow:hidden!important;place-items:stretch!important;z-index:120}
+.combat-backdrop{position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,7,12,.12) 0%,rgba(1,7,12,.04) 42%,rgba(1,7,12,.22) 64%,rgba(1,7,12,.78) 100%)!important}
+.combat-panel{position:absolute;inset:0;width:100%;height:100%;min-height:0;max-height:none;overflow:hidden;grid-template-rows:clamp(36px,5vh,54px) minmax(0,1fr) auto auto auto auto auto;padding:5px clamp(10px,1.7vw,26px) 5px;gap:0}
+.combat-top{min-height:0;height:100%;padding:3px 5px 5px;z-index:20}
+.combat-arena{min-height:0;height:100%;overflow:hidden}
+.combat-monster-art{left:auto;right:3%;width:min(46vw,660px);height:100%;background:radial-gradient(ellipse at 50% 88%,rgba(181,53,75,.24),transparent 63%);z-index:2}
+.combat-monster-art .combat-sprite{height:100%;width:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom}
+.combat-stats{top:clamp(78px,12vh,130px);right:clamp(12px,2vw,30px);width:min(300px,24vw);z-index:8;padding:10px 12px}
+.combat-stats p{min-height:0;margin-top:6px;padding:7px 9px;font-size:10px;line-height:1.35}
+.combat-minimap{display:none!important}
+.combat-player{padding:4px 9px;gap:3px 12px}
+.combat-player>span{font-size:8px}
+.combat-player>.combat-bar{height:6px}
+.initiative-row{gap:5px;font-size:7px}
+.initiative-row .combat-bar{height:4px}
+.combat-wounds{min-height:10px;font-size:7px}
+.combat-targets{padding:4px 9px;gap:5px}
+.combat-targets>span{font-size:7px}
+.combat-targets button{min-width:64px;min-height:25px;padding:3px 7px;font-size:7px}
+.combat-inventory{padding:4px 9px 3px}
+.combat-inventory-heading{margin:0 0 3px;font-size:7px}
+.combat-inventory-heading small{font-size:6px}
+.combat-inventory-items{min-height:43px;gap:5px}
+.combat-item-card{width:56px;min-height:42px;padding:2px;grid-template-rows:23px auto auto;gap:0}
+.combat-item-card img{width:22px;height:22px}
+.combat-item-card strong,.combat-item-card small{font-size:6px;line-height:1.1}
+.combat-item-hint{min-height:9px;margin-top:2px;font-size:7px;line-height:1.1}
+.combat-actions{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px 9px 5px}
+.combat-actions button{min-height:29px;padding:4px 6px;font-size:8px}
+.combat-actions button kbd{font-size:7px}
+.combat-controls-hint{padding:3px 9px 1px;font-size:6px}
+#notifyHost,.notify-host{position:fixed!important;top:clamp(58px,8vh,86px)!important;left:22px!important;right:auto!important;z-index:150!important;max-width:min(420px,calc(100vw - 44px))}
+#senseFeed,.sense-feed{position:fixed!important;top:clamp(112px,15vh,150px)!important;left:22px!important;right:auto!important;z-index:145!important;max-width:min(420px,calc(100vw - 44px))}
+body.combat-active #sceneCreature,body.combat-active .scene-creature{display:none!important;visibility:hidden!important;opacity:0!important}
+body.combat-active .game-hud{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+@media(max-width:760px){
+ .combat-panel{grid-template-rows:34px minmax(0,1fr) auto auto auto auto auto;padding:4px}
+ .combat-monster-art{left:0;right:auto;width:65vw}
+ .combat-stats{top:clamp(70px,11vh,100px);right:5px;width:min(46vw,210px);padding:7px}
+ .combat-player{grid-template-columns:1fr;gap:3px;padding:4px}
+ .combat-targets,.combat-inventory,.combat-actions,.combat-controls-hint{padding-left:4px;padding-right:4px}
+ .combat-targets button{min-width:0;flex:1;font-size:6px}
+ .combat-item-card{width:46px;min-height:38px}
+ .combat-actions{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+ .combat-actions button{min-height:28px;font-size:7px}
+ #notifyHost,.notify-host{left:10px!important;top:46px!important;max-width:calc(100vw - 20px)}
+ #senseFeed,.sense-feed{left:10px!important;top:98px!important;max-width:calc(100vw - 20px)}
+}
+@media(max-height:650px) and (min-width:761px){
+ .combat-panel{grid-template-rows:30px minmax(0,1fr) auto auto auto auto auto;padding-top:2px;padding-bottom:2px}
+ .combat-player{padding:3px 8px}.combat-targets{padding:3px 8px}
+ .combat-inventory{padding:3px 8px}.combat-inventory-items{min-height:35px}
+ .combat-item-card{min-height:34px;grid-template-rows:18px auto auto}.combat-item-card img{width:18px;height:18px}
+ .combat-actions{padding:3px 8px}.combat-actions button{min-height:25px}
+}
