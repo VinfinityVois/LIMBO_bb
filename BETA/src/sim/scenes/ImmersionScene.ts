@@ -96,10 +96,13 @@ export class ImmersionScene {
     this.stage.addEventListener('mousemove', (e) => {
       if (this.diving) return;
       const r = this.stage.getBoundingClientRect();
-      this.parallax.setMouse(
-        ((e.clientX - r.left) / r.width) * 2 - 1,
-        ((e.clientY - r.top) / r.height) * 2 - 1
-      );
+      const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+      this.parallax.setMouse(nx, ny);
+      this.stage.querySelectorAll<HTMLElement>('.hotspot, .exit-btn').forEach((node) => {
+        const depth = node.classList.contains('door') ? 1.2 : node.classList.contains('loot') ? 0.85 : 0.65;
+        node.style.translate = `${nx * 22 * depth}px ${ny * 15 * depth}px`;
+      });
       // follow hover card near cursor if visible
       if (this.hoverCard.classList.contains('show')) {
         const x = e.clientX + 16;
@@ -131,6 +134,7 @@ export class ImmersionScene {
     this.updateZone();
     this.startWorldClock();
     this.startSoundDynamics();
+    simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
     this.startSanityDistortions();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
@@ -266,7 +270,6 @@ export class ImmersionScene {
     document.getElementById('combatAttack')?.addEventListener('click', () => this.combatAction('attack'));
     document.getElementById('combatGuard')?.addEventListener('click', () => this.combatAction('guard'));
     document.getElementById('combatDodge')?.addEventListener('click', () => this.combatDodge());
-    document.getElementById('combatItem')?.addEventListener('click', () => this.combatAction('item'));
     document.getElementById('combatNoise')?.addEventListener('click', () => this.combatAction('noise'));
     document.getElementById('combatFlee')?.addEventListener('click', () => this.combatAction('flee'));
     document.querySelectorAll<HTMLButtonElement>('[data-hit-zone]').forEach(b => b.addEventListener('click', () => {
@@ -368,6 +371,7 @@ export class ImmersionScene {
   }
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
+    if (document.body.classList.contains('combat-active') || this.threatActive) return;
     this.threatKind = kind;
     this.threatActive = true;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
@@ -550,6 +554,7 @@ export class ImmersionScene {
   private async loadLoc(id: LocationId) {
     const loc = LOCATIONS[id];
     const ok = await this.parallax.loadImage(loc.image, loc.filter || '');
+    this.parallax.setWeather(loc.ambient.toLowerCase().includes('rain') || loc.ambient === 'wood');
     simAudio.startAmbient(this.state.muted, loc.ambient);
     const err = document.getElementById('stageError');
     if (err) {
@@ -580,6 +585,7 @@ export class ImmersionScene {
   private buildHotspots() {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
+      if (hs.id === 'hs_door' && this.state.flags.door_unlocked) continue;
       const allFinds = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
       const allFlags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
       if (allFinds.length && allFlags.length && allFinds.every((_, i) => !!this.state.flags[allFlags[i] || ''])) continue;
@@ -700,19 +706,66 @@ export class ImmersionScene {
   private onHotspot(hs: HotspotDef, element?: HTMLButtonElement) {
     simAudio.click(this.state.muted);
     this.state.flags['inspected_' + hs.id] = true;
+    this.state.flags['examined_' + hs.id] = true;
     saveState(this.state);
     this.buildHotspots();
     this.spawnInspectBurst(hs.x, hs.y);
 
+    // Contextual item use: these interactions are intentionally tied to visible world objects.
+    const selected = this.state.selected;
+    const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
+      silk_thread: {
+        hs_note: { flag: 'threaded_note', message: 'Ты закрепил записку нитью. На обороте проступила строка: «Якорь слушает то, что принесено из трёх комнат».' },
+      },
+      matchbox: {
+        hs_lantern: { flag: 'world_lantern_lit', message: 'Сырая спичка вспыхивает на миг. Внутри фонаря проявляется знак Цефея.', consume: true },
+      },
+      warding_charm: {
+        hs_anchor: { flag: 'anchor_warded', message: 'Оберег впитывается в контур якоря. Шёпот на секунду стихает.', consume: true },
+      },
+      ember_lantern: {
+        hs_anchor: { flag: 'anchor_lit', message: 'Ты ставишь тлеющий фонарь в гнездо якоря. Контур удерживает свет.', consume: true },
+      },
+      copper_bell: {
+        hs_anchor: { flag: 'anchor_warned', message: 'Безъязыкий колокольчик дрожит у якоря. Изнутри отвечают тремя ударами.' },
+      },
+      black_seed: {
+        hs_anchor: { flag: 'anchor_seeded', message: 'Семя проваливается в сердцевину якоря. Цефей произносит твоё имя чужим голосом.', consume: true, sanity: -18 },
+      },
+      stitched_mask: {
+        hs_anchor: { flag: 'anchor_masked', message: 'Маска касается якоря. Из-под бумаги звучит: «Теперь я знаю, кто смотрит».', sanity: -8 },
+      },
+    };
+    const contextualUse = selected ? contextual[selected]?.[hs.id] : undefined;
+    if (selected && contextualUse) {
+      this.state.flags['used_' + selected] = true;
+      this.state.flags['used_on_' + hs.id] = true;
+      this.state.flags[contextualUse.flag] = true;
+      if (contextualUse.consume) this.state.inventory = this.state.inventory.filter(id => id !== selected);
+      if (contextualUse.sanity) this.state.sanity = Math.max(0, this.state.sanity + contextualUse.sanity);
+      this.state.selected = null;
+      saveState(this.state);
+      this.notify(contextualUse.message, contextualUse.sanity ? 'warn' : 'ok');
+      this.renderInv();
+      this.renderVitals();
+      this.buildHotspots();
+      this.pulseMatrix(contextualUse.sanity ? 'alert' : 'ok');
+      return;
+    }
+
     if (this.state.selected && hs.useWith?.length) {
       if (hs.useWith.includes(this.state.selected)) {
+        this.state.flags['used_' + this.state.selected] = true;
+        this.state.flags['used_on_' + hs.id] = true;
         if (hs.useFlag) this.state.flags[hs.useFlag] = true;
+        if (hs.id === 'hs_door') this.state.flags.door_unlocked = true;
         this.state.selected = null;
         saveState(this.state);
         simAudio.door(this.state.muted);
         this.notify(hs.useSuccess || 'Сработало', 'ok');
         this.pulseMatrix('ok');
         this.buildExits();
+        this.buildHotspots();
         this.renderInv();
         this.syncHand();
         return;
@@ -861,6 +914,8 @@ export class ImmersionScene {
           return;
         }
         this.state.inventory.push(id);
+        this.state.flags['collected_' + id] = true;
+        if (id === 'black_seed' || id === 'stitched_mask') this.state.flags.took_dangerous_object = true;
         if (flag) this.state.flags[flag] = true;
         if (id === 'black_seed') {
           this.state.sanity = Math.max(0, this.state.sanity - 13);
@@ -917,54 +972,91 @@ export class ImmersionScene {
     const visual = document.getElementById('modalVisual');
     const actions = document.getElementById('modalActions');
     const note = document.getElementById('modalNote');
-    if (title) title.textContent = 'ЯКОРЬ RK-01 · ПОСЛЕДНЕЕ РЕШЕНИЕ';
+    if (title) title.textContent = 'СЕКТОР RK-01 · ВЫХОД';
     if (visual) visual.innerHTML = '<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
     if (body) {
       body.innerHTML = '';
-      const p = document.createElement('p');
-      p.className = 'inspection-description';
-      p.textContent = 'Канал раскрывается. За ним — не выход, а запись о том, как сектор был создан. Цефей просит выбрать, что оставить по ту сторону.';
-      body.appendChild(p);
-      const req = document.createElement('ul');
-      req.className = 'ending-requirements';
-      const requirements = [
-        ['Записка прочитана', !!this.state.flags.note_read],
-        ['Дверь генкана открыта', !!this.state.flags.door_unlocked],
-        ['Нить найдена', !!this.state.flags.took_silk],
-        ['Колокольчик найден', !!this.state.flags.took_bell],
-        ['Оберег собран', !!this.state.flags.crafted_warding_charm],
-        ['Фонарь восстановлен', !!this.state.flags.crafted_ember_lantern],
-      ];
-      requirements.forEach(([label, met]) => {
-        const li = document.createElement('li');
-        li.textContent = (met ? '✓ ' : '— ') + label;
-        li.className = met ? 'met' : 'missing';
-        req.appendChild(li);
-      });
-      body.appendChild(req);
-      const outcome = document.createElement('p');
-      outcome.className = 'ending-outcome-copy';
-      const good = requirements.every(([, met]) => Boolean(met));
-      outcome.textContent = good
-        ? 'Все следы сходятся. Можно очистить канал, не оставляя голос внутри.'
-        : 'Данных недостаточно. Можно разорвать канал сейчас, но сектор уйдёт вместе с частью нашей памяти.';
-      body.appendChild(outcome);
+      const intro=document.createElement('p');intro.className='inspection-description';
+      intro.textContent='Канал закрывается. Зафиксируй выход из сектора — Цефей сохранит состояние узла и перенесёт тебя за его пределы.';
+      body.appendChild(intro);
+      const status=document.createElement('p');status.className='ending-outcome-copy';
+      status.textContent='Сбор данных завершится после выхода. Сейчас не будет ни оценки, ни списка находок — только закрытие сектора.';
+      body.appendChild(status);
     }
     if (actions) {
-      actions.innerHTML = '';
-      const add = (label: string, cls: string, fn: () => void, disabled = false) => {
-        const b = document.createElement('button');
-        b.type = 'button'; b.className = 'inspection-action ' + cls; b.textContent = label;
-        b.disabled = disabled; b.addEventListener('click', fn); actions.appendChild(b);
-      };
-      const ready = !!this.state.flags.note_read && !!this.state.flags.door_unlocked &&
-        !!this.state.flags.took_silk && !!this.state.flags.took_bell &&
-        !!this.state.flags.crafted_warding_charm && !!this.state.flags.crafted_ember_lantern;
-      add('ОЧИСТИТЬ КАНАЛ · ХОРОШИЙ КОНЕЦ', 'primary ending-good', () => this.chooseEnding('clear'), !ready);
-      add('РАЗОРВАТЬ КАНАЛ · ПЛОХОЙ КОНЕЦ', 'secondary ending-bad', () => this.chooseEnding('break'));
-      add('ОСТАТЬСЯ И ПРОВЕРИТЬ ВЕЩИ', 'quiet', () => this.closeModal());
+      actions.innerHTML='';
+      const ready=['note_read','door_unlocked','took_silk','took_bell','crafted_warding_charm','crafted_ember_lantern'].every(flag=>!!this.state.flags[flag]);
+      const button=document.createElement('button');
+      button.type='button';button.className='inspection-action primary ending-good';
+      button.textContent='ВЫЙТИ ИЗ СЕКТОРА';
+      button.addEventListener('click',()=>this.chooseEnding(ready?'clear':'break'));
+      actions.appendChild(button);
+      const back=document.createElement('button');back.type='button';back.className='inspection-action quiet';
+      back.textContent='ОСТАТЬСЯ В СЕКТОРЕ';back.addEventListener('click',()=>this.closeModal());actions.appendChild(back);
     }
-    if (note) note.textContent = 'Хороший исход требует собрать улики и подготовить два защитных предмета. Плохой исход доступен всегда.';
+    if (note) note.textContent='Сначала выход. Отчёт Цефея появится после завершения перехода.';
+  }
+
+  private showRunReport() {
+    const title=document.getElementById('modalTitle');
+    const body=document.getElementById('modalBody');
+    const visual=document.getElementById('modalVisual');
+    const actions=document.getElementById('modalActions');
+    const note=document.getElementById('modalNote');
+    if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
+    if(visual)visual.innerHTML='<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    const allItems=Object.keys(ITEMS) as ItemId[];
+    const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id));
+    const used=allItems.filter(id=>this.state.flags['used_'+id]);
+    const dangerous=['black_seed','stitched_mask'] as ItemId[];
+    const dangerousTaken=dangerous.filter(id=>this.state.flags['collected_'+id]||this.state.inventory.includes(id));
+    const dangerousUsed=dangerous.filter(id=>this.state.flags['used_'+id]);
+    const requirements:[string,boolean][]=[
+      ['Записка прочитана',!!this.state.flags.note_read],
+      ['Дверь генкана открыта',!!this.state.flags.door_unlocked],
+      ['Нить найдена',!!this.state.flags.took_silk],
+      ['Колокольчик найден',!!this.state.flags.took_bell],
+      ['Оберег собран',!!this.state.flags.crafted_warding_charm],
+      ['Фонарь восстановлен',!!this.state.flags.crafted_ember_lantern],
+    ];
+    if(body){
+      body.innerHTML='';
+      const intro=document.createElement('p');intro.className='inspection-description';
+      intro.textContent='Выход подтверждён. Теперь Цефей сверяет маршрут, находки и решения, принятые внутри сектора.';
+      body.appendChild(intro);
+      const list=document.createElement('ul');list.className='ending-requirements';
+      const rows:[string,string][]=[
+        ['Найдено предметов',String(collected.length)],
+        ['Применено предметов',String(used.length)],
+        ['Осталось в инвентаре',String(this.state.inventory.length)],
+        ['Опасные предметы взяты',dangerousTaken.map(id=>ITEMS[id].name).join(', ')||'нет'],
+        ['Опасные предметы применены',dangerousUsed.map(id=>ITEMS[id].name).join(', ')||'нет'],
+        ['Встреченные существа',['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).join(', ')||'нет'],
+        ['Получены ранения',this.state.flags.combat_hit_taken?'да':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
+        ['Отступление',this.state.flags.combat_fled?'да':'нет'],
+      ];
+      rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
+      body.appendChild(list);
+      const found=document.createElement('p');found.className='ending-outcome-copy';
+      found.textContent='Собрано: '+(collected.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(found);
+      const spent=document.createElement('p');spent.className='ending-outcome-copy';
+      spent.textContent='Применено: '+(used.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(spent);
+      const checklist=document.createElement('ul');checklist.className='ending-requirements';
+      requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
+      body.appendChild(checklist);
+      const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
+      outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
+      body.appendChild(outcome);
+    }
+    if(actions){
+      actions.innerHTML='';
+      const button=document.createElement('button');button.type='button';button.className='inspection-action primary ending-good';
+      button.textContent='ПРОДОЛЖИТЬ';button.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html';});actions.appendChild(button);
+    }
+    if(note)note.textContent='Отчёт сформирован после выхода. Состояние предметов и ключевые события сохранены.';
+    document.getElementById('simModal')?.classList.add('open');
+    document.body.classList.add('inspection-open');
+    simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
@@ -1006,9 +1098,11 @@ export class ImmersionScene {
     const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
       ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
       'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
-    this.notify(copy,'ok');
-    this.showSense('◇',copy,ending !== 'clear');
-    window.setTimeout(()=>{ window.location.href='/scene-ryokan.html'; },1800);
+    this.notify('ВЫХОД ИЗ СЕКТОРА · '+copy,'ok');
+    this.showSense('◇','Сектор покинут. Данные переданы Цефею.',ending !== 'clear');
+    this.stage.classList.add('sector-exit');
+    document.body.classList.add('sector-exit-active');
+    window.setTimeout(()=>this.showRunReport(),1100);
   }
 
   private closeModal() {
@@ -1070,6 +1164,8 @@ export class ImmersionScene {
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.threatActive = false;
+    document.getElementById('sceneCreature')?.remove();
+    document.body.classList.remove('threat-active', 'threat-kind-light', 'threat-kind-sound', 'threat-kind-dweller');
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('combatScreen')?.classList.remove('open');
     document.getElementById('sceneCreature')?.remove();
@@ -1187,10 +1283,12 @@ export class ImmersionScene {
   }
 
   private makeNoise(message: string) {
-    this.noiseStartedAt = Date.now();
-    this.noiseDuration = 9000;
-    this.noisePeak = 64;
-    this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
+    const now = Date.now();
+    const carriedLevel = Math.max(this.currentSoundLevel, this.noisePeak * Math.max(0, 1 - (now - this.noiseStartedAt) / Math.max(1, this.noiseDuration)));
+    this.noiseStartedAt = now;
+    this.noiseDuration = 14000;
+    this.noisePeak = Math.min(100, carriedLevel + 24);
+    this.noiseUntil = now + this.noiseDuration;
     const caption = document.getElementById('soundCaption');
     if (caption) caption.textContent = 'ШУМ · источник — ты';
     const danger = document.getElementById('dangerValue');
@@ -1207,27 +1305,41 @@ export class ImmersionScene {
     const el = document.createElement('div');
     el.id = 'sceneCreature';
     el.className = 'scene-creature scene-creature-' + this.threatKind;
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
+    const creatureLine = this.threatKind === 'light'
+      ? '«Не гаси свет. Я почти вспомнил твоё лицо».'
+      : this.threatKind === 'sound'
+        ? '«Тише. Я слышу, как ты думаешь».'
+        : '«Под полом осталось место. Для ещё одного».';
+    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b><span class="creature-dialogue">${creatureLine}</span>`;
     el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
   }
 
   private startCombat() {
+    if (document.body.classList.contains('combat-active')) return;
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     this.threatApproachTimer = 0;
     this.threatActive = false;
+    document.getElementById('sceneCreature')?.remove();
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
-    this.monsterMaxHp = this.threatKind === 'light' ? 58 : this.threatKind === 'sound' ? 42 : 76;
+    this.monsterMaxHp = this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
     this.monsterHp = this.monsterMaxHp;
     this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
     this.combatTurn = 0; this.combatTarget = 'torso';
+    this.state.flags['encounter_' + this.threatKind] = true;
+    const locationLabel = document.getElementById('combatLocationLabel');
+    const locationSub = document.getElementById('combatLocationSub');
+    const zoneLabel = document.getElementById('zoneLabel')?.textContent?.trim();
+    const zoneSub = document.getElementById('zoneSub')?.textContent?.trim();
+    if (locationLabel && zoneLabel) locationLabel.textContent = zoneLabel;
+    if (locationSub && zoneSub) locationSub.textContent = zoneSub;
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
-    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller') + '.png';
+    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger') + '.png';
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -1235,7 +1347,15 @@ export class ImmersionScene {
     const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null; if (dodge) dodge.disabled = true;
     document.body.classList.add('combat-active');
     this.renderCombatWounds();
-    this.updateCombatHud('Существо приближается. Выбери часть тела и действие.');
+    this.renderCombatInventory();
+    const creatureVoice: Record<string,string> = {
+      light: 'Слепой шепчет: «Свет… ты принёс мне глаза. Отдай их обратно».',
+      sound: 'Слушатель отвечает твоим голосом: «Не зови. Я уже запомнил, как ты звучишь».',
+      dweller: 'Жилец скребёт по полу: «Под досками ещё кто-то. Он считает шаги вместо нас».',
+    };
+    this.updateCombatHud(creatureVoice[this.threatKind]);
+    this.state.flags['heard_' + this.threatKind] = true;
+    saveState(this.state);
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
     if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
     else if (this.threatKind === 'sound') simAudio.monsterListener(this.state.muted);
@@ -1251,6 +1371,7 @@ export class ImmersionScene {
     const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = this.dodgeReady ? 'ВРАГ АТАКУЕТ' : 'ТВОЙ ХОД';
     const ini = document.getElementById('initiativeFill') as HTMLElement | null; if (ini) ini.style.width = this.initiative + '%';
     const enemyIni = document.getElementById('enemyInitiativeFill') as HTMLElement | null; if (enemyIni) enemyIni.style.width = (100-this.initiative) + '%';
+    this.renderCombatInventory();
   }
 
   private selectCombatTarget(target: 'head'|'torso'|'arms'|'legs') {
@@ -1266,15 +1387,95 @@ export class ImmersionScene {
     host.textContent = this.state.injuries.map(x => labels[x] || x).join(' · ') || 'ТЯЖЁЛЫХ РАН НЕТ';
   }
 
+  private combatItemInfo(id: ItemId): { usable: boolean; reason: string } {
+    const wounded = this.state.health < 100 || this.state.injuries.includes('bleed');
+    switch (id) {
+      case 'herbal_poultice':
+        return wounded
+          ? { usable: true, reason: '+22 здоровья и остановка кровотечения. Расходуется.' }
+          : { usable: false, reason: 'Пока не нужна: здоровье полное, кровотечения нет.' };
+      case 'medicinal_herbs':
+        return this.state.injuries.includes('bleed') || this.state.health <= 78
+          ? { usable: true, reason: 'Перевязать рану: +12 здоровья, остановить кровотечение. Расходуется.' }
+          : { usable: false, reason: 'Нужны ранения или потеря здоровья.' };
+      case 'warding_charm':
+        return this.state.sanity < 100
+          ? { usable: true, reason: '+16 рассудка. Одноразовый оберег.' }
+          : { usable: false, reason: 'Рассудок стабилен — оберег пока не сработает.' };
+      case 'matchbox':
+        return { usable: true, reason: 'Вспышка отвлечёт существо, даст время и нанесёт небольшой урон.' };
+      case 'ember_lantern':
+        return this.threatKind !== 'light'
+          ? { usable: true, reason: 'Огонь обожжёт существо и вернёт инициативу.' }
+          : { usable: false, reason: 'Слепой идёт на свет. Фонарь только ускорит его атаку.' };
+      case 'stitched_mask':
+        return { usable: true, reason: 'Чужой голос маски заставит существо отшатнуться, но отнимет 6 рассудка.' };
+      case 'copper_bell':
+        return this.threatKind === 'sound' || this.threatKind === 'dweller'
+          ? { usable: true, reason: 'Собьёт ритм атаки и замедлит существо.' }
+          : { usable: false, reason: 'Слепой реагирует на звук слишком резко. Звонок опасен.' };
+      default:
+        return { usable: false, reason: 'В этой схватке предмет не поможет. Сохрани его для исследования.' };
+    }
+  }
+
+  private renderCombatInventory() {
+    const host = document.getElementById('combatInventoryItems');
+    const hint = document.getElementById('combatItemHint');
+    if (!host) return;
+    host.innerHTML = '';
+    if (!this.state.inventory.length) {
+      const empty = document.createElement('p');
+      empty.className = 'combat-inventory-empty';
+      empty.textContent = 'В карманах пусто. Придётся полагаться на себя.';
+      host.appendChild(empty);
+    }
+    for (const id of this.state.inventory) {
+      const def = ITEMS[id];
+      const info = this.combatItemInfo(id);
+      const selected = this.state.selected === id;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'combat-item-card' + (info.usable ? ' is-usable' : ' is-unusable') + (selected ? ' is-selected' : '');
+      card.disabled = !info.usable || this.dodgeReady;
+      card.style.setProperty('--item-tint', def.color);
+      card.setAttribute('aria-label', def.name + '. ' + info.reason);
+      card.innerHTML = '<img src="' + this.itemAsset(id) + '" alt="" draggable="false"><strong></strong><small></small>';
+      card.querySelector('strong')!.textContent = def.short;
+      card.querySelector('small')!.textContent = info.usable ? 'ДОСТУПЕН' : 'НЕ ПОДХОДИТ';
+      card.title = def.name + ' — ' + info.reason;
+      if (info.usable) {
+        card.addEventListener('click', () => {
+          this.state.selected = id;
+          saveState(this.state);
+          this.renderInv();
+          this.renderCombatInventory();
+          simAudio.click(this.state.muted);
+          this.combatAction('item');
+        });
+      }
+      host.appendChild(card);
+    }
+    if (hint) {
+      if (this.state.selected) {
+        const info = this.combatItemInfo(this.state.selected);
+        hint.textContent = ITEMS[this.state.selected].name + ' · ' + info.reason;
+      } else {
+        hint.textContent = 'Выбери подсвеченный предмет. Серые предметы сейчас бесполезны.';
+      }
+    }
+  }
+
   private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
     if (!document.getElementById('combatScreen')?.classList.contains('open') || this.dodgeReady) return;
     let log = '';
-    if (action === 'flee') { this.state.health = Math.max(0, this.state.health - 5); this.finishCombat('Ты отступил, получив ранение.'); return; }
+    if (action === 'flee') { this.state.flags.combat_fled = true; this.state.health = Math.max(0, this.state.health - 5); saveState(this.state); this.finishCombat('Ты отступил, получив ранение.'); return; }
     if (action === 'attack') {
       const weaponDamage: Partial<Record<ItemId, number>> = { ryokan_key:7, wet_key_half:5, wet_key_other:5, ember_lantern:8, copper_bell:4, paper_lantern_shard:13, medicinal_herbs:2, stitched_mask:3 };
       const base = this.state.selected ? (weaponDamage[this.state.selected] ?? 10) : 8 + Math.floor(Math.random()*4);
+      if (this.state.selected && weaponDamage[this.state.selected] !== undefined) this.state.flags['used_' + this.state.selected] = true;
       const armPenalty = this.state.injuries.includes('arm') ? 4 : 0;
-      const accuracy: Record<string,number> = {head:.48,torso:.82,arms:.72,legs:.68};
+      const accuracy: Record<string,number> = {head:.62,torso:.92,arms:.82,legs:.8};
       const hit = Math.random() < accuracy[this.combatTarget] - (this.state.injuries.includes('leg') ? .08 : 0);
       if (!hit) log = 'Ты промахнулся. Существо успело сместиться.';
       else {
@@ -1292,10 +1493,16 @@ export class ImmersionScene {
     else if (action === 'item') {
       const id = this.state.selected;
       if (!id) { this.updateCombatHud('Выбери предмет в инвентаре, затем нажми ПРЕДМЕТ.'); return; }
+      const availability = this.combatItemInfo(id);
+      if (!availability.usable) { this.updateCombatHud(availability.reason); return; }
       if (id === 'herbal_poultice') {
         this.state.health = Math.min(100, this.state.health + 22);
         this.state.injuries = this.state.injuries.filter(x => x !== 'bleed');
         log = 'Ты затянул рану повязкой. +22 HP · кровотечение остановлено.';
+      } else if (id === 'medicinal_herbs') {
+        this.state.health = Math.min(100, this.state.health + 12);
+        this.state.injuries = this.state.injuries.filter(x => x !== 'bleed');
+        log = 'Ты растёр горькие листья и прижал к ране. +12 HP · кровотечение остановлено.';
       } else if (id === 'warding_charm') {
         this.state.sanity = Math.min(100, this.state.sanity + 16);
         log = 'Оберег поглотил шёпот. +16 рассудка.';
@@ -1307,6 +1514,10 @@ export class ImmersionScene {
         this.monsterHp = Math.max(0, this.monsterHp - (this.threatKind === 'light' ? 2 : 14));
         this.initiative = Math.min(100, this.initiative + 18);
         log = this.threatKind === 'light' ? 'Слепой не боится света. Он бросается ближе.' : 'Пламя обжигает тварь. +18 инициативы.';
+      } else if (id === 'copper_bell') {
+        this.enemyLegsSlowed = true;
+        this.initiative = Math.min(100, this.initiative + 24);
+        log = 'Глухой звон сбивает существо с ритма. +24 инициативы · атака замедлена.';
       } else if (id === 'stitched_mask') {
         this.state.sanity = Math.max(0, this.state.sanity - 6);
         this.monsterHp = Math.max(0, this.monsterHp - 12);
@@ -1314,15 +1525,22 @@ export class ImmersionScene {
       } else {
         this.updateCombatHud('Этот предмет нельзя безопасно использовать в бою. Попробуй другой.'); return;
       }
-      if (['herbal_poultice','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
+      this.state.flags['used_' + id] = true;
+      if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
       this.state.selected = null;
-      this.renderInv(); this.renderVitals();
-    } else { this.noiseStartedAt=Date.now(); this.noiseDuration=12000; this.noisePeak=100; this.noiseUntil=this.noiseStartedAt+this.noiseDuration; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
+      this.renderInv(); this.renderVitals(); this.renderCombatInventory();
+    } else { this.makeNoise('Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'); this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
     if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
     this.combatTurn++; this.initiative=Math.max(0,this.initiative-22);
     if (this.state.injuries.includes('bleed')) { this.state.health=Math.max(0,this.state.health-2); log+=' Кровь продолжает уходить: -2 HP.'; }
     this.renderVitals(); this.renderCombatWounds();
-    this.updateCombatHud(log+' '+this.enemyAttackDescription());
+    const creatureWhispers: Record<string,string[]> = {
+      light: ['«Не гаси его. В темноте я вижу лучше».','«Третий удар был не колоколом».'],
+      sound: ['«Твои шаги повторяются. Значит, нас уже двое».','«М. тоже пытался молчать».'],
+      dweller: ['«Ключ открывает дверь. Но не ту, которую ты ищешь».','«Семя помнит того, кто первым его проглотил».'],
+    };
+    const whispers = creatureWhispers[this.threatKind];
+    this.updateCombatHud(log + ' ' + this.enemyAttackDescription() + ' ' + whispers[this.combatTurn % whispers.length]);
     this.beginEnemyAttack(); saveState(this.state);
   }
 
@@ -1338,7 +1556,7 @@ export class ImmersionScene {
     if(dodge){dodge.disabled=false;dodge.classList.add('dodge-window');}
     const phase=document.getElementById('combatPhase'); if(phase) phase.textContent=this.threatKind==='light'?'ПРЫЖОК · УКЛОНИСЬ':this.threatKind==='sound'?'ЗВУКОВОЙ ИМПУЛЬС · ЗАЩИТИСЬ':'ЗАХВАТ · УКЛОНИСЬ';
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
-    const windowMs=this.state.injuries.includes('leg')?680:this.enemyLegsSlowed?1550:this.threatKind==='light'?900:this.threatKind==='sound'?1250:1050;
+    const windowMs=this.state.injuries.includes('leg')?900:this.enemyLegsSlowed?1900:this.threatKind==='light'?1450:this.threatKind==='sound'?1750:1600;
     this.enemyAttackStartedAt = Date.now();
     this.enemyAttackWindowMs = windowMs;
     const bar=document.getElementById('enemyTelegraph') as HTMLElement|null; if(bar){bar.style.transition='none';bar.style.width='100%';requestAnimationFrame(()=>{bar.style.transition='width '+windowMs+'ms linear';bar.style.width='0%';});}
@@ -1350,7 +1568,7 @@ export class ImmersionScene {
     if (!this.dodgeReady) return;
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     const progress = Math.min(1, (Date.now() - this.enemyAttackStartedAt) / this.enemyAttackWindowMs);
-    const perfect = progress >= .62 && progress <= .88;
+    const perfect = progress >= .48 && progress <= .94;
     this.resolveEnemyAttack(perfect, perfect ? 'perfect' : progress < .62 ? 'early' : 'late');
   }
 
@@ -1360,7 +1578,7 @@ export class ImmersionScene {
     const dodge=document.getElementById('combatDodge') as HTMLButtonElement|null;
     if(dodge){dodge.disabled=true;dodge.classList.remove('dodge-window');}
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack');
-    let incoming=this.threatKind==='dweller'?17:this.threatKind==='light'?15:11;
+    let incoming=this.threatKind==='dweller'?12:this.threatKind==='light'?11:8;
     if (this.enemyArmsWeakened) incoming = Math.ceil(incoming * .55);
     let wound='';
     if(this.threatKind==='light'&&!evaded) wound='leg';
@@ -1375,6 +1593,8 @@ export class ImmersionScene {
       document.body.classList.remove('player-hit');void document.body.clientWidth;document.body.classList.add('player-hit');setTimeout(()=>document.body.classList.remove('player-hit'),360);
     }else{simAudio.evade(this.state.muted);art?.classList.add('miss');setTimeout(()=>art?.classList.remove('miss'),380);this.initiative=Math.min(100,this.initiative+18);}
     this.renderVitals();this.renderCombatWounds();
+    if (evaded) this.state.flags.combat_dodged = true;
+    else this.state.flags.combat_hit_taken = true;
     const detail=evaded?'ИДЕАЛЬНОЕ УКЛОНЕНИЕ · ты ушёл с линии атаки. Инициатива возвращается.':(timing === 'early' ? 'РАННЕЕ УКЛОНЕНИЕ · ' : 'НЕУДАЧНЫЙ РЫВОК · ')+'Удар достиг цели: -'+damage+' HP.'+(wound?' Получено состояние: '+wound+'.':'');
     this.updateCombatHud(detail);
     saveState(this.state);
@@ -1474,6 +1694,12 @@ export class ImmersionScene {
       panel.querySelector('.threat-copy')?.appendChild(meter);
     }
     const duration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    const dialogueLines: Record<string,string[]> = {
+      light: ['«Не гаси свет. Я почти вспомнил твоё лицо».','«Ты несёшь маленькое солнце. Оно пахнет страхом».','«Остановись. Я хочу посмотреть на тебя».'],
+      sound: ['«Тише. Я слышу, как ты думаешь».','«Ты повторил этот вдох. В прошлый раз он был последним».','«Не оборачивайся. Я уже стою за твоим голосом».'],
+      dweller: ['«Под полом осталось место. Для ещё одного».','«Я помню, как строили эту комнату. Нас не спрашивали».','«Не стой на досках. Они помнят вес».'],
+    };
+    let lastDialogue = -1;
     const tick = () => {
       if (!this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
@@ -1481,6 +1707,17 @@ export class ImmersionScene {
       const time = document.getElementById('threatApproachTime');
       if (fill) fill.style.width = (progress*100)+'%';
       if (time) time.textContent = Math.max(0,(duration-(Date.now()-this.threatStartedAt))/1000).toFixed(1);
+      const lineIndex = Math.min(2, Math.floor(progress * 3));
+      if (lineIndex !== lastDialogue) {
+        lastDialogue = lineIndex;
+        const dialogue = document.querySelector<HTMLElement>('#sceneCreature .creature-dialogue');
+        if (dialogue) {
+          dialogue.textContent = dialogueLines[this.threatKind][lineIndex];
+          dialogue.classList.remove('dialogue-arrive');
+          void dialogue.offsetWidth;
+          dialogue.classList.add('dialogue-arrive');
+        }
+      }
       const creature = document.getElementById('sceneCreature');
       if (creature) {
         creature.style.setProperty('--approach', String(progress));
@@ -1596,6 +1833,7 @@ export class ImmersionScene {
       this.notify('Сейчас это не требуется.', 'info');
       return;
     }
+    this.state.flags['used_' + id] = true;
     this.state.inventory = this.state.inventory.filter((item) => item !== id);
     this.state.selected = null;
     saveState(this.state);
@@ -1616,6 +1854,8 @@ export class ImmersionScene {
           (r.b === this.state.selected && r.a === id)
       );
       if (recipe) {
+        this.state.flags['used_' + recipe.a] = true;
+        this.state.flags['used_' + recipe.b] = true;
         this.state.inventory = this.state.inventory.filter((x) => x !== recipe.a && x !== recipe.b);
         if (!this.state.inventory.includes(recipe.result)) this.state.inventory.push(recipe.result);
         this.state.flags['crafted_' + recipe.result] = true;

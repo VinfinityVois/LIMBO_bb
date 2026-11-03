@@ -4,6 +4,7 @@
    const $ = s => document.querySelector(s), R = Math.random, rnd = (a, b) => a + R() * (b - a), pick = a => a[R() * a.length | 0];
    const el = (t, c, p) => { const e = document.createElement(t); if (c) e.className = c; if (p) p.appendChild(e); return e };
    const B = document.body, stage = $('#simStage'), reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+   const M = () => window.RkMod || {}; // наследие прошлого забега (endings.js)
    let sanity = 100, g = 0, u = 0; // g — искажение (рассудок < 65%), u — тревога (< 88%)
    
    /* ---------- слои и SVG-фильтр искажения ---------- */
@@ -23,7 +24,7 @@
    function setSanity(v) {
      if (isNaN(v)) return;
      sanity = Math.max(0, Math.min(100, v));
-     g = sanity < 65 ? (65 - sanity) / 65 : 0; u = Math.max(0, Math.min(1, (88 - sanity) / 88));
+     const T = 65 + (M().thr || 0); g = sanity < T ? Math.min(1, (T - sanity) / T + (M().gAdd || 0)) : 0; u = Math.max(0, Math.min(1, (88 - sanity) / 88));
      B.style.setProperty('--g', g.toFixed(3)); B.style.setProperty('--u', u.toFixed(3));
      if (g) B.dataset.fx = g > .6 ? 'high' : g > .3 ? 'mid' : 'low'; else delete B.dataset.fx;
      if (dg) dg.gain.setTargetAtTime(g * .1 + u * .02, ac.currentTime, 1.2);
@@ -113,11 +114,18 @@
      const dx = (left ? 1 : -1) * innerWidth * rnd(.25, .9);
      e.animate([{ transform: 'translate(0,0) scaleY(.8)', opacity: 0 }, { opacity: .3 + u * .55, offset: .3 }, { transform: `translate(${dx}px,${rnd(-30, 30)}px) scaleY(1.2)`, opacity: 0 }], { duration: rnd(3500, 9000), easing: 'ease-in-out' }).onfinish = () => e.remove();
    }
-   function sil() { // ложный силуэт: стоит, подаётся ближе, исчезает рывком
-     const e = el('div', 'fx-sil' + (R() < .4 ? ' eyes' : ''), L), h = rnd(180, 380), o = .5 + g * .4;
-     Object.assign(e.style, { height: h + 'px', width: h * .33 + 'px', left: rnd(4, 86) + '%', bottom: rnd(-6, 10) + '%' });
-     e.animate([{ opacity: 0, transform: 'scale(.9)' }, { opacity: o, transform: 'scale(1)', offset: .35 }, { opacity: o, transform: 'scale(1.1)', offset: .92 }, { opacity: 0, transform: 'scale(1.12)' }], { duration: rnd(1500, 3300) }).onfinish = () => e.remove();
-     if (R() < .5) sfx.steps(2, .05);
+   const SHP = window.RK_SHADOWS || '/assets/game/shadows/'; // куда положены SVG-тени
+   const SH = [['stalker', 0, .46, 0], ['veil', 0, .5, 0], ['hanged', 0, .62, 1], ['crawler', 0, .3, 0],  // [имя, с лицом, высота (доля сцены), висит]
+     ['maw', 1, .5, 0], ['grinner', 1, .55, 0], ['watcher', 1, .5, 0], ['horned', 1, .5, 0]];
+   function sil() { // тень: безликие — всегда, с лицами — когда рассудок заметно упал
+     const pool = SH.filter(x => !x[1] || g > .3 || R() < u * .15), [n, faced, hh, hang] = pick(pool);
+     const e = el('img', 'fx-shade', L); e.src = SHP + n + '.svg'; e.alt = '';
+     const o = Math.min(1, .6 + g * .4), grow = faced ? 1.22 : 1.1;
+     Object.assign(e.style, { height: stage.clientHeight * hh * rnd(.85, 1.15) + 'px', left: rnd(2, 88) + '%', transformOrigin: hang ? '50% 0' : '50% 100%' });
+     if (hang) e.style.top = '0'; else e.style.bottom = rnd(-4, 8) + '%';
+     e.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: o, transform: 'scale(1)', offset: .3 }, { opacity: faced && R() < .5 ? .2 : o, offset: .6 },
+       { opacity: o, transform: `scale(${grow})`, offset: .94 }, { opacity: 0, transform: `scale(${grow * 1.03})` }], { duration: faced ? rnd(1100, 2400) : rnd(1800, 3800) }).onfinish = () => e.remove();
+     if (faced) { burst(); if (R() < .6) sfx.whisper() } else if (R() < .5) sfx.steps(2, .05);
    }
    function eyes() {
      const e = el('div', 'fx-eyes', L); Object.assign(e.style, { left: rnd(5, 90) + '%', top: rnd(20, 75) + '%' });
@@ -187,7 +195,7 @@
      [['c', cs], ['t', th]].forEach(([k, e]) => {
        if (!e) return; const o = isOpen(e); let s = AP[k];
        if (!o) { if (s) { e.style.setProperty('--ap', 0); e.removeAttribute('data-near'); delete AP[k] } return }
-       if (!s) { s = AP[k] = { t0: performance.now(), dur: (11 - g * 4) * 1000, ls: 0 }; if (k === 'c') bar() }
+       if (!s) { s = AP[k] = { t0: performance.now(), dur: (11 - g * 4) * 1000 * (M().ap ?? 1), ls: 0 }; if (k === 'c') bar() }
        const now = performance.now(), p = Math.min(1, (now - s.t0) / s.dur);
        e.style.setProperty('--ap', p.toFixed(3)); p > .7 ? e.setAttribute('data-near', '') : e.removeAttribute('data-near');
        if (k === 'c') { const d = $('#apDist'); if (d) d.textContent = (6 - 5.5 * p).toFixed(1) + ' м' }
@@ -201,11 +209,11 @@
    
    /* ---------- запуск ---------- */
    every(burst, 2500, 9000, () => g);
-   every(shadow, 1800, 6000, () => u * (g ? 1 : .5));
-   every(sil, 5000, 15000, () => g);
+   every(shadow, 1800, 6000, () => u * (g ? 1 : .5) * (M().shadow ?? 1));
+   every(sil, 5000, 15000, () => g * (M().sil ?? 1));
    every(eyes, 6000, 16000, () => g > .2 ? g : 0);
    every(face, 9000, 26000, () => g > .35 ? g : 0);
-   every(() => voice(), 9000, 24000, () => g > .15 ? g : 0);
+   every(() => voice(), 9000, 24000, () => (g > .15 ? g : 0) * (M().voice ?? 1));
    every(think, 6000, 15000, () => u);
    every(invFx, 7000, 19000, () => g);
    every(fakeTarget, 9000, 24000, () => g > .25 ? g : 0);
