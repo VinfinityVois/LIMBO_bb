@@ -705,6 +705,48 @@ export class ImmersionScene {
     this.buildHotspots();
     this.spawnInspectBurst(hs.x, hs.y);
 
+    // Contextual item use: these interactions are intentionally tied to visible world objects.
+    const selected = this.state.selected;
+    const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
+      silk_thread: {
+        hs_note: { flag: 'threaded_note', message: 'Ты закрепил записку нитью. На обороте проступила строка: «Якорь слушает то, что принесено из трёх комнат».' },
+      },
+      matchbox: {
+        hs_lantern: { flag: 'world_lantern_lit', message: 'Сырая спичка вспыхивает на миг. Внутри фонаря проявляется знак Цефея.', consume: true },
+      },
+      warding_charm: {
+        hs_anchor: { flag: 'anchor_warded', message: 'Оберег впитывается в контур якоря. Шёпот на секунду стихает.', consume: true },
+      },
+      ember_lantern: {
+        hs_anchor: { flag: 'anchor_lit', message: 'Ты ставишь тлеющий фонарь в гнездо якоря. Контур удерживает свет.', consume: true },
+      },
+      copper_bell: {
+        hs_anchor: { flag: 'anchor_warned', message: 'Безъязыкий колокольчик дрожит у якоря. Изнутри отвечают тремя ударами.' },
+      },
+      black_seed: {
+        hs_anchor: { flag: 'anchor_seeded', message: 'Семя проваливается в сердцевину якоря. Цефей произносит твоё имя чужим голосом.', consume: true, sanity: -18 },
+      },
+      stitched_mask: {
+        hs_anchor: { flag: 'anchor_masked', message: 'Маска касается якоря. Из-под бумаги звучит: «Теперь я знаю, кто смотрит».', sanity: -8 },
+      },
+    };
+    const contextualUse = selected ? contextual[selected]?.[hs.id] : undefined;
+    if (selected && contextualUse) {
+      this.state.flags['used_' + selected] = true;
+      this.state.flags['used_on_' + hs.id] = true;
+      this.state.flags[contextualUse.flag] = true;
+      if (contextualUse.consume) this.state.inventory = this.state.inventory.filter(id => id !== selected);
+      if (contextualUse.sanity) this.state.sanity = Math.max(0, this.state.sanity + contextualUse.sanity);
+      this.state.selected = null;
+      saveState(this.state);
+      this.notify(contextualUse.message, contextualUse.sanity ? 'warn' : 'ok');
+      this.renderInv();
+      this.renderVitals();
+      this.buildHotspots();
+      this.pulseMatrix(contextualUse.sanity ? 'alert' : 'ok');
+      return;
+    }
+
     if (this.state.selected && hs.useWith?.length) {
       if (hs.useWith.includes(this.state.selected)) {
         if (hs.useFlag) this.state.flags[hs.useFlag] = true;
