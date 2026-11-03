@@ -1694,6 +1694,12 @@ export class ImmersionScene {
       panel.querySelector('.threat-copy')?.appendChild(meter);
     }
     const duration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    const dialogueLines: Record<string,string[]> = {
+      light: ['«Не гаси свет. Я почти вспомнил твоё лицо».','«Ты несёшь маленькое солнце. Оно пахнет страхом».','«Остановись. Я хочу посмотреть на тебя».'],
+      sound: ['«Тише. Я слышу, как ты думаешь».','«Ты повторил этот вдох. В прошлый раз он был последним».','«Не оборачивайся. Я уже стою за твоим голосом».'],
+      dweller: ['«Под полом осталось место. Для ещё одного».','«Я помню, как строили эту комнату. Нас не спрашивали».','«Не стой на досках. Они помнят вес».'],
+    };
+    let lastDialogue = -1;
     const tick = () => {
       if (!this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
@@ -1701,6 +1707,17 @@ export class ImmersionScene {
       const time = document.getElementById('threatApproachTime');
       if (fill) fill.style.width = (progress*100)+'%';
       if (time) time.textContent = Math.max(0,(duration-(Date.now()-this.threatStartedAt))/1000).toFixed(1);
+      const lineIndex = Math.min(2, Math.floor(progress * 3));
+      if (lineIndex !== lastDialogue) {
+        lastDialogue = lineIndex;
+        const dialogue = document.querySelector<HTMLElement>('#sceneCreature .creature-dialogue');
+        if (dialogue) {
+          dialogue.textContent = dialogueLines[this.threatKind][lineIndex];
+          dialogue.classList.remove('dialogue-arrive');
+          void dialogue.offsetWidth;
+          dialogue.classList.add('dialogue-arrive');
+        }
+      }
       const creature = document.getElementById('sceneCreature');
       if (creature) {
         creature.style.setProperty('--approach', String(progress));
