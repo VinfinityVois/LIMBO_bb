@@ -1012,3 +1012,6 @@ body.sector-exit-active .exit-layer { transition:opacity .55s ease; opacity:0 !i
   .scene-creature { left:34% !important; width:clamp(130px,34vw,190px) !important;height:52vh !important; }
   .creature-dialogue { max-width:46vw;font-size:8px; }
 }
+
+.creature-dialogue.dialogue-arrive { animation:dialogue-arrive .42s cubic-bezier(.2,.8,.2,1) both, creature-whisper 5.8s ease-in-out .42s infinite; }
+@keyframes dialogue-arrive { from{opacity:0;filter:blur(4px);transform:translate(-50%,7px)} to{opacity:1;filter:blur(0);transform:translate(-50%,0)} }
