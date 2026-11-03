@@ -1403,6 +1403,10 @@ export class ImmersionScene {
         this.monsterHp = Math.max(0, this.monsterHp - (this.threatKind === 'light' ? 2 : 14));
         this.initiative = Math.min(100, this.initiative + 18);
         log = this.threatKind === 'light' ? 'Слепой не боится света. Он бросается ближе.' : 'Пламя обжигает тварь. +18 инициативы.';
+      } else if (id === 'copper_bell') {
+        this.enemyLegsSlowed = true;
+        this.initiative = Math.min(100, this.initiative + 24);
+        log = 'Глухой звон сбивает существо с ритма. +24 инициативы · атака замедлена.';
       } else if (id === 'stitched_mask') {
         this.state.sanity = Math.max(0, this.state.sanity - 6);
         this.monsterHp = Math.max(0, this.monsterHp - 12);
