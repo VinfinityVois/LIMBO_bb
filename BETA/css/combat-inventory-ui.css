@@ -1,0 +1,55 @@
+/* LIMBO · lightweight tactical encounter */
+.combat-screen{padding:2vh 2vw;place-items:center}
+.combat-backdrop{background:radial-gradient(ellipse at 34% 42%,rgba(32,50,57,.88),rgba(2,6,11,.96) 76%);backdrop-filter:none}
+.combat-panel{width:min(1180px,96vw);max-height:96vh;overflow:auto;padding:18px 22px 16px;border-color:rgba(75,166,184,.58);background:linear-gradient(145deg,rgba(9,23,32,.98),rgba(3,9,15,.99));box-shadow:0 30px 100px #000e,0 0 45px rgba(27,153,177,.12),inset 0 0 0 1px #ffffff0b}
+.combat-arena{grid-template-columns:minmax(300px,43%) minmax(0,1fr);gap:28px;min-height:clamp(250px,39vh,430px);padding:14px 10px 18px}
+.combat-monster-art{height:clamp(250px,39vh,430px);min-width:0;background:radial-gradient(ellipse at 50% 72%,rgba(166,52,71,.2),transparent 67%);overflow:visible}
+.combat-monster-art:before,.combat-monster-art:after{display:none!important;content:none!important}
+.combat-monster-art .combat-sprite{position:relative;z-index:2;display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom;image-rendering:auto;filter:drop-shadow(0 18px 24px #000d) drop-shadow(0 0 15px rgba(183,54,75,.2));}
+.combat-stats{gap:12px;align-self:center}
+.combat-stats>strong{font:700 clamp(18px,2vw,25px) var(--mono);letter-spacing:.18em;color:#f1e9e8}
+.combat-stats>span,.combat-player>span{font-size:10px}
+.combat-stats p{min-height:64px;font-size:13px;line-height:1.6;background:rgba(5,15,23,.82)}
+.combat-player{grid-template-columns:1fr;gap:8px;padding:12px 10px}
+.initiative-row{display:grid;grid-template-columns:100px minmax(0,1fr) 70px minmax(0,1fr);align-items:center;gap:9px}
+.enemy-telegraph{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:12px}
+.combat-wounds{font:10px var(--mono);color:#e2a1aa;letter-spacing:.04em}
+.combat-targets{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 8px}
+.combat-targets>span{margin-right:8px}
+.combat-targets button{min-width:86px;min-height:32px;border:1px solid rgba(116,155,170,.38);border-radius:2px;background:rgba(8,22,31,.88);color:#a9c2ca;font:10px var(--mono);letter-spacing:.08em}
+.combat-targets button.selected{border-color:#3ed3e7;color:#e5fcff;background:rgba(25,112,128,.3);box-shadow:0 0 12px #22c5dc33}
+.combat-inventory{margin:10px 0 12px;padding:11px 12px 9px;border:1px solid rgba(70,135,153,.32);background:linear-gradient(90deg,rgba(5,15,23,.78),rgba(9,24,34,.52))}
+.combat-inventory-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px;color:#d6e6eb;font:600 10px var(--mono);letter-spacing:.15em}
+.combat-inventory-heading small{color:#6f909e;font:9px var(--mono);letter-spacing:.06em}
+.combat-inventory-items{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;min-height:76px}
+.combat-item-card{--item-tint:#39cde0;position:relative;display:grid;grid-template-rows:42px auto auto;justify-items:center;align-content:center;gap:3px;width:82px;min-height:76px;padding:6px 5px 5px;border:1px solid rgba(113,144,157,.3);border-radius:3px;background:linear-gradient(180deg,rgba(14,30,40,.92),rgba(5,13,20,.95));color:#b7c9cf;cursor:pointer;transition:transform .16s,border-color .16s,box-shadow .16s,filter .16s}
+.combat-item-card img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--item-tint),transparent 60%))}
+.combat-item-card strong{font:600 9px var(--mono);letter-spacing:.04em;color:#d9e7eb}
+.combat-item-card small{font:8px var(--mono);letter-spacing:.05em;color:#718994}
+.combat-item-card.is-usable{border-color:color-mix(in srgb,var(--item-tint),transparent 32%);box-shadow:inset 0 0 16px color-mix(in srgb,var(--item-tint),transparent 91%)}
+.combat-item-card.is-usable img{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--item-tint),transparent 36%))}
+.combat-item-card.is-usable:hover,.combat-item-card.is-usable.is-selected{transform:translateY(-2px);border-color:var(--item-tint);box-shadow:0 0 16px color-mix(in srgb,var(--item-tint),transparent 72%),inset 0 0 18px color-mix(in srgb,var(--item-tint),transparent 88%)}
+.combat-item-card.is-selected:after{content:"ВЫБРАН";position:absolute;top:-7px;right:4px;padding:2px 4px;background:#0b202a;border:1px solid var(--item-tint);color:var(--item-tint);font:8px var(--mono);letter-spacing:.05em}
+.combat-item-card.is-unusable{filter:grayscale(1);opacity:.38;cursor:not-allowed;box-shadow:none}
+.combat-item-card:disabled{pointer-events:none}
+.combat-inventory-empty{align-self:center;color:#738b95;font:11px var(--mono)}
+.combat-item-hint{min-height:17px;margin-top:8px;color:#8fb5c1;font:10px/1.5 var(--sans)}
+.combat-actions{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
+.combat-actions button{min-height:42px;border-radius:2px}
+.combat-actions button:disabled{opacity:.32;filter:grayscale(1);cursor:not-allowed}
+.combat-actions button:nth-child(4):not(:disabled){border-color:#48cbdc;color:#d9faff;background:linear-gradient(180deg,#123744,#081c25)}
+.combat-controls-hint{margin-top:10px}
+body.combat-active .game-hud{opacity:.12;filter:brightness(.3)}
+@media(max-width:760px){
+ .combat-screen{padding:8px}
+ .combat-panel{width:100%;max-height:98vh;padding:12px}
+ .combat-arena{grid-template-columns:minmax(0,1fr);gap:8px;min-height:0}
+ .combat-monster-art{height:30vh;min-height:170px}
+ .combat-monster-art .combat-sprite{max-height:30vh}
+ .combat-inventory-heading{align-items:flex-start;flex-direction:column}
+ .combat-item-card{width:70px}
+ .combat-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .combat-actions button:last-child{grid-column:1/-1}
+ .initiative-row{grid-template-columns:78px minmax(0,1fr)}
+ .enemy-telegraph{grid-template-columns:105px 1fr}
+}
