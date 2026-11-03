@@ -9,6 +9,7 @@ type Osc = OscillatorType;
 export const simAudio = {
   ctx: null as AudioContext | null,
   ambientId: 0 as ReturnType<typeof setInterval> | number,
+  atmosphereId: 0 as ReturnType<typeof setInterval> | number,
   ambientSource: null as AudioBufferSourceNode | null,
   ambientFilter: null as BiquadFilterNode | null,
   ambientGain: null as GainNode | null,
@@ -173,6 +174,38 @@ export const simAudio = {
     this.tone(m, 38, 1.05, 'sawtooth', 0.05, 16);
     setTimeout(() => this.tone(m, 165, 0.66, 'sawtooth', 0.022, 28), 210);
   },
+  giggle(m: boolean) {
+    if (m || !this.ctx) return;
+    [0, 115, 260, 390].forEach((delay, index) => {
+      setTimeout(() => {
+        this.tone(false, 620 + (index % 2) * 170, 0.12, 'triangle', 0.012, 390 + index * 28);
+        this.noiseBurst(false, 0.09, 0.006, 'bandpass', 1850 + index * 120);
+      }, delay);
+    });
+  },
+  howl(m: boolean) {
+    this.noiseBurst(m, 1.9, 0.018, 'bandpass', 520);
+    this.tone(m, 310, 1.8, 'sine', 0.018, 72);
+    setTimeout(() => this.tone(m, 92, 1.1, 'triangle', 0.012, 48), 520);
+  },
+  scrape(m: boolean) {
+    this.noiseBurst(m, 0.9, 0.024, 'bandpass', 920);
+    this.tone(m, 68, 0.72, 'sawtooth', 0.012, 34);
+    setTimeout(() => this.noiseBurst(m, 0.42, 0.016, 'highpass', 2200), 260);
+  },
+  startAtmosphere(m: boolean, kind: string) {
+    if (this.atmosphereId) clearInterval(this.atmosphereId as number);
+    this.atmosphereId = 0;
+    if (m) return;
+    const indoor = kind.toLowerCase().includes('interior');
+    this.atmosphereId = window.setInterval(() => {
+      if (this.ambientMuted || !this.ctx || this.ctx.state !== 'running' || Math.random() > 0.34) return;
+      const roll = Math.random();
+      if (roll < 0.34) this.giggle(false);
+      else if (roll < 0.68) this.howl(false);
+      else this.scrape(false);
+    }, indoor ? 17500 : 14500);
+  },
   call(m: boolean) {
     this.noiseBurst(m, 0.38, 0.028, 'bandpass', 780);
     this.tone(m, 185, 0.34, 'triangle', 0.018, 125);
@@ -252,10 +285,13 @@ export const simAudio = {
     const gain = this.ctx.createGain();
     source.buffer = buffer;
     source.loop = true;
-    filter.type = kind.toLowerCase().includes('rain') ? 'bandpass' : 'lowpass';
-    filter.frequency.value = kind.toLowerCase().includes('rain') ? 1650 : 520;
-    filter.Q.value = kind.toLowerCase().includes('rain') ? 0.48 : 0.55;
-    gain.gain.value = kind.toLowerCase().includes('rain') ? 0.008 : 0.0055;
+    const isRain = kind.toLowerCase().includes('rain');
+    const isIndoor = kind.toLowerCase().includes('interior');
+    const isVeranda = kind.toLowerCase() === 'wood';
+    filter.type = isRain ? 'bandpass' : 'lowpass';
+    filter.frequency.value = isRain ? 1650 : isIndoor ? 760 : isVeranda ? 980 : 520;
+    filter.Q.value = isRain ? 0.48 : 0.55;
+    gain.gain.value = isRain ? 0.008 : isIndoor ? 0.0048 : isVeranda ? 0.006 : 0.0055;
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.analyser || this.master || this.ctx.destination);
@@ -277,20 +313,25 @@ export const simAudio = {
     this.roomToneGain = roomGain;
 
     // Sparse droplets / wooden ticks give the ambience a sense of space.
-    const rain = kind.toLowerCase().includes('rain');
+    const rain = isRain || isVeranda;
     const drip = () => {
       if (m || !this.ctx || this.ctx.state !== 'running') return;
       if (rain && Math.random() < 0.82) {
         const pitch = 1250 + Math.random() * 1850;
         this.noiseBurst(false, 0.035 + Math.random() * 0.045, 0.018, 'highpass', pitch);
         this.tone(false, pitch, 0.055 + Math.random() * 0.045, 'sine', 0.014);
+      } else if (isIndoor && Math.random() < 0.58) {
+        // Rain heard from inside: low, softened roof impacts and distant gutter drips.
+        this.noiseBurst(false, 0.11 + Math.random() * 0.12, 0.006, 'lowpass', 420 + Math.random() * 380);
+        this.tone(false, 95 + Math.random() * 55, 0.16, 'sine', 0.004);
       } else if (!rain && Math.random() < 0.28) {
         this.noiseBurst(false, 0.14, 0.009, 'bandpass', 420 + Math.random() * 900);
       }
     };
     drip();
-    this.ambientId = window.setInterval(drip, rain ? 1180 : 1750);
+    this.ambientId = window.setInterval(drip, isIndoor ? 2150 : rain ? 1180 : 1750);
     this.startMeter();
+    this.startAtmosphere(m, kind);
   },
 
   startMeter() {
@@ -320,6 +361,8 @@ export const simAudio = {
   stopAmbient() {
     if (this.ambientId) clearInterval(this.ambientId as number);
     this.ambientId = 0;
+    if (this.atmosphereId) clearInterval(this.atmosphereId as number);
+    this.atmosphereId = 0;
     if (this.meterFrame) cancelAnimationFrame(this.meterFrame);
     this.meterFrame = 0;
     try { this.ambientSource?.stop(); } catch { /* already stopped */ }

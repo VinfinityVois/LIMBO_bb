@@ -96,10 +96,13 @@ export class ImmersionScene {
     this.stage.addEventListener('mousemove', (e) => {
       if (this.diving) return;
       const r = this.stage.getBoundingClientRect();
-      this.parallax.setMouse(
-        ((e.clientX - r.left) / r.width) * 2 - 1,
-        ((e.clientY - r.top) / r.height) * 2 - 1
-      );
+      const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+      this.parallax.setMouse(nx, ny);
+      this.stage.querySelectorAll<HTMLElement>('.hotspot, .exit-btn').forEach((node) => {
+        const depth = node.classList.contains('door') ? 1.2 : node.classList.contains('loot') ? 0.85 : 0.65;
+        node.style.translate = `${nx * 22 * depth}px ${ny * 15 * depth}px`;
+      });
       // follow hover card near cursor if visible
       if (this.hoverCard.classList.contains('show')) {
         const x = e.clientX + 16;
@@ -131,6 +134,7 @@ export class ImmersionScene {
     this.updateZone();
     this.startWorldClock();
     this.startSoundDynamics();
+    simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
     this.startSanityDistortions();
     this.pulseMatrix('ok');
     this.notify('Ты внутри сектора · Рёкан', 'ok');
@@ -550,6 +554,7 @@ export class ImmersionScene {
   private async loadLoc(id: LocationId) {
     const loc = LOCATIONS[id];
     const ok = await this.parallax.loadImage(loc.image, loc.filter || '');
+    this.parallax.setWeather(loc.ambient.toLowerCase().includes('rain') || loc.ambient === 'wood');
     simAudio.startAmbient(this.state.muted, loc.ambient);
     const err = document.getElementById('stageError');
     if (err) {
@@ -580,6 +585,7 @@ export class ImmersionScene {
   private buildHotspots() {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
+      if (hs.id === 'hs_door' && this.state.flags.door_unlocked) continue;
       const allFinds = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
       const allFlags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
       if (allFinds.length && allFlags.length && allFinds.every((_, i) => !!this.state.flags[allFlags[i] || ''])) continue;
@@ -752,12 +758,14 @@ export class ImmersionScene {
         this.state.flags['used_' + this.state.selected] = true;
         this.state.flags['used_on_' + hs.id] = true;
         if (hs.useFlag) this.state.flags[hs.useFlag] = true;
+        if (hs.id === 'hs_door') this.state.flags.door_unlocked = true;
         this.state.selected = null;
         saveState(this.state);
         simAudio.door(this.state.muted);
         this.notify(hs.useSuccess || 'Сработало', 'ok');
         this.pulseMatrix('ok');
         this.buildExits();
+        this.buildHotspots();
         this.renderInv();
         this.syncHand();
         return;
@@ -964,68 +972,91 @@ export class ImmersionScene {
     const visual = document.getElementById('modalVisual');
     const actions = document.getElementById('modalActions');
     const note = document.getElementById('modalNote');
-    if (title) title.textContent = 'ЯКОРЬ RK-01 · ОТЧЁТ ПРОХОЖДЕНИЯ';
+    if (title) title.textContent = 'СЕКТОР RK-01 · ВЫХОД';
     if (visual) visual.innerHTML = '<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
-    const requirements = [
-      ['Записка прочитана', !!this.state.flags.note_read],
-      ['Дверь генкана открыта', !!this.state.flags.door_unlocked],
-      ['Нить найдена', !!this.state.flags.took_silk],
-      ['Колокольчик найден', !!this.state.flags.took_bell],
-      ['Оберег собран', !!this.state.flags.crafted_warding_charm],
-      ['Фонарь восстановлен', !!this.state.flags.crafted_ember_lantern],
-    ];
-    const ready = requirements.every(([,met]) => Boolean(met));
-    const allItems = Object.keys(ITEMS) as ItemId[];
-    const collected = allItems.filter(id => this.state.flags['collected_' + id] || this.state.inventory.includes(id) || this.state.flags['crafted_' + id]);
-    const used = allItems.filter(id => this.state.flags['used_' + id]);
-    const dangerous = (['black_seed','stitched_mask'] as ItemId[]);
-    const dangerousTaken = dangerous.filter(id => this.state.flags['collected_' + id] || this.state.inventory.includes(id));
-    const dangerousUsed = dangerous.filter(id => this.state.flags['used_' + id]);
     if (body) {
       body.innerHTML = '';
-      const intro = document.createElement('p');
-      intro.className = 'inspection-description';
-      intro.textContent = 'Это единственный выход из сектора. Цефей сверяет твои действия и определяет, что удалось сохранить.';
+      const intro=document.createElement('p');intro.className='inspection-description';
+      intro.textContent='Канал закрывается. Зафиксируй выход из сектора — Цефей сохранит состояние узла и перенесёт тебя за его пределы.';
       body.appendChild(intro);
-      const list = document.createElement('ul');
-      list.className = 'ending-requirements';
-      const rows: Array<[string,string]> = [
-        ['Найдено предметов', String(collected.length)],
-        ['Использовано предметов', String(used.length)],
-        ['Осталось в инвентаре', String(this.state.inventory.length)],
-        ['Опасные предметы взяты', dangerousTaken.map(id => ITEMS[id].name).join(', ') || 'нет'],
-        ['Опасные предметы применены', dangerousUsed.map(id => ITEMS[id].name).join(', ') || 'нет'],
-        ['Существо встречено', ['light','sound','dweller'].filter(k => this.state.flags['encounter_' + k]).join(', ') || 'нет'],
-        ['Существо получило удар', this.state.flags.combat_hit_taken ? 'да' : this.state.flags.combat_dodged ? 'нет · уклонение' : 'не проверено'],
-      ];
-      rows.forEach(([label,value]) => { const li=document.createElement('li'); li.textContent=label+': '+value; list.appendChild(li); });
-      body.appendChild(list);
-      const found = document.createElement('p'); found.className='ending-outcome-copy';
-      found.textContent='Собрано: '+(collected.map(id=>ITEMS[id].name).join(' · ') || 'ничего')+'.';
-      body.appendChild(found);
-      const spent = document.createElement('p'); spent.className='ending-outcome-copy';
-      spent.textContent='Применено: '+(used.map(id=>ITEMS[id].name).join(' · ') || 'ничего')+'.';
-      body.appendChild(spent);
-      const checklist=document.createElement('ul'); checklist.className='ending-requirements';
-      requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
-      body.appendChild(checklist);
-      const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
-      outcome.textContent=ready
-        ? 'Улик достаточно. Канал можно очистить, а память сектора сохранить.'
-        : 'Часть улик отсутствует. Канал будет разорван, а сектор потеряет часть памяти.';
-      body.appendChild(outcome);
+      const status=document.createElement('p');status.className='ending-outcome-copy';
+      status.textContent='Сбор данных завершится после выхода. Сейчас не будет ни оценки, ни списка находок — только закрытие сектора.';
+      body.appendChild(status);
     }
     if (actions) {
       actions.innerHTML='';
+      const ready=['note_read','door_unlocked','took_silk','took_bell','crafted_warding_charm','crafted_ember_lantern'].every(flag=>!!this.state.flags[flag]);
       const button=document.createElement('button');
       button.type='button';button.className='inspection-action primary ending-good';
-      button.textContent=ready?'ЗАВЕРШИТЬ УРОВЕНЬ · ОЧИСТИТЬ КАНАЛ':'ЗАВЕРШИТЬ УРОВЕНЬ · РАЗОРВАТЬ КАНАЛ';
+      button.textContent='ВЫЙТИ ИЗ СЕКТОРА';
       button.addEventListener('click',()=>this.chooseEnding(ready?'clear':'break'));
       actions.appendChild(button);
       const back=document.createElement('button');back.type='button';back.className='inspection-action quiet';
-      back.textContent='ВЕРНУТЬСЯ И ДОСОБРАТЬ УЛИКИ';back.addEventListener('click',()=>this.closeModal());actions.appendChild(back);
+      back.textContent='ОСТАТЬСЯ В СЕКТОРЕ';back.addEventListener('click',()=>this.closeModal());actions.appendChild(back);
     }
-    if (note) note.textContent='Исход определяется автоматически по найденным уликам. Дополнительного выхода или выбора «хороший/плохой» здесь нет.';
+    if (note) note.textContent='Сначала выход. Отчёт Цефея появится после завершения перехода.';
+  }
+
+  private showRunReport() {
+    const title=document.getElementById('modalTitle');
+    const body=document.getElementById('modalBody');
+    const visual=document.getElementById('modalVisual');
+    const actions=document.getElementById('modalActions');
+    const note=document.getElementById('modalNote');
+    if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
+    if(visual)visual.innerHTML='<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    const allItems=Object.keys(ITEMS) as ItemId[];
+    const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id));
+    const used=allItems.filter(id=>this.state.flags['used_'+id]);
+    const dangerous=['black_seed','stitched_mask'] as ItemId[];
+    const dangerousTaken=dangerous.filter(id=>this.state.flags['collected_'+id]||this.state.inventory.includes(id));
+    const dangerousUsed=dangerous.filter(id=>this.state.flags['used_'+id]);
+    const requirements:[string,boolean][]=[
+      ['Записка прочитана',!!this.state.flags.note_read],
+      ['Дверь генкана открыта',!!this.state.flags.door_unlocked],
+      ['Нить найдена',!!this.state.flags.took_silk],
+      ['Колокольчик найден',!!this.state.flags.took_bell],
+      ['Оберег собран',!!this.state.flags.crafted_warding_charm],
+      ['Фонарь восстановлен',!!this.state.flags.crafted_ember_lantern],
+    ];
+    if(body){
+      body.innerHTML='';
+      const intro=document.createElement('p');intro.className='inspection-description';
+      intro.textContent='Выход подтверждён. Теперь Цефей сверяет маршрут, находки и решения, принятые внутри сектора.';
+      body.appendChild(intro);
+      const list=document.createElement('ul');list.className='ending-requirements';
+      const rows:[string,string][]=[
+        ['Найдено предметов',String(collected.length)],
+        ['Применено предметов',String(used.length)],
+        ['Осталось в инвентаре',String(this.state.inventory.length)],
+        ['Опасные предметы взяты',dangerousTaken.map(id=>ITEMS[id].name).join(', ')||'нет'],
+        ['Опасные предметы применены',dangerousUsed.map(id=>ITEMS[id].name).join(', ')||'нет'],
+        ['Встреченные существа',['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).join(', ')||'нет'],
+        ['Получены ранения',this.state.flags.combat_hit_taken?'да':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
+        ['Отступление',this.state.flags.combat_fled?'да':'нет'],
+      ];
+      rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
+      body.appendChild(list);
+      const found=document.createElement('p');found.className='ending-outcome-copy';
+      found.textContent='Собрано: '+(collected.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(found);
+      const spent=document.createElement('p');spent.className='ending-outcome-copy';
+      spent.textContent='Применено: '+(used.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(spent);
+      const checklist=document.createElement('ul');checklist.className='ending-requirements';
+      requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
+      body.appendChild(checklist);
+      const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
+      outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
+      body.appendChild(outcome);
+    }
+    if(actions){
+      actions.innerHTML='';
+      const button=document.createElement('button');button.type='button';button.className='inspection-action primary ending-good';
+      button.textContent='ПРОДОЛЖИТЬ';button.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html';});actions.appendChild(button);
+    }
+    if(note)note.textContent='Отчёт сформирован после выхода. Состояние предметов и ключевые события сохранены.';
+    document.getElementById('simModal')?.classList.add('open');
+    document.body.classList.add('inspection-open');
+    simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
@@ -1067,9 +1098,11 @@ export class ImmersionScene {
     const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
       ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
       'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
-    this.notify(copy,'ok');
-    this.showSense('◇',copy,ending !== 'clear');
-    window.setTimeout(()=>{ window.location.href='/scene-ryokan.html'; },1800);
+    this.notify('ВЫХОД ИЗ СЕКТОРА · '+copy,'ok');
+    this.showSense('◇','Сектор покинут. Данные переданы Цефею.',ending !== 'clear');
+    this.stage.classList.add('sector-exit');
+    document.body.classList.add('sector-exit-active');
+    window.setTimeout(()=>this.showRunReport(),1100);
   }
 
   private closeModal() {
@@ -1272,7 +1305,12 @@ export class ImmersionScene {
     const el = document.createElement('div');
     el.id = 'sceneCreature';
     el.className = 'scene-creature scene-creature-' + this.threatKind;
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b>`;
+    const creatureLine = this.threatKind === 'light'
+      ? '«Не гаси свет. Я почти вспомнил твоё лицо».'
+      : this.threatKind === 'sound'
+        ? '«Тише. Я слышу, как ты думаешь».'
+        : '«Под полом осталось место. Для ещё одного».';
+    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b><span class="creature-dialogue">${creatureLine}</span>`;
     el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
