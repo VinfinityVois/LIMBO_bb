@@ -866,7 +866,11 @@ export class ImmersionScene {
           this.state.sanity = Math.max(0, this.state.sanity - 13);
           this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.', 'warn');
           simAudio.whisper(this.state.muted);
-        } else if (id === 'stitched_mask') {
+        } else if (id === 'copper_bell') {
+        this.enemyLegsSlowed = true;
+        this.initiative = Math.min(100, this.initiative + 24);
+        log = 'Глухой звон сбивает существо с ритма. Оно медлит.';
+      } else if (id === 'stitched_mask') {
           this.state.sanity = Math.max(0, this.state.sanity - 8);
           this.notify('Из маски донёсся короткий вдох.', 'warn');
           simAudio.maskWhisper(this.state.muted, 1.1);
@@ -1227,7 +1231,7 @@ export class ImmersionScene {
     this.combatTurn = 0; this.combatTarget = 'torso';
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
-    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'dweller') + '.png';
+    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger') + '.png';
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -1235,6 +1239,7 @@ export class ImmersionScene {
     const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null; if (dodge) dodge.disabled = true;
     document.body.classList.add('combat-active');
     this.renderCombatWounds();
+    this.renderCombatInventory();
     this.updateCombatHud('Существо приближается. Выбери часть тела и действие.');
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
     if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
@@ -1251,6 +1256,7 @@ export class ImmersionScene {
     const phase = document.getElementById('combatPhase'); if (phase) phase.textContent = this.dodgeReady ? 'ВРАГ АТАКУЕТ' : 'ТВОЙ ХОД';
     const ini = document.getElementById('initiativeFill') as HTMLElement | null; if (ini) ini.style.width = this.initiative + '%';
     const enemyIni = document.getElementById('enemyInitiativeFill') as HTMLElement | null; if (enemyIni) enemyIni.style.width = (100-this.initiative) + '%';
+    this.renderCombatInventory();
   }
 
   private selectCombatTarget(target: 'head'|'torso'|'arms'|'legs') {
@@ -1264,6 +1270,90 @@ export class ImmersionScene {
     const host = document.getElementById('combatWounds'); if (!host) return;
     const labels: Record<string,string> = {arm:'Ранена рука: урон снижен',leg:'Ранена нога: уклонение сложнее',bleed:'Кровотечение: -2 HP за ход'};
     host.textContent = this.state.injuries.map(x => labels[x] || x).join(' · ') || 'ТЯЖЁЛЫХ РАН НЕТ';
+  }
+
+  private combatItemInfo(id: ItemId): { usable: boolean; reason: string } {
+    const wounded = this.state.health < 100 || this.state.injuries.includes('bleed');
+    switch (id) {
+      case 'herbal_poultice':
+        return wounded
+          ? { usable: true, reason: '+22 здоровья и остановка кровотечения. Расходуется.' }
+          : { usable: false, reason: 'Пока не нужна: здоровье полное, кровотечения нет.' };
+      case 'medicinal_herbs':
+        return this.state.injuries.includes('bleed') || this.state.health <= 78
+          ? { usable: true, reason: 'Перевязать рану: +12 здоровья, остановить кровотечение. Расходуется.' }
+          : { usable: false, reason: 'Нужны ранения или потеря здоровья.' };
+      case 'warding_charm':
+        return this.state.sanity < 100
+          ? { usable: true, reason: '+16 рассудка. Одноразовый оберег.' }
+          : { usable: false, reason: 'Рассудок стабилен — оберег пока не сработает.' };
+      case 'matchbox':
+        return { usable: true, reason: 'Вспышка отвлечёт существо, даст время и нанесёт небольшой урон.' };
+      case 'ember_lantern':
+        return this.threatKind !== 'light'
+          ? { usable: true, reason: 'Огонь обожжёт существо и вернёт инициативу.' }
+          : { usable: false, reason: 'Слепой идёт на свет. Фонарь только ускорит его атаку.' };
+      case 'stitched_mask':
+        return { usable: true, reason: 'Чужой голос маски заставит существо отшатнуться, но отнимет 6 рассудка.' };
+      case 'copper_bell':
+        return this.threatKind === 'sound' || this.threatKind === 'dweller'
+          ? { usable: true, reason: 'Собьёт ритм атаки и замедлит существо.' }
+          : { usable: false, reason: 'Слепой реагирует на звук слишком резко. Звонок опасен.' };
+      default:
+        return { usable: false, reason: 'В этой схватке предмет не поможет. Сохрани его для исследования.' };
+    }
+  }
+
+  private renderCombatInventory() {
+    const host = document.getElementById('combatInventoryItems');
+    const hint = document.getElementById('combatItemHint');
+    const useButton = document.getElementById('combatItem') as HTMLButtonElement | null;
+    if (!host) return;
+    host.innerHTML = '';
+    let selectedUsable = false;
+    if (!this.state.inventory.length) {
+      const empty = document.createElement('p');
+      empty.className = 'combat-inventory-empty';
+      empty.textContent = 'В карманах пусто. Придётся полагаться на себя.';
+      host.appendChild(empty);
+    }
+    for (const id of this.state.inventory) {
+      const def = ITEMS[id];
+      const info = this.combatItemInfo(id);
+      const selected = this.state.selected === id;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'combat-item-card' + (info.usable ? ' is-usable' : ' is-unusable') + (selected ? ' is-selected' : '');
+      card.disabled = !info.usable || this.dodgeReady;
+      card.style.setProperty('--item-tint', def.color);
+      card.setAttribute('aria-label', def.name + '. ' + info.reason);
+      card.innerHTML = '<img src="' + this.itemAsset(id) + '" alt="" draggable="false"><strong></strong><small></small>';
+      card.querySelector('strong')!.textContent = def.short;
+      card.querySelector('small')!.textContent = info.usable ? 'ДОСТУПЕН' : 'НЕ ПОДХОДИТ';
+      card.title = def.name + ' — ' + info.reason;
+      if (info.usable) {
+        card.addEventListener('click', () => {
+          this.state.selected = id;
+          saveState(this.state);
+          this.renderInv();
+          this.renderCombatInventory();
+          const selectedHint = document.getElementById('combatItemHint');
+          if (selectedHint) selectedHint.textContent = def.name + ' · ' + info.reason;
+          simAudio.click(this.state.muted);
+        });
+      }
+      if (selected && info.usable) selectedUsable = true;
+      host.appendChild(card);
+    }
+    if (hint) {
+      if (this.state.selected) {
+        const info = this.combatItemInfo(this.state.selected);
+        hint.textContent = ITEMS[this.state.selected].name + ' · ' + info.reason;
+      } else {
+        hint.textContent = 'Выбери подсвеченный предмет. Серые предметы сейчас бесполезны.';
+      }
+    }
+    if (useButton) useButton.disabled = !selectedUsable || this.dodgeReady;
   }
 
   private combatAction(action: 'attack'|'guard'|'item'|'noise'|'flee') {
@@ -1292,10 +1382,16 @@ export class ImmersionScene {
     else if (action === 'item') {
       const id = this.state.selected;
       if (!id) { this.updateCombatHud('Выбери предмет в инвентаре, затем нажми ПРЕДМЕТ.'); return; }
+      const availability = this.combatItemInfo(id);
+      if (!availability.usable) { this.updateCombatHud(availability.reason); return; }
       if (id === 'herbal_poultice') {
         this.state.health = Math.min(100, this.state.health + 22);
         this.state.injuries = this.state.injuries.filter(x => x !== 'bleed');
         log = 'Ты затянул рану повязкой. +22 HP · кровотечение остановлено.';
+      } else if (id === 'medicinal_herbs') {
+        this.state.health = Math.min(100, this.state.health + 12);
+        this.state.injuries = this.state.injuries.filter(x => x !== 'bleed');
+        log = 'Ты растёр горькие листья и прижал к ране. +12 HP · кровотечение остановлено.';
       } else if (id === 'warding_charm') {
         this.state.sanity = Math.min(100, this.state.sanity + 16);
         log = 'Оберег поглотил шёпот. +16 рассудка.';
@@ -1314,9 +1410,9 @@ export class ImmersionScene {
       } else {
         this.updateCombatHud('Этот предмет нельзя безопасно использовать в бою. Попробуй другой.'); return;
       }
-      if (['herbal_poultice','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
+      if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
       this.state.selected = null;
-      this.renderInv(); this.renderVitals();
+      this.renderInv(); this.renderVitals(); this.renderCombatInventory();
     } else { this.noiseStartedAt=Date.now(); this.noiseDuration=12000; this.noisePeak=100; this.noiseUntil=this.noiseStartedAt+this.noiseDuration; this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
     if (this.monsterHp<=0) { this.finishCombat('Существо рухнуло во тьму. Победа.'); return; }
     this.combatTurn++; this.initiative=Math.max(0,this.initiative-22);
