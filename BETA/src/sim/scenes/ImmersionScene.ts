@@ -240,33 +240,57 @@ export class ImmersionScene {
     const overlay = document.createElement('section');
     overlay.id = 'systemConfirm';
     overlay.className = 'system-confirm';
+    overlay.dataset.mode = mode;
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
     overlay.innerHTML = `
-      <div class="system-confirm-panel">
-        <div class="system-confirm-kicker">ЦЕФЕЙ · СИСТЕМНОЕ ПОДТВЕРЖДЕНИЕ</div>
-        <h2>${isExit ? 'ЗАВЕРШИТЬ СЕАНС?' : 'ПЕРЕЗАПУСТИТЬ СЕКТОР?'}</h2>
-        <p>${isExit ? 'Текущий прогресс сохранится. Вернуться к досье и покинуть симуляцию?' : 'Текущий проход будет стёрт. Сектор запустится заново с полной последовательностью загрузки.'}</p>
-        <div class="system-confirm-actions">
+      <div class="wave-confirm-scene" aria-hidden="true">
+        <div class="wave-orbit orbit-a"></div><div class="wave-orbit orbit-b"></div>
+        <div class="wave-orbit orbit-c"></div>
+        <div class="wave-core"><i></i><b></b><span></span></div>
+        <div class="wave-horizon"></div>
+        <div class="wave-ribbon ribbon-a"></div><div class="wave-ribbon ribbon-b"></div>
+        <div class="wave-particles"></div>
+      </div>
+      <div class="wave-confirm-content">
+        <div class="system-confirm-kicker">ЦЕФЕЙ <span>///</span> ${isExit ? 'ЗАВЕРШЕНИЕ СЕАНСА' : 'ЦИКЛ ВОССТАНОВЛЕНИЯ'}</div>
+        <div class="wave-confirm-mark">${isExit ? '◌' : '↻'}</div>
+        <h2>${isExit ? 'ВЕРНУТЬСЯ ИЗ ПОГРУЖЕНИЯ?' : 'ВОЙТИ В СЕКТОР СНОВА?'}</h2>
+        <p>${isExit ? 'Текущий прогресс сохранён. Канал будет плавно закрыт, а досье останется доступным.' : 'Текущий проход будет сброшен. Накопленный архив кампании и награды останутся нетронутыми.'}</p>
+        <div class="wave-confirm-actions">
           <button type="button" data-confirm-cancel>ОСТАТЬСЯ</button>
-          <button type="button" class="danger" data-confirm-accept>${isExit ? 'ВЫЙТИ ИЗ СИМУЛЯЦИИ' : 'ПЕРЕЗАПУСК'}</button>
+          <button type="button" class="wave-confirm-accept" data-confirm-accept>${isExit ? 'ЗАВЕРШИТЬ СЕАНС' : 'ПЕРЕЗАПУСТИТЬ'}</button>
         </div>
+        <div class="wave-confirm-foot">${isExit ? 'СВЯЗЬ · СОХРАНЕНА' : 'СОСТОЯНИЕ · БУДЕТ ОБНОВЛЕНО'}</div>
       </div>`;
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('visible'));
-    overlay.querySelector('[data-confirm-cancel]')?.addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
+    const cancel = () => {
+      overlay.classList.add('dismissing');
+      window.setTimeout(() => overlay.remove(), 620);
+    };
+    overlay.querySelector('[data-confirm-cancel]')?.addEventListener('click', cancel);
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) cancel(); });
     overlay.querySelector('[data-confirm-accept]')?.addEventListener('click', () => {
+      overlay.classList.add(isExit ? 'wave-closing' : 'wave-restarting');
+      overlay.querySelector('.wave-confirm-content')?.classList.add('wave-confirm-status');
+      const heading = overlay.querySelector('h2');
+      const copy = overlay.querySelector('p');
+      const accept = overlay.querySelector('[data-confirm-accept]');
+      const cancelButton = overlay.querySelector('[data-confirm-cancel]');
+      if (heading) heading.textContent = isExit ? 'КАНАЛ ЗАКРЫВАЕТСЯ' : 'СЕКТОР ВОССТАНАВЛИВАЕТСЯ';
+      if (copy) copy.textContent = isExit
+        ? 'Сигнал возвращается к Цефею. До следующего погружения.'
+        : 'Память прохода очищается. Архив кампании сохранён.';
+      if (accept) accept.textContent = isExit ? 'СЕАНС ЗАВЕРШЁН' : 'СБРОС СОСТОЯНИЯ';
+      if (cancelButton) cancelButton.remove();
+      overlay.querySelector('.wave-confirm-foot')?.replaceChildren(document.createTextNode(isExit ? 'DISCONNECTING · RK-01' : 'REINITIALIZING · RK-01'));
       if (isExit) {
-        overlay.classList.add('leaving');
-        window.setTimeout(() => { window.location.href = '/scene-ryokan.html'; }, 320);
+        window.setTimeout(() => { window.location.href = '/scene-ryokan.html'; }, 1550);
       } else {
-        overlay.classList.add('rebooting');
         document.body.classList.add('system-reboot');
         sessionStorage.setItem('limbo-sector-reboot', '1');
-        const panel = overlay.querySelector('.system-confirm-panel');
-        if (panel) panel.innerHTML = '<div class="system-confirm-kicker">ЦЕФЕЙ · ПЕРЕЗАПУСК</div><h2>СЕАНС ЗАВЕРШАЕТСЯ</h2><p>Стираем состояние текущего прохода и восстанавливаем сектор. Подключение будет установлено заново.</p><div class="system-reboot-progress"><i></i></div>';
-        window.setTimeout(() => { resetSim(); window.location.reload(); }, 720);
+        window.setTimeout(() => { resetSim(); window.location.reload(); }, 1750);
       }
     });
   }
@@ -1889,7 +1913,7 @@ export class ImmersionScene {
       exit.type = 'button';
       exit.className = 'inspection-action quiet';
       exit.textContent = 'ВЫЙТИ ИЗ СИМУЛЯЦИИ';
-      exit.addEventListener('click', () => { window.location.href = '/scene-ryokan.html'; });
+      exit.addEventListener('click', () => this.showSystemConfirm('exit'));
       actions.appendChild(exit);
     }
     if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены. Повторное прохождение обновит результат RK-01, не стирая архив кампании.';
