@@ -39,3 +39,30 @@
 .sector-finished #notifyHost,.sector-finished #senseFeed{display:none!important}
 .sector-finished .sim-stage{pointer-events:none!important}
 @media(max-width:650px){#simModal.report-mode{padding:8px}#simModal.report-mode .sim-modal-panel{width:96vw!important;max-height:94vh!important}#simModal.report-mode .ending-requirements,#simModal:not(.report-mode) .exit-checklist{grid-template-columns:1fr}#simModal.report-mode .sector-rating{grid-template-columns:1fr auto}#simModal.report-mode .sector-rating b{grid-column:1/-1}#simModal.report-mode .sector-rewards{grid-template-columns:1fr}#simModal.report-mode .smp-h{padding:14px 42px}}
+
+
+/* RK-01 encounter polish */
+.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{
+  height: min(112%, 900px) !important;
+  top: -5% !important;
+  transform-origin: center bottom;
+}
+.spider-presence-0{width:min(54vw,700px)!important}
+.spider-presence-1{width:min(52vw,680px)!important;left:66%!important}
+.spider-presence-2{width:min(62vw,820px)!important;left:58%!important}
+.spider-presence-3{width:min(68vw,900px)!important;left:56%!important}
+.spider-dialogue{bottom:clamp(190px,27vh,330px)!important;z-index:10040!important;max-width:min(760px,88vw)!important}
+.spider-deadline{height:5px;position:relative;overflow:hidden;background:#152a34;margin:0 0 12px;display:flex;align-items:center}
+.spider-deadline i{position:absolute;inset:0 auto 0 0;width:100%;background:linear-gradient(90deg,#43d4d8,#e5a64b,#e64d64);transform-origin:left;animation:spider-deadline-drain linear forwards}
+.spider-deadline span{position:absolute;right:0;top:7px;color:#d58c8c;font:8px 'JetBrains Mono',monospace;letter-spacing:.12em}
+@keyframes spider-deadline-drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.inv-slot{position:relative}
+.inv-stack-count,.combat-stack-count{position:absolute;right:5px;bottom:4px;z-index:4;padding:2px 5px;border:1px solid rgba(83,218,230,.65);border-radius:10px;background:#06131ceF;color:#bdf8ff;font:700 10px 'JetBrains Mono',monospace}
+.combat-item-card{position:relative}
+.thought-journal{z-index:100050!important}
+.thought-journal-group-content{max-height:30vh;overflow:auto}
+#simModal:not(.report-mode) .smp-visual .ending-core-art{animation:anchor-core-pulse 3.2s ease-in-out infinite}
+@keyframes anchor-core-pulse{0%,100%{filter:drop-shadow(0 0 8px #27d5e955);transform:scale(.94) rotate(-2deg)}50%{filter:drop-shadow(0 0 24px #27d5e9aa);transform:scale(1.06) rotate(2deg)}}
+#sectorFinale .finale-ring{animation:finale-ring-expand 3.8s cubic-bezier(.12,.7,.18,1) forwards}
+@keyframes finale-ring-expand{0%{transform:scale(.15) rotate(0);opacity:0}25%{opacity:1}100%{transform:scale(2.8) rotate(140deg);opacity:0}}
+@media(max-width:720px){.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:86vw!important;height:86%!important;top:0!important}.spider-dialogue{bottom:clamp(170px,28vh,250px)!important}}
