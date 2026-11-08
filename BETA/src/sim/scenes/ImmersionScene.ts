@@ -445,9 +445,22 @@ export class ImmersionScene {
       ][stage][n];
       btn.append(strong,hint); btn.addEventListener('click',()=>this.chooseSpider(actions[n])); choices.appendChild(btn);
     }
-    panel.append(title,copy,choices); document.body.appendChild(panel); requestAnimationFrame(()=>panel.classList.add('visible'));
+    const timer = document.createElement('div'); timer.className = 'spider-deadline';
+    const timerBar = document.createElement('i'); timer.appendChild(timerBar);
+    const timerText = document.createElement('span'); timerText.textContent = stage === 3 ? 'АТАКА ЧЕРЕЗ 8 СЕК.' : 'ОТВЕТ НУЖЕН · 12 СЕК.';
+    timer.appendChild(timerText); panel.append(timer,title,copy,choices); document.body.appendChild(panel); requestAnimationFrame(()=>panel.classList.add('visible'));
+    const deadline = stage === 3 ? 8000 : stage === 2 ? 11000 : 12500;
+    timerBar.style.animationDuration = deadline + 'ms';
     if(this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
-    this.spiderDialogTimer=window.setTimeout(()=>{if(document.getElementById('spiderDialogue'))this.chooseSpider('ignore')},stage===3?9500:14500);
+    this.spiderDialogTimer=window.setTimeout(()=>{
+      if(!document.getElementById('spiderDialogue')) return;
+      if(stage===3){
+        this.state.sanity=Math.max(0,this.state.sanity-12);
+        this.state.health=Math.max(1,this.state.health-7);
+        this.notify('Паутинница решила за тебя. Нити рвутся с потолка — она нападает. −12 рассудка.','warn');
+        this.closeSpiderBeat(); this.spiderInCombat=true; saveState(this.state); this.renderVitals(); this.startCombat();
+      } else this.chooseSpider('timeout');
+    },deadline);
     simAudio.whisper(this.state.muted);
     this.showSense('◉',['Краем глаза замечена фигура между деревьями.','Твоя тень движется не в такт.','Что-то перекрыло путь.','Существо вышло из тени.'][stage],stage>=2);
   }
@@ -462,17 +475,20 @@ export class ImmersionScene {
     this.closeSpiderBeat();
     const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
     if(this.spiderStage===0) {
-      if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
+      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
+      else if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
       else if(action==='call'){this.state.flags.spider_called=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
-      if(action==='thread'&&hasThread){{ const at=this.state.inventory.indexOf('silk_thread'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
+      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-6);this.notify('Тень дёрнула за твою пятку. Она больше не ждёт. −6 рассудка.','warn');this.spiderNextAt=Date.now()+4500;}
+      else if(action==='thread'&&hasThread){{ const at=this.state.inventory.indexOf('silk_thread'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
       else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
       else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
-      if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
+      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Паутинница приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
+      else if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
       else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
       else if(action==='hand'){
         const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
@@ -697,18 +713,33 @@ export class ImmersionScene {
       rows.forEach(value => { const p = document.createElement('p'); p.className = 'thought-journal-row'; p.textContent = value; content.appendChild(p); });
       details.append(summary, content); list.appendChild(details);
     };
-    const ids = Object.keys(ITEMS) as ItemId[];
-    const collected = ids.filter(id => this.state.flags['collected_' + id] || this.state.inventory.includes(id));
-    const heldCounts = this.state.inventory.reduce((counts, id) => { counts[id] = (counts[id] || 0) + 1; return counts; }, {} as Partial<Record<ItemId, number>>);
-    const used = ids.filter(id => this.state.flags['used_' + id]);
-    const dangerous = collected.filter(id => id === 'black_seed' || id === 'stitched_mask');
-    const clues = Object.keys(this.state.flags).filter(key => /^(clue_|easter_|lore_|spider_story_heard|gutter_puzzle_solved|anchor_puzzle_solved)/.test(key) && this.state.flags[key]);
-    group('СОБРАННЫЕ ПРЕДМЕТЫ', collected.map(id => ITEMS[id].name + ((heldCounts[id] || 0) > 1 ? ' · В РУКАХ: ' + heldCounts[id] : '')), 'Пока ничего не найдено.');
-    group('ИСПОЛЬЗОВАННЫЕ ПРЕДМЕТЫ', used.map(id => ITEMS[id].name), 'Пока ничего не использовано.');
-    group('ОПАСНЫЕ НАХОДКИ', dangerous.map(id => ITEMS[id].name), 'Опасных предметов пока нет.');
-    group('ПОДСКАЗКИ И ПАСХАЛКИ', clues.map(key => key.replace(/^(clue_|easter_|lore_)/, '').replaceAll('_', ' ')), 'Пока нет подтверждённых зацепок.');
+    const notes: Array<[string,string]> = [
+      ['Записка кокэси', 'note_read'],
+      ['Записка о шёлковой нити', 'threaded_note'],
+      ['Ритм дождя', 'clue_rain_rhythm'],
+      ['Предупреждение о тени', 'clue_shadow_warning'],
+      ['Ответ эха', 'clue_echo_answered'],
+      ['Подсказка о половинах ключа', 'clue_key_halves']
+    ];
+    const noteRows = notes.filter(([,flag]) => !!this.state.flags[flag]).map(([label]) => label);
+    group('ЗАМЕТКИ', noteRows, 'Пока не найдено ни одной записки или зацепки.');
     const thoughts = memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory);
-    group('МЫСЛИ И НАБЛЮДЕНИЯ', thoughts, 'Пока пусто. Здесь будут оставаться важные мысли, подсказки и странные совпадения.');
+    group('МЫСЛИ', thoughts, 'Здесь будут только мысли, которые удалось удержать.');
+    const extra = document.createElement('details'); extra.className = 'thought-journal-group thought-journal-extra';
+    const summary = document.createElement('summary'); summary.textContent = 'ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ · ОПАСНОЕ И ИЗУЧЕННОЕ';
+    const content = document.createElement('div'); content.className = 'thought-journal-group-content';
+    const facts = [
+      ...(this.state.flags.black_seed_taken ? ['Чёрное семя: опасный предмет найден.'] : []),
+      ...(this.state.flags.used_black_seed ? ['Чёрное семя применено; последствия могут проявиться позже.'] : []),
+      ...(this.state.flags.stitched_mask_taken || this.state.inventory.includes('stitched_mask') ? ['Сшитая маска: опасный предмет находится или находился у субъекта.'] : []),
+      ...(this.state.flags.mask_voice_known ? ['Голос маски изучен: субъект распознаёт ответ изнутри.'] : []),
+      ...(this.state.flags.spider_story_heard ? ['История Паутинницы услышана: она удерживала дверь для ушедших.'] : []),
+      ...(this.state.flags.spider_hand_taken ? ['Принята протянутая рука: контакт с существом оставил след.'] : []),
+      ...(this.state.flags.anchor_puzzle_solved ? ['Якорь RK-01 стабилизирован.'] : [])
+    ];
+    if (!facts.length) { const empty=document.createElement('p');empty.className='thought-journal-empty';empty.textContent='Опасные свойства и особые знания пока не обнаружены.';content.appendChild(empty); }
+    facts.forEach(value=>{const p=document.createElement('p');p.className='thought-journal-row';p.textContent=value;content.appendChild(p);});
+    extra.append(summary,content); list.appendChild(extra);
   }
 
   notify(msg: string, kind: 'info' | 'warn' | 'ok' = 'info') {
@@ -1413,9 +1444,15 @@ export class ImmersionScene {
       });
       actions.appendChild(button);
     });
+    if (this.state.flags.anchor_puzzle_solved) {
+      const exit = document.createElement('button'); exit.type = 'button'; exit.className = 'inspection-action primary ending-good';
+      exit.textContent = 'ЗАВЕРШИТЬ СЕКТОР · ПЕРЕЙТИ К ВЫХОДУ';
+      exit.addEventListener('click', () => this.showEndingChoices());
+      actions.appendChild(exit);
+    }
     const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
     close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
-    if (note) note.textContent = 'Одноразовые вещи не расходуются на якоре. Если фонарь, оберег или колокольчик уже применялись в другом месте, якорь примет оставшийся след или найденную подсказку.';
+    if (note) note.textContent = 'Одноразовые вещи не расходуются повторно. Если фонарь, оберег или колокольчик уже применялись, якорь принимает сохранённый след или найденную подсказку.';
     document.getElementById('simModal')?.classList.add('open');
     document.body.classList.add('inspection-open');
   }
@@ -1658,12 +1695,14 @@ export class ImmersionScene {
     this.invEl.innerHTML = '';
     const count = document.getElementById('inventoryCount');
     if (count) count.textContent = this.state.inventory.length + ' / 12';
-    for (const id of this.state.inventory) {
+    const stacks = new Map<ItemId, number>();
+    this.state.inventory.forEach(id => stacks.set(id, (stacks.get(id) || 0) + 1));
+    for (const [id, quantity] of stacks) {
       const def = ITEMS[id];
       const slot = document.createElement('button');
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
-      slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
+      slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>${quantity > 1 ? '<b class="inv-stack-count">×' + quantity + '</b>' : ''}`;
       slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
       slot.draggable=true;
       slot.addEventListener('dragstart',(e)=>{e.dataTransfer?.setData('text/limbo-item',id);if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
@@ -1675,7 +1714,7 @@ export class ImmersionScene {
       });
       this.invEl.appendChild(slot);
     }
-    for (let i = this.state.inventory.length; i < 12; i++) {
+    for (let i = stacks.size; i < 12; i++) {
       const empty = document.createElement('div');
       empty.className = 'inv-slot inv-slot-empty';
       empty.setAttribute('aria-hidden', 'true');
@@ -1979,7 +2018,9 @@ export class ImmersionScene {
       empty.textContent = 'В карманах пусто. Придётся полагаться на себя.';
       host.appendChild(empty);
     }
-    for (const id of this.state.inventory) {
+    const stacks = new Map<ItemId, number>();
+    this.state.inventory.forEach(id => stacks.set(id, (stacks.get(id) || 0) + 1));
+    for (const [id, quantity] of stacks) {
       const def = ITEMS[id];
       const info = this.combatItemInfo(id);
       const selected = this.state.selected === id;
@@ -1989,7 +2030,7 @@ export class ImmersionScene {
       card.disabled = !info.usable || this.dodgeReady;
       card.style.setProperty('--item-tint', def.color);
       card.setAttribute('aria-label', def.name + '. ' + info.reason);
-      card.innerHTML = '<img src="' + this.itemAsset(id) + '" alt="" draggable="false"><strong></strong><small></small>';
+      card.innerHTML = '<img src="' + this.itemAsset(id) + '" alt="" draggable="false"><strong></strong><small></small>' + (quantity > 1 ? '<b class="combat-stack-count">×' + quantity + '</b>' : '');
       card.querySelector('strong')!.textContent = def.short;
       card.querySelector('small')!.textContent = info.usable ? 'ДОСТУПЕН' : 'НЕ ПОДХОДИТ';
       card.title = def.name + ' — ' + info.reason;
