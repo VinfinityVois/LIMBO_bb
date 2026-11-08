@@ -392,6 +392,12 @@ export class ImmersionScene {
   }
 
 
+  private spiderAngerLevel(): number {
+    const anger = ['spider_anger_call','spider_anger_turn','spider_anger_timeout','spider_anger_hand'].filter(key => !!this.state.flags[key]).length;
+    const calm = ['spider_calm_look','spider_calm_steady','spider_calm_bell','spider_calm_words'].filter(key => !!this.state.flags[key]).length;
+    return Math.max(0, anger - calm);
+  }
+
   // Spider arc: an uncanny apparition -> stalking shadow -> active hunter -> full encounter.
   private tickSpiderPresence(): boolean {
     if (document.getElementById('spiderDialogue')) return true;
@@ -402,7 +408,7 @@ export class ImmersionScene {
       const eligible = this.state.visited.length >= 1 && this.state.sanity <= 84;
       const pressure = Math.max(0, 84 - this.state.sanity);
       // Recurring apparition; low sanity makes the encounter much more likely.
-      const chance = Math.min(.58, .105 + pressure * .008 + (this.state.flags.black_seed_taken ? .07 : 0) + (this.state.flags.spider_called ? .035 : 0));
+      const chance = Math.min(.82, .105 + pressure * .008 + (this.state.flags.black_seed_taken ? .07 : 0) + (this.state.flags.spider_called ? .035 : 0) + this.spiderAngerLevel() * .075);
       if (eligible && Math.random() < chance) { this.openSpiderBeat(0); return true; }
       return false;
     }
@@ -415,7 +421,7 @@ export class ImmersionScene {
     const lines = [
       ['НЕЗНАКОМОЕ ДВИЖЕНИЕ','У края света стоит фигура. В ней почти угадывается человек — кожа, плечи, привычка держать голову чуть набок. Но лицо будто забыли закончить. «Ты тоже ищешь дверь?»','Посмотреть в ответ','Сделать вид, что не заметил','Тихо окликнуть'],
       ['ТЕНЬ ИДЁТ СЛЕДОМ','Тень отделилась от твоих ног. Она повторяет шаги с задержкой, а когда ты останавливаешься — продолжает идти ещё один короткий шаг. «Не оборачивайся. Тогда я смогу идти рядом».','Не оборачиваться','Оставить шёлковую нить','Резко обернуться'],
-      ['ОНА ПЕРЕСТАЛА ПРЯТАТЬСЯ','Из тени вытягиваются длинные пальцы. «Я знаю короткий путь. Я держала дверь, пока остальные уходили. Ты ведь не оставишь меня здесь снова?»','Спросить, кого она ждала','Позвонить в колокольчик','Принять протянутую руку'],
+      ['ОНА ПЕРЕСТАЛА ПРЯТАТЬСЯ','Из тени вытягиваются длинные пальцы. «Я знаю короткий путь. Я держала дверь, пока остальные уходили. Ты ведь не оставишь меня здесь снова?»','Спросить, кого она ждала','Позвонить в колокольчик','Сказать, что она не обязана ждать одна','Принять протянутую руку'],
       ['ТЕПЕРЬ У НЕЁ ЕСТЬ ТЕЛО','Существо выходит во весь рост. Нити уходят за его спину и исчезают под домом. «Ты так долго делал вид, что меня нет. Теперь останься. Я покажу, как здесь тихо».','Драться','Бежать, пока проход открыт','Позволить ей взять тебя за руку']
     ];
     this.spiderStage = stage;
@@ -433,31 +439,34 @@ export class ImmersionScene {
     const title = document.createElement('h3'); title.textContent = lines[stage][0];
     const copy = document.createElement('p'); copy.textContent = lines[stage][1];
     const choices = document.createElement('div'); choices.className = 'spider-choices';
-    const actions = [['look','ignore','call'],['steady','thread','turn'],['ask','bell','hand'],['fight','run','surrender']][stage];
-    for (let n=0;n<3;n++) {
+    const actions = [['look','ignore','call'],['steady','thread','turn'],['ask','bell','soothe','hand'],['fight','run','surrender']][stage];
+    const choiceHints = [
+      ['Не отводить взгляд и рассмотреть лицо.','Не провоцировать то, чего пока не понимаешь.','Проверить, ответит ли оно.'],
+      ['Сохранить спокойный шаг.','Предложить нить вместо руки.','Попытаться поймать её на движении.'],
+      ['Выслушать, не обещая ничего.','Звук может разорвать её форму.','Дать понять, что её больше не бросят одну.','Она обещает вывести тебя. Цена неизвестна.'],
+      ['Не дать ей приблизиться.','Шанс уйти есть, но она успеет задеть тебя.','Самый опасный выбор. Неизвестно, отпустит ли она.']
+    ][stage];
+    for (let n=0;n<actions.length;n++) {
       const btn=document.createElement('button'); btn.type='button'; btn.className='spider-choice';
       const strong=document.createElement('strong'); strong.textContent=lines[stage][n+2];
-      const hint=document.createElement('small'); hint.textContent=[
-        ['Не отводить взгляд и рассмотреть лицо.','Не провоцировать то, чего пока не понимаешь.','Проверить, ответит ли оно.'],
-        ['Сохранить спокойный шаг.','Предложить нить вместо руки.','Попытаться поймать её на движении.'],
-        ['Выслушать, не обещая ничего.','Звук может разорвать её форму.','Она обещает вывести тебя. Цена неизвестна.'],
-        ['Не дать ей приблизиться.','Шанс уйти есть, но она успеет задеть тебя.','Самый опасный выбор. Неизвестно, отпустит ли она.']
-      ][stage][n];
+      const hint=document.createElement('small'); hint.textContent=choiceHints[n];
       btn.append(strong,hint); btn.addEventListener('click',()=>this.chooseSpider(actions[n])); choices.appendChild(btn);
     }
     const timer = document.createElement('div'); timer.className = 'spider-deadline';
     const timerBar = document.createElement('i'); timer.appendChild(timerBar);
-    const timerText = document.createElement('span'); timerText.textContent = stage === 3 ? 'АТАКА ЧЕРЕЗ 8 СЕК.' : 'ОТВЕТ НУЖЕН · 12 СЕК.';
+    const anger = this.spiderAngerLevel();
+    const deadline = Math.max(stage === 3 ? 4300 : 6200, (stage === 3 ? 8000 : stage === 2 ? 11000 : 12500) - anger * 1350);
+    const timerText = document.createElement('span'); timerText.textContent = stage === 3 ? 'АТАКА ЧЕРЕЗ ' + (deadline / 1000).toFixed(1) + ' СЕК.' : 'ОТВЕТ НУЖЕН · ' + (deadline / 1000).toFixed(1) + ' СЕК.';
     timer.appendChild(timerText); panel.append(timer,title,copy,choices); document.body.appendChild(panel); requestAnimationFrame(()=>panel.classList.add('visible'));
-    const deadline = stage === 3 ? 8000 : stage === 2 ? 11000 : 12500;
     timerBar.style.animationDuration = deadline + 'ms';
     if(this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
     this.spiderDialogTimer=window.setTimeout(()=>{
       if(!document.getElementById('spiderDialogue')) return;
       if(stage===3){
-        this.state.sanity=Math.max(0,this.state.sanity-12);
-        this.state.health=Math.max(1,this.state.health-7);
-        this.notify('Паутинница решила за тебя. Нити рвутся с потолка — она нападает. −12 рассудка.','warn');
+        this.state.sanity=Math.max(0,this.state.sanity-(12+anger*2));
+        this.state.health=Math.max(1,this.state.health-(7+anger*2));
+        this.state.flags.spider_anger_timeout = true;
+        this.notify('Паутинница решила за тебя. Нити рвутся с потолка — она нападает. −' + (12+anger*2) + ' рассудка.','warn');
         this.closeSpiderBeat(); this.spiderInCombat=true; saveState(this.state); this.renderVitals(); this.startCombat();
       } else this.chooseSpider('timeout');
     },deadline);
@@ -476,26 +485,35 @@ export class ImmersionScene {
     const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
     if(this.spiderStage===0) {
       if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
-      else if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
-      else if(action==='call'){this.state.flags.spider_called=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
+      else if(action==='look'){this.state.flags.spider_recognized=true;this.state.flags.spider_calm_look=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
+      else if(action==='call'){this.state.flags.spider_called=true;this.state.flags.spider_anger_call=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
-      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-6);this.notify('Тень дёрнула за твою пятку. Она больше не ждёт. −6 рассудка.','warn');this.spiderNextAt=Date.now()+4500;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-6);this.notify('Тень дёрнула за твою пятку. Она больше не ждёт. −6 рассудка.','warn');this.spiderNextAt=Date.now()+4500;}
       else if(action==='thread'&&hasThread){{ const at=this.state.inventory.indexOf('silk_thread'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
-      else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
-      else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
+      else if(action==='steady'){this.state.flags.spider_stared_down=true;this.state.flags.spider_calm_steady=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
+      else {this.state.flags.spider_anger_turn=true;this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
-      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Паутинница приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Паутинница приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
       else if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
-      else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
+      else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.spider_calm_bell=true;this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
+      else if(action==='soothe'){
+        this.state.flags.spider_calm_words=true;
+        this.state.flags.spider_story_heard=true;
+        this.state.sanity=Math.min(100,this.state.sanity+4);
+        this.spiderStage=3;
+        this.spiderNextAt=Date.now()+52000;
+        this.notify('Ты говоришь, что её ожидание закончилось. Нити медленно опускаются. Она не становится доброй — лишь отступает. +4 рассудка.','ok');
+      }
       else if(action==='hand'){
+        this.state.flags.spider_anger_hand=true;
         const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
         this.state.flags.spider_hand_taken=true;
         if(Math.random()<risk){this.state.health=0;this.state.sanity=0;this.notify('«Я выведу тебя», — шепчет она. Пальцы смыкаются с другой стороны кожи.','warn');saveState(this.state);this.renderVitals();this.checkDefeat();return;}
         this.state.sanity=Math.max(0,this.state.sanity-22);this.notify('Она отпустила тебя. На ладони осталась чёрная нить под кожей.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+12000;
-      } else {this.state.sanity=Math.max(0,this.state.sanity-7);this.spiderStage=3;this.spiderNextAt=Date.now()+10000;this.notify('Тень рвётся к тебе. Теперь она больше не скрывается.','warn');}
+      } else {this.state.flags.spider_anger_hand=true;this.state.sanity=Math.max(0,this.state.sanity-7);this.spiderStage=3;this.spiderNextAt=Date.now()+10000;this.notify('Тень рвётся к тебе. Теперь она больше не скрывается.','warn');}
     } else {
       if(action==='fight'){this.spiderInCombat=true;this.startCombat();return;}
       if(action==='run'){
@@ -689,7 +707,7 @@ export class ImmersionScene {
     let panel = document.getElementById('thoughtJournal') as HTMLElement | null;
     if (!panel) {
       panel = document.createElement('section'); panel.id = 'thoughtJournal'; panel.className = 'thought-journal'; panel.setAttribute('aria-label', 'Журнал мыслей');
-      panel.innerHTML = '<div class="thought-journal-head"><strong>ПАМЯТЬ СУБЪЕКТА</strong><button type="button" aria-label="Закрыть">×</button></div><p class="thought-journal-intro">Мысли, подсказки и наблюдения, которые удалось удержать.</p><div class="thought-journal-list" id="thoughtJournalList"></div>';
+      panel.innerHTML = '<div class="thought-journal-head"><strong>МЫСЛИ И ЗАМЕТКИ</strong><button type="button" aria-label="Закрыть">×</button></div><p class="thought-journal-intro">Только то, что удалось заметить, прочитать или понять.</p><div class="thought-journal-list" id="thoughtJournalList"></div>';
       document.body.appendChild(panel);
       panel.querySelector('button')?.addEventListener('click', () => { panel?.classList.remove('open'); button?.setAttribute('aria-expanded', 'false'); });
     }
@@ -719,29 +737,24 @@ export class ImmersionScene {
   }
 
   private renderThoughtJournal() {
-    const count = document.getElementById('thoughtJournalCount'); const list = document.getElementById('thoughtJournalList'); const memories = this.state.memories || [];
-    if (count) count.textContent = String(memories.length); if (!list) return; list.innerHTML = '';
-    const group = (title: string, rows: string[], empty: string) => {
-      const details = document.createElement('details'); details.className = 'thought-journal-group';
-      const summary = document.createElement('summary'); summary.textContent = title + ' · ' + rows.length;
-      const content = document.createElement('div'); content.className = 'thought-journal-group-content';
-      if (!rows.length) { const p = document.createElement('p'); p.className = 'thought-journal-empty'; p.textContent = empty; content.appendChild(p); }
-      rows.forEach(value => { const p = document.createElement('p'); p.className = 'thought-journal-row'; p.textContent = value; content.appendChild(p); });
-      details.append(summary, content); list.appendChild(details);
-    };
+    const count = document.getElementById('thoughtJournalCount');
+    const list = document.getElementById('thoughtJournalList');
+    const memories = this.state.memories || [];
     const notes: Array<[string,string]> = [
       ['Записка кокэси', 'note_read'],
-      ['Записка о шёлковой нити', 'threaded_note'],
+      ['Записка у водостока', 'clue_note_gate'],
+      ['Записка под камнем', 'clue_note_garden'],
+      ['Записка под карнизом', 'clue_note_engawa'],
+      ['Записка у якоря', 'clue_note_storage'],
+      ['Подсказка о половинах ключа', 'clue_key_halves'],
       ['Ритм дождя', 'clue_rain_rhythm'],
       ['Предупреждение о тени', 'clue_shadow_warning'],
-      ['Ответ эха', 'clue_echo_answered'],
-      ['Подсказка о половинах ключа', 'clue_key_halves']
+      ['Ответ эха', 'clue_echo_answered']
     ];
     const noteRows = notes.filter(([,flag]) => !!this.state.flags[flag]).map(([label]) => label);
-    group('ЗАМЕТКИ', noteRows, 'Пока не найдено ни одной записки или зацепки.');
     const easterLabels: Record<string,string> = {
       easter_mirror: 'Отражение из другого времени',
-      spider_recognized: 'Тень узнала тебя',
+      spider_recognized: 'Паутинница узнала тебя',
       spider_story_heard: 'История Паутинницы',
       spider_thread_given: 'Нить, отданная тени',
       heard_steps: 'Шаги над потолком',
@@ -750,24 +763,61 @@ export class ImmersionScene {
       anchor_puzzle_solved: 'Стабилизация якоря'
     };
     const openedEaster = Object.keys(easterLabels).filter(key => !!this.state.flags[key]).map(key => easterLabels[key]);
-    group('ОТКРЫТЫЕ ПАСХАЛКИ', openedEaster, 'Пока ни одна пасхалка не раскрыта.');
-    const thoughts = memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory);
-    group('МЫСЛИ', thoughts, 'Здесь будут только мысли, которые удалось удержать.');
-    const extra = document.createElement('details'); extra.className = 'thought-journal-group thought-journal-extra';
-    const summary = document.createElement('summary'); summary.textContent = 'ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ · ОПАСНОЕ И ИЗУЧЕННОЕ';
-    const content = document.createElement('div'); content.className = 'thought-journal-group-content';
+    const total = memories.length + noteRows.length + openedEaster.length;
+    if (count) count.textContent = String(total);
+    if (!list) return;
+    list.innerHTML = '';
+    const group = (title: string, rows: string[]) => {
+      if (!rows.length) return;
+      const details = document.createElement('details');
+      details.className = 'thought-journal-group';
+      const summary = document.createElement('summary');
+      summary.textContent = title + ' · ' + rows.length;
+      const content = document.createElement('div');
+      content.className = 'thought-journal-group-content';
+      rows.forEach(value => {
+        const p = document.createElement('p');
+        p.className = 'thought-journal-row';
+        p.textContent = value;
+        content.appendChild(p);
+      });
+      details.append(summary, content);
+      list.appendChild(details);
+    };
+    group('ЗАМЕТКИ', noteRows);
+    group('ОТКРЫТЫЕ ПАСХАЛКИ', openedEaster);
+    group('МЫСЛИ', memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory));
     const facts = [
-      ...(this.state.flags.black_seed_taken ? ['Чёрное семя: опасный предмет найден.'] : []),
-      ...(this.state.flags.used_black_seed ? ['Чёрное семя применено; последствия могут проявиться позже.'] : []),
-      ...(this.state.flags.stitched_mask_taken || this.state.inventory.includes('stitched_mask') ? ['Сшитая маска: опасный предмет находится или находился у субъекта.'] : []),
-      ...(this.state.flags.mask_voice_known ? ['Голос маски изучен: субъект распознаёт ответ изнутри.'] : []),
-      ...(this.state.flags.spider_story_heard ? ['История Паутинницы услышана: она удерживала дверь для ушедших.'] : []),
-      ...(this.state.flags.spider_hand_taken ? ['Принята протянутая рука: контакт с существом оставил след.'] : []),
-      ...(this.state.flags.anchor_puzzle_solved ? ['Якорь RK-01 стабилизирован.'] : [])
+      ...(this.state.flags.black_seed_taken || this.state.flags.took_black_seed ? ['Чёрное семя: опасный объект найден. При контакте снижает рассудок; изучение показывает живые жилки под плёнкой.'] : []),
+      ...(this.state.flags.used_black_seed ? ['Чёрное семя применено. Последствия применения отмечены в журнале состояния.'] : []),
+      ...(this.state.flags.took_stitched_mask || this.state.inventory.includes('stitched_mask') ? ['Сшитая маска: опасный объект найдена. Надевание снижает рассудок, длительное ношение усиливает воздействие.'] : []),
+      ...(this.state.flags.mask_voice_known ? ['Голос маски изучен: субъект распознаёт ответ изнутри маски.'] : []),
+      ...(this.state.flags.spider_story_heard ? ['Паутинница: услышана история о двери, которую она удерживала для ушедших.'] : []),
+      ...(this.state.flags.spider_hand_taken ? ['Контакт с Паутинницей: принята протянутая рука; возможны последствия.'] : []),
+      ...(this.state.flags.anchor_puzzle_solved ? ['Якорь RK-01 стабилизирован: приняты сигналы предупреждения, защиты и света.'] : [])
     ];
-    if (!facts.length) { const empty=document.createElement('p');empty.className='thought-journal-empty';empty.textContent='Опасные свойства и особые знания пока не обнаружены.';content.appendChild(empty); }
-    facts.forEach(value=>{const p=document.createElement('p');p.className='thought-journal-row';p.textContent=value;content.appendChild(p);});
-    extra.append(summary,content); list.appendChild(extra);
+    if (facts.length) {
+      const extra = document.createElement('details');
+      extra.className = 'thought-journal-group thought-journal-extra';
+      const summary = document.createElement('summary');
+      summary.textContent = 'ДОПОЛНИТЕЛЬНЫЕ ДАННЫЕ · ОПАСНОЕ И ИЗУЧЕННОЕ · ' + facts.length;
+      const content = document.createElement('div');
+      content.className = 'thought-journal-group-content';
+      facts.forEach(value => {
+        const p = document.createElement('p');
+        p.className = 'thought-journal-row';
+        p.textContent = value;
+        content.appendChild(p);
+      });
+      extra.append(summary, content);
+      list.appendChild(extra);
+    }
+    if (!list.children.length) {
+      const empty = document.createElement('p');
+      empty.className = 'thought-journal-empty';
+      empty.textContent = 'Пока нет сохранённых мыслей и заметок.';
+      list.appendChild(empty);
+    }
   }
 
   notify(msg: string, kind: 'info' | 'warn' | 'ok' = 'info') {
@@ -840,7 +890,7 @@ export class ImmersionScene {
 
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
-      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
+      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
       ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
@@ -906,7 +956,8 @@ export class ImmersionScene {
         'hotspot' +
         (hs.complete ? ' complete' : '') +
         (hs.useWith ? ' door' : '') +
-        (hs.item ? ' loot' : '');
+        (hs.item ? ' loot' : '') +
+        (hs.art ? ' note-marker' : '');
       b.style.left = hs.x + '%';
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
@@ -919,9 +970,11 @@ export class ImmersionScene {
       b.dataset.hotspotId = hs.id;
       b.setAttribute('aria-label', (allFinds.length ? 'Осмотреть находку: ' : 'Осмотреть: ') + hs.label);
       if (inspected) b.classList.add('inspected');
-      const itemMarkup = inspected && firstAvailable
-        ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
-        : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
+      const itemMarkup = hs.art
+        ? `<span class="world-note-art"><img src="${hs.art}" alt="" draggable="false"></span>`
+        : inspected && firstAvailable
+          ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
+          : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
       b.innerHTML = itemMarkup + `<span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
       b.setAttribute('aria-label', 'Осмотреть: ' + hs.label);
       b.title = 'Можно осмотреть: ' + hs.label;
@@ -1163,6 +1216,10 @@ export class ImmersionScene {
       visual.innerHTML = '<div class="inspection-scan" aria-hidden="true"><span></span><i></i><b></b></div><small class="inspection-scan-label">СЛЕДЫ · RK-01</small>';
     };
     const showArea = () => {
+      if (hs.id === 'hs_anchor' && this.state.flags.anchor_puzzle_solved) {
+        this.showEndingChoices();
+        return;
+      }
       title.textContent = 'ОСМОТР · ' + hs.label;
       setSceneArt();
       body.innerHTML = '';
@@ -1244,8 +1301,28 @@ export class ImmersionScene {
             saveState(this.state);this.notify('Фрагмент сведений добавлен в память Цефея.','ok');this.closeModal();
           });
         }
+        if (hs.clueFlag && hs.clueText) {
+          addAction(this.state.flags[hs.clueFlag] ? 'ПЕРЕЧИТАТЬ ЗАПИСКУ' : 'ПРОЧИТАТЬ ЗАПИСКУ', 'primary', () => {
+            const letter = document.createElement('article');
+            letter.className = 'note-letter';
+            const image = document.createElement('img');
+            image.src = '/assets/game/items/мусор/sealed_letter.png';
+            image.alt = 'Сложенная записка';
+            image.draggable = false;
+            const text = document.createElement('p');
+            text.textContent = hs.clueText || '';
+            letter.append(image, text);
+            body.querySelector('.note-letter')?.remove();
+            body.appendChild(letter);
+            this.state.flags[hs.clueFlag!] = true;
+            this.rememberThought(hs.label + ': ' + hs.clueText);
+            saveState(this.state);
+            this.notify('Подсказка сохранена в заметках.', 'ok');
+            simAudio.whisper(this.state.muted);
+          });
+        }
         addAction('ЗАКРЫТЬ ОСМОТР', 'quiet', () => this.closeModal());
-        if (note) note.textContent = 'Мы запомнили это место.';
+        if (note) note.textContent = hs.clueFlag ? 'Записку можно прочитать и сохранить в заметках.' : 'Мы запомнили это место.';
       }
     };
 
@@ -1497,7 +1574,7 @@ export class ImmersionScene {
     if (body) {
       body.innerHTML = '';
       const intro=document.createElement('p');intro.className='inspection-description';
-      intro.textContent='Канал закрывается. Зафиксируй выход из сектора — Цефей сохранит состояние узла и перенесёт тебя за его пределы.';
+      intro.textContent='Якорь стабилизирован. Осталось подтвердить выход — после этого сектор закроется, а Цефей покажет итоговый отчёт.';
       body.appendChild(intro);
       const status=document.createElement('p');status.className='ending-outcome-copy';
       status.textContent='Перед выходом проверь обязательные следы. Можно уйти и с пропусками, но они повлияют на оценку и состояние канала.';
@@ -1522,7 +1599,7 @@ export class ImmersionScene {
       const ready=['note_read','door_unlocked','took_silk','took_bell','crafted_warding_charm','crafted_ember_lantern'].every(flag=>!!this.state.flags[flag]);
       const button=document.createElement('button');
       button.type='button';button.className='inspection-action primary ending-good';
-      button.textContent='ВЫЙТИ ИЗ СЕКТОРА';
+      button.textContent='ЗАВЕРШИТЬ СЕКТОР И ПОЛУЧИТЬ ОТЧЁТ';
       button.addEventListener('click',()=>this.chooseEnding(ready?'clear':'break'));
       actions.appendChild(button);
       const back=document.createElement('button');back.type='button';back.className='inspection-action quiet';
@@ -1534,7 +1611,7 @@ export class ImmersionScene {
   private showSectorFinale() {
     document.getElementById('sectorFinale')?.remove();
     const overlay=document.createElement('section');overlay.id='sectorFinale';overlay.className='sector-finale';
-    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>СОЕДИНЕНИЕ РАЗОРВАНО</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
+    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-sigil" aria-hidden="true"><svg viewBox="0 0 240 240"><circle class="sigil-orbit" cx="120" cy="120" r="82"/><circle class="sigil-inner" cx="120" cy="120" r="54"/><path class="sigil-mark" d="M120 28 L143 91 L212 120 L143 149 L120 212 L97 149 L28 120 L97 91 Z"/><path class="sigil-core" d="M120 74 L164 120 L120 166 L76 120 Z"/><path class="sigil-cut" d="M120 44 V196 M44 120 H196"/></svg></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>СОЕДИНЕНИЕ РАЗОРВАНО</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
     document.body.appendChild(overlay);requestAnimationFrame(()=>overlay.classList.add('active'));
     window.setTimeout(()=>{overlay.classList.add('resolved');const p=overlay.querySelector('p');if(p)p.textContent='СУБЪЕКТ ПОКИНУЛ РЁКАН';},1900);
     window.setTimeout(()=>{overlay.classList.add('fade-out');window.setTimeout(()=>{overlay.remove();this.showRunReport();},850);},4100);
@@ -1575,8 +1652,11 @@ export class ImmersionScene {
         ['Осталось в инвентаре',String(this.state.inventory.length)],
         ['Опасные предметы взяты',dangerousTaken.map(id=>ITEMS[id].name).join(', ')||'нет'],
         ['Опасные предметы применены',dangerousUsed.map(id=>ITEMS[id].name).join(', ')||'нет'],
-        ['Встреченные существа',['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).join(', ')||'нет'],
-        ['Получены ранения',this.state.flags.combat_hit_taken?'да':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
+        ['Встреченные существа',[
+          ...(['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).map(k=>({light:'Слепой',sound:'Слушатель',dweller:'Жилец'} as Record<string,string>)[k])),
+          ...(this.state.flags.spider_seen_0||this.state.flags.spider_seen_1||this.state.flags.spider_seen_2||this.state.flags.spider_seen_3?['Паутинница']:[])
+        ].join(', ')||'нет'],
+        ['Получены ранения',this.state.injuries.length ? this.state.injuries.join(', ') : this.state.flags.combat_hit_taken?'да · детали не сохранены':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
         ['Отступление',this.state.flags.combat_fled?'да':'нет'],
       ];
       rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
@@ -1621,7 +1701,11 @@ export class ImmersionScene {
       if (!memoryList.children.length) { const li = document.createElement('li'); li.textContent = 'В памяти не осталось отдельных записей.'; memoryList.appendChild(li); }
       body.appendChild(memoryList);
       const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
-      outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
+      outcome.textContent=this.state.ending==='clear'
+        ? 'Итог: канал очищен. Память сектора сохранена.'
+        : this.state.ending==='bind'
+          ? 'Итог: связь закреплена. Маска сохранена как часть канала; голос сектора может отвечать в следующих узлах.'
+          : 'Итог: канал разорван. Часть памяти сектора потеряна.';
       body.appendChild(outcome);
     }
     if(actions){
@@ -1727,7 +1811,7 @@ export class ImmersionScene {
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>${quantity > 1 ? '<b class="inv-stack-count">×' + quantity + '</b>' : ''}`;
-      slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
+      slot.title = def.name + ' · ' + quantity + ' шт. · ЛКМ выбрать · ПКМ осмотр';
       slot.draggable=true;
       slot.addEventListener('dragstart',(e)=>{e.dataTransfer?.setData('text/limbo-item',id);if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
       slot.addEventListener('click', () => this.onInv(id));
@@ -1816,13 +1900,23 @@ export class ImmersionScene {
           ryokan_key: 'ПРИМЕНЕНИЕ: открыть соответствующий замок на локации',
           wet_key_half: 'ПРИМЕНЕНИЕ: соединить со второй половиной ключа',
           wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
-          paper_lantern_shard: 'ПРИМЕНЕНИЕ: осмотреть источники света и отражающие поверхности',
+          paper_lantern_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью для оберега или со спичками для фонаря · расходуется 1 осколок',
+          mirror_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью, чтобы собрать зеркальную линзу · расходуется 1 осколок',
+          mirror_lens: 'ПРИМЕНЕНИЕ: приложить к потемневшему стеклу в коридоре',
           kokeshi_note: 'ПРИМЕНЕНИЕ: изучить; подсказка к тайнику или механизму',
           silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
         };
         let hint = preview.querySelector('.selected-copy small');
         if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
-        if (hint) hint.textContent = help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        const stackCount = this.state.inventory.filter(item => item === this.state.selected).length;
+        const recipes = RECIPES.filter(recipe => recipe.a === this.state.selected || recipe.b === this.state.selected);
+        const recipeHints = recipes.map(recipe => {
+          const partner = recipe.a === this.state.selected ? recipe.b : recipe.a;
+          return ITEMS[partner].name + ' → ' + ITEMS[recipe.result].name;
+        });
+        if (hint) hint.textContent = (help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить') +
+          (stackCount > 1 ? ' · В СТЕКЕ: ' + stackCount + ' · расходуется по 1 шт.' : '') +
+          (recipeHints.length ? ' · СОЕДИНИТЬ: ' + recipeHints.join(' / ') : '');
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
       }
@@ -2172,7 +2266,9 @@ export class ImmersionScene {
     if(dodge){dodge.disabled=false;dodge.classList.add('dodge-window');}
     const phase=document.getElementById('combatPhase'); if(phase) phase.textContent=this.threatKind==='light'?'ПРЫЖОК · УКЛОНИСЬ':this.threatKind==='sound'?'ЗВУКОВОЙ ИМПУЛЬС · ЗАЩИТИСЬ':'ЗАХВАТ · УКЛОНИСЬ';
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack'); void art?.clientWidth; art?.classList.add('attack');
-    const windowMs=this.state.injuries.includes('leg')?900:this.enemyLegsSlowed?1900:this.threatKind==='light'?1450:this.threatKind==='sound'?1750:1600;
+    const windowMs=this.spiderInCombat
+      ? Math.max(620, 1600 - this.spiderAngerLevel() * 230)
+      : this.state.injuries.includes('leg')?900:this.enemyLegsSlowed?1900:this.threatKind==='light'?1450:this.threatKind==='sound'?1750:1600;
     this.enemyAttackStartedAt = Date.now();
     this.enemyAttackWindowMs = windowMs;
     const bar=document.getElementById('enemyTelegraph') as HTMLElement|null; if(bar){bar.style.transition='none';bar.style.width='100%';requestAnimationFrame(()=>{bar.style.transition='width '+windowMs+'ms linear';bar.style.width='0%';});}
@@ -2483,7 +2579,14 @@ export class ImmersionScene {
       if (recipe) {
         this.state.flags['used_' + recipe.a] = true;
         this.state.flags['used_' + recipe.b] = true;
-        { const a=this.state.inventory.indexOf(recipe.a); if(a>=0)this.state.inventory.splice(a,1); const b=this.state.inventory.indexOf(recipe.b); if(b>=0)this.state.inventory.splice(b,1); }
+        const a=this.state.inventory.indexOf(recipe.a);
+        const b=this.state.inventory.indexOf(recipe.b);
+        if (a < 0 || b < 0) {
+          this.notify('Для соединения нужен хотя бы один экземпляр каждого предмета.', 'warn');
+          this.state.selected = null; this.renderInv(); return;
+        }
+        this.state.inventory.splice(Math.max(a,b),1);
+        this.state.inventory.splice(Math.min(a,b),1);
         if (!this.state.inventory.includes(recipe.result)) this.state.inventory.push(recipe.result);
         this.state.flags['crafted_' + recipe.result] = true;
         this.state.selected = recipe.result;
