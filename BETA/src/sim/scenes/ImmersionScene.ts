@@ -1128,7 +1128,9 @@ export class ImmersionScene {
         // Exit is a hard audio boundary: do not play completion or ambient cues after closure.
       } else this.notify('Элемент принят. Якорь ждёт следующий сигнал.', 'ok');
       saveState(this.state);
-      this.renderInv(); this.renderVitals(); this.openModal(hs); this.showAnchorPuzzle(hs);
+      this.renderInv(); this.renderVitals();
+      if (solved) this.showEndingChoices();
+      else { this.openModal(hs); this.showAnchorPuzzle(hs); }
       return;
     }
     const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
