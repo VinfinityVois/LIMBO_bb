@@ -1089,8 +1089,12 @@ export class ImmersionScene {
     saveState(this.state);
     this.buildHotspots();
     if (hs.complete && !this.state.selected) {
-      this.openModal(hs);
-      this.showAnchorPuzzle(hs);
+      if (this.state.flags.anchor_puzzle_solved) {
+        this.showEndingChoices();
+      } else {
+        this.openModal(hs);
+        this.showAnchorPuzzle(hs);
+      }
       return;
     }
     this.spawnInspectBurst(hs.x, hs.y);
@@ -1105,7 +1109,7 @@ export class ImmersionScene {
         { id: 'ember_lantern', flag: 'anchor_step_lantern', thought: 'Свет замыкает последовательность. Якорь больше не зовёт — он отвечает.' },
       ];
       const next = sequence.find(step => !this.state.flags[step.flag]);
-      if (!next) { this.state.selected = null; this.openModal(hs); return; }
+      if (!next) { this.state.selected = null; saveState(this.state); this.showEndingChoices(); return; }
       if (selected !== next.id) {
         this.notify('Якорь не принимает этот предмет. Порядок важен: звук → защита → свет.', 'warn');
         return;
