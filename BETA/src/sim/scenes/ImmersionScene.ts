@@ -141,6 +141,7 @@ export class ImmersionScene {
     this.bindChrome();
     if (this.state.completed) {
       this.diving = false;
+      document.body.classList.add('sector-finished');
       this.showRunReport();
       return;
     }
@@ -1681,7 +1682,9 @@ export class ImmersionScene {
     const visual=document.getElementById('modalVisual');
     const actions=document.getElementById('modalActions');
     const note=document.getElementById('modalNote');
-    document.getElementById('simModal')?.classList.add('report-mode');
+    const reportModal = document.getElementById('simModal');
+    reportModal?.classList.add('report-mode', 'open');
+    if (reportModal) reportModal.style.display = 'flex';
     if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
     if(visual)visual.innerHTML='<div class="ending-core-art report-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
     const allItems=Object.keys(ITEMS) as ItemId[];
@@ -1848,7 +1851,7 @@ export class ImmersionScene {
     this.stage.classList.add('sector-exit');
     document.body.classList.add('sector-finished');
     document.body.classList.add('sector-exit-active');
-    this.showSectorFinale();
+    this.showRunReport();
   }
 
   private closeModal() {
