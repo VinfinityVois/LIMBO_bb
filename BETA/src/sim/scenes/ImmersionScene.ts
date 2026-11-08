@@ -1136,7 +1136,10 @@ export class ImmersionScene {
           arrow.className = 'discovery-arrow';
           arrow.textContent = '↗';
           row.append(art,copy,arrow);
-          row.addEventListener('click', () => showItem(id));
+          row.addEventListener('click', () => {
+            const originalIndex = found.findIndex((candidate, index) => candidate === id && (!flags[index] || !this.state.flags[flags[index]]));
+            showItem(id, originalIndex);
+          });
           list.appendChild(row);
         });
         body.appendChild(list);
@@ -1182,9 +1185,9 @@ export class ImmersionScene {
       }
     };
 
-    const showItem = (id: ItemId) => {
+    const showItem = (id: ItemId, selectedIndex?: number) => {
       const item = ITEMS[id];
-      const index = found.indexOf(id);
+      const index = selectedIndex ?? found.indexOf(id);
       const flag = flags[index] || hs.takenFlag;
       title.textContent = item?.name || 'НЕИЗВЕСТНАЯ НАХОДКА';
       if (visual) visual.innerHTML = '<img class="item-art-image inspection-item-art" src="' + this.itemAsset(id) + '" alt="">';
