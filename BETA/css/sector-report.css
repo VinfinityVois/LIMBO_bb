@@ -122,3 +122,36 @@
  .note-letter img{width:56px;height:72px}
  #sectorFinale .finale-sigil{width:min(64vw,250px);top:38%}
 }
+
+
+/* Interaction visibility: world objects always sit above route labels and transient toasts. */
+.hotspot-layer{z-index:34!important;pointer-events:none}
+.hotspot-layer .hotspot{pointer-events:auto;position:absolute;z-index:2}
+.hotspot-layer .hotspot.note-marker{z-index:8;width:max(7%,var(--note-hit-width,7%))!important;min-width:44px;min-height:58px;overflow:visible!important}
+.hotspot-layer .hotspot.note-marker .world-note-art{inset:-34%;z-index:1}
+.hotspot-layer .hotspot.note-marker .hotspot-world-label{z-index:2}
+.exit-layer{z-index:18!important;pointer-events:none}
+.exit-layer .exit-btn{pointer-events:auto;z-index:1}
+.hotspot-layer .hotspot.anchor-target{z-index:12!important;min-width:74px;min-height:74px;border:1px solid rgba(69,220,196,.28)!important;background:radial-gradient(circle,rgba(31,190,172,.08),transparent 72%)!important}
+.hotspot-layer .hotspot.anchor-target:hover{border-color:rgba(69,220,196,.9)!important;box-shadow:0 0 28px rgba(40,220,190,.32)!important}
+#notifyHost{z-index:28!important;pointer-events:none}
+#hoverCard{z-index:42!important;pointer-events:none}
+.interact-prompt{z-index:40!important;pointer-events:none}
+
+/* Stable note-reading layout: image and readable text never compete for a narrow column. */
+.sim-modal-panel{display:flex;flex-direction:column;max-height:min(86vh,820px);overflow:hidden}
+.smp-body-row{min-height:0;overflow:auto;align-items:stretch}
+.smp-b{min-width:0;overflow-wrap:anywhere}
+.smp-visual .note-reading-art{display:block;width:min(100%,210px);height:190px;object-fit:contain;padding:10px;box-sizing:border-box}
+.smp-b.note-reading{display:flex;align-items:stretch}
+.note-letter{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;width:100%;min-width:0;box-sizing:border-box;grid-template-columns:none;overflow-wrap:anywhere}
+.note-letter-stamp{flex:0 0 100%;font:600 9px/1.4 var(--mono);letter-spacing:.16em;color:#d2b77e}
+.note-letter p{flex:1 1 180px;min-width:0;margin:0;white-space:normal;overflow-wrap:anywhere;font-size:clamp(13px,1.1vw,15px);line-height:1.85}
+.smp-a{flex:0 0 auto}
+@media(max-width:700px){
+  .smp-body-row{display:flex;flex-direction:column;gap:8px}
+  .smp-visual{flex:0 0 auto;min-height:120px;max-height:150px}
+  .smp-visual .note-reading-art{height:130px}
+  .note-letter{padding:10px}
+  .note-letter p{flex-basis:100%}
+}
