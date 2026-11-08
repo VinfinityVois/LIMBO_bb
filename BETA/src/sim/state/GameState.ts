@@ -10,6 +10,8 @@ export type LocationId =
 
 export type ItemId =
   | 'paper_lantern_shard'
+  | 'mirror_shard'
+  | 'mirror_lens'
   | 'wet_key_half'
   | 'wet_key_other'
   | 'ryokan_key'
@@ -24,9 +26,12 @@ export type ItemId =
   | 'black_seed'
   | 'stitched_mask';
 
+export interface DroppedItem { id: ItemId; location: LocationId; x: number; y: number; }
+
 export interface GameState {
   location: LocationId;
   inventory: ItemId[];
+  droppedItems: DroppedItem[];
   flags: Record<string, boolean>;
   visited: LocationId[];
   selected: ItemId | null;
@@ -39,6 +44,8 @@ export interface GameState {
   maskWorn: boolean;
   maskExposure: number;
   injuries: string[];
+  /** Persistent notes and inner thoughts collected during this run. */
+  memories: string[];
 }
 
 const SAVE_KEY = 'limbo_sim_ryokan_v1';
@@ -47,6 +54,7 @@ export function defaultState(): GameState {
   return {
     location: 'gate',
     inventory: [],
+    droppedItems: [],
     flags: {},
     visited: ['gate'],
     selected: null,
@@ -59,6 +67,7 @@ export function defaultState(): GameState {
     maskWorn: false,
     maskExposure: 0,
     injuries: [],
+    memories: [],
   };
 }
 
@@ -71,6 +80,7 @@ export function loadState(): GameState {
       ...defaultState(),
       ...p,
       inventory: Array.isArray(p.inventory) ? p.inventory : [],
+      droppedItems: Array.isArray(p.droppedItems) ? p.droppedItems.filter((x): x is DroppedItem => !!x && typeof x.id === 'string' && typeof x.location === 'string' && typeof x.x === 'number' && typeof x.y === 'number') : [],
       flags: p.flags || {},
       visited: p.visited?.length ? p.visited : ['gate'],
       selected: p.selected ?? null,
@@ -81,6 +91,7 @@ export function loadState(): GameState {
       maskWorn: p.maskWorn === true,
       maskExposure: typeof p.maskExposure === 'number' ? Math.max(0, p.maskExposure) : 0,
       injuries: Array.isArray(p.injuries) ? p.injuries.filter((x): x is string => typeof x === 'string') : [],
+      memories: Array.isArray(p.memories) ? p.memories.filter((x): x is string => typeof x === 'string').slice(-80) : [],
       muted: localStorage.getItem('limbo_sim_mute') === '1',
     };
   } catch {
@@ -93,6 +104,7 @@ export function saveState(s: GameState): void {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       location: s.location,
       inventory: s.inventory,
+      droppedItems: s.droppedItems,
       flags: s.flags,
       visited: s.visited,
       selected: s.selected,
@@ -104,6 +116,7 @@ export function saveState(s: GameState): void {
       maskWorn: s.maskWorn,
       maskExposure: s.maskExposure,
       injuries: s.injuries,
+      memories: s.memories,
     }));
   } catch { /* */ }
 }

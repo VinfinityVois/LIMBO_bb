@@ -6,6 +6,7 @@
   <title>Погружение · Рёкан</title>
   <link rel="stylesheet" href="/css/sim.css" />
   <link rel="stylesheet" href="/css/experience-polish.css" />
+  <link rel="stylesheet" href="/css/sector-report.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   <!-- НОВОЕ: стили интерфейса по макету, подключать последними -->
   <link rel="stylesheet" href="/css/madness-fx.css" />   <!-- в <head>, последним, после sanity-effects.css -->
@@ -203,6 +204,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 <link rel="stylesheet" href="/css/inspection-gameplay.css" />
 <link rel="stylesheet" href="/css/sim-audio-visual-fix.css" />
 <link rel="stylesheet" href="/css/sim-story-readability.css" />
+<link rel="stylesheet" href="/css/combat-inventory-ui.css" />
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
@@ -313,7 +315,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
   <section class="combat-screen" id="combatScreen" aria-hidden="true">
     <div class="combat-backdrop"></div>
     <div class="combat-panel">
-      <div class="combat-top"><span class="hud-eyebrow">КОНТАКТ · RK-01</span><strong id="combatPhase">СУЩЕСТВО НАПАДАЕТ</strong><button id="combatFlee" type="button">ОТСТУПИТЬ</button></div>
+      <div class="combat-top"><div class="combat-location"><strong id="combatLocationLabel">ДЕРЕВНЯ РЁКАН</strong><span id="combatLocationSub">СТАРЫЙ РЁКАН · ДВОР</span></div><span class="hud-eyebrow">КОНТАКТ · RK-01</span><strong id="combatPhase">ТВОЙ ХОД</strong><button id="combatFlee" type="button">ОТСТУПИТЬ</button></div>
       <div class="combat-arena">
         <div class="combat-monster-art" id="combatMonsterArt"><img id="combatMonsterSprite" class="combat-sprite" src="/assets/game/creatures/listener.png" alt=""><i></i><b></b></div>
         <div class="combat-stats"><strong id="combatMonsterName">СЛУШАТЕЛЬ</strong><span>ЗДОРОВЬЕ СУЩЕСТВА <b id="monsterHpText">42 / 42</b></span><div class="combat-bar monster"><i id="monsterHpFill"></i></div><p id="combatLog">Оно приближается.</p></div>
@@ -327,12 +329,16 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
       <div class="combat-targets"><span>ЦЕЛЬ УДАРА</span>
         <button type="button" data-hit-zone="head">ГОЛОВА</button><button type="button" data-hit-zone="torso" class="selected">КОРПУС</button><button type="button" data-hit-zone="arms">РУКИ</button><button type="button" data-hit-zone="legs">НОГИ</button>
       </div>
+      <section class="combat-inventory" aria-label="Предметы, доступные в бою">
+        <div class="combat-inventory-heading"><span>СНАРЯЖЕНИЕ</span><small>ЦВЕТНОЕ — МОЖНО ПРИМЕНИТЬ · СЕРОЕ — НЕ ПОДХОДИТ</small></div>
+        <div class="combat-inventory-items" id="combatInventoryItems"></div>
+        <p class="combat-item-hint" id="combatItemHint">Нажми на цветной предмет, чтобы применить его. Серые предметы сейчас бесполезны.</p>
+      </section>
       <div class="combat-actions" aria-label="Боевые действия">
         <button id="combatAttack" type="button" title="Клавиша 1 · A"><kbd>1</kbd> АТАКОВАТЬ</button>
         <button id="combatDodge" type="button" disabled title="Клавиша 2 · Пробел"><kbd>2</kbd> УКЛОНИТЬСЯ</button>
         <button id="combatGuard" type="button" title="Клавиша 3 · G"><kbd>3</kbd> ЗАЩИТИТЬСЯ</button>
-        <button id="combatItem" type="button" title="Клавиша 4 · I"><kbd>4</kbd> ПРЕДМЕТ</button>
-        <button id="combatNoise" type="button" title="Отвлекающий шум"><kbd>5</kbd> ОТВЛЕЧЬ</button>
+        <button id="combatNoise" type="button" title="Отвлекающий шум"><kbd>4</kbd> ОТВЛЕЧЬ</button>
       </div>
       <div class="combat-controls-hint">ВЫБЕРИ ЗОНУ ПОПАДАНИЯ · ЖМИ УКЛОНИТЬСЯ В МОМЕНТ УДАРА · ESC — ОТСТУПИТЬ</div>
     </div>

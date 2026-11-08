@@ -960,3 +960,176 @@ body.combat-active .game-hud { opacity:.22; }
 .combat-actions button kbd{display:inline-grid;min-width:19px;height:19px;margin-right:6px;border-color:#4c8190;background:#07141d;color:#d9f4f7;font-size:9px}
 .combat-actions button:disabled{opacity:.34;filter:grayscale(1)}
 .combat-actions button.dodge-window kbd{border-color:#6af1f5;color:#fff;box-shadow:0 0 9px #48e1e588}
+
+
+/* ── LIMBO atmosphere and interaction pass ── */
+.scene-creature {
+  left: 43% !important;
+  top: 17% !important;
+  width: clamp(150px, 18vw, 250px) !important;
+  height: min(70vh, 620px) !important;
+  z-index: 9 !important;
+  transform: translateY(18px) scale(.94) !important;
+  filter: drop-shadow(0 0 32px rgba(226,74,89,.52));
+}
+.scene-creature.visible { transform: translateY(0) scale(1) !important; }
+.scene-creature .creature-sprite {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:contain; object-position:center bottom; z-index:3;
+  filter:brightness(1.12) contrast(1.12) drop-shadow(0 12px 22px #000b);
+}
+.scene-creature:before { opacity:.15; }
+.scene-creature .creature-eyes { z-index:4; }
+.creature-dialogue {
+  position:absolute; left:50%; bottom:12%; z-index:5;
+  width:max-content; max-width:min(280px,42vw);
+  padding:8px 12px; border:1px solid rgba(70,205,221,.55);
+  background:rgba(3,10,17,.9); color:#c5e7ec;
+  font:10px/1.45 var(--mono); letter-spacing:.025em;
+  box-shadow:0 8px 28px #000a,0 0 18px #42c8db22;
+  transform:translateX(-50%);
+  animation:creature-whisper 5.8s ease-in-out infinite;
+}
+.creature-dialogue:before {
+  content:""; position:absolute; left:50%; top:-5px; width:8px;height:8px;
+  background:#07121a;border-left:1px solid #46cddd;border-top:1px solid #46cddd;
+  transform:translateX(-50%) rotate(45deg);
+}
+@keyframes creature-whisper { 0%,100%{opacity:.72} 45%{opacity:1} }
+body.sector-exit-active .sim-stage {
+  animation:sector-exit 1.05s cubic-bezier(.7,0,.2,1) forwards;
+}
+body.sector-exit-active .game-hud,
+body.sector-exit-active .world-hud,
+body.sector-exit-active .hotspot-layer,
+body.sector-exit-active .exit-layer { transition:opacity .55s ease; opacity:0 !important; }
+@keyframes sector-exit {
+  0%{filter:brightness(1) saturate(1);transform:scale(1)}
+  65%{filter:brightness(1.8) saturate(.4);transform:scale(1.035)}
+  100%{filter:brightness(0);transform:scale(1.08)}
+}
+@media(max-width:700px) {
+  .scene-creature { left:34% !important; width:clamp(130px,34vw,190px) !important;height:52vh !important; }
+  .creature-dialogue { max-width:46vw;font-size:8px; }
+}
+
+.creature-dialogue.dialogue-arrive { animation:dialogue-arrive .42s cubic-bezier(.2,.8,.2,1) both, creature-whisper 5.8s ease-in-out .42s infinite; }
+@keyframes dialogue-arrive { from{opacity:0;filter:blur(4px);transform:translate(-50%,7px)} to{opacity:1;filter:blur(0);transform:translate(-50%,0)} }
+
+
+/* ── The Spider: four escalating manifestations ── */
+.spider-presence{
+  position:absolute;z-index:24;left:50%;top:8%;width:min(38vw,520px);height:84%;
+  display:flex;align-items:flex-end;justify-content:center;pointer-events:none;
+  opacity:0;transform:translate(-50%,14px) scale(.985);
+  transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.7,.2,1);
+}
+.spider-presence.visible{opacity:1;transform:translate(-50%,0) scale(1)}
+.spider-presence img{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;user-select:none}
+.spider-presence-0{width:min(26vw,350px);filter:drop-shadow(0 0 18px rgba(120,178,181,.15))}
+.spider-presence-0 img{opacity:.58;filter:brightness(.72) contrast(1.08) saturate(.65)}
+.spider-presence-1{left:72%;top:13%;width:min(22vw,300px);height:70%;filter:blur(.35px) drop-shadow(0 0 15px rgba(0,0,0,.7))}
+.spider-presence-1 img{opacity:.38;filter:brightness(.18) contrast(1.6) saturate(0);mix-blend-mode:multiply}
+.spider-presence-2{left:55%;top:5%;width:min(34vw,460px);height:88%;filter:drop-shadow(0 0 24px rgba(28,12,22,.8))}
+.spider-presence-2 img{opacity:.78;filter:brightness(.48) contrast(1.45) saturate(.7)}
+.spider-presence-3{left:54%;top:0;width:min(42vw,590px);height:96%;filter:drop-shadow(0 12px 28px rgba(0,0,0,.9)) drop-shadow(0 0 20px rgba(134,34,53,.22))}
+.spider-presence-3 img{opacity:1;filter:brightness(.88) contrast(1.2) saturate(.82)}
+.spider-presence-1.visible{animation:spider-stalk 7s ease-in-out infinite}
+.spider-presence-2.visible{animation:spider-lunge 2.4s ease-in-out infinite}
+@keyframes spider-stalk{0%,100%{transform:translate(-50%,0) translateX(0)}50%{transform:translate(-50%,0) translateX(-18px)}}
+@keyframes spider-lunge{0%,100%{transform:translate(-50%,0) scale(1)}48%{transform:translate(-50%,0) scale(1.045)}}
+.spider-dialogue{
+  position:fixed;z-index:10020;left:50%;bottom:clamp(18px,4vh,48px);
+  width:min(660px,calc(100vw - 32px));padding:18px 20px 16px;
+  transform:translate(-50%,16px);opacity:0;pointer-events:none;
+  border:1px solid rgba(77,190,205,.58);
+  background:linear-gradient(145deg,rgba(3,14,22,.97),rgba(3,8,14,.98));
+  box-shadow:0 18px 70px #000d,0 0 28px rgba(44,190,210,.12);
+  color:#c5d9df;backdrop-filter:blur(12px);
+}
+.spider-dialogue.visible{opacity:1;transform:translate(-50%,0);pointer-events:auto;transition:opacity .3s ease,transform .35s ease}
+.spider-dialogue h3{margin:0 0 8px;color:#61d9e7;font:700 11px var(--mono);letter-spacing:.19em}
+.spider-dialogue p{margin:0 0 14px;font:13px/1.65 var(--sans);color:#c1cdd1}
+.spider-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.spider-choice{min-height:58px;padding:9px 10px;text-align:left;border:1px solid rgba(103,153,170,.34);background:rgba(9,26,36,.86);color:#d4e7ec;cursor:pointer}
+.spider-choice:hover,.spider-choice:focus-visible{border-color:#45d0e2;background:rgba(17,57,68,.9);outline:none;box-shadow:0 0 16px #38c5d522}
+.spider-choice strong{display:block;margin-bottom:5px;font:600 10px var(--mono);letter-spacing:.04em}
+.spider-choice small{display:block;color:#7f9ca7;font:10px/1.35 var(--sans)}
+@media(max-width:720px){
+ .spider-presence{width:58vw;left:50%}.spider-presence-1{left:70%;width:40vw}.spider-presence-3{width:68vw}
+ .spider-dialogue{bottom:10px;padding:13px}
+ .spider-dialogue p{font-size:11px}
+ .spider-choices{grid-template-columns:1fr}
+ .spider-choice{min-height:44px}
+}
+
+/* Expanded shadows, finale and world item drops */
+.spider-presence{width:min(54vw,720px);height:100%;top:0;left:50%}
+.spider-presence-0{width:min(40vw,520px);height:92%}
+.spider-presence-1{left:72%;width:min(38vw,500px);height:90%}
+.spider-presence-2{left:55%;width:min(50vw,660px);height:100%}
+.spider-presence-3{left:53%;width:min(58vw,760px);height:100%}
+.spider-dialogue{bottom:clamp(190px,24vh,290px);z-index:10040}
+.dropped-world-item{position:absolute;z-index:19;left:50%;top:50%;width:clamp(44px,5vw,76px);height:clamp(48px,6vw,84px);padding:4px;display:grid;place-items:center;border:1px solid #56d5e555;background:#06131bd9;cursor:pointer;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px #000b);transition:.2s}
+.dropped-world-item:hover{border-color:#61efff;transform:translate(-50%,-56%) scale(1.1);box-shadow:0 0 22px #36d7e966}
+.dropped-world-item img{max-width:100%;max-height:100%;object-fit:contain}
+.dropped-world-item span{position:absolute;top:100%;left:50%;transform:translateX(-50%);padding:3px 6px;background:#030a10ef;color:#b9d9df;font:8px var(--mono);white-space:nowrap}
+.hotspot.drop-target{border:1px dashed #7cecff;background:#4bd8e52b;box-shadow:0 0 26px #4bd8e577}
+.ending-item-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:14px 0}
+.ending-item-card{display:grid;grid-template-rows:76px auto auto;gap:5px;align-items:center;justify-items:center;padding:8px;border:1px solid #42616b55;background:#07141bd9;text-align:center;min-width:0}
+.ending-item-card img{width:100%;height:76px;object-fit:contain;filter:drop-shadow(0 3px 8px #000)}
+.ending-item-card strong{font:600 9px var(--mono);color:#c5dce1}
+.ending-item-card small{font:8px var(--mono);letter-spacing:.08em;color:#55d9c1}
+.ending-item-card.missing{opacity:.45;filter:grayscale(1)}
+.ending-item-card.missing small{color:#a18a8a}
+.sector-finale{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;overflow:hidden;background:#02060b;opacity:0;transition:opacity .7s ease}
+.sector-finale.active{opacity:1}
+.sector-finale.fade-out{opacity:0;filter:blur(8px);transition:opacity .8s,filter .8s}
+.finale-noise{position:absolute;inset:-30%;opacity:.2;background:repeating-linear-gradient(0deg,transparent 0 3px,#8eeaff12 4px),radial-gradient(ellipse at center,#124150 0,transparent 55%);animation:finale-static 1.8s steps(3) infinite}
+.finale-ring{position:absolute;width:min(52vw,560px);aspect-ratio:1;border:1px solid #43d8e977;border-radius:50%;box-shadow:0 0 45px #1fcde533,inset 0 0 45px #1fcde522;transform:scale(.15);opacity:0}
+.sector-finale.active .finale-ring{animation:finale-ring-in 2.7s cubic-bezier(.2,.7,.1,1) forwards}
+.finale-ring:before,.finale-ring:after{content:"";position:absolute;inset:12%;border:1px dashed #63dce955;border-radius:50%;animation:finale-spin 14s linear infinite}
+.finale-ring:after{inset:28%;border-style:solid;animation-direction:reverse}
+.finale-copy{position:relative;text-align:center;padding:30px;opacity:0;transform:translateY(18px);transition:opacity .8s .35s,transform .8s .35s}
+.sector-finale.active .finale-copy{opacity:1;transform:none}
+.finale-copy small{color:#59dcec;font:10px var(--mono);letter-spacing:.3em}
+.finale-copy h1{margin:18px 0 10px;color:#e9faff;font:700 clamp(24px,5vw,54px) var(--mono);letter-spacing:.16em;text-shadow:0 0 26px #47d9ef77}
+.finale-copy p{color:#d57b8c;font:600 12px var(--mono);letter-spacing:.22em}
+.finale-copy span{display:block;margin-top:28px;color:#718f9c;font:9px var(--mono);letter-spacing:.18em}
+.sector-finale.resolved .finale-copy p{color:#64e2d0}
+@keyframes finale-ring-in{0%{transform:scale(.15) rotate(-40deg);opacity:0}35%{opacity:1}100%{transform:scale(1.12) rotate(25deg);opacity:.5}}
+@keyframes finale-spin{to{transform:rotate(360deg)}}
+@keyframes finale-static{0%,100%{transform:translate(0,0)}30%{transform:translate(1%,-.5%)}70%{transform:translate(-.7%,.8%)}}
+body.sector-finished .game-hud,body.sector-finished .world-hud,body.sector-finished .hotspot-layer,body.sector-finished .exit-layer,body.sector-finished .notify-host{pointer-events:none}
+@media(max-width:720px){.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:76vw;height:78%;top:2%}.spider-dialogue{bottom:clamp(150px,25vh,220px)}.ending-item-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* Replace all CSS-drawn monster silhouettes with the authored transparent creature PNGs. */
+.threat-silhouette:before,.threat-silhouette:after,.threat-silhouette span,.threat-silhouette i,
+.scene-creature:before,.scene-creature:after,.scene-creature .creature-eyes,.scene-creature>i,.scene-creature>b,
+.combat-monster-art:before,.combat-monster-art:after{content:none!important;display:none!important;}
+.scene-creature{width:min(30vw,390px);height:min(72vh,680px);left:54%;top:auto;bottom:0;display:flex;align-items:flex-end;justify-content:center;}
+.scene-creature .creature-sprite{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 25px #000d);}
+.threat-silhouette{background:transparent url('/assets/game/creatures/lodger.png') center/contain no-repeat;}
+.sanity-shadow,.false-presence{position:absolute;z-index:9;display:block;width:min(25vw,340px);height:min(58vh,560px);object-fit:contain;object-position:center bottom;pointer-events:none;opacity:0;filter:brightness(.28) saturate(.65) drop-shadow(0 8px 24px #000);animation:png-shadow-drift 4.2s ease-in-out forwards;}
+.sanity-shadow{left:var(--shadow-x);top:var(--shadow-y)}
+.false-presence{left:50%;top:22%;transform:translateX(-50%);width:min(34vw,440px);height:min(68vh,650px);animation:png-shadow-false 2.6s ease-out forwards;}
+@keyframes png-shadow-drift{12%{opacity:.46}65%{opacity:.34;transform:translate(-10px,4px) scale(1.03)}100%{opacity:0;transform:translate(18px,-4px) scale(1.06)}}
+@keyframes png-shadow-false{12%{opacity:.3}60%{opacity:.2}100%{opacity:0;transform:translateX(-50%) scale(1.04)}}
+
+
+/* Keep the journal above the HUD and outside its overflow/stacking contexts. */
+.thought-journal{position:fixed!important;right:24px!important;bottom:calc(var(--hud-h,170px) + 24px)!important;z-index:99999!important;width:min(520px,calc(100vw - 32px))!important;max-height:min(68vh,620px)!important;display:flex!important;opacity:0;visibility:hidden;transform:translateY(8px);pointer-events:none;background:linear-gradient(145deg,rgba(4,17,27,.99),rgba(2,9,16,.99));border:1px solid rgba(70,190,210,.7);box-shadow:0 18px 60px rgba(0,0,0,.7)}
+.thought-journal.open{opacity:1!important;visibility:visible!important;transform:translateY(0);pointer-events:auto!important}
+.thought-journal-toggle{position:relative;z-index:100000;cursor:pointer;pointer-events:auto}
+
+/* Physical note props placed directly in the location art. */
+.hotspot.note-marker{border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.hotspot.note-marker:hover{border:0!important;background:transparent!important;box-shadow:none!important}
+.hotspot .world-note-art{position:absolute;inset:-12%;display:grid;place-items:center;pointer-events:none;transition:transform .2s,filter .2s;filter:drop-shadow(0 5px 8px rgba(0,0,0,.85)) drop-shadow(0 0 7px rgba(72,204,221,.22))}
+.hotspot .world-note-art img{display:block;width:100%;height:100%;object-fit:contain;opacity:1;filter:contrast(1.06) saturate(.78)}
+.hotspot.note-marker:hover .world-note-art,.hotspot.note-marker:focus-visible .world-note-art{transform:translateY(-4px) rotate(-2deg) scale(1.12);filter:drop-shadow(0 8px 12px #000) drop-shadow(0 0 12px rgba(76,220,231,.6))}
+.hotspot.note-marker .hotspot-world-label{top:calc(100% + 8px)}
+.inv-slot{position:relative}
+.inv-stack-count{position:absolute;right:3px;top:3px;z-index:5;padding:1px 4px;border:1px solid rgba(83,218,230,.7);border-radius:9px;background:rgba(3,14,22,.95);color:#c8fbff;font:700 9px 'JetBrains Mono',monospace}
+.note-letter{margin:12px 0 4px;padding:13px 15px;border:1px solid rgba(163,137,94,.38);background:linear-gradient(135deg,rgba(35,29,22,.75),rgba(13,18,22,.88));color:#d8cbb3;font:12px/1.7 'Space Grotesk',sans-serif;white-space:pre-line}

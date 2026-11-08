@@ -18,6 +18,10 @@ export interface HotspotDef {
   useFlag?: string;
   useSuccess?: string;
   complete?: boolean;
+  /** Scene artwork for a physical note pinned or left in the location. */
+  art?: string;
+  clueFlag?: string;
+  clueText?: string;
 }
 
 export const HOTSPOTS: HotspotDef[] = [
@@ -114,6 +118,68 @@ export const HOTSPOTS: HotspotDef[] = [
     label: 'Сшитая маска',
     examine: 'На полке сидит бумажная маска. Чёрная нить прошивает глазницы. Изнутри доносится слабое дыхание.',
     item: 'stitched_mask', takenFlag: 'took_stitched_mask',
+  },
+  {
+    id: 'hs_rain_gutter', location: 'gate', x: 78, y: 28, w: 7, h: 12,
+    label: 'Водосточный желоб',
+    examine: 'Дождевая вода идёт по желобу против уклона. Под краем вырезаны три короткие черты и одна длинная — тот же ритм, который возвращает эхо.',
+  },
+  {
+    id: 'hs_footprint_wall', location: 'garden', x: 8, y: 34, w: 8, h: 14,
+    label: 'Следы на стене',
+    examine: 'Мокрые отпечатки ладоней тянутся вверх по стене. Между ними повторяется знак закрытого глаза. Под последним отпечатком процарапано: «Не всякая тень хочет войти».',
+  },
+  {
+    id: 'hs_mirror_fragments', location: 'hall', x: 68, y: 70, w: 10, h: 12,
+    label: 'Осколки разбитого зеркала',
+    examine: 'Под шкафом лежат два похожих фрагмента. Каждый отражает разное время: один — комнату до пожара, другой — после. Можно забрать оба.',
+    items: ['mirror_shard', 'mirror_shard'],
+    takenFlags: ['took_mirror_shard_a', 'took_mirror_shard_b'],
+  },
+  {
+    id: 'hs_mirror_panel', location: 'hall', x: 78, y: 38, w: 9, h: 16,
+    label: 'Потемневшее стекло',
+    examine: 'В стекле отражается коридор, которого нет за спиной. На миг видна фигура с перевязанными руками. Если направить сюда восстановленный свет, отражение исчезает.',
+  },
+  {
+    id: 'hs_note_gate',
+    location: 'gate',
+    x: 88, y: 43, w: 4.8, h: 10,
+    label: 'Мокрая записка у ворот',
+    examine: 'Между доской и водостоком застрял сложенный лист. Бумага размокла по краям, но чернила ещё держатся.',
+    art: '/assets/game/notes/note_gate.svg',
+    clueFlag: 'clue_note_gate',
+    clueText: 'Три коротких удара. Один длинный. Не звони, чтобы позвать — звони, чтобы предупредить. Бумажный осколок удержит нить; если встретит спичку, станет светом.',
+  },
+  {
+    id: 'hs_note_garden',
+    location: 'garden',
+    x: 15, y: 66, w: 4.8, h: 10,
+    label: 'Записка под камнем',
+    examine: 'Край бумаги выглядывает из-под плоского камня. На ней остались отпечатки мокрых пальцев.',
+    art: '/assets/game/notes/note_garden.svg',
+    clueFlag: 'clue_note_garden',
+    clueText: 'Горькие листья останавливают кровь. Шёлковая нить удерживает их вместе. Не затягивай слишком туго — под повязкой должно остаться место для дыхания.',
+  },
+  {
+    id: 'hs_note_engawa',
+    location: 'engawa',
+    x: 58, y: 25, w: 4.8, h: 10,
+    label: 'Записка под карнизом',
+    examine: 'У карниза зацепился узкий листок. На нём нарисованы две половины одного ключа.',
+    art: '/assets/game/notes/note_engawa.svg',
+    clueFlag: 'clue_note_engawa',
+    clueText: 'У каждой половины ключа свой излом. Не ищи замок, пока металл не станет целым. Три царапины отмечают доску, под которой лежит вторая часть.',
+  },
+  {
+    id: 'hs_note_storage',
+    location: 'storage',
+    x: 82, y: 73, w: 4.8, h: 10,
+    label: 'Записка у якоря',
+    examine: 'Сухой лист сложен вчетверо и зажат между камнем и основанием якоря. На полях три символа: колокольчик, узел, огонь.',
+    art: '/assets/game/notes/note_storage.svg',
+    clueFlag: 'clue_note_storage',
+    clueText: 'Сначала звук. Затем защита. И только после этого свет. Якорь не принимает силу — он принимает три свидетельства, принесённые из разных комнат.',
   },
   {
     id: 'hs_anchor',

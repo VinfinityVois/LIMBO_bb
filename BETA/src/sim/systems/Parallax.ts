@@ -17,6 +17,8 @@ export class ParallaxRenderer {
   running = false;
   filter = '';
   private raf = 0;
+  rainEnabled = false;
+  private rainDrops: Array<{ x:number; y:number; speed:number; length:number; alpha:number; width:number; drift:number }> = [];
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -37,6 +39,25 @@ export class ParallaxRenderer {
     this.canvas.style.width = w + 'px';
     this.canvas.style.height = h + 'px';
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.resetRain();
+  }
+
+  setWeather(rain: boolean) {
+    this.rainEnabled = rain;
+    if (rain && !this.rainDrops.length) this.resetRain();
+  }
+
+  private resetRain() {
+    const count = Math.max(120, Math.min(260, Math.floor((this.w * this.h) / 5200)));
+    this.rainDrops = Array.from({ length: count }, () => ({
+      x: Math.random() * (this.w + 100) - 50,
+      y: Math.random() * (this.h + 100) - 50,
+      speed: 7 + Math.random() * 12,
+      length: 9 + Math.random() * 23,
+      alpha: 0.08 + Math.random() * 0.22,
+      width: 0.45 + Math.random() * 0.8,
+      drift: 1.8 + Math.random() * 3.8,
+    }));
   }
 
   async loadImage(src: string, filter = ''): Promise<boolean> {
@@ -87,7 +108,7 @@ export class ParallaxRenderer {
     }
 
     // Scale plate larger than viewport so parallax has room
-    const scale = 1.08;
+    const scale = 1.14;
     const iw = this.img.naturalWidth;
     const ih = this.img.naturalHeight;
     const cover = Math.max(w / iw, h / ih) * scale;
@@ -95,8 +116,8 @@ export class ParallaxRenderer {
     const dh = ih * cover;
     const maxShiftX = (dw - w) / 2;
     const maxShiftY = (dh - h) / 2;
-    const ox = (w - dw) / 2 - this.mx * maxShiftX * 0.65;
-    const oy = (h - dh) / 2 - this.my * maxShiftY * 0.65;
+    const ox = (w - dw) / 2 - this.mx * maxShiftX * 0.9;
+    const oy = (h - dh) / 2 - this.my * maxShiftY * 0.9;
 
     ctx.save();
     if (this.filter) ctx.filter = this.filter;
@@ -105,6 +126,24 @@ export class ParallaxRenderer {
 
     // subtle near fog / grain for depth (not a second art layer)
     const t = performance.now() * 0.0004;
+    if (this.rainEnabled) {
+      ctx.save();
+      for (const drop of this.rainDrops) {
+        drop.x -= drop.drift;
+        drop.y += drop.speed;
+        if (drop.y > h + drop.length || drop.x < -30) {
+          drop.x = Math.random() * (w + 100) + 20;
+          drop.y = -drop.length - Math.random() * 90;
+        }
+        ctx.strokeStyle = `rgba(190,218,232,${drop.alpha})`;
+        ctx.lineWidth = drop.width;
+        ctx.beginPath();
+        ctx.moveTo(drop.x, drop.y);
+        ctx.lineTo(drop.x - drop.drift * 1.8, drop.y + drop.length);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     const g = ctx.createRadialGradient(
       w * 0.5 + this.mx * 20,
       h * 0.45 + this.my * 12,
@@ -118,16 +157,6 @@ export class ParallaxRenderer {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
-    // soft rain streaks when ambient-like
-    ctx.strokeStyle = 'rgba(180,210,230,0.04)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 18; i++) {
-      const x = ((i * 97 + t * 40) % (w + 40)) - 20;
-      const y = ((i * 53 + t * 120) % (h + 40)) - 20;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x - 4, y + 18);
-      ctx.stroke();
-    }
+
   }
 }
