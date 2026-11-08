@@ -1573,7 +1573,7 @@ export class ImmersionScene {
     if(note)note.textContent='Карта-пропуск RK-02 и карточка субъекта сохранены в архиве Цефея.';
     document.getElementById('simModal')?.classList.add('open');
     document.body.classList.add('inspection-open');
-    simAudio.open(this.state.muted);
+    // Sector is closed: the report is intentionally silent.
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
