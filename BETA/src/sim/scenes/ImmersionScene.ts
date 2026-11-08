@@ -1708,11 +1708,13 @@ export class ImmersionScene {
     const clueCount = clueKeys.filter(k => !!this.state.flags[k]).length;
     const secretCount = secretKeys.filter(k => !!this.state.flags[k]).length;
     const score = Math.max(0, Math.min(100, Math.round(
-      40 +
-      25 * collected.length / Math.max(1, allItems.length) +
+      30 * collected.length / Math.max(1, allItems.length) +
       15 * used.length / Math.max(1, allItems.length) +
-      10 * clueCount / Math.max(1, clueKeys.length) +
-      10 * secretCount / Math.max(1, secretKeys.length)
+      20 * clueCount / Math.max(1, clueKeys.length) +
+      15 * secretCount / Math.max(1, secretKeys.length) +
+      10 * this.state.visited.length / Math.max(1, LOCATION_ORDER.length) +
+      5 * this.state.health / 100 +
+      5 * (this.state.ending === 'clear' ? 1 : this.state.ending === 'bind' ? 0.7 : 0.4)
     )));
     const grade = score >= 92 ? 'A' : score >= 82 ? 'B' : score >= 68 ? 'C' : score >= 52 ? 'D' : score >= 40 ? 'E' : 'F';
     const gradeTier = ({ F: 1, E: 2, D: 3, C: 4, B: 5, A: 6 } as Record<string, number>)[grade];
