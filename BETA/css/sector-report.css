@@ -198,7 +198,7 @@
 
 /* Keep the spider escape choice inside the viewport on short displays. */
 .spider-dialogue{bottom:max(12px,env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
-.spider-choice[data-spider-action="run"]{align-self:end;transform:translateY(6px)}
+.spider-choice[data-spider-action="run"]{align-self:end;position:relative;top:6px}
 .spider-choices{align-items:start}
 @media(max-height:760px){.spider-dialogue{padding:12px 14px 10px!important}.spider-dialogue p{margin-bottom:8px}.spider-choice{min-height:44px;padding:7px 8px}}
 
