@@ -24,6 +24,12 @@ export const ITEMS: Record<ItemId, ItemDef> = {
       <path d="M26 24 L30 32 L38 20" fill="none" stroke="#ffcc66" stroke-width="1.5" opacity="0.8"/>
       <rect x="28" y="44" width="8" height="10" fill="none" stroke="#8a7030" stroke-width="1.5"/>`,
   },
+  mirror_shard: {
+    id: 'mirror_shard', name: 'Зеркальный осколок', short: 'ОСКОЛОК',
+    examine: 'Осколок старого зеркала. На одной стороне отражается комната, на другой — будто бы сад. Их можно соединить с другими фрагментами, чтобы восстановить отражение.',
+    color: '#9bd7e8',
+    svg: `<path d="M15 9 L51 17 L43 55 L9 42 Z" fill="#9bd7e8" fill-opacity=".2" stroke="#b9eaf4" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e0f8ff" stroke-width="1.2"/><path d="M22 20 L36 42" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>`,
+  },
   wet_key_half: {
     id: 'wet_key_half',
     name: 'Половина ключа · А',
