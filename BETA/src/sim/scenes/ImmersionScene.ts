@@ -1127,6 +1127,9 @@ export class ImmersionScene {
           ? 'В стекле отражается коридор, которого нет за спиной. На миг видна фигура с перевязанными руками. Если направить сюда восстановленный свет, отражение исчезает.'
           : 'Больше ничего заметного. Но ощущение чужого присутствия не исчезает.';
         body.appendChild(empty);
+        if (hs.id === 'hs_rain_gutter') {
+          addAction(this.state.flags.gutter_puzzle_solved ? 'РИТМ УЖЕ ЗАПОМНЕН' : 'ВОСПРОИЗВЕСТИ РИТМ', 'primary', () => this.showGutterPuzzle(hs));
+        }
         if(hs.id==='hs_rain_gutter'||hs.id==='hs_footprint_wall'||hs.id==='hs_mirror_panel'){
           addAction('ЗАПОМНИТЬ ЗНАК', 'primary', () => {
             this.state.flags['lore_'+hs.id]=true;
@@ -1241,6 +1244,64 @@ export class ImmersionScene {
     modal.classList.add('open');
     document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
+  }
+
+  private showGutterPuzzle(hs: HotspotDef) {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    if (title) title.textContent = 'ВОДОСТОК · РИТМ ДОЖДЯ';
+    if (visual) visual.innerHTML = '<div class="inspection-scan" aria-hidden="true"><span></span><i></i><b></b></div>';
+    if (!body || !actions) return;
+    body.innerHTML = ''; actions.innerHTML = '';
+    const intro = document.createElement('p'); intro.className = 'inspection-description';
+    intro.textContent = 'Вода ударяет по металлу. На краю вырезаны три короткие черты и одна длинная. Повтори услышанное: три коротких удара, затем один протяжный.';
+    body.appendChild(intro);
+    const display = document.createElement('div'); display.className = 'gutter-sequence-display';
+    const pattern = document.createElement('div'); pattern.className = 'gutter-sequence-pattern';
+    display.appendChild(pattern); body.appendChild(display);
+    const expected = ['short', 'short', 'short', 'long'];
+    const entered: string[] = [];
+    const render = () => {
+      pattern.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const beat = document.createElement('i');
+        beat.className = 'gutter-beat ' + (entered[i] || 'empty');
+        beat.textContent = entered[i] ? (entered[i] === 'short' ? '·' : '━') : '—';
+        pattern.appendChild(beat);
+      }
+    };
+    render();
+    const addBeat = (kind: string) => {
+      if (entered.length >= 4) entered.length = 0;
+      entered.push(kind); render();
+      if (entered.length === 4) {
+        if (entered.every((beat, index) => beat === expected[index])) {
+          this.state.flags.gutter_puzzle_solved = true;
+          this.state.flags.clue_rain_rhythm = true;
+          this.state.flags.clue_echo_answered = true;
+          this.rememberThought('Водосток: три коротких удара и один длинный. Это не случайный шум — Рёкан отвечает тем же ритмом.');
+          saveState(this.state);
+          this.notify('РИТМ СОПОСТАВЛЕН · ПОДСКАЗКА СОХРАНЕНА', 'ok');
+          this.openModal(hs);
+        } else {
+          this.notify('Ритм не совпал. Вода сбивается, но рисунок остаётся.', 'warn');
+          entered.length = 0; render();
+        }
+      }
+    };
+    const short = document.createElement('button'); short.type = 'button'; short.className = 'inspection-action secondary'; short.textContent = 'КОРОТКИЙ УДАР';
+    short.addEventListener('click', () => addBeat('short'));
+    const long = document.createElement('button'); long.type = 'button'; long.className = 'inspection-action secondary'; long.textContent = 'ДЛИННЫЙ УДАР';
+    long.addEventListener('click', () => addBeat('long'));
+    const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'inspection-action quiet'; reset.textContent = 'СБРОСИТЬ';
+    reset.addEventListener('click', () => { entered.length = 0; render(); });
+    actions.append(short, long, reset);
+    const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
+    close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
+    if (note) note.textContent = 'Подсказка: три коротких удара и один длинный. Ошибка не наказывается — можно попробовать снова.';
   }
 
   private showAnchorPuzzle(hs: HotspotDef) {
