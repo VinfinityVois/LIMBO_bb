@@ -221,3 +221,5 @@
   #simModal.report-mode .sector-rating b{grid-column:1/-1}
   #simModal.report-mode .smp-a button{width:100%}
 }
+
+#simModal.report-mode #modalClose{display:none!important}
