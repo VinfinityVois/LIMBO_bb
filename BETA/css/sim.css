@@ -1102,3 +1102,17 @@ body.sector-exit-active .exit-layer { transition:opacity .55s ease; opacity:0 !i
 @keyframes finale-static{0%,100%{transform:translate(0,0)}30%{transform:translate(1%,-.5%)}70%{transform:translate(-.7%,.8%)}}
 body.sector-finished .game-hud,body.sector-finished .world-hud,body.sector-finished .hotspot-layer,body.sector-finished .exit-layer,body.sector-finished .notify-host{pointer-events:none}
 @media(max-width:720px){.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:76vw;height:78%;top:2%}.spider-dialogue{bottom:clamp(150px,25vh,220px)}.ending-item-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+
+/* Replace all CSS-drawn monster silhouettes with the authored transparent creature PNGs. */
+.threat-silhouette:before,.threat-silhouette:after,.threat-silhouette span,.threat-silhouette i,
+.scene-creature:before,.scene-creature:after,.scene-creature .creature-eyes,.scene-creature>i,.scene-creature>b,
+.combat-monster-art:before,.combat-monster-art:after{content:none!important;display:none!important;}
+.scene-creature{width:min(30vw,390px);height:min(72vh,680px);left:54%;top:auto;bottom:0;display:flex;align-items:flex-end;justify-content:center;}
+.scene-creature .creature-sprite{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 18px 25px #000d);}
+.threat-silhouette{background:transparent url('/assets/game/creatures/lodger.png') center/contain no-repeat;}
+.sanity-shadow,.false-presence{position:absolute;z-index:9;display:block;width:min(25vw,340px);height:min(58vh,560px);object-fit:contain;object-position:center bottom;pointer-events:none;opacity:0;filter:brightness(.28) saturate(.65) drop-shadow(0 8px 24px #000);animation:png-shadow-drift 4.2s ease-in-out forwards;}
+.sanity-shadow{left:var(--shadow-x);top:var(--shadow-y)}
+.false-presence{left:50%;top:22%;transform:translateX(-50%);width:min(34vw,440px);height:min(68vh,650px);animation:png-shadow-false 2.6s ease-out forwards;}
+@keyframes png-shadow-drift{12%{opacity:.46}65%{opacity:.34;transform:translate(-10px,4px) scale(1.03)}100%{opacity:0;transform:translate(18px,-4px) scale(1.06)}}
+@keyframes png-shadow-false{12%{opacity:.3}60%{opacity:.2}100%{opacity:0;transform:translateX(-50%) scale(1.04)}}
