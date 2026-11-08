@@ -347,3 +347,9 @@ body.combat-active .game-hud{opacity:0!important;visibility:hidden!important;poi
 .ending-memory-list li{line-height:1.5}
 .hud-inventory{position:relative}
 @media(max-width:760px){.thought-journal{right:0;bottom:calc(100% + 7px);max-height:55vh}.anchor-puzzle-sockets{grid-template-columns:1fr}.anchor-puzzle-socket{min-height:58px}}
+
+.gutter-sequence-display{margin:14px 0;padding:14px;border:1px solid rgba(76,169,190,.32);background:rgba(4,18,28,.72)}
+.gutter-sequence-pattern{display:flex;justify-content:center;gap:10px}
+.gutter-beat{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(105,150,165,.42);color:#86cbd5;font:700 20px var(--mono);font-style:normal;background:rgba(10,37,49,.6)}
+.gutter-beat.short{border-color:#5bc8d4;color:#a8f2f3}
+.gutter-beat.long{border-color:#d1a45d;color:#f2d49b}
