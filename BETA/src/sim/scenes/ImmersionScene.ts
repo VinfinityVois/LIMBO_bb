@@ -1576,7 +1576,11 @@ export class ImmersionScene {
       if (!memoryList.children.length) { const li = document.createElement('li'); li.textContent = 'В памяти не осталось отдельных записей.'; memoryList.appendChild(li); }
       body.appendChild(memoryList);
       const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
-      outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
+      outcome.textContent=this.state.ending==='clear'
+        ? 'Итог: канал очищен. Память сектора сохранена.'
+        : this.state.ending==='bind'
+          ? 'Итог: связь закреплена. Маска сохранена как часть канала; голос сектора может отвечать в следующих узлах.'
+          : 'Итог: канал разорван. Часть памяти сектора потеряна.';
       body.appendChild(outcome);
     }
     if(actions){
@@ -1587,7 +1591,6 @@ export class ImmersionScene {
     if(note)note.textContent='Отчёт сформирован после выхода. Состояние предметов и ключевые события сохранены.';
     document.getElementById('simModal')?.classList.add('open');
     document.body.classList.add('inspection-open');
-    simAudio.open(this.state.muted);
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
