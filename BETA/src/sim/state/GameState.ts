@@ -11,6 +11,7 @@ export type LocationId =
 export type ItemId =
   | 'paper_lantern_shard'
   | 'mirror_shard'
+  | 'mirror_lens'
   | 'wet_key_half'
   | 'wet_key_other'
   | 'ryokan_key'
