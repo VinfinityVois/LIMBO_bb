@@ -309,11 +309,11 @@ export class ImmersionScene {
       if (zone === 'head' || zone === 'torso' || zone === 'arms' || zone === 'legs') this.selectCombatTarget(zone);
     }));
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
-    document.getElementById('modalBackdrop')?.addEventListener('click', () => this.closeModal());
+    document.getElementById('modalBackdrop')?.addEventListener('click', () => { if (document.getElementById('simModal')?.classList.contains('report-mode')) return; this.closeModal(); });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (document.getElementById('combatScreen')?.classList.contains('open')) this.combatAction('flee');
-        else this.closeModal();
+        else if (!document.getElementById('simModal')?.classList.contains('report-mode')) this.closeModal();
         return;
       }
       const target = e.target as HTMLElement | null;
