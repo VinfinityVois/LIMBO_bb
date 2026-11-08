@@ -393,7 +393,7 @@ export class ImmersionScene {
 
 
   private spiderAngerLevel(): number {
-    const anger = ['spider_anger_call','spider_anger_turn','spider_anger_timeout','spider_anger_hand'].filter(key => !!this.state.flags[key]).length;
+    const anger = ['spider_anger_call','spider_anger_turn','spider_anger_hand','spider_anger_timeout','spider_anger_timeout_0','spider_anger_timeout_1','spider_anger_timeout_2','spider_anger_timeout_3'].filter(key => !!this.state.flags[key]).length;
     const calm = ['spider_calm_look','spider_calm_steady','spider_calm_bell','spider_calm_words'].filter(key => !!this.state.flags[key]).length;
     return Math.max(0, anger - calm);
   }
@@ -465,7 +465,7 @@ export class ImmersionScene {
       if(stage===3){
         this.state.sanity=Math.max(0,this.state.sanity-(12+anger*2));
         this.state.health=Math.max(1,this.state.health-(7+anger*2));
-        this.state.flags.spider_anger_timeout = true;
+        this.state.flags.spider_anger_timeout_3 = true;
         this.notify('Паутинница решила за тебя. Нити рвутся с потолка — она нападает. −' + (12+anger*2) + ' рассудка.','warn');
         this.closeSpiderBeat(); this.spiderInCombat=true; saveState(this.state); this.renderVitals(); this.startCombat();
       } else this.chooseSpider('timeout');
@@ -484,19 +484,19 @@ export class ImmersionScene {
     this.closeSpiderBeat();
     const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
     if(this.spiderStage===0) {
-      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout_0=true;this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
       else if(action==='look'){this.state.flags.spider_recognized=true;this.state.flags.spider_calm_look=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
       else if(action==='call'){this.state.flags.spider_called=true;this.state.flags.spider_anger_call=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
-      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-6);this.notify('Тень дёрнула за твою пятку. Она больше не ждёт. −6 рассудка.','warn');this.spiderNextAt=Date.now()+4500;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout_1=true;this.state.sanity=Math.max(0,this.state.sanity-6);this.notify('Тень дёрнула за твою пятку. Она больше не ждёт. −6 рассудка.','warn');this.spiderNextAt=Date.now()+4500;}
       else if(action==='thread'&&hasThread){{ const at=this.state.inventory.indexOf('silk_thread'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
       else if(action==='steady'){this.state.flags.spider_stared_down=true;this.state.flags.spider_calm_steady=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
       else {this.state.flags.spider_anger_turn=true;this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
-      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Паутинница приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout_2=true;this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Паутинница приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
       else if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
       else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.spider_calm_bell=true;this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
       else if(action==='soothe'){
@@ -786,8 +786,15 @@ export class ImmersionScene {
     };
     group('ЗАМЕТКИ', noteRows);
     group('ОТКРЫТЫЕ ПАСХАЛКИ', openedEaster);
-    group('МЫСЛИ', memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory));
+    const notePrefixes = notes.map(([label]) => label + ':');
+    const thoughtRows = memories.filter(memory => !notePrefixes.some(prefix => memory.startsWith(prefix))).slice().reverse()
+      .map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory);
+    group('МЫСЛИ', thoughtRows);
+    const studiedFacts = (Object.keys(ITEMS) as ItemId[])
+      .filter(id => !!this.state.flags['studied_' + id])
+      .map(id => ITEMS[id].name + ': предмет изучен. ' + ITEMS[id].examine);
     const facts = [
+      ...studiedFacts,
       ...(this.state.flags.black_seed_taken || this.state.flags.took_black_seed ? ['Чёрное семя: опасный объект найден. При контакте снижает рассудок; изучение показывает живые жилки под плёнкой.'] : []),
       ...(this.state.flags.used_black_seed ? ['Чёрное семя применено. Последствия применения отмечены в журнале состояния.'] : []),
       ...(this.state.flags.took_stitched_mask || this.state.inventory.includes('stitched_mask') ? ['Сшитая маска: опасный объект найдена. Надевание снижает рассудок, длительное ношение усиливает воздействие.'] : []),
@@ -1414,6 +1421,9 @@ export class ImmersionScene {
           ? 'Нить прошита изнутри. На бумаге проступает отпечаток лица, хотя маска лежит неподвижно. Мы отводим взгляд — и слышим собственный вдох изнутри неё.'
           : 'Мы поворачиваем находку в руках. На поверхности видны следы чужого использования. Под пальцами ощущается слабая вибрация.';
         body.appendChild(detail);
+        this.state.flags['studied_' + id] = true;
+        saveState(this.state);
+        this.renderThoughtJournal();
         simAudio.whisper(this.state.muted);
         this.showSense('◉', 'Мы изучили: ' + (item?.name || 'находку'), false);
       });
@@ -1614,7 +1624,8 @@ export class ImmersionScene {
   private showSectorFinale() {
     document.getElementById('sectorFinale')?.remove();
     const overlay=document.createElement('section');overlay.id='sectorFinale';overlay.className='sector-finale';
-    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-sigil" aria-hidden="true"><svg viewBox="0 0 240 240"><circle class="sigil-orbit" cx="120" cy="120" r="82"/><circle class="sigil-inner" cx="120" cy="120" r="54"/><path class="sigil-mark" d="M120 28 L143 91 L212 120 L143 149 L120 212 L97 149 L28 120 L97 91 Z"/><path class="sigil-core" d="M120 74 L164 120 L120 166 L76 120 Z"/><path class="sigil-cut" d="M120 44 V196 M44 120 H196"/></svg></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>СОЕДИНЕНИЕ РАЗОРВАНО</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
+    const finaleState = this.state.ending === 'clear' ? 'КАНАЛ ОЧИЩЕН' : this.state.ending === 'bind' ? 'СВЯЗЬ ЗАКРЕПЛЕНА' : 'УЗЕЛ РАЗРУШЕН';
+    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-sigil" aria-hidden="true"><svg viewBox="0 0 240 240"><circle class="sigil-orbit" cx="120" cy="120" r="82"/><circle class="sigil-inner" cx="120" cy="120" r="54"/><path class="sigil-mark" d="M120 28 L143 91 L212 120 L143 149 L120 212 L97 149 L28 120 L97 91 Z"/><path class="sigil-core" d="M120 74 L164 120 L120 166 L76 120 Z"/><path class="sigil-cut" d="M120 44 V196 M44 120 H196"/></svg></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>'+finaleState+'</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
     document.body.appendChild(overlay);requestAnimationFrame(()=>overlay.classList.add('active'));
     window.setTimeout(()=>{overlay.classList.add('resolved');const p=overlay.querySelector('p');if(p)p.textContent='СУБЪЕКТ ПОКИНУЛ РЁКАН';},1900);
     window.setTimeout(()=>{overlay.classList.add('fade-out');window.setTimeout(()=>{overlay.remove();this.showRunReport();},850);},4100);
