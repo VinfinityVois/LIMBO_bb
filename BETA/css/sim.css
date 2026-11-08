@@ -1122,3 +1122,14 @@ body.sector-finished .game-hud,body.sector-finished .world-hud,body.sector-finis
 .thought-journal{position:fixed!important;right:24px!important;bottom:calc(var(--hud-h,170px) + 24px)!important;z-index:99999!important;width:min(520px,calc(100vw - 32px))!important;max-height:min(68vh,620px)!important;display:flex!important;opacity:0;visibility:hidden;transform:translateY(8px);pointer-events:none;background:linear-gradient(145deg,rgba(4,17,27,.99),rgba(2,9,16,.99));border:1px solid rgba(70,190,210,.7);box-shadow:0 18px 60px rgba(0,0,0,.7)}
 .thought-journal.open{opacity:1!important;visibility:visible!important;transform:translateY(0);pointer-events:auto!important}
 .thought-journal-toggle{position:relative;z-index:100000;cursor:pointer;pointer-events:auto}
+
+/* Physical note props placed directly in the location art. */
+.hotspot.note-marker{border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.hotspot.note-marker:hover{border:0!important;background:transparent!important;box-shadow:none!important}
+.hotspot .world-note-art{position:absolute;inset:-12%;display:grid;place-items:center;pointer-events:none;transition:transform .2s,filter .2s;filter:drop-shadow(0 5px 8px rgba(0,0,0,.85)) drop-shadow(0 0 7px rgba(72,204,221,.22))}
+.hotspot .world-note-art img{display:block;width:100%;height:100%;object-fit:contain;opacity:1;filter:contrast(1.06) saturate(.78)}
+.hotspot.note-marker:hover .world-note-art,.hotspot.note-marker:focus-visible .world-note-art{transform:translateY(-4px) rotate(-2deg) scale(1.12);filter:drop-shadow(0 8px 12px #000) drop-shadow(0 0 12px rgba(76,220,231,.6))}
+.hotspot.note-marker .hotspot-world-label{top:calc(100% + 8px)}
+.inv-slot{position:relative}
+.inv-stack-count{position:absolute;right:3px;top:3px;z-index:5;padding:1px 4px;border:1px solid rgba(83,218,230,.7);border-radius:9px;background:rgba(3,14,22,.95);color:#c8fbff;font:700 9px 'JetBrains Mono',monospace}
+.note-letter{margin:12px 0 4px;padding:13px 15px;border:1px solid rgba(163,137,94,.38);background:linear-gradient(135deg,rgba(35,29,22,.75),rgba(13,18,22,.88));color:#d8cbb3;font:12px/1.7 'Space Grotesk',sans-serif;white-space:pre-line}
