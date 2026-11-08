@@ -1667,109 +1667,281 @@ export class ImmersionScene {
   }
 
   private showRunReport() {
-    const title=document.getElementById('modalTitle');
-    const body=document.getElementById('modalBody');
-    const visual=document.getElementById('modalVisual');
-    const actions=document.getElementById('modalActions');
-    const note=document.getElementById('modalNote');
-    const reportModal = document.getElementById('simModal');
-    reportModal?.classList.add('report-mode', 'open');
-    if (reportModal) reportModal.style.display = 'flex';
-    if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
-    if(visual)visual.innerHTML='<div class="ending-core-art report-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
-    const allItems=Object.keys(ITEMS) as ItemId[];
-    const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id)||this.state.droppedItems.some(x=>x.id===id));
-    const used=allItems.filter(id=>this.state.flags['used_'+id]);
-    const dangerous=['black_seed','stitched_mask'] as ItemId[];
-    const dangerousTaken=dangerous.filter(id=>this.state.flags['collected_'+id]||this.state.inventory.includes(id));
-    const dangerousUsed=dangerous.filter(id=>this.state.flags['used_'+id]);
-    const requirements:[string,boolean][]=[
-      ['Записка прочитана',!!this.state.flags.note_read],
-      ['Дверь генкана открыта',!!this.state.flags.door_unlocked],
-      ['Нить найдена',!!this.state.flags.took_silk],
-      ['Колокольчик найден',!!this.state.flags.took_bell],
-      ['Оберег собран',!!this.state.flags.crafted_warding_charm],
-      ['Фонарь восстановлен',!!this.state.flags.crafted_ember_lantern],
-    ];
-    if(body){
-      body.innerHTML='';
-      const intro=document.createElement('p');intro.className='inspection-description';
-      intro.textContent='Выход подтверждён. Теперь Цефей сверяет маршрут, находки и решения, принятые внутри сектора.';
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    const modal = document.getElementById('simModal');
+
+    const allItems = Object.keys(ITEMS) as ItemId[];
+    const collected = allItems.filter(id =>
+      this.state.flags['collected_' + id] ||
+      this.state.flags['crafted_' + id] ||
+      this.state.inventory.includes(id) ||
+      this.state.droppedItems.some(x => x.id === id)
+    );
+    const used = allItems.filter(id => this.state.flags['used_' + id]);
+    const clueLabels: Record<string, string> = {
+      note_read: 'Записка о суставном скрипе',
+      clue_note_gate: 'Записка у водостока',
+      clue_note_garden: 'Записка под камнем',
+      clue_note_engawa: 'Записка под карнизом',
+      clue_note_storage: 'Записка у якоря',
+      clue_key_halves: 'Подсказка о половинах ключа',
+      threaded_note: 'Записка о шёлковой нити',
+      clue_rain_rhythm: 'Ритм дождя',
+      clue_shadow_warning: 'Предупреждение о тени',
+      clue_echo_answered: 'Ответ эха'
+    };
+    const easterLabels: Record<string, string> = {
+      easter_mirror: 'Отражение из другого времени',
+      spider_recognized: 'Паутинница узнала тебя',
+      spider_story_heard: 'История Паутинницы',
+      spider_thread_given: 'Нить, отданная Паутиннице',
+      heard_steps: 'Шаги над потолком',
+      mask_voice_known: 'Голос из маски'
+    };
+    const clueKeys = Object.keys(clueLabels);
+    const secretKeys = Object.keys(easterLabels);
+    const clueCount = clueKeys.filter(k => !!this.state.flags[k]).length;
+    const secretCount = secretKeys.filter(k => !!this.state.flags[k]).length;
+    const score = Math.max(0, Math.min(100, Math.round(
+      40 +
+      25 * collected.length / Math.max(1, allItems.length) +
+      15 * used.length / Math.max(1, allItems.length) +
+      10 * clueCount / Math.max(1, clueKeys.length) +
+      10 * secretCount / Math.max(1, secretKeys.length)
+    )));
+    const grade = score >= 92 ? 'A' : score >= 82 ? 'B' : score >= 68 ? 'C' : score >= 52 ? 'D' : score >= 40 ? 'E' : 'F';
+    const gradeTier = ({ F: 1, E: 2, D: 3, C: 4, B: 5, A: 6 } as Record<string, number>)[grade];
+    const gradeArt = ({ F: 'F.png', E: 'Е.png', D: 'D.png', C: 'С.png', B: 'В.png', A: 'А.png' } as Record<string, string>)[grade];
+
+    const campaignKey = 'limbo_campaign_archive_v1';
+    type SectorRecord = { score: number; grade: string; gradeTier: number; collected: number; used: number; clues: number; secrets: number; ending: string | null };
+    type CampaignArchive = {
+      version: 1;
+      results: Record<string, SectorRecord>;
+      completedSectors: string[];
+      totalScore: number;
+      scoreCount: number;
+      averageScore: number;
+      totalCollected: number;
+      totalUsed: number;
+      totalClues: number;
+      totalSecrets: number;
+      bestCardTier: number;
+      passTier: number;
+    };
+    const emptyArchive = (): CampaignArchive => ({
+      version: 1, results: {}, completedSectors: [], totalScore: 0, scoreCount: 0,
+      averageScore: 0, totalCollected: 0, totalUsed: 0, totalClues: 0,
+      totalSecrets: 0, bestCardTier: 1, passTier: 1
+    });
+    let archive = emptyArchive();
+    try {
+      const saved = JSON.parse(localStorage.getItem(campaignKey) || 'null') as Partial<CampaignArchive> | null;
+      if (saved && saved.version === 1 && saved.results && typeof saved.results === 'object') {
+        const results = saved.results as Record<string, SectorRecord>;
+        const records = Object.values(results);
+        const totalScore = records.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
+        const scoreCount = records.length;
+        const averageScore = scoreCount ? Math.round(totalScore / scoreCount) : 0;
+        archive = {
+          ...emptyArchive(), results, completedSectors: Object.keys(results),
+          totalScore, scoreCount, averageScore,
+          totalCollected: records.reduce((sum, item) => sum + (Number(item.collected) || 0), 0),
+          totalUsed: records.reduce((sum, item) => sum + (Number(item.used) || 0), 0),
+          totalClues: records.reduce((sum, item) => sum + (Number(item.clues) || 0), 0),
+          totalSecrets: records.reduce((sum, item) => sum + (Number(item.secrets) || 0), 0),
+          bestCardTier: Math.max(1, ...records.map(item => Number(item.gradeTier) || 1)),
+          passTier: averageScore >= 84 ? 3 : averageScore >= 62 ? 2 : 1
+        };
+      }
+    } catch { archive = emptyArchive(); }
+    // Replacing a sector record makes report reopening idempotent: no duplicate rewards or score inflation.
+    archive.results['RK-01'] = {
+      score, grade, gradeTier, collected: collected.length, used: used.length,
+      clues: clueCount, secrets: secretCount, ending: this.state.ending
+    };
+    const records = Object.values(archive.results);
+    archive.completedSectors = Object.keys(archive.results);
+    archive.totalScore = records.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
+    archive.scoreCount = records.length;
+    archive.averageScore = archive.scoreCount ? Math.round(archive.totalScore / archive.scoreCount) : 0;
+    archive.totalCollected = records.reduce((sum, item) => sum + (Number(item.collected) || 0), 0);
+    archive.totalUsed = records.reduce((sum, item) => sum + (Number(item.used) || 0), 0);
+    archive.totalClues = records.reduce((sum, item) => sum + (Number(item.clues) || 0), 0);
+    archive.totalSecrets = records.reduce((sum, item) => sum + (Number(item.secrets) || 0), 0);
+    archive.bestCardTier = Math.max(archive.bestCardTier, gradeTier);
+    archive.passTier = archive.averageScore >= 84 ? 3 : archive.averageScore >= 62 ? 2 : 1;
+    try {
+      localStorage.setItem(campaignKey, JSON.stringify(archive));
+      localStorage.setItem('limbo_pass_RK02', '1');
+      localStorage.setItem('limbo_character_card_RK01', JSON.stringify({
+        sector: 'RK-01', subject: 'СУБЪЕКТ 01', ending: this.state.ending,
+        grade, score, card: 'card' + gradeTier + '.png', health: this.state.health,
+        sanity: this.state.sanity, visited: this.state.visited.length,
+        createdAt: new Date().toISOString()
+      }));
+      localStorage.setItem('limbo_next_sector_pass', JSON.stringify({
+        image: 'b' + archive.passTier + '.png',
+        tier: archive.passTier,
+        averageScore: archive.averageScore,
+        completedSectors: archive.completedSectors,
+        totalCollected: archive.totalCollected,
+        totalUsed: archive.totalUsed,
+        totalClues: archive.totalClues,
+        totalSecrets: archive.totalSecrets
+      }));
+    } catch { /* The current report remains available even if the archive is unavailable. */ }
+
+    if (title) title.textContent = 'ЦЕФЕЙ · ИТОГИ СЕКТОРА RK-01';
+    if (visual) {
+      visual.innerHTML = '<div class="report-grade-emblem"><img src="/assets/game/items/' + gradeArt + '" alt="Оценка ' + grade + '"><span>ОЦЕНКА · ' + grade + '</span></div>';
+    }
+    if (body) {
+      body.innerHTML = '';
+      const intro = document.createElement('p');
+      intro.className = 'inspection-description';
+      intro.textContent = 'Сектор закрыт. Цефей зафиксировал маршрут, найденные предметы и последствия принятых решений.';
       body.appendChild(intro);
-      const list=document.createElement('ul');list.className='ending-requirements';
-      const rows:[string,string][]=[
-        ['Найдено предметов',String(collected.length)],
-        ['Применено предметов',String(used.length)],
-        ['Осталось в инвентаре',String(this.state.inventory.length)],
-        ['Опасные предметы взяты',dangerousTaken.map(id=>ITEMS[id].name).join(', ')||'нет'],
-        ['Опасные предметы применены',dangerousUsed.map(id=>ITEMS[id].name).join(', ')||'нет'],
-        ['Встреченные существа',[
-          ...(['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).map(k=>({light:'Слепой',sound:'Слушатель',dweller:'Жилец'} as Record<string,string>)[k])),
-          ...(this.state.flags.spider_seen_0||this.state.flags.spider_seen_1||this.state.flags.spider_seen_2||this.state.flags.spider_seen_3?['Паутинница']:[])
-        ].join(', ')||'нет'],
-        ['Получены ранения',this.state.injuries.length ? this.state.injuries.join(', ') : this.state.flags.combat_hit_taken?'да · детали не сохранены':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
-        ['Отступление',this.state.flags.combat_fled?'да':'нет'],
+
+      const rating = document.createElement('section');
+      rating.className = 'sector-rating';
+      rating.innerHTML = '<span>ОЦЕНКА ПРОХОЖДЕНИЯ</span><strong>' + grade + '</strong><b>' + score + ' / 100</b><small>Находки · применение · подсказки · сюжетные следы</small>';
+      body.appendChild(rating);
+
+      const rewards = document.createElement('section');
+      rewards.className = 'sector-rewards report-rewards';
+      const pass = document.createElement('article');
+      pass.className = 'reward-card reward-pass';
+      pass.innerHTML = '<img src="/assets/game/items/b' + archive.passTier + '.png" alt="Пропуск следующего сектора"><div><small>БРЕЛОК-ПРОПУСК · НАКОПИТЕЛЬНЫЙ</small><strong>ДОСТУП К СЛЕДУЮЩЕЙ ЛОКАЦИИ</strong><b>УРОВЕНЬ ' + archive.passTier + ' / 3</b><em>Средняя оценка кампании: ' + archive.averageScore + ' · секторов: ' + archive.scoreCount + '</em></div>';
+      const card = document.createElement('article');
+      card.className = 'reward-card reward-id';
+      card.innerHTML = '<img src="/assets/game/items/card' + archive.bestCardTier + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + archive.bestCardTier + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
+      rewards.append(pass, card);
+      body.appendChild(rewards);
+
+      const cumulative = document.createElement('section');
+      cumulative.className = 'campaign-totals';
+      cumulative.innerHTML =
+        '<div><small>ПРОЙДЕНО СЕКТОРОВ</small><strong>' + archive.scoreCount + '</strong></div>' +
+        '<div><small>СРЕДНИЙ БАЛЛ</small><strong>' + archive.averageScore + '</strong></div>' +
+        '<div><small>ПРЕДМЕТОВ НАЙДЕНО</small><strong>' + archive.totalCollected + '</strong></div>' +
+        '<div><small>ПРЕДМЕТОВ ПРИМЕНЕНО</small><strong>' + archive.totalUsed + '</strong></div>' +
+        '<div><small>ПОДСКАЗОК</small><strong>' + archive.totalClues + '</strong></div>' +
+        '<div><small>СЮЖЕТНЫХ СЛЕДОВ</small><strong>' + archive.totalSecrets + '</strong></div>';
+      body.appendChild(cumulative);
+
+      const details = document.createElement('ul');
+      details.className = 'ending-requirements report-details';
+      const dangerous = (['black_seed', 'stitched_mask'] as ItemId[]).filter(id =>
+        this.state.flags['collected_' + id] || this.state.inventory.includes(id)
+      );
+      const dangerousUsed = (['black_seed', 'stitched_mask'] as ItemId[]).filter(id => this.state.flags['used_' + id]);
+      const encounters = [
+        ...(['light', 'sound', 'dweller'].filter(k => this.state.flags['encounter_' + k]).map(k =>
+          ({ light: 'Слепой', sound: 'Слушатель', dweller: 'Жилец' } as Record<string, string>)[k]
+        )),
+        ...(this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3 ? ['Паутинница'] : [])
       ];
-      rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
-      body.appendChild(list);
-      const gallery=document.createElement('div');gallery.className='ending-item-gallery';
-      allItems.forEach(id=>{
-        const card=document.createElement('div');card.className='ending-item-card '+(collected.includes(id)?'found':'missing');
-        const img=document.createElement('img');img.src=this.itemAsset(id);img.alt='';
-        const name=document.createElement('strong');name.textContent=ITEMS[id].name;
-        const status=document.createElement('small');status.textContent=used.includes(id)?'ИСПОЛЬЗОВАНО':collected.includes(id)?(this.state.droppedItems.some(x=>x.id===id)?'ОСТАВЛЕНО НА ЛОКАЦИИ':'НАЙДЕНО'):'НЕ НАЙДЕНО';
-        card.append(img,name,status);gallery.appendChild(card);
+      const rows: [string, string][] = [
+        ['Найдено предметов', String(collected.length)],
+        ['Применено предметов', String(used.length)],
+        ['Осталось в инвентаре', String(this.state.inventory.length)],
+        ['Опасные предметы взяты', dangerous.map(id => ITEMS[id].name).join(', ') || 'нет'],
+        ['Опасные предметы применены', dangerousUsed.map(id => ITEMS[id].name).join(', ') || 'нет'],
+        ['Встреченные существа', encounters.join(', ') || 'нет'],
+        ['Получены ранения', this.state.injuries.length ? this.state.injuries.join(', ') : this.state.flags.combat_hit_taken ? 'да · детали не сохранены' : this.state.flags.combat_dodged ? 'нет · удалось уклониться' : 'не зафиксировано'],
+        ['Отступление', this.state.flags.combat_fled ? 'да' : 'нет']
+      ];
+      rows.forEach(([label, value]) => {
+        const li = document.createElement('li');
+        li.textContent = label + ': ' + value;
+        details.appendChild(li);
+      });
+      body.appendChild(details);
+
+      const gallery = document.createElement('div');
+      gallery.className = 'ending-item-gallery';
+      allItems.forEach(id => {
+        const found = collected.includes(id);
+        const itemCard = document.createElement('div');
+        itemCard.className = 'ending-item-card ' + (found ? 'found' : 'missing');
+        const img = document.createElement('img');
+        img.src = this.itemAsset(id);
+        img.alt = '';
+        const name = document.createElement('strong');
+        name.textContent = ITEMS[id].name;
+        const status = document.createElement('small');
+        status.textContent = used.includes(id) ? 'ИСПОЛЬЗОВАНО' : found ? (this.state.droppedItems.some(x => x.id === id) ? 'ОСТАВЛЕНО НА ЛОКАЦИИ' : 'НАЙДЕНО') : 'НЕ НАЙДЕНО';
+        itemCard.append(img, name, status);
+        gallery.appendChild(itemCard);
       });
       body.appendChild(gallery);
-      const found=document.createElement('p');found.className='ending-outcome-copy';
-      found.textContent='Собрано: '+(collected.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(found);
-      const spent=document.createElement('p');spent.className='ending-outcome-copy';
-      spent.textContent='Применено: '+(used.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(spent);
-      const checklist=document.createElement('ul');checklist.className='ending-requirements';
-      requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
-      body.appendChild(checklist);
-      const clueLabels:Record<string,string>={note_read:'Записка о суставном скрипе',clue_note_gate:'Записка у водостока',clue_note_garden:'Записка под камнем',clue_note_engawa:'Записка под карнизом',clue_note_storage:'Записка у якоря',clue_key_halves:'Подсказка о половинах ключа',threaded_note:'Записка о шёлковой нити',clue_rain_rhythm:'Ритм дождя',clue_shadow_warning:'Предупреждение о тени',clue_echo_answered:'Ответ эха'};
-      const easterLabels:Record<string,string>={easter_mirror:'Отражение из другого времени',spider_recognized:'Паутинница узнала тебя',spider_story_heard:'История Паутинницы',spider_thread_given:'Нить, отданная Паутиннице',heard_steps:'Шаги над потолком',mask_voice_known:'Голос из маски'};
-      const groups:Array<[string,Record<string,string>]>=[['ПОДСКАЗКИ',clueLabels],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterLabels]];
-      groups.forEach(([label,labels])=>{
-        const keys=Object.keys(labels);const foundKeys=keys.filter(k=>!!this.state.flags[k]);
-        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.map(k=>labels[k]).join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
+
+      const lore = document.createElement('ul');
+      lore.className = 'ending-requirements report-details';
+      const groups: Array<[string, Record<string, string>]> = [
+        ['ПОДСКАЗКИ', clueLabels],
+        ['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ', easterLabels]
+      ];
+      groups.forEach(([label, labels]) => {
+        const keys = Object.keys(labels);
+        const foundKeys = keys.filter(k => !!this.state.flags[k]);
+        const li = document.createElement('li');
+        li.textContent = label + ': ' + (foundKeys.length ? foundKeys.map(k => labels[k]).join(' · ') : 'не обнаружены') + ' (' + foundKeys.length + '/' + keys.length + ')';
+        lore.appendChild(li);
       });
       body.appendChild(lore);
-      const clueCount=Object.keys(clueLabels).filter(k=>!!this.state.flags[k]).length;
-      const secretCount=Object.keys(easterLabels).filter(k=>!!this.state.flags[k]).length;
-      const score=Math.max(0,Math.min(100,Math.round(40+25*collected.length/Math.max(1,allItems.length)+15*used.length/Math.max(1,allItems.length)+10*clueCount/Object.keys(clueLabels).length+10*secretCount/Object.keys(easterLabels).length)));
-      const rank=score>=92?'S':score>=82?'A':score>=68?'B':score>=52?'C':'D';
-      const rating=document.createElement('section');rating.className='sector-rating';
-      rating.innerHTML='<span>ОЦЕНКА ПРОХОЖДЕНИЯ</span><strong>'+rank+'</strong><b>'+score+' / 100</b><small>Находки · применение · подсказки · сюжетные следы</small>';
-      body.appendChild(rating);
-      const rewards=document.createElement('section');rewards.className='sector-rewards';
-      rewards.innerHTML='<article class="reward-card reward-pass"><span>✦</span><small>ПОЛУЧЕНО</small><strong>КАРТА-ПРОПУСК</strong><b>RK-02</b><em>Доступ к следующему сектору</em></article><article class="reward-card reward-id"><span>RK</span><small>АРХИВ ЦЕФЕЯ</small><strong>КАРТОЧКА ПЕРСОНАЖА</strong><b>СУБЪЕКТ 01</b><em>Профиль прохождения сохранён</em></article>';
-      body.appendChild(rewards);
-      const memoryHeading = document.createElement('h3'); memoryHeading.className = 'ending-memory-heading'; memoryHeading.textContent = 'ЗАПОМНЕННЫЕ МЫСЛИ И НАБЛЮДЕНИЯ'; body.appendChild(memoryHeading);
-      const memoryList = document.createElement('ul'); memoryList.className = 'ending-requirements ending-memory-list';
-      (this.state.memories || []).forEach(memory => { const li = document.createElement('li'); li.textContent = memory; memoryList.appendChild(li); });
-      if (!memoryList.children.length) { const li = document.createElement('li'); li.textContent = 'В памяти не осталось отдельных записей.'; memoryList.appendChild(li); }
+
+      const memoryHeading = document.createElement('h3');
+      memoryHeading.className = 'ending-memory-heading';
+      memoryHeading.textContent = 'ЗАПОМНЕННЫЕ МЫСЛИ И НАБЛЮДЕНИЯ';
+      body.appendChild(memoryHeading);
+      const memoryList = document.createElement('ul');
+      memoryList.className = 'ending-requirements ending-memory-list';
+      (this.state.memories || []).forEach(memory => {
+        const li = document.createElement('li');
+        li.textContent = memory;
+        memoryList.appendChild(li);
+      });
+      if (!memoryList.children.length) {
+        const li = document.createElement('li');
+        li.textContent = 'В памяти не осталось отдельных записей.';
+        memoryList.appendChild(li);
+      }
       body.appendChild(memoryList);
-      const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
-      outcome.textContent=this.state.ending==='clear'
+
+      const outcome = document.createElement('p');
+      outcome.className = 'ending-outcome-copy';
+      outcome.textContent = this.state.ending === 'clear'
         ? 'Итог: канал очищен. Память сектора сохранена.'
-        : this.state.ending==='bind'
+        : this.state.ending === 'bind'
           ? 'Итог: связь закреплена. Маска сохранена как часть канала; голос сектора может отвечать в следующих узлах.'
           : 'Итог: канал разорван. Часть памяти сектора потеряна.';
       body.appendChild(outcome);
     }
-    if(actions){
-      actions.innerHTML='';
-      const next=document.createElement('button');next.type='button';next.className='inspection-action primary ending-good';
-      next.textContent='К СЛЕДУЮЩЕМУ СЕКТОРУ';next.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html?sector=RK-02';});actions.appendChild(next);
-      const back=document.createElement('button');back.type='button';back.className='inspection-action quiet';
-      back.textContent='ВЕРНУТЬСЯ К ВЫБОРУ СЕКТОРОВ';back.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html';});actions.appendChild(back);
+    if (actions) {
+      actions.innerHTML = '';
+      const next = document.createElement('button');
+      next.type = 'button';
+      next.className = 'inspection-action primary ending-good';
+      next.textContent = 'ПРОДОЛЖИТЬ · СЛЕДУЮЩАЯ СЦЕНА';
+      next.addEventListener('click', () => { window.location.href = '/scene-shanghai.html'; });
+      actions.appendChild(next);
+      const exit = document.createElement('button');
+      exit.type = 'button';
+      exit.className = 'inspection-action quiet';
+      exit.textContent = 'ВЫЙТИ ИЗ СИМУЛЯЦИИ';
+      exit.addEventListener('click', () => { window.location.href = '/scene-ryokan.html'; });
+      actions.appendChild(exit);
     }
-    if(note)note.textContent='Карта-пропуск RK-02 и карточка субъекта сохранены в архиве Цефея.';
-    document.getElementById('simModal')?.classList.add('open');
-    document.body.classList.add('inspection-open');
-    // Sector is closed: the report is intentionally silent.
+    if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены в накопительном архиве Цефея.';
+    modal?.classList.add('report-mode', 'open');
+    if (modal) modal.style.display = 'flex';
+    document.body.classList.add('inspection-open', 'sector-finished');
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
