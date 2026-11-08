@@ -449,6 +449,7 @@ export class ImmersionScene {
     ][stage];
     for (let n=0;n<actions.length;n++) {
       const btn=document.createElement('button'); btn.type='button'; btn.className='spider-choice';
+      btn.dataset.spiderAction=actions[n];
       const strong=document.createElement('strong'); strong.textContent=lines[stage][n+2];
       const hint=document.createElement('small'); hint.textContent=choiceHints[n];
       btn.append(strong,hint); btn.addEventListener('click',()=>this.chooseSpider(actions[n])); choices.appendChild(btn);
@@ -899,7 +900,7 @@ export class ImmersionScene {
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
       paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
-      ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
+      ryokan_key: 'key', kokeshi_note: 'letter', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
       stitched_mask: 'doll',
@@ -929,8 +930,18 @@ export class ImmersionScene {
   private dropItem(id: ItemId, clientX?: number, clientY?: number) {
     if(!this.state.inventory.includes(id)) return;
     const rect=this.stage.getBoundingClientRect();
-    const x=clientX===undefined?46+Math.random()*12:Math.max(5,Math.min(94,((clientX-rect.left)/rect.width)*100));
-    const y=clientY===undefined?48+Math.random()*12:Math.max(12,Math.min(78,((clientY-rect.top)/rect.height)*100));
+    let x=clientX===undefined?48+Math.random()*10:Math.max(5,Math.min(94,((clientX-rect.left)/rect.width)*100));
+    let y=clientY===undefined?78+Math.random()*5:Math.max(12,Math.min(88,((clientY-rect.top)/rect.height)*100));
+    const collides=(px:number,py:number)=>{
+      const nearExit=LOCATIONS[this.state.location].exits.some(ex=>Math.abs(px-ex.x)<10&&Math.abs(py-ex.y)<12);
+      const nearHotspot=hotspotsFor(this.state.location).some(hs=>px>=hs.x-5&&px<=hs.x+hs.w+5&&py>=hs.y-7&&py<=hs.y+hs.h+7);
+      return nearExit||nearHotspot;
+    };
+    if(collides(x,y)){
+      const safeSpots:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[[34,86],[52,88],[70,86],[42,24],[62,30]];
+      const safe=safeSpots.find(([px,py])=>!collides(px,py));
+      if(safe){[x,y]=safe;}
+    }
     { const at=this.state.inventory.indexOf(id); if(at>=0)this.state.inventory.splice(at,1); }
     if(this.state.selected===id)this.state.selected=null;
     this.state.droppedItems.push({id,location:this.state.location,x,y});
@@ -1330,7 +1341,7 @@ export class ImmersionScene {
               visual.innerHTML = '';
               const image = document.createElement('img');
               image.className = 'note-reading-art';
-              image.src = hs.art || '/assets/game/items/мусор/sealed_letter.png';
+              image.src = hs.art || '/assets/game/items/letter.png';
               image.alt = 'Сложенная записка';
               image.draggable = false;
               visual.appendChild(image);
@@ -1477,6 +1488,11 @@ export class ImmersionScene {
     const intro = document.createElement('p'); intro.className = 'inspection-description';
     intro.textContent = 'Вода ударяет по металлу. На краю вырезаны три короткие черты и одна длинная. Повтори услышанное: три коротких удара, затем один протяжный.';
     body.appendChild(intro);
+    const audioHint=document.createElement('div');audioHint.className='gutter-audio-hint';
+    audioHint.innerHTML='<span class="gutter-audio-icon" aria-hidden="true">◖))</span><span><strong>УСЛЫШАТЬ РИТМ</strong><small>Три коротких удара · один длинный</small></span>';
+    const listen=document.createElement('button');listen.type='button';listen.className='inspection-action primary gutter-listen';listen.textContent='ПРОСЛУШАТЬ ПОДСКАЗКУ';
+    listen.addEventListener('click',()=>{simAudio.unlock();simAudio.gutterSequence(this.state.muted);audioHint.classList.add('playing');window.setTimeout(()=>audioHint.classList.remove('playing'),1500);});
+    audioHint.appendChild(listen);body.appendChild(audioHint);
     const display = document.createElement('div'); display.className = 'gutter-sequence-display';
     const pattern = document.createElement('div'); pattern.className = 'gutter-sequence-pattern';
     display.appendChild(pattern); body.appendChild(display);
@@ -1494,7 +1510,7 @@ export class ImmersionScene {
     render();
     const addBeat = (kind: string) => {
       if (entered.length >= 4) entered.length = 0;
-      entered.push(kind); render();
+      entered.push(kind); render(); if(kind==='short')simAudio.shortTap(this.state.muted);else simAudio.longTap(this.state.muted);
       if (entered.length === 4) {
         if (entered.every((beat, index) => beat === expected[index])) {
           this.state.flags.gutter_puzzle_solved = true;
@@ -1502,9 +1518,11 @@ export class ImmersionScene {
           this.state.flags.clue_echo_answered = true;
           this.rememberThought('Водосток: три коротких удара и один длинный. Это не случайный шум — Рёкан отвечает тем же ритмом.');
           saveState(this.state);
+          simAudio.complete(this.state.muted);
           this.notify('РИТМ СОПОСТАВЛЕН · ПОДСКАЗКА СОХРАНЕНА', 'ok');
           this.openModal(hs);
         } else {
+          simAudio.deny(this.state.muted);
           this.notify('Ритм не совпал. Вода сбивается, но рисунок остаётся.', 'warn');
           entered.length = 0; render();
         }

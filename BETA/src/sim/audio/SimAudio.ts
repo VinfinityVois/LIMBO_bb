@@ -154,6 +154,18 @@ export const simAudio = {
       setTimeout(() => this.tone(m, 145, 0.44, 'sawtooth', 0.018 * v, 24), 260);
     }
   },
+  shortTap(m: boolean) {
+    this.noiseBurst(m, 0.055, 0.025, 'bandpass', 1500);
+    this.tone(m, 460, 0.075, 'triangle', 0.026, 300);
+  },
+  longTap(m: boolean) {
+    this.noiseBurst(m, 0.28, 0.022, 'bandpass', 760);
+    this.tone(m, 260, 0.32, 'sine', 0.026, 180);
+  },
+  gutterSequence(m: boolean) {
+    [0, 230, 460].forEach(delay => setTimeout(() => this.shortTap(m), delay));
+    setTimeout(() => this.longTap(m), 790);
+  },
   bell(m: boolean) {
     this.tone(m, 640, 0.42, 'sine', 0.032, 430);
     setTimeout(() => this.tone(m, 910, 0.55, 'sine', 0.018, 690), 65);

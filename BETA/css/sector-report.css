@@ -155,3 +155,71 @@
   .note-letter{padding:10px}
   .note-letter p{flex-basis:100%}
 }
+
+
+/* Sector entry: the same geometric language as the exit finale, but opening inward. */
+.dive-overlay{position:fixed;inset:0;z-index:13000;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at center,#0a1c27 0,#03080e 58%,#010306 100%);opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s}
+.dive-overlay.active{opacity:1;visibility:visible}
+.dive-overlay:before,.dive-overlay:after{content:"";position:absolute;inset:-30%;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(112,225,238,.035) 4px),radial-gradient(ellipse at center,rgba(35,154,174,.18),transparent 58%);animation:dive-static 2.2s steps(3) infinite}
+.dive-overlay:after{inset:0;background:linear-gradient(90deg,transparent,rgba(75,218,231,.08),transparent);transform:translateX(-100%);animation:dive-scan 3.4s ease-in-out infinite}
+.dive-core{position:relative;z-index:2;width:min(560px,88vw);min-height:430px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;text-align:center}
+.dive-ring{position:absolute;width:min(72vw,430px);aspect-ratio:1;border:1px solid rgba(76,219,231,.36);border-radius:50%;box-shadow:0 0 42px rgba(42,194,214,.12),inset 0 0 42px rgba(42,194,214,.08);animation:dive-rotate 14s linear infinite}
+.dive-ring:before,.dive-ring:after{content:"";position:absolute;inset:9%;border:1px dashed rgba(119,225,230,.28);border-radius:50%}
+.dive-ring:after{inset:22%;border-style:solid;border-color:rgba(119,225,230,.16)}
+.dive-ring.d2{width:min(54vw,320px);border-color:rgba(220,168,99,.25);animation:dive-rotate 22s linear infinite reverse}
+.dive-portal{position:absolute;width:min(34vw,220px);aspect-ratio:1;display:grid;place-items:center;filter:drop-shadow(0 0 26px rgba(44,207,224,.3));animation:dive-breathe 3.4s ease-in-out infinite}
+.dive-portal svg{width:100%;height:100%;overflow:visible;fill:none;stroke:#70dce5;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;opacity:.68}
+.dive-portal circle:first-child{stroke-dasharray:5 8;animation:dive-rotate 26s linear infinite}
+.dive-portal circle:nth-child(2){stroke:#d6b477;opacity:.65;stroke-dasharray:2 6}
+.dive-title{position:relative;margin-top:230px;color:#e2f6f6;font:700 clamp(16px,2vw,22px) var(--mono,monospace);letter-spacing:.34em;text-shadow:0 0 22px #42c6d8a6}
+.dive-log{position:relative;display:grid;gap:7px;min-height:96px;margin-top:20px;color:#8eabb5;font:9px/1.6 var(--mono,monospace);letter-spacing:.12em;text-align:left}
+.dive-line{animation:dive-line-in .45s ease both}
+.dive-line.dim{color:#66818d}.dive-line.cyan{color:#75e3ed;text-shadow:0 0 12px #4bc6dc55}.dive-line.hi{color:#e2c58e}
+.dive-overlay.out{opacity:0;visibility:hidden;filter:blur(8px);transform:scale(1.04);transition:opacity .7s,filter .7s,transform .7s}
+.dive-overlay.out .dive-portal{transform:scale(1.8);opacity:0;transition:transform .7s,opacity .7s}
+@keyframes dive-rotate{to{transform:rotate(360deg)}}@keyframes dive-breathe{0%,100%{transform:scale(.92);opacity:.65}50%{transform:scale(1.06);opacity:1}}
+@keyframes dive-static{0%,100%{transform:translate(0)}50%{transform:translate(1%,-1%)}}
+@keyframes dive-scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes dive-line-in{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+
+/* All shadow manifestations are larger and readable; spider1 is no longer swallowed by Multiply. */
+.spider-presence{width:min(68vw,900px)!important;height:min(96vh,980px)!important}
+.spider-presence-0{width:min(58vw,760px)!important;height:94%!important}
+.spider-presence-1{left:68%!important;width:min(64vw,840px)!important;height:96%!important;filter:drop-shadow(0 0 24px rgba(0,0,0,.95))!important}
+.spider-presence-2{left:57%!important;width:min(70vw,940px)!important;height:100%!important}
+.spider-presence-3{left:55%!important;width:min(76vw,1020px)!important;height:100%!important}
+.spider-presence-1 img{opacity:.88!important;filter:brightness(.48) contrast(1.42) saturate(.12)!important;mix-blend-mode:normal!important}
+.spider-presence-0 img,.spider-presence-2 img,.spider-presence-3 img{opacity:1!important}
+.sanity-shadow,.false-presence{width:min(42vw,560px)!important;height:min(76vh,760px)!important;max-width:560px}
+.sanity-shadow{filter:brightness(.5) contrast(1.22) saturate(.2) drop-shadow(0 12px 22px #000)!important}
+.false-presence{filter:brightness(.52) contrast(1.2) drop-shadow(0 12px 24px #000)!important}
+@keyframes png-shadow-drift{12%{opacity:.72}65%{opacity:.56;transform:translate(-10px,4px) scale(1.05)}100%{opacity:0;transform:translate(18px,-4px) scale(1.08)}}
+@keyframes png-shadow-false{12%{opacity:.54}60%{opacity:.36}100%{opacity:0;transform:translateX(-50%) scale(1.08)}}
+
+/* Keep the spider escape choice inside the viewport on short displays. */
+.spider-dialogue{bottom:max(12px,env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
+.spider-choice[data-spider-action="run"]{align-self:end;position:relative;top:6px}
+.spider-choices{align-items:start}
+@media(max-height:760px){.spider-dialogue{padding:12px 14px 10px!important}.spider-dialogue p{margin-bottom:8px}.spider-choice{min-height:44px;padding:7px 8px}}
+
+/* Rhythm puzzle has an audible demo and tactile response to every input. */
+.gutter-audio-hint{display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px;border:1px solid rgba(73,195,211,.35);background:linear-gradient(100deg,rgba(7,33,44,.92),rgba(5,17,26,.72));}
+.gutter-audio-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid #4fc8d5;border-radius:50%;color:#8cecf0;font:700 13px var(--mono);box-shadow:0 0 18px #3cc4d633}
+.gutter-audio-hint strong,.gutter-audio-hint small{display:block}.gutter-audio-hint strong{color:#c8f5f5;font:700 10px var(--mono);letter-spacing:.12em}.gutter-audio-hint small{margin-top:4px;color:#83a9b3;font:10px var(--sans)}
+.gutter-listen{margin-left:auto;white-space:nowrap}
+.gutter-audio-hint.playing .gutter-audio-icon{animation:gutter-audio-pulse .45s ease-in-out 3}
+@keyframes gutter-audio-pulse{50%{transform:scale(1.12);box-shadow:0 0 24px #54e1eeaa}}
+.gutter-sequence-display{position:relative;overflow:hidden}
+.gutter-sequence-display:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(91,222,230,.08),transparent);transform:translateX(-100%)}
+.gutter-audio-hint.playing~.gutter-sequence-display:after{animation:gutter-sweep 1.2s ease}
+@keyframes gutter-sweep{to{transform:translateX(100%)}}
+
+/* Move the retreat control down into the safe area of the combat header. */
+.combat-top{align-items:center;min-height:52px}
+#combatFlee{align-self:flex-end;margin-top:8px;margin-bottom:2px;transform:translateY(4px)}
+@media(max-width:760px){#combatFlee{margin-top:10px;margin-bottom:4px;transform:none}}
+
+/* Center the entry glyph precisely; its rotation uses transform while translate stays independent. */
+.dive-ring,.dive-portal{left:50%;top:42%;translate:-50% -50%}
+.dive-portal{z-index:1}
+.dive-title,.dive-log{z-index:2}
