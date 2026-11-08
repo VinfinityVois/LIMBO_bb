@@ -1879,6 +1879,12 @@ export class ImmersionScene {
       next.textContent = 'ПРОДОЛЖИТЬ · СЛЕДУЮЩАЯ СЦЕНА';
       next.addEventListener('click', () => { window.location.href = '/scene-shanghai.html'; });
       actions.appendChild(next);
+      const replay = document.createElement('button');
+      replay.type = 'button';
+      replay.className = 'inspection-action quiet report-replay';
+      replay.textContent = 'ПЕРЕИГРАТЬ СЕКТОР';
+      replay.addEventListener('click', () => this.showSystemConfirm('reset'));
+      actions.appendChild(replay);
       const exit = document.createElement('button');
       exit.type = 'button';
       exit.className = 'inspection-action quiet';
@@ -1886,7 +1892,7 @@ export class ImmersionScene {
       exit.addEventListener('click', () => { window.location.href = '/scene-ryokan.html'; });
       actions.appendChild(exit);
     }
-    if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены в накопительном архиве Цефея.';
+    if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены. Повторное прохождение обновит результат RK-01, не стирая архив кампании.';
     modal?.classList.add('report-mode', 'open');
     if (modal) modal.style.display = 'flex';
     document.body.classList.add('inspection-open', 'sector-finished');
