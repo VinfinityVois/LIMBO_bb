@@ -900,7 +900,7 @@ export class ImmersionScene {
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
       paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
-      ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
+      ryokan_key: 'key', kokeshi_note: 'letter', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
       stitched_mask: 'doll',
