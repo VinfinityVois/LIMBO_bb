@@ -81,6 +81,12 @@ export class ImmersionScene {
 
   constructor() {
     this.state = loadState();
+    // Migrate progress from the earlier anchor interaction so existing saves do not become stuck.
+    if (this.state.flags.anchor_warned) this.state.flags.anchor_step_bell = true;
+    if (this.state.flags.anchor_warded) this.state.flags.anchor_step_charm = true;
+    if (this.state.flags.anchor_lit) this.state.flags.anchor_step_lantern = true;
+    if (this.state.flags.anchor_step_bell && this.state.flags.anchor_step_charm && this.state.flags.anchor_step_lantern) this.state.flags.anchor_puzzle_solved = true;
+    saveState(this.state);
     this.maskWorn = this.state.maskWorn === true;
     document.body.classList.toggle('mask-worn', this.maskWorn);
     this.stage = document.getElementById('simStage')!;
