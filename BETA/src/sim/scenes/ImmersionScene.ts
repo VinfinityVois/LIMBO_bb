@@ -13,6 +13,7 @@ import { hotspotsFor, type HotspotDef } from '../data/ryokan/hotspots';
 import { ITEMS, RECIPES, itemSvgMarkup } from '../data/ryokan/items';
 import { ParallaxRenderer } from '../systems/Parallax';
 import { simAudio } from '../audio/SimAudio';
+import { recordCampaignSector } from '../state/CampaignProgress';
 
 function actionsFor(hs: HotspotDef, state: GameState): string[] {
   const a: string[] = ['Осмотреть'];
@@ -1717,66 +1718,11 @@ export class ImmersionScene {
     const gradeTier = ({ F: 1, E: 2, D: 3, C: 4, B: 5, A: 6 } as Record<string, number>)[grade];
     const gradeArt = ({ F: 'F.png', E: 'Е.png', D: 'D.png', C: 'С.png', B: 'В.png', A: 'А.png' } as Record<string, string>)[grade];
 
-    const campaignKey = 'limbo_campaign_archive_v1';
-    type SectorRecord = { score: number; grade: string; gradeTier: number; collected: number; used: number; clues: number; secrets: number; ending: string | null };
-    type CampaignArchive = {
-      version: 1;
-      results: Record<string, SectorRecord>;
-      completedSectors: string[];
-      totalScore: number;
-      scoreCount: number;
-      averageScore: number;
-      totalCollected: number;
-      totalUsed: number;
-      totalClues: number;
-      totalSecrets: number;
-      bestCardTier: number;
-      passTier: number;
-    };
-    const emptyArchive = (): CampaignArchive => ({
-      version: 1, results: {}, completedSectors: [], totalScore: 0, scoreCount: 0,
-      averageScore: 0, totalCollected: 0, totalUsed: 0, totalClues: 0,
-      totalSecrets: 0, bestCardTier: 1, passTier: 1
-    });
-    let archive = emptyArchive();
-    try {
-      const saved = JSON.parse(localStorage.getItem(campaignKey) || 'null') as Partial<CampaignArchive> | null;
-      if (saved && saved.version === 1 && saved.results && typeof saved.results === 'object') {
-        const results = saved.results as Record<string, SectorRecord>;
-        const records = Object.values(results);
-        const totalScore = records.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
-        const scoreCount = records.length;
-        const averageScore = scoreCount ? Math.round(totalScore / scoreCount) : 0;
-        archive = {
-          ...emptyArchive(), results, completedSectors: Object.keys(results),
-          totalScore, scoreCount, averageScore,
-          totalCollected: records.reduce((sum, item) => sum + (Number(item.collected) || 0), 0),
-          totalUsed: records.reduce((sum, item) => sum + (Number(item.used) || 0), 0),
-          totalClues: records.reduce((sum, item) => sum + (Number(item.clues) || 0), 0),
-          totalSecrets: records.reduce((sum, item) => sum + (Number(item.secrets) || 0), 0),
-          bestCardTier: Math.max(1, ...records.map(item => Number(item.gradeTier) || 1)),
-          passTier: averageScore >= 84 ? 3 : averageScore >= 62 ? 2 : 1
-        };
-      }
-    } catch { archive = emptyArchive(); }
-    // Replacing a sector record makes report reopening idempotent: no duplicate rewards or score inflation.
-    archive.results['RK-01'] = {
+    const archive = recordCampaignSector('RK-01', {
       score, grade, gradeTier, collected: collected.length, used: used.length,
       clues: clueCount, secrets: secretCount, ending: this.state.ending
-    };
-    const records = Object.values(archive.results);
-    archive.completedSectors = Object.keys(archive.results);
-    archive.totalScore = records.reduce((sum, item) => sum + (Number(item.score) || 0), 0);
-    archive.scoreCount = records.length;
-    archive.averageScore = archive.scoreCount ? Math.round(archive.totalScore / archive.scoreCount) : 0;
-    archive.totalCollected = records.reduce((sum, item) => sum + (Number(item.collected) || 0), 0);
-    archive.totalUsed = records.reduce((sum, item) => sum + (Number(item.used) || 0), 0);
-    archive.totalClues = records.reduce((sum, item) => sum + (Number(item.clues) || 0), 0);
-    archive.totalSecrets = records.reduce((sum, item) => sum + (Number(item.secrets) || 0), 0);
-    archive.bestCardTier = Math.max(archive.bestCardTier, gradeTier);
-    archive.passTier = archive.averageScore >= 84 ? 3 : archive.averageScore >= 62 ? 2 : 1;
+    });
     try {
-      localStorage.setItem(campaignKey, JSON.stringify(archive));
       localStorage.setItem('limbo_pass_RK02', '1');
       localStorage.setItem('limbo_character_card_RK01', JSON.stringify({
         sector: 'RK-01', subject: 'СУБЪЕКТ 01', ending: this.state.ending,
