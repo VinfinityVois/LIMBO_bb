@@ -699,6 +699,22 @@ export class ImmersionScene {
       button!.setAttribute('aria-expanded', String(open));
       if (open) this.renderThoughtJournal();
     };
+    if (panel.dataset.outsideCloseBound !== '1') {
+      panel.dataset.outsideCloseBound = '1';
+      document.addEventListener('pointerdown', (event) => {
+        const target = event.target as Node;
+        if (panel!.classList.contains('open') && !panel!.contains(target) && !button!.contains(target)) {
+          panel!.classList.remove('open');
+          button!.setAttribute('aria-expanded', 'false');
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && panel!.classList.contains('open')) {
+          panel!.classList.remove('open');
+          button!.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
     this.renderThoughtJournal();
   }
 
@@ -723,6 +739,18 @@ export class ImmersionScene {
     ];
     const noteRows = notes.filter(([,flag]) => !!this.state.flags[flag]).map(([label]) => label);
     group('ЗАМЕТКИ', noteRows, 'Пока не найдено ни одной записки или зацепки.');
+    const easterLabels: Record<string,string> = {
+      easter_mirror: 'Отражение из другого времени',
+      spider_recognized: 'Тень узнала тебя',
+      spider_story_heard: 'История Паутинницы',
+      spider_thread_given: 'Нить, отданная тени',
+      heard_steps: 'Шаги над потолком',
+      mask_voice_known: 'Голос из маски',
+      gutter_puzzle_solved: 'Тайна водостока',
+      anchor_puzzle_solved: 'Стабилизация якоря'
+    };
+    const openedEaster = Object.keys(easterLabels).filter(key => !!this.state.flags[key]).map(key => easterLabels[key]);
+    group('ОТКРЫТЫЕ ПАСХАЛКИ', openedEaster, 'Пока ни одна пасхалка не раскрыта.');
     const thoughts = memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory);
     group('МЫСЛИ', thoughts, 'Здесь будут только мысли, которые удалось удержать.');
     const extra = document.createElement('details'); extra.className = 'thought-journal-group thought-journal-extra';
