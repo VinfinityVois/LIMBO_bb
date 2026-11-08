@@ -393,8 +393,7 @@ export class ImmersionScene {
     const title = document.createElement('h3'); title.textContent = lines[stage][0];
     const copy = document.createElement('p'); copy.textContent = lines[stage][1];
     const choices = document.createElement('div'); choices.className = 'spider-choices';
-    const actions = [
-      [['look','ignore','call'],['steady','thread','turn'],['ask','bell','hand'],['fight','run','surrender']][stage];
+    const actions = [['look','ignore','call'],['steady','thread','turn'],['ask','bell','hand'],['fight','run','surrender']][stage];
     for (let n=0;n<3;n++) {
       const btn=document.createElement('button'); btn.type='button'; btn.className='spider-choice';
       const strong=document.createElement('strong'); strong.textContent=lines[stage][n+2];
