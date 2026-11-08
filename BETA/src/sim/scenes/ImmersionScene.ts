@@ -433,8 +433,8 @@ export class ImmersionScene {
       else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+9000;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
-      if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderNextAt=Date.now()+34000;}
-      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderNextAt=Date.now()+65000;}
+      if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
+      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+65000;}
       else if(action==='hand'){
         const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
         this.state.flags.spider_hand_taken=true;
