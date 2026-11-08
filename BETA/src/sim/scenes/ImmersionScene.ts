@@ -1322,6 +1322,8 @@ export class ImmersionScene {
     this.threatApproachTimer = 0;
     this.threatActive = false;
     document.getElementById('sceneCreature')?.remove();
+    document.getElementById('spiderPresence')?.remove();
+    document.getElementById('spiderDialogue')?.remove();
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
