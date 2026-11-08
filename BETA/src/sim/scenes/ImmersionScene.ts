@@ -465,13 +465,13 @@ export class ImmersionScene {
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
-      if(action==='thread'&&hasThread){this.state.inventory=this.state.inventory.filter(x=>x!=='silk_thread');this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
+      if(action==='thread'&&hasThread){{ const at=this.state.inventory.indexOf('silk_thread'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
       else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
       else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
       if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
-      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
+      else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
       else if(action==='hand'){
         const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
         this.state.flags.spider_hand_taken=true;
@@ -658,15 +658,27 @@ export class ImmersionScene {
   private ensureThoughtJournal() {
     const inventory = document.querySelector<HTMLElement>('.hud-inventory');
     const heading = inventory?.querySelector<HTMLElement>('.inventory-heading');
-    if (!inventory || !heading || document.getElementById('thoughtJournalToggle')) return;
-    const button = document.createElement('button'); button.id = 'thoughtJournalToggle'; button.type = 'button'; button.className = 'thought-journal-toggle';
-    button.innerHTML = 'МЫСЛИ <b id="thoughtJournalCount">0</b>';
-    button.addEventListener('click', () => { const panel = document.getElementById('thoughtJournal'); if (!panel) return; const open = !panel.classList.contains('open'); panel.classList.toggle('open', open); button.setAttribute('aria-expanded', String(open)); if (open) this.renderThoughtJournal(); });
-    heading.appendChild(button);
-    const panel = document.createElement('section'); panel.id = 'thoughtJournal'; panel.className = 'thought-journal'; panel.setAttribute('aria-label', 'Журнал мыслей');
-    panel.innerHTML = '<div class="thought-journal-head"><strong>ПАМЯТЬ СУБЪЕКТА</strong><button type="button" aria-label="Закрыть">×</button></div><p class="thought-journal-intro">Мысли, подсказки и наблюдения, которые удалось удержать.</p><div class="thought-journal-list" id="thoughtJournalList"></div>';
-    panel.querySelector('button')?.addEventListener('click', () => { panel.classList.remove('open'); button.setAttribute('aria-expanded', 'false'); });
-    inventory.appendChild(panel); this.renderThoughtJournal();
+    if (!inventory || !heading) return;
+    let button = document.getElementById('thoughtJournalToggle') as HTMLButtonElement | null;
+    if (!button) {
+      button = document.createElement('button'); button.id = 'thoughtJournalToggle'; button.type = 'button'; button.className = 'thought-journal-toggle';
+      button.innerHTML = 'МЫСЛИ <b id="thoughtJournalCount">0</b>';
+      heading.appendChild(button);
+    }
+    let panel = document.getElementById('thoughtJournal') as HTMLElement | null;
+    if (!panel) {
+      panel = document.createElement('section'); panel.id = 'thoughtJournal'; panel.className = 'thought-journal'; panel.setAttribute('aria-label', 'Журнал мыслей');
+      panel.innerHTML = '<div class="thought-journal-head"><strong>ПАМЯТЬ СУБЪЕКТА</strong><button type="button" aria-label="Закрыть">×</button></div><p class="thought-journal-intro">Мысли, подсказки и наблюдения, которые удалось удержать.</p><div class="thought-journal-list" id="thoughtJournalList"></div>';
+      document.body.appendChild(panel);
+      panel.querySelector('button')?.addEventListener('click', () => { panel?.classList.remove('open'); button?.setAttribute('aria-expanded', 'false'); });
+    }
+    button.onclick = () => {
+      const open = !panel!.classList.contains('open');
+      panel!.classList.toggle('open', open);
+      button!.setAttribute('aria-expanded', String(open));
+      if (open) this.renderThoughtJournal();
+    };
+    this.renderThoughtJournal();
   }
 
   private renderThoughtJournal() {
@@ -681,11 +693,12 @@ export class ImmersionScene {
       details.append(summary, content); list.appendChild(details);
     };
     const ids = Object.keys(ITEMS) as ItemId[];
-    const collected = ids.filter(id => this.state.flags['collected_' + id]);
+    const collected = ids.filter(id => this.state.flags['collected_' + id] || this.state.inventory.includes(id));
+    const heldCounts = this.state.inventory.reduce((counts, id) => { counts[id] = (counts[id] || 0) + 1; return counts; }, {} as Partial<Record<ItemId, number>>);
     const used = ids.filter(id => this.state.flags['used_' + id]);
     const dangerous = collected.filter(id => id === 'black_seed' || id === 'stitched_mask');
     const clues = Object.keys(this.state.flags).filter(key => /^(clue_|easter_|lore_|spider_story_heard|gutter_puzzle_solved|anchor_puzzle_solved)/.test(key) && this.state.flags[key]);
-    group('СОБРАННЫЕ ПРЕДМЕТЫ', collected.map(id => ITEMS[id].name), 'Пока ничего не найдено.');
+    group('СОБРАННЫЕ ПРЕДМЕТЫ', collected.map(id => ITEMS[id].name + ((heldCounts[id] || 0) > 1 ? ' · В РУКАХ: ' + heldCounts[id] : '')), 'Пока ничего не найдено.');
     group('ИСПОЛЬЗОВАННЫЕ ПРЕДМЕТЫ', used.map(id => ITEMS[id].name), 'Пока ничего не использовано.');
     group('ОПАСНЫЕ НАХОДКИ', dangerous.map(id => ITEMS[id].name), 'Опасных предметов пока нет.');
     group('ПОДСКАЗКИ И ПАСХАЛКИ', clues.map(key => key.replace(/^(clue_|easter_|lore_)/, '').replaceAll('_', ' ')), 'Пока нет подтверждённых зацепок.');
@@ -763,7 +776,7 @@ export class ImmersionScene {
 
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
-      paper_lantern_shard: 'lantern_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
+      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
       ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
@@ -796,7 +809,7 @@ export class ImmersionScene {
     const rect=this.stage.getBoundingClientRect();
     const x=clientX===undefined?46+Math.random()*12:Math.max(5,Math.min(94,((clientX-rect.left)/rect.width)*100));
     const y=clientY===undefined?48+Math.random()*12:Math.max(12,Math.min(78,((clientY-rect.top)/rect.height)*100));
-    this.state.inventory=this.state.inventory.filter(item=>item!==id);
+    { const at=this.state.inventory.indexOf(id); if(at>=0)this.state.inventory.splice(at,1); }
     if(this.state.selected===id)this.state.selected=null;
     this.state.droppedItems.push({id,location:this.state.location,x,y});
     this.state.flags['dropped_'+id]=true; saveState(this.state);
@@ -951,6 +964,11 @@ export class ImmersionScene {
     this.state.flags['examined_' + hs.id] = true;
     saveState(this.state);
     this.buildHotspots();
+    if (hs.complete && !this.state.selected) {
+      this.openModal(hs);
+      this.showAnchorPuzzle(hs);
+      return;
+    }
     this.spawnInspectBurst(hs.x, hs.y);
 
     // Contextual item use: these interactions are intentionally tied to visible world objects.
@@ -971,7 +989,7 @@ export class ImmersionScene {
       this.state.flags[next.flag] = true;
       this.state.flags['used_' + selected] = true;
       this.state.flags['used_on_hs_anchor'] = true;
-      this.state.inventory = this.state.inventory.filter(id => id !== selected);
+      { const at = this.state.inventory.indexOf(selected); if (at >= 0) this.state.inventory.splice(at, 1); }
       this.state.selected = null;
       this.rememberThought(next.thought);
       const solved = sequence.every(step => !!this.state.flags[step.flag]);
@@ -982,7 +1000,7 @@ export class ImmersionScene {
         simAudio.complete(this.state.muted);
       } else this.notify('Элемент принят. Якорь ждёт следующий сигнал.', 'ok');
       saveState(this.state);
-      this.renderInv(); this.renderVitals(); this.openModal(hs);
+      this.renderInv(); this.renderVitals(); this.openModal(hs); this.showAnchorPuzzle(hs);
       return;
     }
     const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
@@ -1016,7 +1034,7 @@ export class ImmersionScene {
       this.state.flags['used_' + selected] = true;
       this.state.flags['used_on_' + hs.id] = true;
       this.state.flags[contextualUse.flag] = true;
-      if (contextualUse.consume) this.state.inventory = this.state.inventory.filter(id => id !== selected);
+      if (contextualUse.consume) { const at = this.state.inventory.indexOf(selected); if (at >= 0) this.state.inventory.splice(at, 1); }
       if (contextualUse.sanity) this.state.sanity = Math.max(0, this.state.sanity + contextualUse.sanity);
       this.state.selected = null;
       saveState(this.state);
@@ -1325,9 +1343,9 @@ export class ImmersionScene {
 
   private syncAnchorProgress() {
     // A one-use resource leaves a permanent trace; the anchor accepts that trace later.
-    if (this.state.flags.used_copper_bell || this.state.flags.anchor_warned || this.state.flags.clue_rain_rhythm) this.state.flags.anchor_step_bell = true;
-    if (this.state.flags.used_warding_charm || this.state.flags.anchor_warded) this.state.flags.anchor_step_charm = true;
-    if (this.state.flags.used_ember_lantern || this.state.flags.anchor_lit || this.state.flags.world_lantern_lit) this.state.flags.anchor_step_lantern = true;
+    if (this.state.flags.took_bell || this.state.flags.used_copper_bell || this.state.flags.anchor_warned || this.state.flags.clue_rain_rhythm) this.state.flags.anchor_step_bell = true;
+    if (this.state.flags.used_warding_charm || this.state.flags.anchor_warded || this.state.flags.threaded_note || this.state.flags.clue_shadow_warning || (this.state.flags.took_silk && this.state.flags.took_herbs)) this.state.flags.anchor_step_charm = true;
+    if (this.state.flags.used_ember_lantern || this.state.flags.anchor_lit || this.state.flags.world_lantern_lit || this.state.flags.easter_mirror || this.state.flags.note_read || this.state.flags.took_matches) this.state.flags.anchor_step_lantern = true;
     if (this.state.flags.anchor_step_bell && this.state.flags.anchor_step_charm && this.state.flags.anchor_step_lantern) this.state.flags.anchor_puzzle_solved = true;
     saveState(this.state);
   }
@@ -1369,13 +1387,29 @@ export class ImmersionScene {
       const button = document.createElement('button'); button.type = 'button';
       button.className = 'inspection-action secondary';
       button.textContent = (this.state.flags[step.flag] ? '✓ ' : '＋ ') + ITEMS[step.id].name;
-      button.disabled = !!this.state.flags[step.flag] || !this.state.inventory.includes(step.id);
-      button.addEventListener('click', () => { if (!button.disabled) { this.state.selected = step.id; this.onHotspot(hs); } });
+      const evidenceAvailable = step.flag === 'anchor_step_bell'
+        ? !!(this.state.flags.took_bell || this.state.flags.clue_rain_rhythm)
+        : step.flag === 'anchor_step_charm'
+          ? !!(this.state.flags.threaded_note || this.state.flags.clue_shadow_warning || (this.state.flags.took_silk && this.state.flags.took_herbs))
+          : !!(this.state.flags.world_lantern_lit || this.state.flags.easter_mirror || this.state.flags.note_read || this.state.flags.took_matches);
+      const hasItem = this.state.inventory.includes(step.id);
+      button.disabled = !!this.state.flags[step.flag] || (!hasItem && !evidenceAvailable);
+      if (!hasItem && evidenceAvailable) button.textContent = '＋ ПРИНЯТЬ СЛЕД · ' + step.label;
+      button.addEventListener('click', () => {
+        if (button.disabled) return;
+        this.state.flags[step.flag] = true;
+        if (hasItem) this.state.flags['used_' + step.id] = true;
+        this.syncAnchorProgress();
+        saveState(this.state);
+        this.showAnchorPuzzle(hs);
+      });
       actions.appendChild(button);
     });
     const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
     close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
-    if (note) note.textContent = 'Неправильный предмет не расходуется. Каждый верный сигнал устанавливается в гнездо и сохраняется.';
+    if (note) note.textContent = 'Одноразовые вещи не расходуются на якоре. Если фонарь, оберег или колокольчик уже применялись в другом месте, якорь примет оставшийся след или найденную подсказку.';
+    document.getElementById('simModal')?.classList.add('open');
+    document.body.classList.add('inspection-open');
   }
 
   private showEndingChoices() {
@@ -1535,7 +1569,7 @@ export class ImmersionScene {
       document.body.classList.add('mask-worn');
     } else {
       this.state.health = Math.max(1, this.state.health - 12);
-      this.state.inventory = this.state.inventory.filter(id => id !== 'black_seed');
+      { const at = this.state.inventory.indexOf('black_seed'); if (at >= 0) this.state.inventory.splice(at, 1); }
       this.state.selected = this.state.inventory.includes(this.state.selected as ItemId) ? this.state.selected : null;
       this.state.flags.channel_broken = true;
       this.state.flags.creatures_weakened = true;
@@ -1984,7 +2018,7 @@ export class ImmersionScene {
         this.updateCombatHud('Этот предмет нельзя безопасно использовать в бою. Попробуй другой.'); return;
       }
       this.state.flags['used_' + id] = true;
-      if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) this.state.inventory = this.state.inventory.filter(x => x !== id);
+      if (['herbal_poultice','medicinal_herbs','warding_charm','matchbox'].includes(id)) { const at=this.state.inventory.indexOf(id); if(at>=0)this.state.inventory.splice(at,1); }
       this.state.selected = null;
       this.renderInv(); this.renderVitals(); this.renderCombatInventory();
     } else { this.makeNoise('Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'); this.monsterHp=Math.max(0,this.monsterHp-6); log='Резкий хлопок отвлёк существо. Но шум услышали в соседних комнатах.'; simAudio.impact(this.state.muted); }
@@ -2305,7 +2339,7 @@ export class ImmersionScene {
       return;
     }
     this.state.flags['used_' + id] = true;
-    this.state.inventory = this.state.inventory.filter((item) => item !== id);
+    { const at=this.state.inventory.indexOf(id); if(at>=0)this.state.inventory.splice(at,1); }
     this.state.selected = null;
     saveState(this.state);
     simAudio.take(this.state.muted);
@@ -2327,7 +2361,7 @@ export class ImmersionScene {
       if (recipe) {
         this.state.flags['used_' + recipe.a] = true;
         this.state.flags['used_' + recipe.b] = true;
-        this.state.inventory = this.state.inventory.filter((x) => x !== recipe.a && x !== recipe.b);
+        { const a=this.state.inventory.indexOf(recipe.a); if(a>=0)this.state.inventory.splice(a,1); const b=this.state.inventory.indexOf(recipe.b); if(b>=0)this.state.inventory.splice(b,1); }
         if (!this.state.inventory.includes(recipe.result)) this.state.inventory.push(recipe.result);
         this.state.flags['crafted_' + recipe.result] = true;
         this.state.selected = recipe.result;
