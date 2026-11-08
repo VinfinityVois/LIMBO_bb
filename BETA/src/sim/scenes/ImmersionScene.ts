@@ -484,7 +484,7 @@ export class ImmersionScene {
     this.closeSpiderBeat();
     const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
     if(this.spiderStage===0) {
-      if(action==='timeout'){this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout=true;this.state.sanity=Math.max(0,this.state.sanity-3);this.notify('Ты слишком долго молчал. Фигура стала ближе. −3 рассудка.','warn');this.spiderNextAt=Date.now()+9000;}
       else if(action==='look'){this.state.flags.spider_recognized=true;this.state.flags.spider_calm_look=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
       else if(action==='call'){this.state.flags.spider_called=true;this.state.flags.spider_anger_call=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
@@ -1135,6 +1135,9 @@ export class ImmersionScene {
         hs_anchor: { flag: 'anchor_lit', message: 'Ты ставишь тлеющий фонарь в гнездо якоря. Контур удерживает свет.', consume: true },
         hs_mirror_panel: { flag: 'easter_mirror', message: 'Свет касается стекла. В отражении фигура поднимает руку раньше тебя. На стекле проступает: «ОНА УЖЕ ВНУТРИ».' },
       },
+      mirror_lens: {
+        hs_mirror_panel: { flag: 'easter_mirror', message: 'Линза входит в трещину потемневшего стекла. Отражение собирается в одно целое: фигура поднимает руку раньше тебя.', consume: true },
+      },
       copper_bell: {
         hs_anchor: { flag: 'anchor_warned', message: 'Безъязыкий колокольчик дрожит у якоря. Изнутри отвечают тремя ударами.' },
         hs_rain_gutter: { flag: 'clue_rain_rhythm', message: 'Ты прикладываешь колокольчик к желобу. Металл отвечает тремя короткими ударами и одним длинным.' },
@@ -1677,8 +1680,8 @@ export class ImmersionScene {
       const checklist=document.createElement('ul');checklist.className='ending-requirements';
       requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
       body.appendChild(checklist);
-      const clueLabels:Record<string,string>={note_read:'Записка о суставном скрипе',clue_key_halves:'Подсказка о половинах ключа',threaded_note:'Записка о шёлковой нити',clue_rain_rhythm:'Ритм дождя',clue_shadow_warning:'Предупреждение о тени',clue_echo_answered:'Ответ эха'};
-      const easterLabels:Record<string,string>={easter_mirror:'Отражение из другого времени',spider_recognized:'Тень узнала тебя',spider_story_heard:'История паучьей тени',spider_thread_given:'Нить отдана тени',heard_steps:'Шаги над потолком',mask_voice_known:'Голос из маски'};
+      const clueLabels:Record<string,string>={note_read:'Записка о суставном скрипе',clue_note_gate:'Записка у водостока',clue_note_garden:'Записка под камнем',clue_note_engawa:'Записка под карнизом',clue_note_storage:'Записка у якоря',clue_key_halves:'Подсказка о половинах ключа',threaded_note:'Записка о шёлковой нити',clue_rain_rhythm:'Ритм дождя',clue_shadow_warning:'Предупреждение о тени',clue_echo_answered:'Ответ эха'};
+      const easterLabels:Record<string,string>={easter_mirror:'Отражение из другого времени',spider_recognized:'Паутинница узнала тебя',spider_story_heard:'История Паутинницы',spider_thread_given:'Нить, отданная Паутиннице',heard_steps:'Шаги над потолком',mask_voice_known:'Голос из маски'};
       const groups:Array<[string,Record<string,string>]>=[['ПОДСКАЗКИ',clueLabels],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterLabels]];
       groups.forEach(([label,labels])=>{
         const keys=Object.keys(labels);const foundKeys=keys.filter(k=>!!this.state.flags[k]);
@@ -2587,7 +2590,7 @@ export class ImmersionScene {
         }
         this.state.inventory.splice(Math.max(a,b),1);
         this.state.inventory.splice(Math.min(a,b),1);
-        if (!this.state.inventory.includes(recipe.result)) this.state.inventory.push(recipe.result);
+        this.state.inventory.push(recipe.result);
         this.state.flags['crafted_' + recipe.result] = true;
         this.state.selected = recipe.result;
         saveState(this.state);
