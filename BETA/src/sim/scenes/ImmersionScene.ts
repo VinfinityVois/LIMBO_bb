@@ -75,7 +75,7 @@ export class ImmersionScene {
   private lastNotification = '';
   private lastNotificationAt = 0;
   private spiderStage = 0;
-  private spiderNextAt = Date.now() + 28000;
+  private spiderNextAt = Date.now() + 16000;
   private spiderDialogTimer: ReturnType<typeof setTimeout> | number = 0;
   private spiderInCombat = false;
 
@@ -397,9 +397,10 @@ export class ImmersionScene {
         document.body.classList.contains('combat-active') || this.threatActive) return false;
     if (Date.now() < this.spiderNextAt) return false;
     if (this.spiderStage === 0) {
-      const eligible = this.state.visited.length >= 2 && this.state.sanity <= 72;
-      const pressure = Math.max(0, 72 - this.state.sanity);
-      const chance = Math.min(.34, .025 + pressure * .006 + (this.state.flags.black_seed_taken ? .035 : 0));
+      const eligible = this.state.visited.length >= 1 && this.state.sanity <= 84;
+      const pressure = Math.max(0, 84 - this.state.sanity);
+      // Recurring apparition; low sanity makes the encounter much more likely.
+      const chance = Math.min(.58, .105 + pressure * .008 + (this.state.flags.black_seed_taken ? .07 : 0) + (this.state.flags.spider_called ? .035 : 0));
       if (eligible && Math.random() < chance) { this.openSpiderBeat(0); return true; }
       return false;
     }
@@ -459,24 +460,24 @@ export class ImmersionScene {
     this.closeSpiderBeat();
     const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
     if(this.spiderStage===0) {
-      if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+52000;}
-      else if(action==='call'){this.state.flags.spider_called=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+18000;}
-      else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+26000;}
+      if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+24000;}
+      else if(action==='call'){this.state.flags.spider_called=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+12000;}
+      else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+19000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
       if(action==='thread'&&hasThread){this.state.inventory=this.state.inventory.filter(x=>x!=='silk_thread');this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
-      else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+42000;}
-      else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+9000;}
+      else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+28000;}
+      else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
       if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
-      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+65000;}
+      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
       else if(action==='hand'){
         const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
         this.state.flags.spider_hand_taken=true;
         if(Math.random()<risk){this.state.health=0;this.state.sanity=0;this.notify('«Я выведу тебя», — шепчет она. Пальцы смыкаются с другой стороны кожи.','warn');saveState(this.state);this.renderVitals();this.checkDefeat();return;}
         this.state.sanity=Math.max(0,this.state.sanity-22);this.notify('Она отпустила тебя. На ладони осталась чёрная нить под кожей.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+12000;
-      } else {this.state.sanity=Math.max(0,this.state.sanity-7);this.spiderStage=3;this.spiderNextAt=Date.now()+14000;this.notify('Тень рвётся к тебе. Теперь она больше не скрывается.','warn');}
+      } else {this.state.sanity=Math.max(0,this.state.sanity-7);this.spiderStage=3;this.spiderNextAt=Date.now()+10000;this.notify('Тень рвётся к тебе. Теперь она больше не скрывается.','warn');}
     } else {
       if(action==='fight'){this.spiderInCombat=true;this.startCombat();return;}
       if(action==='run'){
@@ -671,8 +672,25 @@ export class ImmersionScene {
   private renderThoughtJournal() {
     const count = document.getElementById('thoughtJournalCount'); const list = document.getElementById('thoughtJournalList'); const memories = this.state.memories || [];
     if (count) count.textContent = String(memories.length); if (!list) return; list.innerHTML = '';
-    if (!memories.length) { const empty = document.createElement('p'); empty.className = 'thought-journal-empty'; empty.textContent = 'Пока пусто. Здесь будут оставаться важные мысли, подсказки и странные совпадения.'; list.appendChild(empty); return; }
-    memories.slice().reverse().forEach((memory, index) => { const entry = document.createElement('article'); entry.className = 'thought-journal-entry'; const number = document.createElement('small'); number.textContent = 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0'); const copy = document.createElement('p'); copy.textContent = memory; entry.append(number, copy); list.appendChild(entry); });
+    const group = (title: string, rows: string[], empty: string) => {
+      const details = document.createElement('details'); details.className = 'thought-journal-group';
+      const summary = document.createElement('summary'); summary.textContent = title + ' · ' + rows.length;
+      const content = document.createElement('div'); content.className = 'thought-journal-group-content';
+      if (!rows.length) { const p = document.createElement('p'); p.className = 'thought-journal-empty'; p.textContent = empty; content.appendChild(p); }
+      rows.forEach(value => { const p = document.createElement('p'); p.className = 'thought-journal-row'; p.textContent = value; content.appendChild(p); });
+      details.append(summary, content); list.appendChild(details);
+    };
+    const ids = Object.keys(ITEMS) as ItemId[];
+    const collected = ids.filter(id => this.state.flags['collected_' + id]);
+    const used = ids.filter(id => this.state.flags['used_' + id]);
+    const dangerous = collected.filter(id => id === 'black_seed' || id === 'stitched_mask');
+    const clues = Object.keys(this.state.flags).filter(key => /^(clue_|easter_|lore_|spider_story_heard|gutter_puzzle_solved|anchor_puzzle_solved)/.test(key) && this.state.flags[key]);
+    group('СОБРАННЫЕ ПРЕДМЕТЫ', collected.map(id => ITEMS[id].name), 'Пока ничего не найдено.');
+    group('ИСПОЛЬЗОВАННЫЕ ПРЕДМЕТЫ', used.map(id => ITEMS[id].name), 'Пока ничего не использовано.');
+    group('ОПАСНЫЕ НАХОДКИ', dangerous.map(id => ITEMS[id].name), 'Опасных предметов пока нет.');
+    group('ПОДСКАЗКИ И ПАСХАЛКИ', clues.map(key => key.replace(/^(clue_|easter_|lore_)/, '').replaceAll('_', ' ')), 'Пока нет подтверждённых зацепок.');
+    const thoughts = memories.slice().reverse().map((memory, index) => 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0') + ' · ' + memory);
+    group('МЫСЛИ И НАБЛЮДЕНИЯ', thoughts, 'Пока пусто. Здесь будут оставаться важные мысли, подсказки и странные совпадения.');
   }
 
   notify(msg: string, kind: 'info' | 'warn' | 'ok' = 'info') {
@@ -938,6 +956,7 @@ export class ImmersionScene {
     // Contextual item use: these interactions are intentionally tied to visible world objects.
     const selected = this.state.selected;
     if (hs.id === 'hs_anchor' && selected) {
+      this.syncAnchorProgress();
       const sequence: Array<{ id: ItemId; flag: string; thought: string }> = [
         { id: 'copper_bell', flag: 'anchor_step_bell', thought: 'Колокольчик — первый ответ. Якорь слышит не звук, а намерение предупредить.' },
         { id: 'warding_charm', flag: 'anchor_step_charm', thought: 'Оберег удерживает контур. Три комнаты — три свидетельства; нить связывает их.' },
@@ -1304,7 +1323,17 @@ export class ImmersionScene {
     if (note) note.textContent = 'Подсказка: три коротких удара и один длинный. Ошибка не наказывается — можно попробовать снова.';
   }
 
+  private syncAnchorProgress() {
+    // A one-use resource leaves a permanent trace; the anchor accepts that trace later.
+    if (this.state.flags.used_copper_bell || this.state.flags.anchor_warned || this.state.flags.clue_rain_rhythm) this.state.flags.anchor_step_bell = true;
+    if (this.state.flags.used_warding_charm || this.state.flags.anchor_warded) this.state.flags.anchor_step_charm = true;
+    if (this.state.flags.used_ember_lantern || this.state.flags.anchor_lit || this.state.flags.world_lantern_lit) this.state.flags.anchor_step_lantern = true;
+    if (this.state.flags.anchor_step_bell && this.state.flags.anchor_step_charm && this.state.flags.anchor_step_lantern) this.state.flags.anchor_puzzle_solved = true;
+    saveState(this.state);
+  }
+
   private showAnchorPuzzle(hs: HotspotDef) {
+    this.syncAnchorProgress();
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
     const visual = document.getElementById('modalVisual');
