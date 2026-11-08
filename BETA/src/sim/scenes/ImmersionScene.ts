@@ -115,11 +115,26 @@ export class ImmersionScene {
         this.hoverCard.style.top = Math.min(y, window.innerHeight - 120) + 'px';
       }
     });
+    this.stage.addEventListener('contextmenu', (e) => {
+      if ((e.target as HTMLElement).closest('.inv-slot,.spider-dialogue,.sim-modal,.combat-screen,button,a')) return;
+      e.preventDefault(); this.echo();
+    });
+    this.stage.addEventListener('dragover', (e) => { if (Array.from(e.dataTransfer?.types || []).includes('text/limbo-item')) e.preventDefault(); });
+    this.stage.addEventListener('drop', (e) => {
+      const id = e.dataTransfer?.getData('text/limbo-item') as ItemId;
+      if (!id || !this.state.inventory.includes(id)) return;
+      e.preventDefault(); this.dropItem(id, e.clientX, e.clientY);
+    });
     window.addEventListener('resize', () => this.resize());
   }
 
   async start() {
     this.bindChrome();
+    if (this.state.completed) {
+      this.diving = false;
+      this.showRunReport();
+      return;
+    }
     this.ensurePerceptionOverlay();
     if (sessionStorage.getItem('limbo-sector-reboot') === '1') {
       sessionStorage.removeItem('limbo-sector-reboot');
@@ -131,6 +146,7 @@ export class ImmersionScene {
     await this.loadLoc(this.state.location);
     this.buildHotspots();
     this.buildExits();
+    this.renderDroppedItems();
     this.renderInv();
     this.renderVitals();
     this.checkDefeat();
@@ -288,8 +304,20 @@ export class ImmersionScene {
         else this.closeModal();
         return;
       }
-      if (!document.getElementById('combatScreen')?.classList.contains('open') || e.repeat) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(target.tagName))) return;
+      if (e.repeat) return;
       const key = e.key.toLowerCase();
+      if (!document.getElementById('combatScreen')?.classList.contains('open')) {
+        if (document.getElementById('simModal')?.classList.contains('open') || document.getElementById('spiderDialogue')) return;
+        if (key === 'e') { this.echo(); return; }
+        if (key === 'q') { simAudio.call(this.state.muted); this.makeNoise('Ты окликнул кого-то в темноте.'); return; }
+        if (key === 'r') { this.useSelectedItem(); return; }
+        if (key === 'f' && this.state.selected) { this.openItemExam(this.state.selected); return; }
+        if (key === 'x' && this.state.selected) { this.dropItem(this.state.selected); return; }
+        if (/^[1-9]$/.test(key)) { const id=this.state.inventory[Number(key)-1]; if(id) this.onInv(id); return; }
+        return;
+      }
       if (key === '1' || key === 'a') this.combatAction('attack');
       else if (key === '2' || key === ' ') this.combatDodge();
       else if (key === '3' || key === 'g') this.combatAction('guard');
@@ -362,8 +390,10 @@ export class ImmersionScene {
         document.body.classList.contains('combat-active') || this.threatActive) return false;
     if (Date.now() < this.spiderNextAt) return false;
     if (this.spiderStage === 0) {
-      const eligible = this.state.visited.length >= 2 || this.state.sanity < 82 || this.state.flags.black_seed_taken;
-      if (eligible && Math.random() < .075) { this.openSpiderBeat(0); return true; }
+      const eligible = this.state.visited.length >= 2 && this.state.sanity <= 72;
+      const pressure = Math.max(0, 72 - this.state.sanity);
+      const chance = Math.min(.34, .025 + pressure * .006 + (this.state.flags.black_seed_taken ? .035 : 0));
+      if (eligible && Math.random() < chance) { this.openSpiderBeat(0); return true; }
       return false;
     }
     this.openSpiderBeat(this.spiderStage);
@@ -688,6 +718,49 @@ export class ImmersionScene {
     return '/assets/game/items/' + (files[id] || 'mirror_shard') + '.png';
   }
 
+  private renderDroppedItems() {
+    this.stage.querySelectorAll('.dropped-world-item').forEach(node => node.remove());
+    for (const drop of this.state.droppedItems.filter(item => item.location === this.state.location)) {
+      const button=document.createElement('button');
+      button.type='button'; button.className='dropped-world-item'; button.style.left=drop.x+'%'; button.style.top=drop.y+'%';
+      const def=ITEMS[drop.id];
+      button.innerHTML='<img src="'+this.itemAsset(drop.id)+'" alt=""><span>'+def.name+'</span>';
+      button.title=def.name+' · подобрать';
+      button.addEventListener('click',()=>{
+        if(this.state.inventory.length>=12){this.notify('Инвентарь заполнен. Сначала освободи место.','warn');return;}
+        this.state.droppedItems=this.state.droppedItems.filter(x=>x!==drop);
+        this.state.inventory.push(drop.id); this.state.flags['collected_'+drop.id]=true;
+        saveState(this.state); this.renderDroppedItems(); this.renderInv();
+        this.notify('Поднято: '+def.name,'ok'); simAudio.take(this.state.muted);
+      });
+      this.stage.appendChild(button);
+    }
+  }
+
+  private dropItem(id: ItemId, clientX?: number, clientY?: number) {
+    if(!this.state.inventory.includes(id)) return;
+    const rect=this.stage.getBoundingClientRect();
+    const x=clientX===undefined?46+Math.random()*12:Math.max(5,Math.min(94,((clientX-rect.left)/rect.width)*100));
+    const y=clientY===undefined?48+Math.random()*12:Math.max(12,Math.min(78,((clientY-rect.top)/rect.height)*100));
+    this.state.inventory=this.state.inventory.filter(item=>item!==id);
+    if(this.state.selected===id)this.state.selected=null;
+    this.state.droppedItems.push({id,location:this.state.location,x,y});
+    this.state.flags['dropped_'+id]=true; saveState(this.state);
+    this.renderInv(); this.renderDroppedItems();
+    this.notify('Оставлено на месте: '+ITEMS[id].name+'. Можно вернуться и подобрать.','info');
+  }
+
+  private echo() {
+    simAudio.call(this.state.muted);
+    this.makeNoise('Ты посылаешь короткое эхо по помещению. Ответ приходит не сразу.');
+    this.state.flags.used_echo=true;
+    if(!this.state.flags.clue_echo_answered && this.state.visited.length>=3 && Math.random()<.22){
+      this.state.flags.clue_echo_answered=true;
+      this.notify('Эхо возвращается тремя ударами. Где-то в доме есть ответ на этот ритм.','ok');
+    }
+    saveState(this.state);
+  }
+
   private buildHotspots() {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
@@ -726,6 +799,14 @@ export class ImmersionScene {
         this.showHover(hs, b);
       });
       b.addEventListener('mouseleave', () => this.hideHover());
+      b.addEventListener('contextmenu',(e)=>{if(hs.id==='hs_rain_gutter'){e.preventDefault();this.state.flags.clue_rain_rhythm=true;saveState(this.state);this.notify('Три коротких удара и один длинный. Эхо повторяет рисунок желоба.','ok');this.echo();}});
+      b.addEventListener('dragover',(e)=>{if(Array.from(e.dataTransfer?.types || []).includes('text/limbo-item')){e.preventDefault();b.classList.add('drop-target');}});
+      b.addEventListener('dragleave',()=>b.classList.remove('drop-target'));
+      b.addEventListener('drop',(e)=>{
+        const id=e.dataTransfer?.getData('text/limbo-item') as ItemId;
+        if(!id||!this.state.inventory.includes(id))return;
+        e.preventDefault();e.stopPropagation();b.classList.remove('drop-target');this.state.selected=id;this.onHotspot(hs,b);
+      });
       b.addEventListener('click', () => {
         this.hideHover();
         this.onHotspot(hs, b);
@@ -799,6 +880,7 @@ export class ImmersionScene {
     await this.loadLoc(to);
     this.buildHotspots();
     this.buildExits();
+    this.renderDroppedItems();
     this.renderMinimap();
     this.updateZone();
     this.stage.classList.remove('fade');
@@ -822,6 +904,7 @@ export class ImmersionScene {
     const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
       silk_thread: {
         hs_note: { flag: 'threaded_note', message: 'Ты закрепил записку нитью. На обороте проступила строка: «Якорь слушает то, что принесено из трёх комнат».' },
+        hs_footprint_wall: { flag: 'clue_shadow_warning', message: 'Ты натягиваешь нить между отпечатками. Она дрожит только там, где тень должна была бы стоять.' },
       },
       matchbox: {
         hs_lantern: { flag: 'world_lantern_lit', message: 'Сырая спичка вспыхивает на миг. Внутри фонаря проявляется знак Цефея.', consume: true },
@@ -831,9 +914,11 @@ export class ImmersionScene {
       },
       ember_lantern: {
         hs_anchor: { flag: 'anchor_lit', message: 'Ты ставишь тлеющий фонарь в гнездо якоря. Контур удерживает свет.', consume: true },
+        hs_mirror_panel: { flag: 'easter_mirror', message: 'Свет касается стекла. В отражении фигура поднимает руку раньше тебя. На стекле проступает: «ОНА УЖЕ ВНУТРИ».' },
       },
       copper_bell: {
         hs_anchor: { flag: 'anchor_warned', message: 'Безъязыкий колокольчик дрожит у якоря. Изнутри отвечают тремя ударами.' },
+        hs_rain_gutter: { flag: 'clue_rain_rhythm', message: 'Ты прикладываешь колокольчик к желобу. Металл отвечает тремя короткими ударами и одним длинным.' },
       },
       black_seed: {
         hs_anchor: { flag: 'anchor_seeded', message: 'Семя проваливается в сердцевину якоря. Цефей произносит твоё имя чужим голосом.', consume: true, sanity: -18 },
@@ -964,8 +1049,23 @@ export class ImmersionScene {
       } else {
         const empty = document.createElement('p');
         empty.className = 'discovery-empty';
-        empty.textContent = 'Больше ничего заметного. Но ощущение чужого присутствия не исчезает.';
+        empty.textContent = hs.id === 'hs_rain_gutter'
+          ? 'Дождевая вода идёт против уклона. Под краем вырезаны три короткие черты и одна длинная — тот же ритм, который возвращает эхо.'
+          : hs.id === 'hs_footprint_wall'
+          ? 'Мокрые отпечатки ладоней тянутся вверх по стене. Между ними повторяется знак закрытого глаза. Под последним отпечатком: «Не всякая тень хочет войти».'
+          : hs.id === 'hs_mirror_panel'
+          ? 'В стекле отражается коридор, которого нет за спиной. На миг видна фигура с перевязанными руками. Если направить сюда восстановленный свет, отражение исчезает.'
+          : 'Больше ничего заметного. Но ощущение чужого присутствия не исчезает.';
         body.appendChild(empty);
+        if(hs.id==='hs_rain_gutter'||hs.id==='hs_footprint_wall'||hs.id==='hs_mirror_panel'){
+          addAction('ЗАПОМНИТЬ ЗНАК', 'primary', () => {
+            this.state.flags['lore_'+hs.id]=true;
+            if(hs.id==='hs_rain_gutter')this.state.flags.clue_rain_rhythm=true;
+            if(hs.id==='hs_footprint_wall')this.state.flags.clue_shadow_warning=true;
+            if(hs.id==='hs_mirror_panel')this.state.flags.easter_mirror=true;
+            saveState(this.state);this.notify('Фрагмент сведений добавлен в память Цефея.','ok');this.closeModal();
+          });
+        }
         addAction('ЗАКРЫТЬ ОСМОТР', 'quiet', () => this.closeModal());
         if (note) note.textContent = 'Мы запомнили это место.';
       }
@@ -1103,6 +1203,15 @@ export class ImmersionScene {
     if (note) note.textContent='Сначала выход. Отчёт Цефея появится после завершения перехода.';
   }
 
+  private showSectorFinale() {
+    document.getElementById('sectorFinale')?.remove();
+    const overlay=document.createElement('section');overlay.id='sectorFinale';overlay.className='sector-finale';
+    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>СОЕДИНЕНИЕ РАЗОРВАНО</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
+    document.body.appendChild(overlay);requestAnimationFrame(()=>overlay.classList.add('active'));
+    window.setTimeout(()=>{overlay.classList.add('resolved');const p=overlay.querySelector('p');if(p)p.textContent='СУБЪЕКТ ПОКИНУЛ РЁКАН';},1900);
+    window.setTimeout(()=>{overlay.classList.add('fade-out');window.setTimeout(()=>{overlay.remove();this.showRunReport();},850);},4100);
+  }
+
   private showRunReport() {
     const title=document.getElementById('modalTitle');
     const body=document.getElementById('modalBody');
@@ -1112,7 +1221,7 @@ export class ImmersionScene {
     if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
     if(visual)visual.innerHTML='<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
     const allItems=Object.keys(ITEMS) as ItemId[];
-    const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id));
+    const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id)||this.state.droppedItems.some(x=>x.id===id));
     const used=allItems.filter(id=>this.state.flags['used_'+id]);
     const dangerous=['black_seed','stitched_mask'] as ItemId[];
     const dangerousTaken=dangerous.filter(id=>this.state.flags['collected_'+id]||this.state.inventory.includes(id));
@@ -1143,6 +1252,15 @@ export class ImmersionScene {
       ];
       rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
       body.appendChild(list);
+      const gallery=document.createElement('div');gallery.className='ending-item-gallery';
+      allItems.forEach(id=>{
+        const card=document.createElement('div');card.className='ending-item-card '+(collected.includes(id)?'found':'missing');
+        const img=document.createElement('img');img.src=this.itemAsset(id);img.alt='';
+        const name=document.createElement('strong');name.textContent=ITEMS[id].name;
+        const status=document.createElement('small');status.textContent=used.includes(id)?'ИСПОЛЬЗОВАНО':collected.includes(id)?(this.state.droppedItems.some(x=>x.id===id)?'ОСТАВЛЕНО НА ЛОКАЦИИ':'НАЙДЕНО'):'НЕ НАЙДЕНО';
+        card.append(img,name,status);gallery.appendChild(card);
+      });
+      body.appendChild(gallery);
       const found=document.createElement('p');found.className='ending-outcome-copy';
       found.textContent='Собрано: '+(collected.map(id=>ITEMS[id].name).join(' · ')||'ничего')+'.';body.appendChild(found);
       const spent=document.createElement('p');spent.className='ending-outcome-copy';
@@ -1150,6 +1268,15 @@ export class ImmersionScene {
       const checklist=document.createElement('ul');checklist.className='ending-requirements';
       requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
       body.appendChild(checklist);
+      const lore=document.createElement('ul');lore.className='ending-requirements';
+      const clueKeys=['note_read','clue_key_halves','threaded_note','clue_rain_rhythm','clue_shadow_warning','clue_echo_answered'];
+      const easterKeys=['easter_mirror','spider_recognized','spider_story_heard','spider_thread_given','heard_steps','mask_voice_known'];
+      const groups:Array<[string,string[]]>=[['ПОДСКАЗКИ',clueKeys],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterKeys]];
+      groups.forEach(([label,keys])=>{
+        const foundKeys=keys.filter(k=>!!this.state.flags[k]);
+        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
+      });
+      body.appendChild(lore);
       const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
       outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
       body.appendChild(outcome);
@@ -1166,6 +1293,7 @@ export class ImmersionScene {
   }
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
+    if(this.state.completed)return;
     this.state.completed = true;
     this.state.ending = ending;
     this.state.flags.ending_clear = ending === 'clear';
@@ -1207,8 +1335,9 @@ export class ImmersionScene {
     this.notify('ВЫХОД ИЗ СЕКТОРА · '+copy,'ok');
     this.showSense('◇','Сектор покинут. Данные переданы Цефею.',ending !== 'clear');
     this.stage.classList.add('sector-exit');
+    document.body.classList.add('sector-finished');
     document.body.classList.add('sector-exit-active');
-    window.setTimeout(()=>this.showRunReport(),1100);
+    this.showSectorFinale();
   }
 
   private closeModal() {
@@ -1228,11 +1357,13 @@ export class ImmersionScene {
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
       slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
+      slot.draggable=true;
+      slot.addEventListener('dragstart',(e)=>{e.dataTransfer?.setData('text/limbo-item',id);if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
       slot.addEventListener('click', () => this.onInv(id));
       slot.addEventListener('focus', () => simAudio.hover(this.state.muted));
       slot.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        this.openItemExam(id);
+        e.preventDefault();e.stopPropagation();
+        if(e.shiftKey)this.dropItem(id);else this.openItemExam(id);
       });
       this.invEl.appendChild(slot);
     }

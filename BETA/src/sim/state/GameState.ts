@@ -24,9 +24,12 @@ export type ItemId =
   | 'black_seed'
   | 'stitched_mask';
 
+export interface DroppedItem { id: ItemId; location: LocationId; x: number; y: number; }
+
 export interface GameState {
   location: LocationId;
   inventory: ItemId[];
+  droppedItems: DroppedItem[];
   flags: Record<string, boolean>;
   visited: LocationId[];
   selected: ItemId | null;
@@ -47,6 +50,7 @@ export function defaultState(): GameState {
   return {
     location: 'gate',
     inventory: [],
+    droppedItems: [],
     flags: {},
     visited: ['gate'],
     selected: null,
@@ -71,6 +75,7 @@ export function loadState(): GameState {
       ...defaultState(),
       ...p,
       inventory: Array.isArray(p.inventory) ? p.inventory : [],
+      droppedItems: Array.isArray(p.droppedItems) ? p.droppedItems.filter((x): x is DroppedItem => !!x && typeof x.id === 'string' && typeof x.location === 'string' && typeof x.x === 'number' && typeof x.y === 'number') : [],
       flags: p.flags || {},
       visited: p.visited?.length ? p.visited : ['gate'],
       selected: p.selected ?? null,
@@ -93,6 +98,7 @@ export function saveState(s: GameState): void {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
       location: s.location,
       inventory: s.inventory,
+      droppedItems: s.droppedItems,
       flags: s.flags,
       visited: s.visited,
       selected: s.selected,

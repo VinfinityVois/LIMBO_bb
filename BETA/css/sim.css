@@ -1062,3 +1062,43 @@ body.sector-exit-active .exit-layer { transition:opacity .55s ease; opacity:0 !i
  .spider-choices{grid-template-columns:1fr}
  .spider-choice{min-height:44px}
 }
+
+/* Expanded shadows, finale and world item drops */
+.spider-presence{width:min(54vw,720px);height:100%;top:0;left:50%}
+.spider-presence-0{width:min(40vw,520px);height:92%}
+.spider-presence-1{left:72%;width:min(38vw,500px);height:90%}
+.spider-presence-2{left:55%;width:min(50vw,660px);height:100%}
+.spider-presence-3{left:53%;width:min(58vw,760px);height:100%}
+.spider-dialogue{bottom:clamp(190px,24vh,290px);z-index:10040}
+.dropped-world-item{position:absolute;z-index:19;left:50%;top:50%;width:clamp(44px,5vw,76px);height:clamp(48px,6vw,84px);padding:4px;display:grid;place-items:center;border:1px solid #56d5e555;background:#06131bd9;cursor:pointer;transform:translate(-50%,-50%);filter:drop-shadow(0 8px 12px #000b);transition:.2s}
+.dropped-world-item:hover{border-color:#61efff;transform:translate(-50%,-56%) scale(1.1);box-shadow:0 0 22px #36d7e966}
+.dropped-world-item img{max-width:100%;max-height:100%;object-fit:contain}
+.dropped-world-item span{position:absolute;top:100%;left:50%;transform:translateX(-50%);padding:3px 6px;background:#030a10ef;color:#b9d9df;font:8px var(--mono);white-space:nowrap}
+.hotspot.drop-target{border:1px dashed #7cecff;background:#4bd8e52b;box-shadow:0 0 26px #4bd8e577}
+.ending-item-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:14px 0}
+.ending-item-card{display:grid;grid-template-rows:76px auto auto;gap:5px;align-items:center;justify-items:center;padding:8px;border:1px solid #42616b55;background:#07141bd9;text-align:center;min-width:0}
+.ending-item-card img{width:100%;height:76px;object-fit:contain;filter:drop-shadow(0 3px 8px #000)}
+.ending-item-card strong{font:600 9px var(--mono);color:#c5dce1}
+.ending-item-card small{font:8px var(--mono);letter-spacing:.08em;color:#55d9c1}
+.ending-item-card.missing{opacity:.45;filter:grayscale(1)}
+.ending-item-card.missing small{color:#a18a8a}
+.sector-finale{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;overflow:hidden;background:#02060b;opacity:0;transition:opacity .7s ease}
+.sector-finale.active{opacity:1}
+.sector-finale.fade-out{opacity:0;filter:blur(8px);transition:opacity .8s,filter .8s}
+.finale-noise{position:absolute;inset:-30%;opacity:.2;background:repeating-linear-gradient(0deg,transparent 0 3px,#8eeaff12 4px),radial-gradient(ellipse at center,#124150 0,transparent 55%);animation:finale-static 1.8s steps(3) infinite}
+.finale-ring{position:absolute;width:min(52vw,560px);aspect-ratio:1;border:1px solid #43d8e977;border-radius:50%;box-shadow:0 0 45px #1fcde533,inset 0 0 45px #1fcde522;transform:scale(.15);opacity:0}
+.sector-finale.active .finale-ring{animation:finale-ring-in 2.7s cubic-bezier(.2,.7,.1,1) forwards}
+.finale-ring:before,.finale-ring:after{content:"";position:absolute;inset:12%;border:1px dashed #63dce955;border-radius:50%;animation:finale-spin 14s linear infinite}
+.finale-ring:after{inset:28%;border-style:solid;animation-direction:reverse}
+.finale-copy{position:relative;text-align:center;padding:30px;opacity:0;transform:translateY(18px);transition:opacity .8s .35s,transform .8s .35s}
+.sector-finale.active .finale-copy{opacity:1;transform:none}
+.finale-copy small{color:#59dcec;font:10px var(--mono);letter-spacing:.3em}
+.finale-copy h1{margin:18px 0 10px;color:#e9faff;font:700 clamp(24px,5vw,54px) var(--mono);letter-spacing:.16em;text-shadow:0 0 26px #47d9ef77}
+.finale-copy p{color:#d57b8c;font:600 12px var(--mono);letter-spacing:.22em}
+.finale-copy span{display:block;margin-top:28px;color:#718f9c;font:9px var(--mono);letter-spacing:.18em}
+.sector-finale.resolved .finale-copy p{color:#64e2d0}
+@keyframes finale-ring-in{0%{transform:scale(.15) rotate(-40deg);opacity:0}35%{opacity:1}100%{transform:scale(1.12) rotate(25deg);opacity:.5}}
+@keyframes finale-spin{to{transform:rotate(360deg)}}
+@keyframes finale-static{0%,100%{transform:translate(0,0)}30%{transform:translate(1%,-.5%)}70%{transform:translate(-.7%,.8%)}}
+body.sector-finished .game-hud,body.sector-finished .world-hud,body.sector-finished .hotspot-layer,body.sector-finished .exit-layer,body.sector-finished .notify-host{pointer-events:none}
+@media(max-width:720px){.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:76vw;height:78%;top:2%}.spider-dialogue{bottom:clamp(150px,25vh,220px)}.ending-item-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
