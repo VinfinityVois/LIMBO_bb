@@ -1345,8 +1345,7 @@ export class ImmersionScene {
             letter.append(stamp, text);
             body.appendChild(letter);
             actions.innerHTML = '';
-            addAction('ПОНЯТНО', 'primary', () => this.closeModal());
-            addAction('ЗАКРЫТЬ', 'quiet', () => this.closeModal());
+            addAction('ЗАКРЫТЬ ЗАПИСКУ', 'primary', () => this.closeModal());
             this.state.flags[hs.clueFlag!] = true;
             this.rememberThought(hs.label + ': ' + hs.clueText);
             saveState(this.state);
