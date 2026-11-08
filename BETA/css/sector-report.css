@@ -101,29 +101,6 @@
 .note-letter img{width:76px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 7px #0009)}
 .note-letter p{margin:0;white-space:pre-line}
 
-/* Animated sector seal during the final transfer to Cepheus. */
-#sectorFinale .finale-sigil{position:absolute;left:50%;top:42%;width:min(42vw,310px);aspect-ratio:1;transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px #36d7e988)}
-#sectorFinale .finale-sigil svg{width:100%;height:100%;overflow:visible}
-#sectorFinale .sigil-orbit{fill:none;stroke:#4de3ed;stroke-width:1.2;stroke-dasharray:8 7;transform-origin:120px 120px;animation:sigil-spin 8s linear infinite}
-#sectorFinale .sigil-inner{fill:rgba(14,49,60,.25);stroke:#a1eaf0;stroke-width:1;stroke-dasharray:2 5;animation:sigil-breathe 2.8s ease-in-out infinite}
-#sectorFinale .sigil-mark{fill:none;stroke:#67dce7;stroke-width:1.5;stroke-linejoin:round;transform-origin:120px 120px;animation:sigil-pulse 3s ease-in-out infinite}
-#sectorFinale .sigil-core{fill:rgba(84,207,218,.08);stroke:#e5fbff;stroke-width:1.2;transform-origin:120px 120px;animation:sigil-core 2.4s ease-in-out infinite}
-#sectorFinale .sigil-cut{stroke:#e2fbff;stroke-width:.8;opacity:.65;stroke-dasharray:3 7;animation:sigil-flicker 1.7s steps(2) infinite}
-@keyframes sigil-spin{to{transform:rotate(360deg)}}
-@keyframes sigil-breathe{0%,100%{opacity:.35;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}
-@keyframes sigil-pulse{0%,100%{transform:scale(.92) rotate(0);opacity:.55}50%{transform:scale(1.08) rotate(8deg);opacity:1}}
-@keyframes sigil-core{0%,100%{transform:scale(.8) rotate(0)}50%{transform:scale(1.12) rotate(45deg)}}
-@keyframes sigil-flicker{0%,100%{opacity:.2}50%{opacity:.9}}
-@media(max-width:720px){
- .spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:90vw!important;height:95%!important;top:-2%!important;left:55%!important}
- .spider-dialogue{bottom:calc(var(--hud-h,200px) + 6px)!important;width:calc(100vw - 18px)!important;max-height:180px!important;padding:8px!important}
- .spider-choices{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- .note-letter{grid-template-columns:56px 1fr;gap:8px;padding:8px;font-size:10px}
- .note-letter img{width:56px;height:72px}
- #sectorFinale .finale-sigil{width:min(64vw,250px);top:38%}
-}
-
-
 /* Interaction visibility: world objects always sit above route labels and transient toasts. */
 .hotspot-layer{z-index:34!important;pointer-events:none}
 .hotspot-layer .hotspot{pointer-events:auto;position:absolute;z-index:2}
@@ -167,40 +144,15 @@
 .dive-ring:before,.dive-ring:after{content:"";position:absolute;inset:9%;border:1px dashed rgba(119,225,230,.28);border-radius:50%}
 .dive-ring:after{inset:22%;border-style:solid;border-color:rgba(119,225,230,.16)}
 .dive-ring.d2{width:min(54vw,320px);border-color:rgba(220,168,99,.25);animation:dive-rotate 22s linear infinite reverse}
-.dive-portal{position:absolute;width:min(34vw,220px);aspect-ratio:1;display:grid;place-items:center;filter:drop-shadow(0 0 26px rgba(44,207,224,.3));animation:dive-breathe 3.4s ease-in-out infinite}
-.dive-portal svg{width:100%;height:100%;overflow:visible;fill:none;stroke:#70dce5;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;opacity:.68}
-.dive-portal circle:first-child{stroke-dasharray:5 8;animation:dive-rotate 26s linear infinite}
-.dive-portal circle:nth-child(2){stroke:#d6b477;opacity:.65;stroke-dasharray:2 6}
 .dive-title{position:relative;margin-top:230px;color:#e2f6f6;font:700 clamp(16px,2vw,22px) var(--mono,monospace);letter-spacing:.34em;text-shadow:0 0 22px #42c6d8a6}
 .dive-log{position:relative;display:grid;gap:7px;min-height:96px;margin-top:20px;color:#8eabb5;font:9px/1.6 var(--mono,monospace);letter-spacing:.12em;text-align:left}
 .dive-line{animation:dive-line-in .45s ease both}
 .dive-line.dim{color:#66818d}.dive-line.cyan{color:#75e3ed;text-shadow:0 0 12px #4bc6dc55}.dive-line.hi{color:#e2c58e}
 .dive-overlay.out{opacity:0;visibility:hidden;filter:blur(8px);transform:scale(1.04);transition:opacity .7s,filter .7s,transform .7s}
-.dive-overlay.out .dive-portal{transform:scale(1.8);opacity:0;transition:transform .7s,opacity .7s}
-@keyframes dive-rotate{to{transform:rotate(360deg)}}@keyframes dive-breathe{0%,100%{transform:scale(.92);opacity:.65}50%{transform:scale(1.06);opacity:1}}
+@keyframes dive-rotate{to{transform:rotate(360deg)}}
 @keyframes dive-static{0%,100%{transform:translate(0)}50%{transform:translate(1%,-1%)}}
 @keyframes dive-scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 @keyframes dive-line-in{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
-
-/* All shadow manifestations are larger and readable; spider1 is no longer swallowed by Multiply. */
-.spider-presence{width:min(68vw,900px)!important;height:min(96vh,980px)!important}
-.spider-presence-0{width:min(58vw,760px)!important;height:94%!important}
-.spider-presence-1{left:68%!important;width:min(64vw,840px)!important;height:96%!important;filter:drop-shadow(0 0 24px rgba(0,0,0,.95))!important}
-.spider-presence-2{left:57%!important;width:min(70vw,940px)!important;height:100%!important}
-.spider-presence-3{left:55%!important;width:min(76vw,1020px)!important;height:100%!important}
-.spider-presence-1 img{opacity:.88!important;filter:brightness(.48) contrast(1.42) saturate(.12)!important;mix-blend-mode:normal!important}
-.spider-presence-0 img,.spider-presence-2 img,.spider-presence-3 img{opacity:1!important}
-.sanity-shadow,.false-presence{width:min(42vw,560px)!important;height:min(76vh,760px)!important;max-width:560px}
-.sanity-shadow{filter:brightness(.5) contrast(1.22) saturate(.2) drop-shadow(0 12px 22px #000)!important}
-.false-presence{filter:brightness(.52) contrast(1.2) drop-shadow(0 12px 24px #000)!important}
-@keyframes png-shadow-drift{12%{opacity:.72}65%{opacity:.56;transform:translate(-10px,4px) scale(1.05)}100%{opacity:0;transform:translate(18px,-4px) scale(1.08)}}
-@keyframes png-shadow-false{12%{opacity:.54}60%{opacity:.36}100%{opacity:0;transform:translateX(-50%) scale(1.08)}}
-
-/* Keep the spider escape choice inside the viewport on short displays. */
-.spider-dialogue{bottom:max(12px,env(safe-area-inset-bottom))!important;max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain}
-.spider-choice[data-spider-action="run"]{align-self:end;position:relative;top:6px}
-.spider-choices{align-items:start}
-@media(max-height:760px){.spider-dialogue{padding:12px 14px 10px!important}.spider-dialogue p{margin-bottom:8px}.spider-choice{min-height:44px;padding:7px 8px}}
 
 /* Rhythm puzzle has an audible demo and tactile response to every input. */
 .gutter-audio-hint{display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px;border:1px solid rgba(73,195,211,.35);background:linear-gradient(100deg,rgba(7,33,44,.92),rgba(5,17,26,.72));}
