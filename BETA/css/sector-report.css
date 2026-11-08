@@ -66,3 +66,59 @@
 #sectorFinale .finale-ring{animation:finale-ring-expand 3.8s cubic-bezier(.12,.7,.18,1) forwards}
 @keyframes finale-ring-expand{0%{transform:scale(.15) rotate(0);opacity:0}25%{opacity:1}100%{transform:scale(2.8) rotate(140deg);opacity:0}}
 @media(max-width:720px){.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:86vw!important;height:86%!important;top:0!important}.spider-dialogue{bottom:clamp(170px,28vh,250px)!important}}
+
+
+/* RK-01: the apparition dominates the location; dialogue stays a compact footer. */
+.spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{
+  height:124%!important;top:-12%!important;transform-origin:center bottom!important;
+}
+.spider-presence-0{width:min(60vw,780px)!important;left:55%!important}
+.spider-presence-1{width:min(68vw,900px)!important;left:62%!important}
+.spider-presence-2{width:min(72vw,960px)!important;left:57%!important}
+.spider-presence-3{width:min(78vw,1040px)!important;left:55%!important}
+.spider-dialogue{
+  bottom:calc(var(--hud-h,200px) + 10px)!important;
+  width:min(620px,calc(100vw - 32px))!important;
+  max-width:620px!important;max-height:190px!important;overflow:auto!important;
+  padding:10px 12px!important;z-index:10040!important;
+}
+.spider-dialogue h3{font-size:9px!important;margin:0 0 4px!important}
+.spider-dialogue p{font-size:10px!important;line-height:1.35!important;margin:0 0 6px!important}
+.spider-choices{gap:5px!important}
+.spider-choice{min-height:36px!important;padding:6px 7px!important}
+.spider-choice strong{font-size:8px!important;margin-bottom:2px!important}
+.spider-choice small{font-size:8px!important;line-height:1.2!important}
+.spider-deadline{height:4px!important;margin:0 0 7px!important}
+.spider-deadline span{font-size:7px!important;top:5px!important}
+
+/* Physical notes use the letter image already present in the repository. */
+.hotspot.note-marker{border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.hotspot.note-marker:hover{border:0!important;background:transparent!important;box-shadow:none!important}
+.hotspot.note-marker .world-note-art{position:absolute;inset:-18%;display:grid;place-items:center;pointer-events:none;filter:drop-shadow(0 5px 8px rgba(0,0,0,.9))}
+.hotspot.note-marker .world-note-art img{display:block;width:100%;height:100%;object-fit:contain;opacity:1;filter:contrast(1.08) saturate(.8)}
+.hotspot.note-marker:hover .world-note-art{transform:translateY(-4px) rotate(-2deg) scale(1.12);filter:drop-shadow(0 8px 12px #000) drop-shadow(0 0 12px rgba(76,220,231,.55))}
+.note-letter{display:grid;grid-template-columns:76px 1fr;align-items:start;gap:12px;margin:12px 0 4px;padding:12px;border:1px solid rgba(163,137,94,.38);background:linear-gradient(135deg,rgba(35,29,22,.78),rgba(13,18,22,.92));color:#d8cbb3;font:12px/1.7 'Space Grotesk',sans-serif}
+.note-letter img{width:76px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 7px #0009)}
+.note-letter p{margin:0;white-space:pre-line}
+
+/* Animated sector seal during the final transfer to Cepheus. */
+#sectorFinale .finale-sigil{position:absolute;left:50%;top:42%;width:min(42vw,310px);aspect-ratio:1;transform:translate(-50%,-50%);filter:drop-shadow(0 0 20px #36d7e988)}
+#sectorFinale .finale-sigil svg{width:100%;height:100%;overflow:visible}
+#sectorFinale .sigil-orbit{fill:none;stroke:#4de3ed;stroke-width:1.2;stroke-dasharray:8 7;transform-origin:120px 120px;animation:sigil-spin 8s linear infinite}
+#sectorFinale .sigil-inner{fill:rgba(14,49,60,.25);stroke:#a1eaf0;stroke-width:1;stroke-dasharray:2 5;animation:sigil-breathe 2.8s ease-in-out infinite}
+#sectorFinale .sigil-mark{fill:none;stroke:#67dce7;stroke-width:1.5;stroke-linejoin:round;transform-origin:120px 120px;animation:sigil-pulse 3s ease-in-out infinite}
+#sectorFinale .sigil-core{fill:rgba(84,207,218,.08);stroke:#e5fbff;stroke-width:1.2;transform-origin:120px 120px;animation:sigil-core 2.4s ease-in-out infinite}
+#sectorFinale .sigil-cut{stroke:#e2fbff;stroke-width:.8;opacity:.65;stroke-dasharray:3 7;animation:sigil-flicker 1.7s steps(2) infinite}
+@keyframes sigil-spin{to{transform:rotate(360deg)}}
+@keyframes sigil-breathe{0%,100%{opacity:.35;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes sigil-pulse{0%,100%{transform:scale(.92) rotate(0);opacity:.55}50%{transform:scale(1.08) rotate(8deg);opacity:1}}
+@keyframes sigil-core{0%,100%{transform:scale(.8) rotate(0)}50%{transform:scale(1.12) rotate(45deg)}}
+@keyframes sigil-flicker{0%,100%{opacity:.2}50%{opacity:.9}}
+@media(max-width:720px){
+ .spider-presence-0,.spider-presence-1,.spider-presence-2,.spider-presence-3{width:90vw!important;height:95%!important;top:-2%!important;left:55%!important}
+ .spider-dialogue{bottom:calc(var(--hud-h,200px) + 6px)!important;width:calc(100vw - 18px)!important;max-height:180px!important;padding:8px!important}
+ .spider-choices{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .note-letter{grid-template-columns:56px 1fr;gap:8px;padding:8px;font-size:10px}
+ .note-letter img{width:56px;height:72px}
+ #sectorFinale .finale-sigil{width:min(64vw,250px);top:38%}
+}
