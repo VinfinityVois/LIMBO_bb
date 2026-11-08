@@ -277,6 +277,7 @@ export class ImmersionScene {
         document.body.classList.add('audio-ready');
       } else simAudio.stopAmbient();
     });
+    this.ensureThoughtJournal();
     document.getElementById('btnExit')?.addEventListener('click', () => this.showSystemConfirm('exit'));
     document.getElementById('btnReset')?.addEventListener('click', () => this.showSystemConfirm('reset'));
     document.getElementById('btnInspectItem')?.addEventListener('click', () => {
@@ -639,6 +640,35 @@ export class ImmersionScene {
     if (mode !== 'idle') setTimeout(() => { document.body.dataset.matrix = 'idle'; }, 2000);
   }
 
+  private rememberThought(text: string) {
+    const value = text.trim(); if (!value) return;
+    this.state.memories = this.state.memories || [];
+    if (this.state.memories.includes(value)) return;
+    this.state.memories.push(value); if (this.state.memories.length > 80) this.state.memories = this.state.memories.slice(-80);
+    saveState(this.state); this.renderThoughtJournal();
+  }
+
+  private ensureThoughtJournal() {
+    const inventory = document.querySelector<HTMLElement>('.hud-inventory');
+    const heading = inventory?.querySelector<HTMLElement>('.inventory-heading');
+    if (!inventory || !heading || document.getElementById('thoughtJournalToggle')) return;
+    const button = document.createElement('button'); button.id = 'thoughtJournalToggle'; button.type = 'button'; button.className = 'thought-journal-toggle';
+    button.innerHTML = 'МЫСЛИ <b id="thoughtJournalCount">0</b>';
+    button.addEventListener('click', () => { const panel = document.getElementById('thoughtJournal'); if (!panel) return; const open = !panel.classList.contains('open'); panel.classList.toggle('open', open); button.setAttribute('aria-expanded', String(open)); if (open) this.renderThoughtJournal(); });
+    heading.appendChild(button);
+    const panel = document.createElement('section'); panel.id = 'thoughtJournal'; panel.className = 'thought-journal'; panel.setAttribute('aria-label', 'Журнал мыслей');
+    panel.innerHTML = '<div class="thought-journal-head"><strong>ПАМЯТЬ СУБЪЕКТА</strong><button type="button" aria-label="Закрыть">×</button></div><p class="thought-journal-intro">Мысли, подсказки и наблюдения, которые удалось удержать.</p><div class="thought-journal-list" id="thoughtJournalList"></div>';
+    panel.querySelector('button')?.addEventListener('click', () => { panel.classList.remove('open'); button.setAttribute('aria-expanded', 'false'); });
+    inventory.appendChild(panel); this.renderThoughtJournal();
+  }
+
+  private renderThoughtJournal() {
+    const count = document.getElementById('thoughtJournalCount'); const list = document.getElementById('thoughtJournalList'); const memories = this.state.memories || [];
+    if (count) count.textContent = String(memories.length); if (!list) return; list.innerHTML = '';
+    if (!memories.length) { const empty = document.createElement('p'); empty.className = 'thought-journal-empty'; empty.textContent = 'Пока пусто. Здесь будут оставаться важные мысли, подсказки и странные совпадения.'; list.appendChild(empty); return; }
+    memories.slice().reverse().forEach((memory, index) => { const entry = document.createElement('article'); entry.className = 'thought-journal-entry'; const number = document.createElement('small'); number.textContent = 'ЗАПИСЬ ' + String(memories.length - index).padStart(2, '0'); const copy = document.createElement('p'); copy.textContent = memory; entry.append(number, copy); list.appendChild(entry); });
+  }
+
   notify(msg: string, kind: 'info' | 'warn' | 'ok' = 'info') {
     const host = document.getElementById('notifyHost');
     if (!host) return;
@@ -901,6 +931,35 @@ export class ImmersionScene {
 
     // Contextual item use: these interactions are intentionally tied to visible world objects.
     const selected = this.state.selected;
+    if (hs.id === 'hs_anchor' && selected) {
+      const sequence: Array<{ id: ItemId; flag: string; thought: string }> = [
+        { id: 'copper_bell', flag: 'anchor_step_bell', thought: 'Колокольчик — первый ответ. Якорь слышит не звук, а намерение предупредить.' },
+        { id: 'warding_charm', flag: 'anchor_step_charm', thought: 'Оберег удерживает контур. Три комнаты — три свидетельства; нить связывает их.' },
+        { id: 'ember_lantern', flag: 'anchor_step_lantern', thought: 'Свет замыкает последовательность. Якорь больше не зовёт — он отвечает.' },
+      ];
+      const next = sequence.find(step => !this.state.flags[step.flag]);
+      if (!next) { this.state.selected = null; this.openModal(hs); return; }
+      if (selected !== next.id) {
+        this.notify('Якорь не принимает этот предмет. Порядок важен: звук → защита → свет.', 'warn');
+        return;
+      }
+      this.state.flags[next.flag] = true;
+      this.state.flags['used_' + selected] = true;
+      this.state.flags['used_on_hs_anchor'] = true;
+      this.state.inventory = this.state.inventory.filter(id => id !== selected);
+      this.state.selected = null;
+      this.rememberThought(next.thought);
+      const solved = sequence.every(step => !!this.state.flags[step.flag]);
+      if (solved) {
+        this.state.flags.anchor_puzzle_solved = true;
+        this.rememberThought('Последовательность замкнулась. Теперь можно покинуть Рёкан.');
+        this.notify('ЯКОРЬ СТАБИЛИЗИРОВАН · ВЫХОД ОТКРЫТ', 'ok');
+        simAudio.complete(this.state.muted);
+      } else this.notify('Элемент принят. Якорь ждёт следующий сигнал.', 'ok');
+      saveState(this.state);
+      this.renderInv(); this.renderVitals(); this.openModal(hs);
+      return;
+    }
     const contextual: Partial<Record<ItemId, Partial<Record<string, { flag: string; message: string; consume?: boolean; sanity?: number }>>>> = {
       silk_thread: {
         hs_note: { flag: 'threaded_note', message: 'Ты закрепил записку нитью. На обороте проступила строка: «Якорь слушает то, что принесено из трёх комнат».' },
@@ -1044,8 +1103,13 @@ export class ImmersionScene {
         });
         if (note) note.textContent = 'Среди следов есть что-то ещё. Каждую находку можно рассмотреть отдельно.';
       } else if (hs.complete) {
-        addAction('ВЫБРАТЬ ИСХОД', 'primary', () => this.showEndingChoices());
-        if (note) note.textContent = 'Канал ждёт решения.';
+        if (this.state.flags.anchor_puzzle_solved) {
+          addAction('ВЫЙТИ ИЗ СЕКТОРА', 'primary', () => this.showEndingChoices());
+          if (note) note.textContent = 'Якорь стабилизирован. Теперь можно покинуть сектор.';
+        } else {
+          addAction('РАЗОБРАТЬСЯ С ЯКОРЕМ', 'primary', () => this.showAnchorPuzzle(hs));
+          if (note) note.textContent = 'Выход заблокирован. Сначала восстанови последовательность: звук → защита → свет.';
+        }
       } else {
         const empty = document.createElement('p');
         empty.className = 'discovery-empty';
@@ -1060,6 +1124,7 @@ export class ImmersionScene {
         if(hs.id==='hs_rain_gutter'||hs.id==='hs_footprint_wall'||hs.id==='hs_mirror_panel'){
           addAction('ЗАПОМНИТЬ ЗНАК', 'primary', () => {
             this.state.flags['lore_'+hs.id]=true;
+            this.rememberThought(hs.label + ': ' + hs.examine);
             if(hs.id==='hs_rain_gutter')this.state.flags.clue_rain_rhythm=true;
             if(hs.id==='hs_footprint_wall')this.state.flags.clue_shadow_warning=true;
             if(hs.id==='hs_mirror_panel')this.state.flags.easter_mirror=true;
@@ -1172,7 +1237,57 @@ export class ImmersionScene {
     simAudio.open(this.state.muted);
   }
 
+  private showAnchorPuzzle(hs: HotspotDef) {
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('modalBody');
+    const visual = document.getElementById('modalVisual');
+    const actions = document.getElementById('modalActions');
+    const note = document.getElementById('modalNote');
+    if (title) title.textContent = 'ЯКОРЬ RK-01 · ПОСЛЕДОВАТЕЛЬНОСТЬ';
+    if (visual) visual.innerHTML = '<div class="ending-core-art anchor-puzzle-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if (!body || !actions) return;
+    body.innerHTML = ''; actions.innerHTML = '';
+    const intro = document.createElement('p'); intro.className = 'inspection-description';
+    intro.textContent = 'На поверхности три гнезда. На полях записки проступает фраза: «Сначала предупреди. Затем удержи. И только после этого освети». Помести предметы по порядку.';
+    body.appendChild(intro);
+    const sequence: Array<{ id: ItemId; flag: string; label: string }> = [
+      { id: 'copper_bell', flag: 'anchor_step_bell', label: 'I · ПРЕДУПРЕДИТЬ' },
+      { id: 'warding_charm', flag: 'anchor_step_charm', label: 'II · УДЕРЖАТЬ' },
+      { id: 'ember_lantern', flag: 'anchor_step_lantern', label: 'III · ОСВЕТИТЬ' },
+    ];
+    const sockets = document.createElement('div'); sockets.className = 'anchor-puzzle-sockets';
+    sequence.forEach((step, index) => {
+      const done = !!this.state.flags[step.flag];
+      const card = document.createElement('div'); card.className = 'anchor-puzzle-socket' + (done ? ' solved' : '');
+      const number = document.createElement('b'); number.textContent = String(index + 1).padStart(2, '0');
+      const label = document.createElement('strong'); label.textContent = step.label;
+      const status = document.createElement('small'); status.textContent = done ? 'СИГНАЛ ПРИНЯТ' : ITEMS[step.id].name;
+      card.append(number, label, status); sockets.appendChild(card);
+    });
+    body.appendChild(sockets);
+    const next = sequence.find(step => !this.state.flags[step.flag]);
+    const hint = document.createElement('p'); hint.className = this.state.flags.anchor_puzzle_solved ? 'anchor-puzzle-success' : 'anchor-puzzle-hint';
+    hint.textContent = next ? 'СЛЕДУЮЩИЙ СИГНАЛ: ' + next.label : 'ВСЕ ТРИ СИГНАЛА ПРИНЯТЫ. ЯКОРЬ СТАБИЛИЗИРОВАН.';
+    body.appendChild(hint);
+    sequence.forEach(step => {
+      const button = document.createElement('button'); button.type = 'button';
+      button.className = 'inspection-action secondary';
+      button.textContent = (this.state.flags[step.flag] ? '✓ ' : '＋ ') + ITEMS[step.id].name;
+      button.disabled = !!this.state.flags[step.flag] || !this.state.inventory.includes(step.id);
+      button.addEventListener('click', () => { if (!button.disabled) { this.state.selected = step.id; this.onHotspot(hs); } });
+      actions.appendChild(button);
+    });
+    const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
+    close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
+    if (note) note.textContent = 'Неправильный предмет не расходуется. Каждый верный сигнал устанавливается в гнездо и сохраняется.';
+  }
+
   private showEndingChoices() {
+    if (!this.state.flags.anchor_puzzle_solved) {
+      const anchor = hotspotsFor('storage').find(hs => hs.id === 'hs_anchor');
+      if (anchor) this.showAnchorPuzzle(anchor);
+      return;
+    }
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
     const visual = document.getElementById('modalVisual');
@@ -1277,6 +1392,11 @@ export class ImmersionScene {
         const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
       });
       body.appendChild(lore);
+      const memoryHeading = document.createElement('h3'); memoryHeading.className = 'ending-memory-heading'; memoryHeading.textContent = 'ЗАПОМНЕННЫЕ МЫСЛИ И НАБЛЮДЕНИЯ'; body.appendChild(memoryHeading);
+      const memoryList = document.createElement('ul'); memoryList.className = 'ending-requirements ending-memory-list';
+      (this.state.memories || []).forEach(memory => { const li = document.createElement('li'); li.textContent = memory; memoryList.appendChild(li); });
+      if (!memoryList.children.length) { const li = document.createElement('li'); li.textContent = 'В памяти не осталось отдельных записей.'; memoryList.appendChild(li); }
+      body.appendChild(memoryList);
       const outcome=document.createElement('p');outcome.className='ending-outcome-copy';
       outcome.textContent=this.state.ending==='clear'?'Итог: канал очищен. Память сектора сохранена.':'Итог: канал разорван. Часть памяти сектора потеряна.';
       body.appendChild(outcome);
@@ -1294,6 +1414,7 @@ export class ImmersionScene {
 
   private chooseEnding(ending: 'clear'|'bind'|'break') {
     if(this.state.completed)return;
+    if (!this.state.flags.anchor_puzzle_solved) { this.notify('Выход заблокирован: сначала стабилизируй якорь.', 'warn'); return; }
     this.state.completed = true;
     this.state.ending = ending;
     this.state.flags.ending_clear = ending === 'clear';
@@ -2001,6 +2122,7 @@ export class ImmersionScene {
         ? ['Дверь была дальше. Почему она ближе?', 'Кто-то произнёс твоё имя изнутри стены.', 'Предмет в кармане кажется тёплым.']
         : ['Это не выход. Это воспоминание о выходе.', 'Не доверяй силуэтам. Один из них — твой.', 'Ты забыл, сколько пальцев на руке.'];
       const line = thoughts[this.thoughtIndex++ % thoughts.length];
+      this.rememberThought(line);
       const voice = document.getElementById('innerVoice');
       if (voice) voice.textContent = line;
       simAudio.innerVoice(this.state.muted, tier === 3 ? 1.8 : tier === 2 ? 1.2 : .7);
@@ -2140,6 +2262,7 @@ export class ImmersionScene {
         examBody.textContent = 'ЛИЧНАЯ ЗАПИСЬ · М.\\n\\nЕсли ты читаешь это, значит, дверь уже закрылась за тобой. Не верь шагам, которые повторяют твои. Это не эхо — оно учится.\\n\\nПервый ключ лежит там, где вода не отражает небо. Вторую половину спрятали под доской с тремя царапинами. Соедини их, но не открывай дверь, пока не найдёшь нить.\\n\\nНить удерживает бумагу. Бумага помнит огонь. Колокольчик без языка всё ещё может предупредить того, кто слушает не ушами.\\n\\nМ. · если маска заговорит твоим голосом — не отвечай.';
         this.state.flags.note_read = true;
         this.state.flags.clue_key_halves = true;
+        this.rememberThought('Записка М.: первый ключ — там, где вода не отражает небо; второй — под доской с тремя царапинами. Нить удерживает бумагу, бумага помнит огонь.');
         saveState(this.state);
         read.textContent = 'ПЕРЕЧИТАТЬ';
         simAudio.whisper(this.state.muted);
