@@ -428,7 +428,7 @@ export class ImmersionScene {
       else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+26000;}
       this.spiderStage=1;
     } else if(this.spiderStage===1) {
-      if(action==='thread'&&hasThread){this.state.inventory=this.state.inventory.filter(x=>x!=='silk_thread');this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.notify('Нить натянулась сама собой и ушла в темноту. Шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+78000;}
+      if(action==='thread'&&hasThread){this.state.inventory=this.state.inventory.filter(x=>x!=='silk_thread');this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.state.flags.spider_released=true;this.spiderStage=0;this.notify('Нить натянулась сама собой и ушла в темноту. Паутина ослабла. Впервые за всё время шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+99999999;}
       else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+42000;}
       else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+9000;}
       this.spiderStage=2;
