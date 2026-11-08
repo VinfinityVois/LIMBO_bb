@@ -1764,7 +1764,7 @@ export class ImmersionScene {
       : this.threatKind === 'sound'
         ? '«Тише. Я слышу, как ты думаешь».'
         : '«Под полом осталось место. Для ещё одного».';
-    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-eyes"></span><i></i><b></b><span class="creature-dialogue">${creatureLine}</span>`;
+    el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-dialogue">${creatureLine}</span>`;
     el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
@@ -2096,8 +2096,11 @@ export class ImmersionScene {
 
   private spawnMovingShadow() {
     if (document.body.classList.contains('combat-active') || this.threatActive) return;
-    const shadow = document.createElement('div');
+    const shadow = document.createElement('img');
     shadow.className = 'sanity-shadow';
+    shadow.src = '/assets/game/creatures/spider1.png';
+    shadow.alt = '';
+    shadow.draggable = false;
     shadow.setAttribute('aria-hidden','true');
     shadow.style.setProperty('--shadow-y', (12 + Math.random()*66) + '%');
     shadow.style.setProperty('--shadow-x', (8 + Math.random()*82) + '%');
@@ -2107,9 +2110,12 @@ export class ImmersionScene {
 
   private showFalseSilhouette() {
     if (document.getElementById('falsePresence')) return;
-    const ghost = document.createElement('div');
+    const ghost = document.createElement('img');
     ghost.id = 'falsePresence';
     ghost.className = 'false-presence';
+    ghost.src = '/assets/game/creatures/spider0.png';
+    ghost.alt = '';
+    ghost.draggable = false;
     ghost.setAttribute('aria-hidden','true');
     this.stage.appendChild(ghost);
     window.setTimeout(() => ghost.remove(), 2600);
