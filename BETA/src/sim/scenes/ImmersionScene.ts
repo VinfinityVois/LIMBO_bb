@@ -776,7 +776,7 @@ export class ImmersionScene {
 
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
-      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
+      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
       ryokan_key: 'key', kokeshi_note: 'scroll', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
@@ -842,7 +842,8 @@ export class ImmersionScene {
         'hotspot' +
         (hs.complete ? ' complete' : '') +
         (hs.useWith ? ' door' : '') +
-        (hs.item ? ' loot' : '');
+        (hs.item ? ' loot' : '') +
+        (hs.art ? ' note-marker' : '');
       b.style.left = hs.x + '%';
       b.style.top = hs.y + '%';
       b.style.width = hs.w + '%';
@@ -855,9 +856,11 @@ export class ImmersionScene {
       b.dataset.hotspotId = hs.id;
       b.setAttribute('aria-label', (allFinds.length ? 'Осмотреть находку: ' : 'Осмотреть: ') + hs.label);
       if (inspected) b.classList.add('inspected');
-      const itemMarkup = inspected && firstAvailable
-        ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
-        : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
+      const itemMarkup = hs.art
+        ? `<span class="world-note-art"><img src="${hs.art}" alt="" draggable="false"></span>`
+        : inspected && firstAvailable
+          ? `<span class="world-loot-art"><img src="${this.itemAsset(firstAvailable)}" alt="" draggable="false"></span>`
+          : '<span class="hotspot-reticle" aria-hidden="true"><i></i></span>';
       b.innerHTML = itemMarkup + `<span class="hotspot-world-label">${hs.label}<small>НАЖМИТЕ, ЧТОБЫ ОСМОТРЕТЬ</small></span>`;
       b.setAttribute('aria-label', 'Осмотреть: ' + hs.label);
       b.title = 'Можно осмотреть: ' + hs.label;
@@ -1028,6 +1031,9 @@ export class ImmersionScene {
       stitched_mask: {
         hs_anchor: { flag: 'anchor_masked', message: 'Маска касается якоря. Из-под бумаги звучит: «Теперь я знаю, кто смотрит».', sanity: -8 },
       },
+      mirror_lens: {
+        hs_mirror_panel: { flag: 'easter_mirror', message: 'Линза входит в трещину потемневшего стекла. Отражение собирается в одно целое: фигура поднимает руку раньше тебя.', consume: true },
+      },
     };
     const contextualUse = selected ? contextual[selected]?.[hs.id] : undefined;
     if (selected && contextualUse) {
@@ -1167,6 +1173,21 @@ export class ImmersionScene {
           ? 'В стекле отражается коридор, которого нет за спиной. На миг видна фигура с перевязанными руками. Если направить сюда восстановленный свет, отражение исчезает.'
           : 'Больше ничего заметного. Но ощущение чужого присутствия не исчезает.';
         body.appendChild(empty);
+        if (hs.clueFlag && hs.clueText) {
+          const read = addAction(this.state.flags[hs.clueFlag] ? 'ПЕРЕЧИТАТЬ ЗАПИСКУ' : 'ПРОЧИТАТЬ ЗАПИСКУ', 'primary', () => {
+            const letter = document.createElement('article');
+            letter.className = 'note-letter';
+            letter.textContent = hs.clueText || '';
+            body.querySelector('.note-letter')?.remove();
+            body.appendChild(letter);
+            this.state.flags[hs.clueFlag!] = true;
+            this.rememberThought(hs.label + ': ' + hs.clueText);
+            saveState(this.state);
+            read.textContent = 'ПЕРЕЧИТАТЬ ЗАПИСКУ';
+            this.notify('Подсказка сохранена в памяти Цефея.','ok');
+            simAudio.whisper(this.state.muted);
+          });
+        }
         if (hs.id === 'hs_rain_gutter') {
           addAction(this.state.flags.gutter_puzzle_solved ? 'РИТМ УЖЕ ЗАПОМНЕН' : 'ВОСПРОИЗВЕСТИ РИТМ', 'primary', () => this.showGutterPuzzle(hs));
         }
@@ -1468,6 +1489,7 @@ export class ImmersionScene {
     const note=document.getElementById('modalNote');
     if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
     if(visual)visual.innerHTML='<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    document.getElementById('simModal')?.classList.add('report-mode');
     const allItems=Object.keys(ITEMS) as ItemId[];
     const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id)||this.state.droppedItems.some(x=>x.id===id));
     const used=allItems.filter(id=>this.state.flags['used_'+id]);
@@ -1494,8 +1516,11 @@ export class ImmersionScene {
         ['Осталось в инвентаре',String(this.state.inventory.length)],
         ['Опасные предметы взяты',dangerousTaken.map(id=>ITEMS[id].name).join(', ')||'нет'],
         ['Опасные предметы применены',dangerousUsed.map(id=>ITEMS[id].name).join(', ')||'нет'],
-        ['Встреченные существа',['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).join(', ')||'нет'],
-        ['Получены ранения',this.state.flags.combat_hit_taken?'да':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
+        ['Встреченные существа',[
+          ...(['light','sound','dweller'].filter(k=>this.state.flags['encounter_'+k]).map(k=>({light:'Слепой',sound:'Слушатель',dweller:'Жилец'} as Record<string,string>)[k])),
+          ...(this.state.flags.spider_seen_0||this.state.flags.spider_seen_1||this.state.flags.spider_seen_2||this.state.flags.spider_seen_3?['Паутинница']:[])
+        ].join(', ')||'нет'],
+        ['Получены ранения',this.state.injuries.length ? this.state.injuries.join(', ') : this.state.flags.combat_hit_taken?'да · детали не сохранены':this.state.flags.combat_dodged?'нет · удалось уклониться':'не зафиксировано'],
         ['Отступление',this.state.flags.combat_fled?'да':'нет'],
       ];
       rows.forEach(([label,value])=>{const li=document.createElement('li');li.textContent=label+': '+value;list.appendChild(li);});
@@ -1517,14 +1542,34 @@ export class ImmersionScene {
       requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
       body.appendChild(checklist);
       const lore=document.createElement('ul');lore.className='ending-requirements';
-      const clueKeys=['note_read','clue_key_halves','threaded_note','clue_rain_rhythm','clue_shadow_warning','clue_echo_answered'];
-      const easterKeys=['easter_mirror','spider_recognized','spider_story_heard','spider_thread_given','heard_steps','mask_voice_known'];
-      const groups:Array<[string,string[]]>=[['ПОДСКАЗКИ',clueKeys],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterKeys]];
-      groups.forEach(([label,keys])=>{
-        const foundKeys=keys.filter(k=>!!this.state.flags[k]);
-        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
+      const clueLabels:Record<string,string>={
+        note_read:'Записка М.',clue_key_halves:'Подсказка о половинах ключа',
+        threaded_note:'Записка о шёлковой нити',clue_rain_rhythm:'Ритм дождя',
+        clue_shadow_warning:'Предупреждение о тени',clue_echo_answered:'Ответ эха',
+        clue_note_gate:'Записка у ворот',clue_note_garden:'Записка в саду',
+        clue_note_engawa:'Записка у карниза',clue_note_storage:'Записка у якоря'
+      };
+      const easterLabels:Record<string,string>={
+        easter_mirror:'Отражение из другого времени',spider_recognized:'Тень узнала тебя',
+        spider_story_heard:'История Паутинницы',spider_thread_given:'Нить отдана тени',
+        heard_steps:'Шаги над потолком',mask_voice_known:'Голос из маски'
+      };
+      const groups:Array<[string,Record<string,string>]>=[['ПОДСКАЗКИ',clueLabels],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterLabels]];
+      groups.forEach(([label,labels])=>{
+        const keys=Object.keys(labels);const foundKeys=keys.filter(k=>!!this.state.flags[k]);
+        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.map(k=>labels[k]).join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
       });
       body.appendChild(lore);
+      const clueCount=Object.keys(clueLabels).filter(k=>!!this.state.flags[k]).length;
+      const secretCount=Object.keys(easterLabels).filter(k=>!!this.state.flags[k]).length;
+      const score=Math.max(0,Math.min(100,Math.round(40+25*collected.length/Math.max(1,allItems.length)+15*used.length/Math.max(1,allItems.length)+10*clueCount/Object.keys(clueLabels).length+10*secretCount/Object.keys(easterLabels).length)));
+      const rank=score>=92?'S':score>=82?'A':score>=68?'B':score>=52?'C':'D';
+      const rating=document.createElement('section');rating.className='sector-rating';
+      rating.innerHTML='<span>ОЦЕНКА ПРОХОЖДЕНИЯ</span><strong>'+rank+'</strong><b>'+score+' / 100</b><small>Находки · применение · подсказки · сюжетные следы</small>';
+      body.appendChild(rating);
+      const rewards=document.createElement('section');rewards.className='sector-rewards';
+      rewards.innerHTML='<article class="reward-card reward-pass"><span>✦</span><small>ПОЛУЧЕНО</small><strong>КАРТА-ПРОПУСК</strong><b>RK-02</b><em>Доступ к следующему сектору</em></article><article class="reward-card reward-id"><span>RK</span><small>АРХИВ ЦЕФЕЯ</small><strong>КАРТОЧКА ПЕРСОНАЖА</strong><b>СУБЪЕКТ 01</b><em>Профиль прохождения сохранён</em></article>';
+      body.appendChild(rewards);
       const memoryHeading = document.createElement('h3'); memoryHeading.className = 'ending-memory-heading'; memoryHeading.textContent = 'ЗАПОМНЕННЫЕ МЫСЛИ И НАБЛЮДЕНИЯ'; body.appendChild(memoryHeading);
       const memoryList = document.createElement('ul'); memoryList.className = 'ending-requirements ending-memory-list';
       (this.state.memories || []).forEach(memory => { const li = document.createElement('li'); li.textContent = memory; memoryList.appendChild(li); });
@@ -1550,6 +1595,16 @@ export class ImmersionScene {
     if (!this.state.flags.anchor_puzzle_solved) { this.notify('Выход заблокирован: сначала стабилизируй якорь.', 'warn'); return; }
     this.state.completed = true;
     this.state.ending = ending;
+    this.state.flags.pass_RK02 = true;
+    this.state.flags.character_card_RK01 = true;
+    try {
+      localStorage.setItem('limbo_pass_RK02', '1');
+      localStorage.setItem('limbo_character_card_RK01', JSON.stringify({
+        sector:'RK-01',subject:'СУБЪЕКТ 01',ending,
+        health:this.state.health,sanity:this.state.sanity,
+        visited:this.state.visited.length,createdAt:new Date().toISOString()
+      }));
+    } catch { /* report remains available in the sector save */ }
     this.state.flags.ending_clear = ending === 'clear';
     this.state.flags.ending_bind = ending === 'bind';
     this.state.flags.ending_break = ending === 'break';
@@ -1579,6 +1634,21 @@ export class ImmersionScene {
     }
     saveState(this.state);
     markSceneDone();
+    // Freeze the sector before the exit cinematic: no new threats, sanity drain or dialogue timers.
+    this.diving = false;
+    this.threatActive = false;
+    if (this.eventTimer) clearInterval(this.eventTimer as number);
+    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
+    if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    if (this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
+    document.getElementById('threatOverlay')?.classList.remove('open');
+    document.getElementById('combatScreen')?.classList.remove('open');
+    document.getElementById('spiderDialogue')?.remove();
+    document.getElementById('spiderPresence')?.remove();
+    document.getElementById('sceneCreature')?.remove();
+    document.body.classList.remove('combat-active','threat-active');
     simAudio.complete(this.state.muted);
     this.closeModal();
     this.renderInv();
@@ -1595,7 +1665,7 @@ export class ImmersionScene {
   }
 
   private closeModal() {
-    document.getElementById('simModal')?.classList.remove('open');
+    document.getElementById('simModal')?.classList.remove('open','report-mode');
     document.body.classList.remove('inspection-open');
     document.querySelectorAll('.hotspot.being-inspected').forEach(node => node.classList.remove('being-inspected'));
   }
@@ -1610,7 +1680,15 @@ export class ImmersionScene {
       slot.type = 'button';
       slot.className = 'inv-slot' + (this.state.selected === id ? ' selected' : '');
       slot.innerHTML = `<img class="inventory-item-art" src="${this.itemAsset(id)}" alt="${def.name}" draggable="false"><span class="n">${def.short}</span>`;
-      slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр';
+      const stackCount = this.state.inventory.filter(item => item === id).length;
+      slot.title = def.name + ' · ЛКМ выбрать · ПКМ осмотр' +
+        (stackCount > 1 ? ' · в инвентаре: ' + stackCount + ' шт.' : '');
+      if (stackCount > 1) {
+        const badge = document.createElement('span');
+        badge.className = 'inv-stack-count';
+        badge.textContent = '×' + stackCount;
+        slot.appendChild(badge);
+      }
       slot.draggable=true;
       slot.addEventListener('dragstart',(e)=>{e.dataTransfer?.setData('text/limbo-item',id);if(e.dataTransfer)e.dataTransfer.effectAllowed='move';});
       slot.addEventListener('click', () => this.onInv(id));
@@ -1699,13 +1777,21 @@ export class ImmersionScene {
           ryokan_key: 'ПРИМЕНЕНИЕ: открыть соответствующий замок на локации',
           wet_key_half: 'ПРИМЕНЕНИЕ: соединить со второй половиной ключа',
           wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
-          paper_lantern_shard: 'ПРИМЕНЕНИЕ: осмотреть источники света и отражающие поверхности',
+          paper_lantern_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью для оберега или со спичками для фонаря',
+          mirror_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью, чтобы собрать зеркальную линзу',
+          mirror_lens: 'ПРИМЕНЕНИЕ: приложить к потемневшему стеклу в коридоре',
           kokeshi_note: 'ПРИМЕНЕНИЕ: изучить; подсказка к тайнику или механизму',
           silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
         };
         let hint = preview.querySelector('.selected-copy small');
         if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
-        if (hint) hint.textContent = help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить';
+        const recipes = RECIPES.filter(recipe => recipe.a === this.state.selected || recipe.b === this.state.selected);
+        const recipeHints = recipes.map(recipe => {
+          const partner = recipe.a === this.state.selected ? recipe.b : recipe.a;
+          return ITEMS[partner].name + ' → ' + ITEMS[recipe.result].name;
+        });
+        if (hint) hint.textContent = (help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить') +
+          (recipeHints.length ? ' · СОЕДИНИТЬ: ' + recipeHints.join(' / ') : '');
       } else {
         preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
       }
