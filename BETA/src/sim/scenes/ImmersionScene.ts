@@ -74,6 +74,10 @@ export class ImmersionScene {
   private notificationBusy = false;
   private lastNotification = '';
   private lastNotificationAt = 0;
+  private spiderStage = 0;
+  private spiderNextAt = Date.now() + 28000;
+  private spiderDialogTimer: ReturnType<typeof setTimeout> | number = 0;
+  private spiderInCombat = false;
 
   constructor() {
     this.state = loadState();
@@ -309,6 +313,8 @@ export class ImmersionScene {
         saveState(this.state);
         if (this.state.health <= 0) return;
       } else this.sanityCollapseTick = 0;
+      if (this.tickSpiderPresence()) return;
+      if (this.spiderStage > 0 && !this.state.flags.spider_defeated && !this.state.flags.spider_released) return;
       if (this.threatActive || Date.now() < this.threatCooldown || this.state.defeated) return;
       const stayed = Date.now() - this.roomEnteredAt;
       this.tickMaskEffects();
@@ -346,6 +352,107 @@ export class ImmersionScene {
       }
       saveState(this.state); this.renderVitals();
     }, 5000);
+  }
+
+
+  // Spider arc: an uncanny apparition -> stalking shadow -> active hunter -> full encounter.
+  private tickSpiderPresence(): boolean {
+    if (document.getElementById('spiderDialogue')) return true;
+    if (this.state.flags.spider_defeated || this.state.flags.spider_released || this.state.defeated ||
+        document.body.classList.contains('combat-active') || this.threatActive) return false;
+    if (Date.now() < this.spiderNextAt) return false;
+    if (this.spiderStage === 0) {
+      const eligible = this.state.visited.length >= 2 || this.state.sanity < 82 || this.state.flags.black_seed_taken;
+      if (eligible && Math.random() < .075) { this.openSpiderBeat(0); return true; }
+      return false;
+    }
+    this.openSpiderBeat(this.spiderStage);
+    return true;
+  }
+
+  private openSpiderBeat(stage: number) {
+    const assets = ['spider0.png','spider1.png','spider2.png','spider4.png'];
+    const lines = [
+      ['НЕЗНАКОМОЕ ДВИЖЕНИЕ','У края света стоит фигура. В ней почти угадывается человек — кожа, плечи, привычка держать голову чуть набок. Но лицо будто забыли закончить. «Ты тоже ищешь дверь?»','Посмотреть в ответ','Сделать вид, что не заметил','Тихо окликнуть'],
+      ['ТЕНЬ ИДЁТ СЛЕДОМ','Тень отделилась от твоих ног. Она повторяет шаги с задержкой, а когда ты останавливаешься — продолжает идти ещё один короткий шаг. «Не оборачивайся. Тогда я смогу идти рядом».','Не оборачиваться','Оставить шёлковую нить','Резко обернуться'],
+      ['ОНА ПЕРЕСТАЛА ПРЯТАТЬСЯ','Из тени вытягиваются длинные пальцы. «Я знаю короткий путь. Я держала дверь, пока остальные уходили. Ты ведь не оставишь меня здесь снова?»','Спросить, кого она ждала','Позвонить в колокольчик','Принять протянутую руку'],
+      ['ТЕПЕРЬ У НЕЁ ЕСТЬ ТЕЛО','Существо выходит во весь рост. Нити уходят за его спину и исчезают под домом. «Ты так долго делал вид, что меня нет. Теперь останься. Я покажу, как здесь тихо».','Драться','Бежать, пока проход открыт','Позволить ей взять тебя за руку']
+    ];
+    this.spiderStage = stage;
+    this.state.flags['spider_seen_' + stage] = true;
+    saveState(this.state);
+    document.getElementById('spiderPresence')?.remove();
+    const figure = document.createElement('div');
+    figure.id = 'spiderPresence'; figure.className = 'spider-presence spider-presence-' + stage;
+    const img = document.createElement('img'); img.src = '/assets/game/creatures/' + assets[stage]; img.alt = ''; img.draggable = false;
+    figure.appendChild(img); this.stage.appendChild(figure);
+    requestAnimationFrame(() => figure.classList.add('visible'));
+    document.getElementById('spiderDialogue')?.remove();
+    const panel = document.createElement('section');
+    panel.id = 'spiderDialogue'; panel.className = 'spider-dialogue'; panel.setAttribute('role','dialog'); panel.setAttribute('aria-modal','true');
+    const title = document.createElement('h3'); title.textContent = lines[stage][0];
+    const copy = document.createElement('p'); copy.textContent = lines[stage][1];
+    const choices = document.createElement('div'); choices.className = 'spider-choices';
+    const actions = [
+      [['look','ignore','call'],['steady','thread','turn'],['ask','bell','hand'],['fight','run','surrender']][stage];
+    for (let n=0;n<3;n++) {
+      const btn=document.createElement('button'); btn.type='button'; btn.className='spider-choice';
+      const strong=document.createElement('strong'); strong.textContent=lines[stage][n+2];
+      const hint=document.createElement('small'); hint.textContent=[
+        ['Не отводить взгляд и рассмотреть лицо.','Не провоцировать то, чего пока не понимаешь.','Проверить, ответит ли оно.'],
+        ['Сохранить спокойный шаг.','Предложить нить вместо руки.','Попытаться поймать её на движении.'],
+        ['Выслушать, не обещая ничего.','Звук может разорвать её форму.','Она обещает вывести тебя. Цена неизвестна.'],
+        ['Не дать ей приблизиться.','Шанс уйти есть, но она успеет задеть тебя.','Самый опасный выбор. Неизвестно, отпустит ли она.']
+      ][stage][n];
+      btn.append(strong,hint); btn.addEventListener('click',()=>this.chooseSpider(actions[n])); choices.appendChild(btn);
+    }
+    panel.append(title,copy,choices); document.body.appendChild(panel); requestAnimationFrame(()=>panel.classList.add('visible'));
+    if(this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
+    this.spiderDialogTimer=window.setTimeout(()=>{if(document.getElementById('spiderDialogue'))this.chooseSpider('ignore')},stage===3?9500:14500);
+    simAudio.whisper(this.state.muted);
+    this.showSense('◉',['Краем глаза замечена фигура между деревьями.','Твоя тень движется не в такт.','Что-то перекрыло путь.','Существо вышло из тени.'][stage],stage>=2);
+  }
+
+  private closeSpiderBeat() {
+    if(this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
+    this.spiderDialogTimer=0; document.getElementById('spiderDialogue')?.remove(); document.getElementById('spiderPresence')?.remove();
+  }
+
+  private chooseSpider(action: string) {
+    if(!document.getElementById('spiderDialogue')) return;
+    this.closeSpiderBeat();
+    const hasThread=this.state.inventory.includes('silk_thread'), hasBell=this.state.inventory.includes('copper_bell');
+    if(this.spiderStage===0) {
+      if(action==='look'){this.state.flags.spider_recognized=true;this.state.sanity=Math.min(100,this.state.sanity+2);this.notify('На её лице нет глаз. Но ты понял: она ждёт, когда её назовут. +2 рассудка.','ok');this.spiderNextAt=Date.now()+52000;}
+      else if(action==='call'){this.state.flags.spider_called=true;this.makeNoise('Ты окликнул фигуру. Она повторила твоё имя с задержкой.');this.spiderNextAt=Date.now()+18000;}
+      else {this.notify('Ты отвёл взгляд. На мокрых досках остался след босой ступни.','info');this.spiderNextAt=Date.now()+26000;}
+      this.spiderStage=1;
+    } else if(this.spiderStage===1) {
+      if(action==='thread'&&hasThread){this.state.inventory=this.state.inventory.filter(x=>x!=='silk_thread');this.state.flags.used_silk_thread=true;this.state.flags.spider_thread_given=true;this.notify('Нить натянулась сама собой и ушла в темноту. Шаги за спиной стихли.','ok');this.spiderNextAt=Date.now()+78000;}
+      else if(action==='steady'){this.state.flags.spider_stared_down=true;this.notify('Ты не обернулся. Тень отстала, но не исчезла.','ok');this.spiderNextAt=Date.now()+42000;}
+      else {this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+9000;}
+      this.spiderStage=2;
+    } else if(this.spiderStage===2) {
+      if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderNextAt=Date.now()+34000;}
+      else if(action==='bell'&&hasBell){this.state.inventory=this.state.inventory.filter(x=>x!=='copper_bell');this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderNextAt=Date.now()+65000;}
+      else if(action==='hand'){
+        const risk=Math.min(.78,(this.state.sanity<30?.48:this.state.sanity<55?.31:.16)+(this.maskWorn?.12:0)+(this.state.inventory.includes('black_seed')?.12:0));
+        this.state.flags.spider_hand_taken=true;
+        if(Math.random()<risk){this.state.health=0;this.state.sanity=0;this.notify('«Я выведу тебя», — шепчет она. Пальцы смыкаются с другой стороны кожи.','warn');saveState(this.state);this.renderVitals();this.checkDefeat();return;}
+        this.state.sanity=Math.max(0,this.state.sanity-22);this.notify('Она отпустила тебя. На ладони осталась чёрная нить под кожей.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+12000;
+      } else {this.state.sanity=Math.max(0,this.state.sanity-7);this.spiderStage=3;this.spiderNextAt=Date.now()+14000;this.notify('Тень рвётся к тебе. Теперь она больше не скрывается.','warn');}
+    } else {
+      if(action==='fight'){this.spiderInCombat=true;this.startCombat();return;}
+      if(action==='run'){
+        if(Math.random()<.62){this.state.health=Math.max(1,this.state.health-13);this.state.sanity=Math.max(0,this.state.sanity-8);this.spiderStage=2;this.spiderNextAt=Date.now()+42000;this.notify('Ты вырвался. Нити распороли рукав, но не удержали тебя.','ok');}
+        else{this.state.health=Math.max(1,this.state.health-24);this.spiderStage=3;this.spiderNextAt=Date.now()+18000;this.notify('Она догнала тебя у поворота. Теперь придётся драться.','warn');}
+      } else if(action==='surrender'){
+        const risk=Math.min(.88,(this.state.sanity<30?.72:this.state.sanity<55?.54:.32)+(this.maskWorn?.1:0));
+        if(Math.random()<risk){this.state.health=0;this.state.sanity=0;this.notify('Она обещает вывести тебя. За дверью нет коридора — только натянутые нити.','warn');saveState(this.state);this.renderVitals();this.checkDefeat();return;}
+        this.state.health=Math.max(1,this.state.health-16);this.state.sanity=Math.max(0,this.state.sanity-18);this.spiderInCombat=true;this.notify('Ты вырвал руку, но нити уже держат запястье.','warn');this.startCombat();return;
+      }
+    }
+    saveState(this.state);this.renderVitals();this.renderInv();
   }
 
   private startWorldClock() {
@@ -1328,9 +1435,9 @@ export class ImmersionScene {
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
-    this.monsterMaxHp = this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
+    this.monsterMaxHp = this.spiderInCombat ? 62 : this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+    this.monsterName = this.spiderInCombat ? 'ПАУТИННИЦА' : this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
     this.combatTurn = 0; this.combatTarget = 'torso';
     this.state.flags['encounter_' + this.threatKind] = true;
     const locationLabel = document.getElementById('combatLocationLabel');
@@ -1341,7 +1448,7 @@ export class ImmersionScene {
     if (locationSub && zoneSub) locationSub.textContent = zoneSub;
     const name = document.getElementById('combatMonsterName'); if (name) name.textContent = this.monsterName;
     const sprite = document.getElementById('combatMonsterSprite') as HTMLImageElement | null;
-    if (sprite) sprite.src = '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger') + '.png';
+    if (sprite) sprite.src = this.spiderInCombat ? '/assets/game/creatures/spider4.png' : '/assets/game/creatures/' + (this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger') + '.png';
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
@@ -1351,15 +1458,17 @@ export class ImmersionScene {
     this.renderCombatWounds();
     this.renderCombatInventory();
     const creatureVoice: Record<string,string> = {
+      spider: 'Паутинница шепчет: «Ты всё-таки пришёл. Я оставила тебе место между нитями».',
       light: 'Слепой шепчет: «Свет… ты принёс мне глаза. Отдай их обратно».',
       sound: 'Слушатель отвечает твоим голосом: «Не зови. Я уже запомнил, как ты звучишь».',
       dweller: 'Жилец скребёт по полу: «Под досками ещё кто-то. Он считает шаги вместо нас».',
     };
-    this.updateCombatHud(creatureVoice[this.threatKind]);
+    this.updateCombatHud(this.spiderInCombat ? creatureVoice.spider : creatureVoice[this.threatKind]);
     this.state.flags['heard_' + this.threatKind] = true;
     saveState(this.state);
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
-    if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
+    if (this.spiderInCombat) simAudio.monsterDweller(this.state.muted);
+    else if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
     else if (this.threatKind === 'sound') simAudio.monsterListener(this.state.muted);
     else simAudio.monsterDweller(this.state.muted);
   }
@@ -1537,16 +1646,18 @@ export class ImmersionScene {
     if (this.state.injuries.includes('bleed')) { this.state.health=Math.max(0,this.state.health-2); log+=' Кровь продолжает уходить: -2 HP.'; }
     this.renderVitals(); this.renderCombatWounds();
     const creatureWhispers: Record<string,string[]> = {
+      spider: ['«Я не ловлю тебя. Я держу то, что падает».','«Под домом есть комната из имён».','«Не ищи выход там, где я смотрю».'],
       light: ['«Не гаси его. В темноте я вижу лучше».','«Третий удар был не колоколом».'],
       sound: ['«Твои шаги повторяются. Значит, нас уже двое».','«М. тоже пытался молчать».'],
       dweller: ['«Ключ открывает дверь. Но не ту, которую ты ищешь».','«Семя помнит того, кто первым его проглотил».'],
     };
-    const whispers = creatureWhispers[this.threatKind];
+    const whispers = this.spiderInCombat ? creatureWhispers.spider : creatureWhispers[this.threatKind];
     this.updateCombatHud(log + ' ' + this.enemyAttackDescription() + ' ' + whispers[this.combatTurn % whispers.length]);
     this.beginEnemyAttack(); saveState(this.state);
   }
 
   private enemyAttackDescription() {
+    if (this.spiderInCombat) return 'Паутинница поднимает руки. Между пальцами натягиваются нити.';
     if (this.threatKind==='light') return 'Слепой собирается прыгнуть из темноты.';
     if (this.threatKind==='sound') return 'Слушатель накапливает звуковую волну.';
     return 'Жилец тянется к тебе длинными руками.';
@@ -1580,12 +1691,13 @@ export class ImmersionScene {
     const dodge=document.getElementById('combatDodge') as HTMLButtonElement|null;
     if(dodge){dodge.disabled=true;dodge.classList.remove('dodge-window');}
     const art=document.getElementById('combatMonsterArt'); art?.classList.remove('attack');
-    let incoming=this.threatKind==='dweller'?12:this.threatKind==='light'?11:8;
+    let incoming=this.spiderInCombat?10:this.threatKind==='dweller'?12:this.threatKind==='light'?11:8;
     if (this.enemyArmsWeakened) incoming = Math.ceil(incoming * .55);
     let wound='';
     if(this.threatKind==='light'&&!evaded) wound='leg';
     if(this.threatKind==='sound'&&!evaded){this.state.sanity=Math.max(0,this.state.sanity-9);wound='arm';}
     if(this.threatKind==='dweller'&&!evaded) wound='bleed';
+    if(this.spiderInCombat&&!evaded) wound='arm';
     const damage=evaded?0:this.guarding?Math.ceil(incoming*.28):timing === 'early' ? Math.ceil(incoming * .55) : timing === 'late' ? Math.ceil(incoming * .8) : incoming;
     this.guarding=false; this.enemyArmsWeakened=false; this.enemyLegsSlowed=false;
     if(!evaded){
@@ -1800,6 +1912,9 @@ export class ImmersionScene {
   }
 
   private finishCombat(message: string) {
+    if (this.spiderInCombat && this.monsterHp <= 0) this.state.flags.spider_defeated = true;
+    else if (this.spiderInCombat) { this.spiderStage = 3; this.spiderNextAt = Date.now()+38000; }
+    this.spiderInCombat = false;
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.dodgeReady = false;
     document.getElementById('combatScreen')?.classList.remove('open');
