@@ -218,3 +218,8 @@
 .combat-top{align-items:center;min-height:52px}
 #combatFlee{align-self:flex-end;margin-top:8px;margin-bottom:2px;transform:translateY(4px)}
 @media(max-width:760px){#combatFlee{margin-top:10px;margin-bottom:4px;transform:none}}
+
+/* Center the entry glyph precisely; its rotation uses transform while translate stays independent. */
+.dive-ring,.dive-portal{left:50%;top:42%;translate:-50% -50%}
+.dive-portal{z-index:1}
+.dive-title,.dive-log{z-index:2}
