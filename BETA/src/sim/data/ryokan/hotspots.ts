@@ -18,6 +18,9 @@ export interface HotspotDef {
   useFlag?: string;
   useSuccess?: string;
   complete?: boolean;
+  art?: string;
+  clueFlag?: string;
+  clueText?: string;
 }
 
 export const HOTSPOTS: HotspotDef[] = [
@@ -136,6 +139,49 @@ export const HOTSPOTS: HotspotDef[] = [
     id: 'hs_mirror_panel', location: 'hall', x: 78, y: 38, w: 9, h: 16,
     label: 'Потемневшее стекло',
     examine: 'В стекле отражается коридор, которого нет за спиной. На миг видна фигура с перевязанными руками. Если направить сюда восстановленный свет, отражение исчезает.',
+    useWith: ['mirror_lens'],
+    useFlag: 'easter_mirror',
+    useSuccess: 'Линза входит в трещину потемневшего стекла. Отражение собирается в одно целое: фигура поднимает руку раньше тебя.',
+  },
+  {
+    id: 'hs_note_gate',
+    location: 'gate',
+    x: 87, y: 43, w: 5.2, h: 11,
+    label: 'Записка у водостока',
+    examine: 'Между доской и водостоком застрял сложенный лист. Бумага размокла по краям, но чернила ещё держатся.',
+    art: '/assets/game/items/мусор/sealed_letter.png',
+    clueFlag: 'clue_note_gate',
+    clueText: 'Три коротких удара. Один длинный. Не звони, чтобы позвать — звони, чтобы предупредить. Бумажный осколок удержит нить; если встретит спичку, станет светом.',
+  },
+  {
+    id: 'hs_note_garden',
+    location: 'garden',
+    x: 15, y: 66, w: 5.2, h: 11,
+    label: 'Записка под камнем',
+    examine: 'Край бумаги выглядывает из-под плоского камня. На ней остались отпечатки мокрых пальцев.',
+    art: '/assets/game/items/мусор/sealed_letter.png',
+    clueFlag: 'clue_note_garden',
+    clueText: 'Горькие листья останавливают кровь. Шёлковая нить удерживает их вместе. Не затягивай слишком туго — под повязкой должно остаться место для дыхания.',
+  },
+  {
+    id: 'hs_note_engawa',
+    location: 'engawa',
+    x: 58, y: 25, w: 5.2, h: 11,
+    label: 'Записка под карнизом',
+    examine: 'У карниза зацепился узкий листок. На нём нарисованы две половины одного ключа.',
+    art: '/assets/game/items/мусор/sealed_letter.png',
+    clueFlag: 'clue_note_engawa',
+    clueText: 'У каждой половины ключа свой излом. Не ищи замок, пока металл не станет целым. Три царапины отмечают доску, под которой лежит вторая часть.',
+  },
+  {
+    id: 'hs_note_storage',
+    location: 'storage',
+    x: 82, y: 73, w: 5.2, h: 11,
+    label: 'Записка у якоря',
+    examine: 'Сухой лист сложен вчетверо и зажат между камнем и основанием якоря. На полях три символа: колокольчик, узел, огонь.',
+    art: '/assets/game/items/мусор/sealed_letter.png',
+    clueFlag: 'clue_note_storage',
+    clueText: 'Сначала звук. Затем защита. И только после этого свет. Якорь не принимает силу — он принимает три свидетельства, принесённые из разных комнат.',
   },
   {
     id: 'hs_anchor',
