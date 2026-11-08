@@ -1666,16 +1666,6 @@ export class ImmersionScene {
     document.body.classList.add('inspection-open');
   }
 
-  private showSectorFinale() {
-    document.getElementById('sectorFinale')?.remove();
-    const overlay=document.createElement('section');overlay.id='sectorFinale';overlay.className='sector-finale';
-    const finaleState = this.state.ending === 'clear' ? 'КАНАЛ ОЧИЩЕН' : this.state.ending === 'bind' ? 'СВЯЗЬ ЗАКРЕПЛЕНА' : 'УЗЕЛ РАЗРУШЕН';
-    overlay.innerHTML='<div class="finale-noise"></div><div class="finale-ring"></div><div class="finale-sigil" aria-hidden="true"><svg viewBox="0 0 240 240"><circle class="sigil-orbit" cx="120" cy="120" r="82"/><circle class="sigil-inner" cx="120" cy="120" r="54"/><path class="sigil-mark" d="M120 28 L143 91 L212 120 L143 149 L120 212 L97 149 L28 120 L97 91 Z"/><path class="sigil-core" d="M120 74 L164 120 L120 166 L76 120 Z"/><path class="sigil-cut" d="M120 44 V196 M44 120 H196"/></svg></div><div class="finale-copy"><small>ЦЕФЕЙ · RK-01</small><h1>СЕКТОР ЗАВЕРШЁН</h1><p>'+finaleState+'</p><span>ФИКСАЦИЯ ПОСЛЕДНЕГО СОСТОЯНИЯ…</span></div>';
-    document.body.appendChild(overlay);requestAnimationFrame(()=>overlay.classList.add('active'));
-    window.setTimeout(()=>{overlay.classList.add('resolved');const p=overlay.querySelector('p');if(p)p.textContent='СУБЪЕКТ ПОКИНУЛ РЁКАН';},1900);
-    window.setTimeout(()=>{overlay.classList.add('fade-out');window.setTimeout(()=>{overlay.remove();this.showRunReport();},850);},4100);
-  }
-
   private showRunReport() {
     const title=document.getElementById('modalTitle');
     const body=document.getElementById('modalBody');
