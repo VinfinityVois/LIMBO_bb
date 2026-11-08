@@ -34,6 +34,8 @@ export class ImmersionScene {
   invEl: HTMLElement;
   hoverCard: HTMLElement;
   private eventTimer = 0 as ReturnType<typeof setInterval> | number;
+  private matrixTimer = 0 as ReturnType<typeof setInterval> | number;
+  private worldClockTimer = 0 as ReturnType<typeof setInterval> | number;
   private threatActive = false;
   private threatCooldown = 0;
   private threatKind: 'light' | 'sound' | 'dweller' = 'dweller';
@@ -500,7 +502,9 @@ export class ImmersionScene {
       if (time) time.textContent = d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
       if (date) date.textContent = d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'});
     };
-    update(); setInterval(update, 15000);
+    update();
+    if (this.worldClockTimer) clearInterval(this.worldClockTimer as number);
+    this.worldClockTimer = setInterval(update, 15000);
   }
   private showSense(icon: string, message: string, warning: boolean) {
     const feed = document.getElementById('senseFeed'); if (!feed) return;
@@ -636,7 +640,8 @@ export class ImmersionScene {
     };
     fill(left);
     fill(right);
-    setInterval(() => {
+    if (this.matrixTimer) clearInterval(this.matrixTimer as number);
+    this.matrixTimer = setInterval(() => {
       fill(left);
       fill(right);
     }, 2000);
@@ -1584,6 +1589,8 @@ export class ImmersionScene {
     } catch { /* архив недоступен — отчёт всё равно остаётся в сохранении сектора */ }
     // Freeze every active loop before the exit cinematic: no more encounters, sanity drain or ambient threats.
     if (this.eventTimer) clearInterval(this.eventTimer as number);
+    if (this.matrixTimer) clearInterval(this.matrixTimer as number);
+    if (this.worldClockTimer) clearInterval(this.worldClockTimer as number);
     if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
     if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
