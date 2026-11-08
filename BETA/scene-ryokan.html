@@ -2422,23 +2422,47 @@
 <script>
 (function(){
  try{
-  const raw=localStorage.getItem('limbo_sim_ryokan_v1'); if(!raw)return;
-  const state=JSON.parse(raw); if(!state.ending)return;
-  const data={
-   clear:['КАНАЛ ОЧИЩЕН','Мы сохранили ясность. В следующих секторах меньше ложных сигналов.'],
-   bind:['СВЯЗЬ ПРИНЯТА','Маска запомнила нас. Чужие голоса могут открывать скрытые ответы — рассудок уязвим.'],
-   break:['УЗЕЛ РАЗРУШЕН','Существа ослаблены, но тело ранено. Часть ресурсов утрачена.']
-  }[state.ending];
-  if(!data)return;
-  const card=document.createElement('aside'); card.className='ending-carryover';
-  card.innerHTML='<b></b><span></span>'; card.querySelector('b').textContent=data[0]; card.querySelector('span').textContent=data[1];
-  const target=document.querySelector('.sc-body')||document.querySelector('main')||document.body; target.prepend(card);
+  const target=document.querySelector('.sc-body')||document.querySelector('main')||document.body;
+  const raw=localStorage.getItem('limbo_sim_ryokan_v1');
+  const state=raw?JSON.parse(raw):null;
+  if(state&&state.ending){
+   const data={
+    clear:['КАНАЛ ОЧИЩЕН','Мы сохранили ясность. В следующих секторах меньше ложных сигналов.'],
+    bind:['СВЯЗЬ ПРИНЯТА','Маска запомнила нас. Чужие голоса могут открывать скрытые ответы — рассудок уязвим.'],
+    break:['УЗЕЛ РАЗРУШЕН','Существа ослаблены, но тело ранено. Часть ресурсов утрачена.']
+   }[state.ending];
+   if(data){
+    const card=document.createElement('aside'); card.className='ending-carryover';
+    card.innerHTML='<b></b><span></span>'; card.querySelector('b').textContent=data[0]; card.querySelector('span').textContent=data[1];
+    target.prepend(card);
+   }
+  }
+  const archive=JSON.parse(localStorage.getItem('limbo_campaign_archive_v1')||'null');
+  if(archive&&archive.version===1&&archive.scoreCount){
+   const tier=Math.max(1,Math.min(3,Number(archive.passTier)||1));
+   const cardTier=Math.max(1,Math.min(6,Number(archive.bestCardTier)||1));
+   const panel=document.createElement('aside'); panel.className='ending-campaign-carryover';
+   panel.innerHTML=
+    '<div class="ecc-art"><img src="/assets/game/items/b'+tier+'.png" alt="Накопительный пропуск"><small>ПРОПУСК · УРОВЕНЬ '+tier+'/3</small></div>'+
+    '<div class="ecc-art"><img src="/assets/game/items/card'+cardTier+'.png" alt="Карточка персонажа"><small>КАРТОЧКА · '+cardTier+'/6</small></div>'+
+    '<div class="ecc-data"><b>АРХИВ ЦЕФЕЯ · НАКОПИТЕЛЬНЫЙ ПРОГРЕСС</b><strong>'+archive.completedSectors.length+' СЕКТОР(А) · '+archive.averageScore+'/100 СРЕДНИЙ БАЛЛ</strong><span>Найдено: '+archive.totalCollected+' · применено: '+archive.totalUsed+' · подсказок: '+archive.totalClues+' · сюжетных следов: '+archive.totalSecrets+'</span></div>';
+   target.prepend(panel);
+  }
  }catch(e){}
 })();
 </script>
 <style>
 .ending-carryover{display:flex;flex-direction:column;gap:6px;margin:14px auto;padding:13px 16px;max-width:1100px;border:1px solid rgba(53,200,230,.35);border-left:3px solid #35c8e6;background:linear-gradient(90deg,rgba(6,25,36,.96),rgba(6,13,22,.82));color:#b8d1da;font:12px/1.5 var(--font-ui,sans-serif)}
 .ending-carryover b{color:#53d7ed;font:600 10px var(--font-mono,monospace);letter-spacing:.16em}
+.ending-campaign-carryover{display:grid;grid-template-columns:120px 120px minmax(0,1fr);gap:16px;align-items:center;margin:14px auto;padding:14px 18px;max-width:1100px;border:1px solid rgba(53,200,230,.32);background:linear-gradient(100deg,rgba(6,25,36,.96),rgba(6,13,22,.88));color:#b8d1da}
+.ending-campaign-carryover .ecc-art{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.ending-campaign-carryover .ecc-art img{width:100%;height:86px;object-fit:contain;filter:drop-shadow(0 5px 14px rgba(40,190,215,.18))}
+.ending-campaign-carryover .ecc-art small{font:8px var(--font-mono,monospace);letter-spacing:.1em;color:#78c9d5}
+.ending-campaign-carryover .ecc-data{display:flex;flex-direction:column;gap:7px;min-width:0}
+.ending-campaign-carryover .ecc-data b{font:600 9px var(--font-mono,monospace);letter-spacing:.15em;color:#53d7ed}
+.ending-campaign-carryover .ecc-data strong{font:600 13px var(--font-mono,monospace);color:#e1f4f6}
+.ending-campaign-carryover .ecc-data span{font:11px/1.5 var(--font-ui,sans-serif);color:#91aeb8}
+@media(max-width:650px){.ending-campaign-carryover{grid-template-columns:82px 82px minmax(0,1fr);gap:8px;padding:10px}.ending-campaign-carryover .ecc-art img{height:64px}.ending-campaign-carryover .ecc-data strong{font-size:10px}.ending-campaign-carryover .ecc-data span{font-size:9px}}
 </style>
 
 </body>
