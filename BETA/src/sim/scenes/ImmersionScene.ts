@@ -1061,7 +1061,7 @@ export class ImmersionScene {
         this.state.flags.anchor_puzzle_solved = true;
         this.rememberThought('Последовательность замкнулась. Теперь можно покинуть Рёкан.');
         this.notify('ЯКОРЬ СТАБИЛИЗИРОВАН · ВЫХОД ОТКРЫТ', 'ok');
-        simAudio.complete(this.state.muted);
+        // Exit is a hard audio boundary: do not play completion or ambient cues after closure.
       } else this.notify('Элемент принят. Якорь ждёт следующий сигнал.', 'ok');
       saveState(this.state);
       this.renderInv(); this.renderVitals(); this.openModal(hs); this.showAnchorPuzzle(hs);
@@ -1419,6 +1419,8 @@ export class ImmersionScene {
 
   private showAnchorPuzzle(hs: HotspotDef) {
     this.syncAnchorProgress();
+    // Once stabilized, the anchor becomes the single, clear sector-exit screen.
+    if (this.state.flags.anchor_puzzle_solved) { this.showEndingChoices(); return; }
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
     const visual = document.getElementById('modalVisual');
@@ -1472,12 +1474,6 @@ export class ImmersionScene {
       });
       actions.appendChild(button);
     });
-    if (this.state.flags.anchor_puzzle_solved) {
-      const exit = document.createElement('button'); exit.type = 'button'; exit.className = 'inspection-action primary ending-good';
-      exit.textContent = 'ЗАВЕРШИТЬ СЕКТОР · ПЕРЕЙТИ К ВЫХОДУ';
-      exit.addEventListener('click', () => this.showEndingChoices());
-      actions.appendChild(exit);
-    }
     const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
     close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
     if (note) note.textContent = 'Одноразовые вещи не расходуются повторно. Если фонарь, оберег или колокольчик уже применялись, якорь принимает сохранённый след или найденную подсказку.';
