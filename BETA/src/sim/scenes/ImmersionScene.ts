@@ -1434,8 +1434,22 @@ export class ImmersionScene {
       intro.textContent='Канал закрывается. Зафиксируй выход из сектора — Цефей сохранит состояние узла и перенесёт тебя за его пределы.';
       body.appendChild(intro);
       const status=document.createElement('p');status.className='ending-outcome-copy';
-      status.textContent='Сбор данных завершится после выхода. Сейчас не будет ни оценки, ни списка находок — только закрытие сектора.';
+      status.textContent='Перед выходом проверь обязательные следы. Можно уйти и с пропусками, но они повлияют на оценку и состояние канала.';
       body.appendChild(status);
+      const checklist=document.createElement('ul');checklist.className='ending-requirements exit-checklist';
+      const objectives:[string,string][]=[
+        ['Записка прочитана','note_read'],['Дверь генкана открыта','door_unlocked'],
+        ['Шёлковая нить найдена','took_silk'],['Колокольчик найден','took_bell'],
+        ['Оберег собран','crafted_warding_charm'],['Фонарь восстановлен','crafted_ember_lantern']
+      ];
+      objectives.forEach(([label,flag])=>{
+        const li=document.createElement('li');const done=!!this.state.flags[flag];
+        li.className=done?'met':'missing';li.textContent=(done?'✓  ':'—  ')+label;checklist.appendChild(li);
+      });
+      body.appendChild(checklist);
+      const reminder=document.createElement('p');reminder.className='ending-outcome-copy';
+      reminder.textContent='После выхода начнётся финальная заставка, затем появится полный отчёт. Вернуться в сектор уже нельзя.';
+      body.appendChild(reminder);
     }
     if (actions) {
       actions.innerHTML='';
@@ -1466,8 +1480,9 @@ export class ImmersionScene {
     const visual=document.getElementById('modalVisual');
     const actions=document.getElementById('modalActions');
     const note=document.getElementById('modalNote');
+    document.getElementById('simModal')?.classList.add('report-mode');
     if(title)title.textContent='ЦЕФЕЙ · ОТЧЁТ ПОСЛЕ ВЫХОДА';
-    if(visual)visual.innerHTML='<div class="ending-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
+    if(visual)visual.innerHTML='<div class="ending-core-art report-core-art" aria-hidden="true"><i></i><b></b><span></span></div>';
     const allItems=Object.keys(ITEMS) as ItemId[];
     const collected=allItems.filter(id=>this.state.flags['collected_'+id]||this.state.flags['crafted_'+id]||this.state.inventory.includes(id)||this.state.droppedItems.some(x=>x.id===id));
     const used=allItems.filter(id=>this.state.flags['used_'+id]);
@@ -1516,15 +1531,24 @@ export class ImmersionScene {
       const checklist=document.createElement('ul');checklist.className='ending-requirements';
       requirements.forEach(([label,met])=>{const li=document.createElement('li');li.textContent=(met?'✓ ':'— ')+label;li.className=met?'met':'missing';checklist.appendChild(li);});
       body.appendChild(checklist);
-      const lore=document.createElement('ul');lore.className='ending-requirements';
-      const clueKeys=['note_read','clue_key_halves','threaded_note','clue_rain_rhythm','clue_shadow_warning','clue_echo_answered'];
-      const easterKeys=['easter_mirror','spider_recognized','spider_story_heard','spider_thread_given','heard_steps','mask_voice_known'];
-      const groups:Array<[string,string[]]>=[['ПОДСКАЗКИ',clueKeys],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterKeys]];
-      groups.forEach(([label,keys])=>{
-        const foundKeys=keys.filter(k=>!!this.state.flags[k]);
-        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
+      const clueLabels:Record<string,string>={note_read:'Записка о суставном скрипе',clue_key_halves:'Подсказка о половинах ключа',threaded_note:'Записка о шёлковой нити',clue_rain_rhythm:'Ритм дождя',clue_shadow_warning:'Предупреждение о тени',clue_echo_answered:'Ответ эха'};
+      const easterLabels:Record<string,string>={easter_mirror:'Отражение из другого времени',spider_recognized:'Тень узнала тебя',spider_story_heard:'История паучьей тени',spider_thread_given:'Нить отдана тени',heard_steps:'Шаги над потолком',mask_voice_known:'Голос из маски'};
+      const groups:Array<[string,Record<string,string>]>=[['ПОДСКАЗКИ',clueLabels],['ПАСХАЛКИ И СЮЖЕТНЫЕ СЛЕДЫ',easterLabels]];
+      groups.forEach(([label,labels])=>{
+        const keys=Object.keys(labels);const foundKeys=keys.filter(k=>!!this.state.flags[k]);
+        const li=document.createElement('li');li.textContent=label+': '+(foundKeys.length?foundKeys.map(k=>labels[k]).join(' · '):'не обнаружены')+' ('+foundKeys.length+'/'+keys.length+')';lore.appendChild(li);
       });
       body.appendChild(lore);
+      const clueCount=Object.keys(clueLabels).filter(k=>!!this.state.flags[k]).length;
+      const secretCount=Object.keys(easterLabels).filter(k=>!!this.state.flags[k]).length;
+      const score=Math.max(0,Math.min(100,Math.round(40+25*collected.length/Math.max(1,allItems.length)+15*used.length/Math.max(1,allItems.length)+10*clueCount/Object.keys(clueLabels).length+10*secretCount/Object.keys(easterLabels).length)));
+      const rank=score>=92?'S':score>=82?'A':score>=68?'B':score>=52?'C':'D';
+      const rating=document.createElement('section');rating.className='sector-rating';
+      rating.innerHTML='<span>ОЦЕНКА ПРОХОЖДЕНИЯ</span><strong>'+rank+'</strong><b>'+score+' / 100</b><small>Находки · применение · подсказки · сюжетные следы</small>';
+      body.appendChild(rating);
+      const rewards=document.createElement('section');rewards.className='sector-rewards';
+      rewards.innerHTML='<article class="reward-card reward-pass"><span>✦</span><small>ПОЛУЧЕНО</small><strong>КАРТА-ПРОПУСК</strong><b>RK-02</b><em>Доступ к следующему сектору</em></article><article class="reward-card reward-id"><span>RK</span><small>АРХИВ ЦЕФЕЯ</small><strong>КАРТОЧКА ПЕРСОНАЖА</strong><b>СУБЪЕКТ 01</b><em>Профиль прохождения сохранён</em></article>';
+      body.appendChild(rewards);
       const memoryHeading = document.createElement('h3'); memoryHeading.className = 'ending-memory-heading'; memoryHeading.textContent = 'ЗАПОМНЕННЫЕ МЫСЛИ И НАБЛЮДЕНИЯ'; body.appendChild(memoryHeading);
       const memoryList = document.createElement('ul'); memoryList.className = 'ending-requirements ending-memory-list';
       (this.state.memories || []).forEach(memory => { const li = document.createElement('li'); li.textContent = memory; memoryList.appendChild(li); });
@@ -1536,10 +1560,12 @@ export class ImmersionScene {
     }
     if(actions){
       actions.innerHTML='';
-      const button=document.createElement('button');button.type='button';button.className='inspection-action primary ending-good';
-      button.textContent='ПРОДОЛЖИТЬ';button.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html';});actions.appendChild(button);
+      const next=document.createElement('button');next.type='button';next.className='inspection-action primary ending-good';
+      next.textContent='К СЛЕДУЮЩЕМУ СЕКТОРУ';next.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html?sector=RK-02';});actions.appendChild(next);
+      const back=document.createElement('button');back.type='button';back.className='inspection-action quiet';
+      back.textContent='ВЕРНУТЬСЯ К ВЫБОРУ СЕКТОРОВ';back.addEventListener('click',()=>{this.closeModal();window.location.href='/scene-ryokan.html';});actions.appendChild(back);
     }
-    if(note)note.textContent='Отчёт сформирован после выхода. Состояние предметов и ключевые события сохранены.';
+    if(note)note.textContent='Карта-пропуск RK-02 и карточка субъекта сохранены в архиве Цефея.';
     document.getElementById('simModal')?.classList.add('open');
     document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
@@ -1550,6 +1576,27 @@ export class ImmersionScene {
     if (!this.state.flags.anchor_puzzle_solved) { this.notify('Выход заблокирован: сначала стабилизируй якорь.', 'warn'); return; }
     this.state.completed = true;
     this.state.ending = ending;
+    this.state.flags.pass_RK02 = true;
+    this.state.flags.character_card_RK01 = true;
+    try {
+      localStorage.setItem('limbo_pass_RK02', '1');
+      localStorage.setItem('limbo_character_card_RK01', JSON.stringify({sector:'RK-01',subject:'СУБЪЕКТ 01',ending,health:this.state.health,sanity:this.state.sanity,visited:this.state.visited.length,createdAt:new Date().toISOString()}));
+    } catch { /* архив недоступен — отчёт всё равно остаётся в сохранении сектора */ }
+    // Freeze every active loop before the exit cinematic: no more encounters, sanity drain or ambient threats.
+    if (this.eventTimer) clearInterval(this.eventTimer as number);
+    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
+    if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
+    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
+    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    if (this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
+    this.threatActive = false;
+    this.spiderInCombat = false;
+    document.getElementById('threatOverlay')?.classList.remove('open');
+    document.getElementById('combatScreen')?.classList.remove('open');
+    document.getElementById('spiderDialogue')?.remove();
+    document.getElementById('sceneCreature')?.remove();
+    document.body.classList.remove('threat-active','combat-active','threat-kind-light','threat-kind-sound','threat-kind-dweller');
+    simAudio.stopAmbient();
     this.state.flags.ending_clear = ending === 'clear';
     this.state.flags.ending_bind = ending === 'bind';
     this.state.flags.ending_break = ending === 'break';
