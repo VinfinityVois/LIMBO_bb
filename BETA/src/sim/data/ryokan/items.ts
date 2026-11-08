@@ -30,6 +30,12 @@ export const ITEMS: Record<ItemId, ItemDef> = {
     color: '#9bd7e8',
     svg: `<path d="M15 9 L51 17 L43 55 L9 42 Z" fill="#9bd7e8" fill-opacity=".2" stroke="#b9eaf4" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e0f8ff" stroke-width="1.2"/><path d="M22 20 L36 42" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>`,
   },
+  mirror_lens: {
+    id: 'mirror_lens', name: 'Сшитая зеркальная линза', short: 'ЛИНЗА',
+    examine: 'Два зеркальных осколка сведены шёлковой нитью. Отражение больше не распадается на разные комнаты. Линзу можно приложить к потемневшему стеклу.',
+    color: '#9bd7e8',
+    svg: `<path d="M13 9 L51 17 L43 55 L9 42 Z" fill="#9bd7e8" fill-opacity=".18" stroke="#d9f8ff" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e0f8ff" stroke-width="1.3"/><path d="M22 20 L36 42 M16 47 Q32 58 49 12" fill="none" stroke="#c5cddc" stroke-width="1.5"/>`,
+  },
   wet_key_half: {
     id: 'wet_key_half',
     name: 'Половина ключа · А',
@@ -159,6 +165,11 @@ export const RECIPES = [
     a: 'paper_lantern_shard' as ItemId, b: 'matchbox' as ItemId,
     result: 'ember_lantern' as ItemId,
     message: 'Сырая спичка вспыхнула неестественно ровно. Осколок фонаря удержал огонёк.',
+  },
+  {
+    a: 'mirror_shard' as ItemId, b: 'silk_thread' as ItemId,
+    result: 'mirror_lens' as ItemId,
+    message: 'Ты совмещаешь два отражения и стягиваешь трещину шёлковой нитью. Получилась зеркальная линза.',
   },
 ];
 
