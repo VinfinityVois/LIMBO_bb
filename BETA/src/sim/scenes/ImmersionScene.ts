@@ -88,6 +88,7 @@ export class ImmersionScene {
     if (this.state.flags.anchor_warded) this.state.flags.anchor_step_charm = true;
     if (this.state.flags.anchor_lit) this.state.flags.anchor_step_lantern = true;
     if (this.state.flags.anchor_step_bell && this.state.flags.anchor_step_charm && this.state.flags.anchor_step_lantern) this.state.flags.anchor_puzzle_solved = true;
+    if (this.state.flags.anchor_puzzle_solved) this.state.flags.anchor_exit_unlocked = true;
     saveState(this.state);
     this.maskWorn = this.state.maskWorn === true;
     document.body.classList.toggle('mask-worn', this.maskWorn);
@@ -961,6 +962,7 @@ export class ImmersionScene {
       b.type = 'button';
       b.className =
         'hotspot' +
+        (hs.id === 'hs_anchor' ? ' anchor-target' : '') +
         (hs.complete ? ' complete' : '') +
         (hs.useWith ? ' door' : '') +
         (hs.item ? ' loot' : '') +
@@ -1087,7 +1089,6 @@ export class ImmersionScene {
     this.state.flags['inspected_' + hs.id] = true;
     this.state.flags['examined_' + hs.id] = true;
     saveState(this.state);
-    this.buildHotspots();
     if (hs.complete && !this.state.selected) {
       if (this.state.flags.anchor_puzzle_solved) {
         this.showEndingChoices();
@@ -1201,6 +1202,7 @@ export class ImmersionScene {
       return;
     }
 
+    this.buildHotspots();
     this.openModal(hs);
   }
 
@@ -1213,6 +1215,8 @@ export class ImmersionScene {
     const note = document.getElementById('modalNote');
     const found = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
     const flags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
+    body.classList.remove('note-reading');
+    if (visual) visual.innerHTML = '';
 
     const addAction = (label: string, variant: 'primary'|'secondary'|'quiet', fn: () => void) => {
       const button = document.createElement('button');
@@ -1319,20 +1323,35 @@ export class ImmersionScene {
         }
         if (hs.clueFlag && hs.clueText) {
           addAction(this.state.flags[hs.clueFlag] ? 'ПЕРЕЧИТАТЬ ЗАПИСКУ' : 'ПРОЧИТАТЬ ЗАПИСКУ', 'primary', () => {
+            title.textContent = hs.label.toUpperCase();
+            body.innerHTML = '';
+            body.classList.add('note-reading');
+            if (visual) {
+              visual.innerHTML = '';
+              const image = document.createElement('img');
+              image.className = 'note-reading-art';
+              image.src = hs.art || '/assets/game/items/мусор/sealed_letter.png';
+              image.alt = 'Сложенная записка';
+              image.draggable = false;
+              visual.appendChild(image);
+            }
             const letter = document.createElement('article');
             letter.className = 'note-letter';
-            const image = document.createElement('img');
-            image.src = '/assets/game/items/мусор/sealed_letter.png';
-            image.alt = 'Сложенная записка';
-            image.draggable = false;
+            const stamp = document.createElement('div');
+            stamp.className = 'note-letter-stamp';
+            stamp.textContent = 'ЗАПИСЬ · RK-01';
             const text = document.createElement('p');
             text.textContent = hs.clueText || '';
-            letter.append(image, text);
-            body.querySelector('.note-letter')?.remove();
+            letter.append(stamp, text);
             body.appendChild(letter);
+            actions.innerHTML = '';
+            addAction('ПОНЯТНО', 'primary', () => this.closeModal());
+            addAction('ЗАКРЫТЬ', 'quiet', () => this.closeModal());
             this.state.flags[hs.clueFlag!] = true;
             this.rememberThought(hs.label + ': ' + hs.clueText);
             saveState(this.state);
+            this.renderThoughtJournal();
+            if (note) note.textContent = 'Текст сохранён в заметках Цефея.';
             this.notify('Подсказка сохранена в заметках.', 'ok');
             simAudio.whisper(this.state.muted);
           });
@@ -1625,6 +1644,8 @@ export class ImmersionScene {
       back.textContent='ОСТАТЬСЯ В СЕКТОРЕ';back.addEventListener('click',()=>this.closeModal());actions.appendChild(back);
     }
     if (note) note.textContent='Сначала выход. Отчёт Цефея появится после завершения перехода.';
+    document.getElementById('simModal')?.classList.add('open');
+    document.body.classList.add('inspection-open');
   }
 
   private showSectorFinale() {
