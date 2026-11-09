@@ -1,4 +1,4 @@
-/* A-55 archive redesign — wide collection workspace + collapsible personnel rail */
+/* A-00 archive redesign — wide collection workspace + collapsible personnel rail */
 .employee-page{min-height:100vh;background:radial-gradient(ellipse at 60% 0%,rgba(0,105,122,.12),transparent 42%),var(--void);color:var(--text)}
 .employee-layout{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:calc(100vh - 58px);transition:grid-template-columns .35s cubic-bezier(.2,.8,.2,1)}
 .employee-sidebar{position:sticky;top:0;height:calc(100vh - 58px);min-height:650px;overflow-y:auto;display:flex;flex-direction:column;padding:1.1rem 1rem .8rem;background:linear-gradient(180deg,rgba(9,19,30,.98),rgba(4,9,16,.98));border-right:1px solid rgba(0,212,232,.2);z-index:5;transition:opacity .25s,transform .35s}
@@ -125,3 +125,16 @@
 .modal-body.slide-next .archive-entry-nav,.modal-body.slide-prev .archive-entry-nav{animation:archiveNavFade .24s ease both}
 @keyframes archiveNavFade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:560px){.archive-entry-nav{gap:.35rem}.archive-entry-nav button{padding:.45rem .5rem;gap:.35rem}.archive-entry-nav button small{font-size:6px}.entry-position{padding:.35rem .4rem}}
+
+
+/* Looping detail navigation: always available, including at the ends of a collection */
+.archive-entry-nav button{min-width:138px;justify-content:space-between;position:relative;overflow:hidden}
+.archive-entry-nav button:before{content:"";position:absolute;inset:0;opacity:0;background:linear-gradient(105deg,transparent,rgba(0,212,232,.13),transparent);transform:translateX(-110%);transition:transform .42s,opacity .2s}
+.archive-entry-nav button:hover:before{opacity:1;transform:translateX(110%)}
+.archive-entry-nav button:focus-visible{outline:1px solid var(--cyan);outline-offset:3px}
+.archive-entry-nav .entry-position{padding:.4rem .7rem;border:1px solid rgba(0,212,232,.13);background:rgba(0,212,232,.035)}
+.modal-body.slide-next .generic-detail,.modal-body.slide-next .spider-detail{animation:archiveSlideNext .34s cubic-bezier(.18,.8,.2,1) both}
+.modal-body.slide-prev .generic-detail,.modal-body.slide-prev .spider-detail{animation:archiveSlidePrev .34s cubic-bezier(.18,.8,.2,1) both}
+@keyframes archiveSlideNext{from{opacity:0;transform:translate3d(42px,0,0) scale(.985);filter:blur(3px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@keyframes archiveSlidePrev{from{opacity:0;transform:translate3d(-42px,0,0) scale(.985);filter:blur(3px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@media(max-width:520px){.archive-entry-nav{gap:.35rem}.archive-entry-nav button{min-width:0;padding:.42rem .48rem;gap:.3rem}.archive-entry-nav button small{font-size:6px}.archive-entry-nav .entry-position{padding:.3rem .4rem}}
