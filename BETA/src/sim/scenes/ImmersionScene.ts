@@ -72,6 +72,8 @@ export class ImmersionScene {
   private noiseStartedAt = 0;
   private noiseDuration = 0;
   private noisePeak = 0;
+  private noiseEncounterPending = false;
+  private noiseEncounterExpiresAt = 0;
   private currentSoundLevel = 3;
   private notificationQueue: Array<{ message: string; kind: 'info' | 'warn' | 'ok' }> = [];
   private notificationBusy = false;
@@ -150,6 +152,7 @@ export class ImmersionScene {
   }
 
   async start() {
+    this.ensureInterfaceWindows();
     this.bindChrome();
     if (this.state.completed) {
       this.diving = false;
@@ -175,8 +178,6 @@ export class ImmersionScene {
     this.checkDefeat();
     this.renderMinimap();
     this.updateZone();
-    await this.showControlsTutorial();
-    this.diving = false;
     this.startWorldClock();
     this.startSoundDynamics();
     simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
@@ -186,6 +187,8 @@ export class ImmersionScene {
     this.scheduleEvents();
     this.startMatrixStreams();
     this.startInterfaceWatchdog();
+    await this.showSectorBriefing();
+    this.diving = false;
   }
 
   /** Boot: tunnel into Limbo */
@@ -250,6 +253,62 @@ export class ImmersionScene {
           resolve();
         }, 700);
       }, 2200);
+    });
+  }
+
+  private showSectorBriefing(): Promise<void> {
+    this.diving = true;
+    document.getElementById('sectorBriefing')?.remove();
+    return new Promise(resolve => {
+      const overlay = document.createElement('section');
+      overlay.id = 'sectorBriefing';
+      overlay.className = 'sector-briefing';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      const hasLantern = this.state.inventory.includes('ember_lantern');
+      const hasSelected = !!this.state.selected && this.state.inventory.includes(this.state.selected);
+      overlay.innerHTML = `
+        <div class="sector-briefing-backdrop"></div>
+        <div class="sector-briefing-panel">
+          <div class="sector-briefing-kicker">ЦЕФЕЙ · RK-01 · ПРОТОКОЛ ВХОДА</div>
+          <h2>ПЕРЕД ВХОДОМ В СЕКТОР</h2>
+          <p class="sector-briefing-intro">Канал нестабилен. Проверь угрозы и быстрые действия перед продолжением.</p>
+          <div class="sector-briefing-alerts">
+            <article><b>ЗВУК</b><strong>Кидзё слышит шум</strong><span>Эхо, звон и возня в инвентаре могут привлечь её. Чем громче звук, тем быстрее она приблизится.</span></article>
+            <article><b>СВЕТ</b><strong>Юрэй идёт на источник</strong><span>Зажжённый фонарь выдаёт положение. Погаси его, если заметишь движение в темноте.</span></article>
+            <article><b>ВРЕМЯ И ПРЕДМЕТЫ</b><strong>Опасность истощает рассудок</strong><span>Долгое пребывание в комнате и ношение чёрного семени или сшитой маски постепенно разрушают восприятие. При нуле рассудка начинает падать здоровье.</span></article>
+            <article><b>КОНТАКТ</b><strong>Не пропускай телеграф атаки</strong><span>В бою уклоняйся во время сигнала. Ошибка отнимает HP; атаки Кидзё дополнительно повреждают рассудок.</span></article>
+          </div>
+          <div class="sector-briefing-quick-label">БЫСТРЫЕ ДЕЙСТВИЯ</div>
+          <div class="sector-briefing-quick">
+            <button type="button" data-brief-action="echo"><kbd>Q</kbd><span><strong>ЭХО</strong><small>Послать звук в помещение</small></span></button>
+            <button type="button" data-brief-action="use" ${hasSelected ? '' : 'disabled'}><kbd>R</kbd><span><strong>ПРИМЕНИТЬ</strong><small>Использовать выбранный предмет</small></span></button>
+            <button type="button" data-brief-action="inspect" ${hasSelected ? '' : 'disabled'}><kbd>F</kbd><span><strong>ИЗУЧИТЬ</strong><small>Открыть выбранную находку</small></span></button>
+            <button type="button" data-brief-action="lantern" ${hasLantern ? '' : 'disabled'}><kbd>L</kbd><span><strong>${this.lightActive ? 'ПОГАСИТЬ СВЕТ' : 'ВЫБРАТЬ ФОНАРЬ'}</strong><small>${hasLantern ? 'Переключить источник света' : 'Фонарь ещё не найден'}</small></span></button>
+          </div>
+          <div class="sector-briefing-footer"><span>СИМУЛЯЦИЯ ПРИОСТАНОВЛЕНА</span><button type="button" data-brief-continue>ПРОДОЛЖИТЬ ПОГРУЖЕНИЕ <i>→</i></button></div>
+        </div>`;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('visible'));
+      let finished = false;
+      const finish = (action?: string) => {
+        if (finished) return;
+        finished = true;
+        overlay.classList.add('closing');
+        window.setTimeout(() => {
+          overlay.remove();
+          this.diving = false;
+          if (action === 'echo') this.echo();
+          else if (action === 'use') this.useSelectedItem();
+          else if (action === 'inspect' && this.state.selected) this.openItemExam(this.state.selected);
+          else if (action === 'lantern' && hasLantern) { this.state.selected = 'ember_lantern'; this.useSelectedItem(); }
+          resolve();
+        }, 260);
+      };
+      overlay.querySelector('[data-brief-continue]')?.addEventListener('click', () => finish());
+      overlay.querySelectorAll<HTMLButtonElement>('[data-brief-action]').forEach(button =>
+        button.addEventListener('click', () => { if (!button.disabled) finish(button.dataset.briefAction); })
+      );
     });
   }
 
@@ -552,6 +611,7 @@ export class ImmersionScene {
   private scheduleEvents() {
     if (this.eventTimer) clearInterval(this.eventTimer as number);
     this.eventTimer = setInterval(() => {
+      if (this.diving || document.hidden || this.state.defeated) return;
       if (this.state.sanity <= 0 && !this.state.defeated) {
         this.sanityCollapseTick += 1;
         this.state.health = Math.max(0, this.state.health - 8);
@@ -562,7 +622,6 @@ export class ImmersionScene {
       } else this.sanityCollapseTick = 0;
       this.tickSanityExposure();
       if (this.tickSpiderPresence()) return;
-      if (this.spiderStage > 0 && !this.state.flags.spider_defeated && !this.state.flags.spider_released) return;
       if (this.threatActive || Date.now() < this.threatCooldown || this.state.defeated) return;
       const stayed = Date.now() - this.roomEnteredAt;
       this.tickMaskEffects();
@@ -581,6 +640,14 @@ export class ImmersionScene {
       // Each creature has its own trigger condition.
       // Three independent creature behaviours, with a small shared encounter roll.
       // The type is chosen from the player's current behaviour and room, not a single hard-coded room gate.
+      if (this.noiseEncounterPending) {
+        if (Date.now() > this.noiseEncounterExpiresAt) this.noiseEncounterPending = false;
+        else {
+          const noise = Math.max(this.currentSoundLevel, this.noisePeak);
+          const chance = noise >= 68 ? .62 : noise >= 38 ? .48 : .30;
+          if (noise >= 16 && Math.random() < chance) { this.noiseEncounterPending = false; this.startThreat('sound'); return; }
+        }
+      }
       const lightChance = this.lightActive && !this.maskWorn ? .22 : 0;
       const soundPressure = this.currentSoundLevel / 100;
       const soundChance = this.currentSoundLevel >= 16 ? Math.min(.52, .04 + this.currentSoundLevel * .0048) : 0;
@@ -769,6 +836,7 @@ export class ImmersionScene {
     if (document.body.classList.contains('combat-active') || this.threatActive) return;
     this.threatKind = kind;
     this.threatActive = true;
+    this.noiseEncounterPending = false;
     this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5);
     this.state.flags['encounter_' + kind] = true;
     this.state.flags['encounter_' + kind + '_yokai'] = true;
@@ -1306,8 +1374,10 @@ export class ImmersionScene {
       this.makeNoise('Шаги эхом разнеслись по локации.');
       this.state.location = to;
       this.roomEnteredAt = Date.now();
-      this.noiseStartedAt = Date.now(); this.noiseDuration = 4500; this.noisePeak = 58;
+      this.noiseStartedAt = Date.now(); this.noiseDuration = 11000; this.noisePeak = 58;
       this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
+      this.noiseEncounterPending = true;
+      this.noiseEncounterExpiresAt = this.noiseUntil;
       if (!this.state.visited.includes(to)) this.state.visited.push(to);
       saveState(this.state);
       this.stage.classList.add('fade');
@@ -2496,6 +2566,8 @@ export class ImmersionScene {
     this.noiseDuration = 16000;
     this.noisePeak = Math.min(100, carriedLevel + 34);
     this.noiseUntil = now + this.noiseDuration;
+    this.noiseEncounterPending = true;
+    this.noiseEncounterExpiresAt = this.noiseUntil;
     const caption = document.getElementById('soundCaption');
     if (caption) caption.textContent = 'ШУМ · источник — ты';
     const danger = document.getElementById('dangerValue');
