@@ -3,7 +3,7 @@ export type CampaignSectorResult = {
   score: number; grade: string; gradeTier: number; collected: number; used: number;
   clues: number; secrets: number; ending: string | null;
   completedAt?: string; health?: number; sanity?: number; visited?: number;
-  items?: string[]; clueNames?: string[]; charms?: string[];
+  items?: string[]; studiedItems?: string[]; clueNames?: string[]; secretNames?: string[]; encounters?: string[]; charms?: string[];
 };
 export type CampaignRun = CampaignSectorResult & {
   runId: string; sectorId: string; completedAt: string;
