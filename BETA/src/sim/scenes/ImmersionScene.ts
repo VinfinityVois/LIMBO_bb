@@ -586,6 +586,19 @@ export class ImmersionScene {
     window.addEventListener('keydown', unlockAudio);
   }
 
+  private applyDangerousPickup(id: ItemId) {
+    const loss = id === 'black_seed' ? 13 : id === 'stitched_mask' ? 8 : 0;
+    if (!loss) return;
+    this.state.sanity = Math.max(0, this.state.sanity - loss);
+    this.lastSanityExposureAt = Date.now();
+    this.state.flags.took_dangerous_object = true;
+    this.state.flags['took_' + id] = true;
+    if (id === 'black_seed') this.state.flags.black_seed_taken = true;
+    this.notify(id === 'black_seed' ? 'Семя дёрнулось в ладони. Рассудок −13.' : 'Из маски донёсся короткий вдох. Рассудок −8.', 'warn');
+    if (id === 'black_seed') simAudio.whisper(this.state.muted);
+    else simAudio.maskWhisper(this.state.muted, 1.1);
+  }
+
   private tickSanityExposure() {
     const now = Date.now();
     if (now - this.lastSanityExposureAt < 15000 || this.state.defeated || this.state.sanity <= 0) return;
@@ -1220,8 +1233,10 @@ export class ImmersionScene {
         if(this.state.inventory.length>=12){this.notify('Инвентарь заполнен. Сначала освободи место.','warn');return;}
         this.state.droppedItems=this.state.droppedItems.filter(x=>x!==drop);
         this.state.inventory.push(drop.id); this.state.flags['collected_'+drop.id]=true;
+        this.applyDangerousPickup(drop.id);
         saveState(this.state); this.renderDroppedItems(); this.renderInv();
-        this.notify('Поднято: '+def.name,'ok'); simAudio.take(this.state.muted);
+        if (drop.id !== 'black_seed' && drop.id !== 'stitched_mask') this.notify('Поднято: '+def.name,'ok');
+        simAudio.take(this.state.muted);
       });
       this.stage.appendChild(button);
     }
@@ -1758,17 +1773,8 @@ export class ImmersionScene {
         this.state.flags['collected_' + id] = true;
         if (id === 'black_seed' || id === 'stitched_mask') this.state.flags.took_dangerous_object = true;
         if (flag) this.state.flags[flag] = true;
-        if (id === 'black_seed') {
-          this.state.sanity = Math.max(0, this.state.sanity - 13);
-          this.lastSanityExposureAt = Date.now();
-          this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.', 'warn');
-          simAudio.whisper(this.state.muted);
-        } else if (id === 'stitched_mask') {
-          this.state.sanity = Math.max(0, this.state.sanity - 8);
-          this.lastSanityExposureAt = Date.now();
-          this.notify('Из маски донёсся короткий вдох.', 'warn');
-          simAudio.maskWhisper(this.state.muted, 1.1);
-        } else this.notify('Получено: ' + (item?.name || 'предмет'), 'ok');
+        if (id === 'black_seed' || id === 'stitched_mask') this.applyDangerousPickup(id);
+        else this.notify('Получено: ' + (item?.name || 'предмет'), 'ok');
         saveState(this.state);
         simAudio.take(this.state.muted);
         this.pulseMatrix('ok');
@@ -1807,6 +1813,7 @@ export class ImmersionScene {
 
     body.classList.remove('thought-text');
     showArea();
+    modal.hidden = false;
     modal.classList.add('open');
     document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
@@ -1954,7 +1961,8 @@ export class ImmersionScene {
     const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
     close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
     if (note) note.textContent = 'Одноразовые вещи не расходуются повторно. Если фонарь, оберег или колокольчик уже применялись, якорь принимает сохранённый след или найденную подсказку.';
-    document.getElementById('simModal')?.classList.add('open');
+    const modal = document.getElementById('simModal');
+    if (modal) { modal.hidden = false; modal.classList.add('open'); }
     document.body.classList.add('inspection-open');
   }
 
@@ -2006,7 +2014,8 @@ export class ImmersionScene {
       back.textContent='ОСТАТЬСЯ В СЕКТОРЕ';back.addEventListener('click',()=>this.closeModal());actions.appendChild(back);
     }
     if (note) note.textContent='Сначала выход. Отчёт Цефея появится после завершения перехода.';
-    document.getElementById('simModal')?.classList.add('open');
+    const modal = document.getElementById('simModal');
+    if (modal) { modal.hidden = false; modal.classList.add('open'); }
     document.body.classList.add('inspection-open');
   }
 
@@ -2359,14 +2368,16 @@ export class ImmersionScene {
   }
 
   private closeModal() {
-    document.getElementById('simModal')?.classList.remove('open');
+    const modal = document.getElementById('simModal');
+    modal?.classList.remove('open');
+    if (modal) modal.hidden = true;
     document.body.classList.remove('inspection-open');
     document.querySelectorAll('.hotspot.being-inspected').forEach(node => node.classList.remove('being-inspected'));
   }
 
   private renderInv() {
     this.invEl.innerHTML = '';
-    const count = document.getElementById('inventoryCount');
+    const count = document.getElementById('inventoryCount') || document.getElementById('invCount');
     if (count) count.textContent = this.state.inventory.length + ' / 12';
     const stacks = new Map<ItemId, number>();
     this.state.inventory.forEach(id => stacks.set(id, (stacks.get(id) || 0) + 1));
@@ -2400,10 +2411,10 @@ export class ImmersionScene {
   private renderVitals() {
     const health = Math.max(0, Math.min(100, this.state.health ?? 100));
     const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
-    const healthFill = document.getElementById('healthFill') as HTMLElement | null;
-    const sanityFill = document.getElementById('sanityFill') as HTMLElement | null;
-    const healthValue = document.getElementById('healthValue');
-    const sanityValue = document.getElementById('sanityValue');
+    const healthFill = (document.getElementById('healthFill') || document.getElementById('hpBar')) as HTMLElement | null;
+    const sanityFill = (document.getElementById('sanityFill') || document.getElementById('sanBar')) as HTMLElement | null;
+    const healthValue = document.getElementById('healthValue') || document.getElementById('hpText');
+    const sanityValue = document.getElementById('sanityValue') || document.getElementById('sanText');
     if (healthFill) healthFill.style.width = health + '%';
     if (sanityFill) sanityFill.style.width = sanity + '%';
     if (healthValue) healthValue.textContent = String(health);
@@ -2625,7 +2636,8 @@ export class ImmersionScene {
     const art = document.getElementById('combatMonsterArt');
     art?.classList.remove('combat-beast-light','combat-beast-sound','combat-beast-dweller');
     art?.classList.add('combat-beast-' + this.threatKind);
-    const screen = document.getElementById('combatScreen'); screen?.classList.add('open'); screen?.setAttribute('aria-hidden','false');
+    const screen = document.getElementById('combatScreen');
+    if (screen) { screen.hidden = false; screen.classList.add('open'); screen.setAttribute('aria-hidden','false'); }
     const dodge = document.getElementById('combatDodge') as HTMLButtonElement | null; if (dodge) dodge.disabled = true;
     document.body.classList.add('combat-active');
     this.renderCombatWounds();
@@ -2639,6 +2651,7 @@ export class ImmersionScene {
     this.updateCombatHud(this.spiderInCombat ? creatureVoice.spider : creatureVoice[this.threatKind]);
     this.state.flags['heard_' + this.threatKind] = true;
     saveState(this.state);
+    this.beginEnemyAttack();
     this.makeNoise('Схватка началась. Шум разбудит всё вокруг.');
     if (this.spiderInCombat) simAudio.monsterDweller(this.state.muted);
     else if (this.threatKind === 'light') simAudio.monsterBlind(this.state.muted);
@@ -3104,8 +3117,9 @@ export class ImmersionScene {
     this.spiderInCombat = false;
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     this.dodgeReady = false;
-    document.getElementById('combatScreen')?.classList.remove('open');
-    document.getElementById('combatScreen')?.setAttribute('aria-hidden','true');
+    const combatScreen = document.getElementById('combatScreen');
+    combatScreen?.classList.remove('open');
+    if (combatScreen) { combatScreen.hidden = true; combatScreen.setAttribute('aria-hidden','true'); }
     document.body.classList.remove('combat-active');
     document.getElementById('sceneCreature')?.remove();
     this.threatCooldown = Date.now()+45000;
@@ -3216,7 +3230,9 @@ export class ImmersionScene {
     close.textContent = 'ЗАКРЫТЬ';
     close.onclick = () => this.closeModal();
     actions.appendChild(close);
+    modal.hidden = false;
     modal.classList.add('open');
+    document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
   }
 
