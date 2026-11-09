@@ -1956,7 +1956,7 @@ export class ImmersionScene {
       pass.innerHTML = '<img src="/assets/game/items/b' + archive.passTier + '.png" alt="Пропуск следующего сектора"><div><small>БРЕЛОК-ПРОПУСК · НАКОПИТЕЛЬНЫЙ</small><strong>ДОСТУП К СЛЕДУЮЩЕЙ ЛОКАЦИИ</strong><b>УРОВЕНЬ ' + archive.passTier + ' / 3</b><em>Средняя оценка кампании: ' + archive.averageScore + ' · секторов: ' + archive.scoreCount + '</em></div>';
       const card = document.createElement('article');
       card.className = 'reward-card reward-id';
-      card.innerHTML = '<img src="/assets/game/items/card' + Math.max(1, Math.min(6, archive.bestCardTier)) + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + Math.max(1, Math.max(1, Math.min(6, archive.bestCardTier))) + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
+      card.innerHTML = '<img src="/assets/game/items/card' + Math.max(1, Math.min(6, archive.bestCardTier)) + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + Math.max(1, Math.min(6, archive.bestCardTier)) + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
       rewards.append(pass, card);
       if (charmDrops.length) {
         charmDrops.forEach(id => {
