@@ -1894,11 +1894,15 @@ export class ImmersionScene {
       { id: 'charm_5', chance: .16, eligible: !!this.state.flags.encounter_dweller && secretCount > 0 },
       { id: 'charm_6', chance: .08, eligible: score >= 92 && this.state.ending === 'clear' }
     ];
-    const previouslyOwned = new Set(loadCampaignArchive().charms || []);
-    const charmDrops = !this.state.flags.campaign_recorded ? charmRules.filter(rule =>
+    const existingArchive = loadCampaignArchive();
+    const previousRun = this.state.flags.campaign_recorded
+      ? existingArchive.runs.find(run => run.runId === this.state.flags.campaign_run_id) || existingArchive.runs[existingArchive.runs.length - 1]
+      : null;
+    const previouslyOwned = new Set(existingArchive.charms || []);
+    const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
       rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
-    ).map(rule => rule.id) : [];
-    const archive = this.state.flags.campaign_recorded ? loadCampaignArchive() : recordCampaignSector('RK-01', {
+    ).map(rule => rule.id);
+    const archive = previousRun ? existingArchive : recordCampaignSector('RK-01', {
       score, grade, gradeTier, collected: collected.length, used: used.length,
       clues: clueCount, secrets: secretCount, ending: this.state.ending,
       completedAt: new Date().toISOString(), health: this.state.health, sanity: this.state.sanity,
@@ -1906,6 +1910,7 @@ export class ImmersionScene {
     });
     if (!this.state.flags.campaign_recorded) {
       this.state.flags.campaign_recorded = true;
+      this.state.flags.campaign_run_id = archive.runs[archive.runs.length - 1]?.runId || '';
       saveState(this.state);
     }
     try {
