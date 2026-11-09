@@ -47,3 +47,7 @@
 @keyframes runEntryIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:640px){.run-entry{grid-template-columns:28px minmax(0,1fr) auto;gap:8px}.run-score{grid-column:2;grid-row:2;text-align:left}.run-grade{grid-column:3;grid-row:1 / span 2}}
 @media(prefers-reduced-motion:reduce){.run-entry{animation:none}}
+
+.tile-condition{font-size:7px!important;line-height:1.45;color:#a9bbc4!important;letter-spacing:.02em!important;max-width:100%}
+.reward-charm{border-color:rgba(205,158,86,.25)!important}.reward-charm img{filter:drop-shadow(0 0 12px rgba(211,166,92,.22))}
+.reward-charm-missed{opacity:.72;filter:saturate(.55)}
