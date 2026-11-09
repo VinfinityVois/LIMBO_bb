@@ -822,6 +822,18 @@ export class ImmersionScene {
     if (mode !== 'idle') setTimeout(() => { document.body.dataset.matrix = 'idle'; }, 2000);
   }
 
+  private filePersonalNote(flag: string, label: string, text: string) {
+    try {
+      const key = 'limbo_employee_notes_v1';
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      const rows = Array.isArray(saved) ? saved.filter((row: any) => row && row.flag !== flag) : [];
+      rows.push({ flag, label, text, location: this.state.location, createdAt: new Date().toISOString() });
+      localStorage.setItem(key, JSON.stringify(rows.slice(-120)));
+    } catch { /* The current run journal remains available if storage is full. */ }
+    this.state.flags['filed_' + flag] = true;
+    this.rememberThought(label + ': ' + text);
+  }
+
   private rememberThought(text: string) {
     const value = text.trim(); if (!value) return;
     this.state.memories = this.state.memories || [];
@@ -1505,7 +1517,7 @@ export class ImmersionScene {
               this.state.flags[hs.clueFlag!] = true;
               this.state.flags['filed_' + hs.clueFlag!] = true;
               this.state.flags['collected_note_' + hs.id] = true;
-              if (!(this.state.memories || []).includes(hs.label + ': ' + hs.clueText)) this.rememberThought(hs.label + ': ' + hs.clueText);
+              this.filePersonalNote(hs.clueFlag!, hs.label, hs.clueText);
               saveState(this.state); this.renderThoughtJournal(); this.buildHotspots();
               this.notify('Записка добавлена в личное дело. Бумага убрана с места находки.','ok');
               this.closeModal();
@@ -1559,8 +1571,7 @@ export class ImmersionScene {
             fileNote.className = 'inspection-action primary file-note-action';
             fileNote.textContent = 'ЗАПИСАТЬ В ЛИЧНОЕ ДЕЛО';
             fileNote.addEventListener('click', () => {
-              this.state.flags.filed_note_kokeshi = true;
-              if (!(this.state.memories || []).some(value => value.startsWith('Записка кокэси:'))) this.rememberThought('Записка кокэси: ключ, нить, бумага и огонь — порядок, который оставил автор.');
+              this.filePersonalNote('note_read','Записка кокэси','Если услышишь суставы — уже поздно. Ключ лежит там, где вода не отражает небо; вторую половину спрятали под доской с тремя царапинами. Нить удерживает бумагу, бумага помнит огонь, а колокольчик без языка предупреждает того, кто слушает не ушами.');
               saveState(this.state); this.renderThoughtJournal();
               this.notify('Записка внесена в личное дело. Её можно забрать отдельно.','ok');
               fileNote.textContent = 'СОХРАНЕНО В ЛИЧНОМ ДЕЛЕ';
