@@ -1912,10 +1912,11 @@ export class ImmersionScene {
     const previousRun = this.state.flags.campaign_recorded && currentRunId
       ? existingArchive.runs.find(run => run.runId === currentRunId) || null
       : null;
-    // Each eligible charm gets an independent roll on every completed run.
-    // The dossier collection remains unique, while repeat runs can yield different charms.
+    // Each eligible, not-yet-owned charm gets its own independent roll on this run.
+    // The exact run record is reused on refresh, so report and dossier always agree.
+    const previouslyOwned = new Set(existingArchive.charms || []);
     const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
-      rule.eligible && Math.random() < rule.chance
+      rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
     ).map(rule => rule.id);
     const archive = previousRun ? existingArchive : recordCampaignSector('RK-01', {
       score, grade, gradeTier, collected: collected.length, used: used.length,
