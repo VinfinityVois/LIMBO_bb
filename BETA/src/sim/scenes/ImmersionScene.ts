@@ -89,6 +89,7 @@ export class ImmersionScene {
   private lastSanityExposureAt = Date.now();
 
   constructor() {
+    simAudio.setLocked(true);
     this.state = loadState();
     // Migrate progress from the earlier anchor interaction so existing saves do not become stuck.
     if (this.state.flags.anchor_warned) this.state.flags.anchor_step_bell = true;
@@ -168,7 +169,7 @@ export class ImmersionScene {
       document.body.classList.add('system-reboot');
     }
     this.resize();
-    simAudio.ambientMuted = true;
+    simAudio.setLocked(true);
     simAudio.stopAmbient();
     this.parallax.start();
     await this.playDiveIn();
@@ -185,6 +186,7 @@ export class ImmersionScene {
 
     // No game clock, sound, threat or control system runs behind the entry overlays.
     this.diving = false;
+    simAudio.setLocked(false);
     this.checkDefeat();
     this.startWorldClock();
     this.startSoundDynamics();
@@ -680,6 +682,7 @@ export class ImmersionScene {
       const b = document.getElementById('btnMute');
       if (b) b.textContent = this.state.muted ? 'SFX OFF' : 'SFX ON';
       document.body.classList.toggle('audio-muted', this.state.muted);
+      if (this.diving) return;
       simAudio.unlock();
       if (!this.state.muted) {
         simAudio.click(false);
@@ -739,7 +742,7 @@ export class ImmersionScene {
       else if (key === '5' || key === 'f') this.combatAction('flee');
     });
     // Keep audio unlocked after the first trusted user gesture and when returning to the tab.
-    const unlockAudio = () => simAudio.unlock();
+    const unlockAudio = () => { if (!this.diving) simAudio.unlock(); };
     window.addEventListener('pointerdown', unlockAudio);
     window.addEventListener('keydown', unlockAudio);
   }
@@ -917,7 +920,7 @@ export class ImmersionScene {
         this.state.sanity=Math.max(0,this.state.sanity-(12+anger*2));
         this.state.health=Math.max(1,this.state.health-(7+anger*2));
         this.state.flags.spider_anger_timeout_3 = true;
-        this.notify('Дзерогумо решила за тебя. Нити рвутся с потолка — она нападает. −' + (12+anger*2) + ' рассудка.','warn');
+        this.notify('Дзёрогумо решила за тебя. Нити рвутся с потолка — она нападает. −' + (12+anger*2) + ' рассудка.','warn');
         this.closeSpiderBeat(); this.spiderInCombat=true; saveState(this.state); this.renderVitals(); this.startCombat();
       } else this.chooseSpider('timeout');
     },deadline);
@@ -947,7 +950,7 @@ export class ImmersionScene {
       else {this.state.flags.spider_anger_turn=true;this.state.sanity=Math.max(0,this.state.sanity-4);this.notify(action==='thread'?'Нити нет. Тень касается твоей пятки.':'Тень рванулась раньше, чем ты успел её поймать.','warn');this.spiderNextAt=Date.now()+6500;}
       this.spiderStage=2;
     } else if(this.spiderStage===2) {
-      if(action==='timeout'){this.state.flags.spider_anger_timeout_2=true;this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Дзерогумо приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
+      if(action==='timeout'){this.state.flags.spider_anger_timeout_2=true;this.state.sanity=Math.max(0,this.state.sanity-10);this.notify('Молчание она приняла за отказ. Дзёрогумо приближается. −10 рассудка.','warn');this.spiderStage=3;this.spiderNextAt=Date.now()+1800;}
       else if(action==='ask'){this.state.flags.spider_story_heard=true;this.state.sanity=Math.max(0,this.state.sanity-2);this.notify('«Меня оставили под домом. Я держала дверь, пока они уходили».','info');this.spiderStage=3;this.spiderNextAt=Date.now()+34000;}
       else if(action==='bell'&&hasBell){{ const at=this.state.inventory.indexOf('copper_bell'); if(at>=0)this.state.inventory.splice(at,1); }this.state.flags.spider_calm_bell=true;this.state.flags.used_copper_bell=true;this.notify('Колокольчик раскалывает тишину. Паутина отступает, но обещает вернуться.','ok');this.spiderStage=3;this.spiderNextAt=Date.now()+42000;}
       else if(action==='soothe'){
@@ -1229,8 +1232,8 @@ export class ImmersionScene {
     const noteRows = notes.filter(([,flag]) => !!this.state.flags[flag]).map(([label]) => label);
     const easterLabels: Record<string,string> = {
       easter_mirror: 'Отражение из другого времени',
-      spider_recognized: 'Дзерогумо узнала тебя',
-      spider_story_heard: 'История Дзерогумо',
+      spider_recognized: 'Дзёрогумо узнала тебя',
+      spider_story_heard: 'История Дзёрогумо',
       spider_thread_given: 'Нить, отданная тени',
       heard_steps: 'Шаги над потолком',
       mask_voice_known: 'Голос из маски',
@@ -1274,8 +1277,8 @@ export class ImmersionScene {
       ...(this.state.flags.used_black_seed ? ['Чёрное семя применено. Последствия применения отмечены в журнале состояния.'] : []),
       ...(this.state.flags.took_stitched_mask || this.state.inventory.includes('stitched_mask') ? ['Сшитая маска: опасный объект найдена. Надевание снижает рассудок, длительное ношение усиливает воздействие.'] : []),
       ...(this.state.flags.mask_voice_known ? ['Голос маски изучен: субъект распознаёт ответ изнутри маски.'] : []),
-      ...(this.state.flags.spider_story_heard ? ['Дзерогумо: услышана история о двери, которую она удерживала для ушедших.'] : []),
-      ...(this.state.flags.spider_hand_taken ? ['Контакт с Дзерогумо: принята протянутая рука; возможны последствия.'] : []),
+      ...(this.state.flags.spider_story_heard ? ['Дзёрогумо: услышана история о двери, которую она удерживала для ушедших.'] : []),
+      ...(this.state.flags.spider_hand_taken ? ['Контакт с Дзёрогумо: принята протянутая рука; возможны последствия.'] : []),
       ...(this.state.flags.anchor_puzzle_solved ? ['Якорь RK-01 стабилизирован: приняты сигналы предупреждения, защиты и света.'] : [])
     ];
     if (facts.length) {
@@ -2211,9 +2214,9 @@ export class ImmersionScene {
     };
     const easterLabels: Record<string, string> = {
       easter_mirror: 'Отражение из другого времени',
-      spider_recognized: 'Дзерогумо узнала тебя',
-      spider_story_heard: 'История Дзерогумо',
-      spider_thread_given: 'Нить, отданная Дзерогумо',
+      spider_recognized: 'Дзёрогумо узнала тебя',
+      spider_story_heard: 'История Дзёрогумо',
+      spider_thread_given: 'Нить, отданная Дзёрогумо',
       heard_steps: 'Шаги над потолком',
       mask_voice_known: 'Голос из маски'
     };
@@ -2351,7 +2354,7 @@ export class ImmersionScene {
         ...(['light', 'sound', 'dweller'].filter(k => this.state.flags['encounter_' + k]).map(k =>
           ({ light: 'Юрэй / онрё', sound: 'Кидзё', dweller: 'Рокудзё-но Миясудокоро' } as Record<string, string>)[k]
         )),
-        ...(this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3 ? ['Дзерогумо'] : [])
+        ...(this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3 ? ['Дзёрогумо'] : [])
       ];
       const rows: [string, string][] = [
         ['Найдено предметов', String(collected.length)],
@@ -2782,7 +2785,7 @@ export class ImmersionScene {
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.spiderInCombat ? 62 : this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.spiderInCombat ? 'ДЗЕРОГУМО' : this.threatKind === 'light' ? 'ЮРЭЙ · ОНРЁ' : this.threatKind === 'sound' ? 'КИДЗЁ' : 'РОКУДЗЁ-НО МИЯСУДОКОРО';
+    this.monsterName = this.spiderInCombat ? 'ДЗЁРОГУМО · ЁКАЙ' : this.threatKind === 'light' ? 'ЮРЭЙ · ОНРЁ' : this.threatKind === 'sound' ? 'КИДЗЁ' : 'РОКУДЗЁ-НО МИЯСУДОКОРО';
     this.combatTurn = 0; this.combatTarget = 'torso';
     this.state.flags['encounter_' + this.threatKind] = true;
     this.state.flags['encounter_' + this.threatKind + '_yokai'] = true;
@@ -2805,7 +2808,7 @@ export class ImmersionScene {
     this.renderCombatWounds();
     this.renderCombatInventory();
     const creatureVoice: Record<string,string> = {
-      spider: 'Дзерогумо шепчет: «Ты всё-таки пришёл. Я оставила тебе место между нитями».',
+      spider: 'Дзёрогумо шепчет: «Ты всё-таки пришёл. Я оставила тебе место между нитями».',
       light: 'Юрэй шепчет из-под повязки: «Свет… ты принёс мне глаза. Отдай их обратно».',
       sound: 'Кидзё отвечает твоим голосом: «Не зови. Я уже запомнила, как ты звучишь».',
       dweller: 'Рокудзё шепчет из складок кимоно: «Под досками ещё кто-то. Он считает шаги вместо нас».',
@@ -3007,7 +3010,7 @@ export class ImmersionScene {
   }
 
   private enemyAttackDescription() {
-    if (this.spiderInCombat) return 'Дзерогумо поднимает руки. Между пальцами натягиваются нити.';
+    if (this.spiderInCombat) return 'Дзёрогумо поднимает руки. Между пальцами натягиваются нити.';
     if (this.threatKind==='light') return 'Юрэй собирается выплыть из тумана.';
     if (this.threatKind==='sound') return 'Кидзё накапливает звуковую волну.';
     return 'Рокудзё тянется к тебе из складок кимоно.';
