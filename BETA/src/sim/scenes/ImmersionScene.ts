@@ -1921,8 +1921,8 @@ export class ImmersionScene {
       : null;
     // Each eligible, not-yet-owned charm gets its own independent roll on this run.
     // The exact run record is reused on refresh, so report and dossier always agree.
-    const runCharmRows = existingArchive.runs.filter(run => Array.isArray(run.charms));
-    const previouslyOwned = new Set(runCharmRows.length ? runCharmRows.flatMap(run => run.charms || []) : (existingArchive.charms || []));
+    const hasRunCharmLedger = existingArchive.runs.length > 0 && existingArchive.runs.every(run => Array.isArray(run.charms));
+    const previouslyOwned = new Set(hasRunCharmLedger ? existingArchive.runs.flatMap(run => run.charms || []) : (existingArchive.charms || []));
     const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
       rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
     ).map(rule => rule.id);
