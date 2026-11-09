@@ -678,7 +678,7 @@ export class ImmersionScene {
         }
 
         window.setTimeout(() => {
-          const replayUrl = new URL('scene-ryokan.html', window.location.href);
+          const replayUrl = new URL('sim.html', window.location.href);
           replayUrl.searchParams.set('replay', String(Date.now()));
           window.location.replace(replayUrl.toString());
         }, 1550);
