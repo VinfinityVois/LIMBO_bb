@@ -270,7 +270,7 @@ export class ImmersionScene {
             <article><b>04 / ЛИЧНОЕ ДЕЛО</b><strong>Мысли и записи</strong><span>Открывай журнал в панели инвентаря. Там сохраняются прочитанные записки, наблюдения и изученные свойства.</span></article>
           </div>
           <div class="sim-tutorial-keys">
-            <div><b>E</b><span>Откликнуться / взаимодействовать</span></div>
+            <div><b>E</b><span>Эхо / ответить на сигнал</span></div>
             <div><b>Q</b><span>Позвать — создать шум</span></div>
             <div><b>R</b><span>Применить выбранный предмет</span></div>
             <div><b>F</b><span>Изучить выбранный предмет</span></div>
