@@ -138,3 +138,109 @@
 @keyframes archiveSlideNext{from{opacity:0;transform:translate3d(42px,0,0) scale(.985);filter:blur(3px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
 @keyframes archiveSlidePrev{from{opacity:0;transform:translate3d(-42px,0,0) scale(.985);filter:blur(3px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
 @media(max-width:520px){.archive-entry-nav{gap:.35rem}.archive-entry-nav button{min-width:0;padding:.42rem .48rem;gap:.3rem}.archive-entry-nav button small{font-size:6px}.archive-entry-nav .entry-position{padding:.3rem .4rem}}
+
+
+/* Locked archive records: monochrome art with a clear security plate. */
+.archive-tile.is-locked{
+  filter:none;
+  opacity:1;
+  cursor:pointer;
+  border-color:rgba(130,145,155,.2);
+  background:linear-gradient(135deg,rgba(16,21,27,.92),rgba(6,9,14,.97));
+}
+.archive-tile.is-locked .tile-art{
+  border-color:rgba(145,155,165,.18);
+  background:radial-gradient(ellipse,rgba(125,135,145,.08),rgba(0,0,0,.28));
+}
+.archive-tile.is-locked .tile-art img{
+  filter:grayscale(1) saturate(0) brightness(.62);
+  opacity:.72;
+}
+.archive-tile.is-locked .tile-info>b{color:#8d9aa3}
+.archive-tile.is-locked .tile-info small{color:#697782}
+.archive-tile.is-locked .tile-info i{color:#8a969e}
+.tile-lock-badge,.locked-detail-stamp{
+  position:absolute;
+  z-index:3;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.28rem .48rem;
+  border:1px solid rgba(160,170,180,.35);
+  background:rgba(5,9,14,.92);
+  color:#aab4bc;
+  font:600 7px/1 var(--font-mono);
+  letter-spacing:.14em;
+  box-shadow:0 5px 18px rgba(0,0,0,.42);
+  backdrop-filter:blur(8px);
+}
+.tile-lock-badge{top:7px;left:7px}
+.modal-art{position:relative}
+.locked-detail-stamp{top:12px;left:12px;padding:.42rem .62rem}
+.modal-body.is-locked-entry .modal-art img,
+.modal-body.is-locked-entry .spider-main-art img{
+  filter:grayscale(1) saturate(0) brightness(.66)!important;
+}
+.modal-body.is-locked-entry .spider-main-art{filter:grayscale(.8)}
+
+/* Detail navigation sits on the left/right edges of the information window. */
+.modal-body{position:relative;overflow:visible;padding:0 2.35rem}
+.archive-entry-nav{
+  position:absolute;
+  z-index:6;
+  top:50%;
+  left:0;
+  right:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0;
+  margin:0;
+  padding:0;
+  border:0;
+  transform:translateY(-50%);
+  pointer-events:none;
+}
+.archive-entry-nav button,
+.archive-entry-nav button:focus-visible{
+  display:grid;
+  place-items:center;
+  width:42px;
+  min-width:42px;
+  height:42px;
+  padding:0;
+  border:1px solid rgba(0,212,232,.34);
+  border-radius:50%;
+  background:rgba(4,12,19,.94);
+  color:#b9e8ee;
+  box-shadow:0 6px 22px rgba(0,0,0,.5),inset 0 0 12px rgba(0,212,232,.06);
+  pointer-events:auto;
+}
+.archive-entry-nav button span{
+  display:block;
+  width:auto;
+  height:auto;
+  border:0;
+  border-radius:0;
+  font:500 1.25rem/1 var(--font-display);
+}
+.archive-entry-nav button:hover:not(:disabled){
+  transform:scale(1.08);
+  border-color:rgba(0,212,232,.72);
+  background:rgba(0,212,232,.14);
+}
+.archive-entry-nav .entry-prev:hover:not(:disabled){transform:translateX(-2px) scale(1.08)}
+.archive-entry-nav .entry-next:hover:not(:disabled){transform:translateX(2px) scale(1.08)}
+.archive-entry-nav button:disabled{opacity:.25;cursor:not-allowed}
+@media(max-width:760px){
+  .modal-body{padding-inline:1.75rem}
+  .archive-entry-nav button{width:35px;min-width:35px;height:35px}
+}
+@media(max-width:520px){
+  .modal-body{padding-inline:1.45rem}
+  .archive-entry-nav button{width:31px;min-width:31px;height:31px}
+  .archive-entry-nav button span{font-size:1.05rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .archive-entry-nav button{transition:none}
+}
