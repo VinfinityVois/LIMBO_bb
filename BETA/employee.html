@@ -76,6 +76,7 @@ const medals=[
 {name:'ВОЗВРАЩЕНИЕ',sub:'Завершить сектор',desc:'Получить итоговый отчёт по сектору RK-01.',open:sectorDone>0,icon:'↗',condition:'Завершить сектор'}
 ];
 const grades=[['F','assets/game/items/F.png'],['E','assets/game/items/Е.png'],['D','assets/game/items/D.png'],['C','assets/game/items/С.png'],['B','assets/game/items/В.png'],['A','assets/game/items/А.png'],['S','assets/game/items/S.png']];
+const bestScore=results.reduce((best,[,r])=>Math.max(best,Number(r.score)||0),0),gradeThresholds=[0,40,52,68,82,92,98],gradeOpen=i=>sectorDone>0&&(i===0||bestScore>=gradeThresholds[i]);
 const passTier=Math.max(0,Math.min(3,Number(archive.passTier)||0)),cardTier=Math.max(0,Math.min(6,Number(archive.bestCardTier)||0));
 const simPasses=[1,2,3].map((n)=>({name:'ПРОПУСК СИМУЛЯЦИИ B'+n,sub:'CAMPAIGN CLEARANCE / '+n,desc:['Первичный пропуск, выданный за прохождение сектора.','Улучшенный пропуск за устойчивый результат кампании.','Высший уровень допуска по накопительному рейтингу.'][n-1],open:passTier>=n,image:'assets/game/items/b'+n+'.png',condition:'Получить соответствующий накопительный рейтинг'}));
 const charms=Array.from({length:6},(_,i)=>({name:'БРЕЛОК / КАРТОЧКА '+(i+1),sub:'PERSONNEL COLLECTIBLE · '+String(i+1).padStart(2,'0'),desc:'Коллекционный брелок сотрудника. Его можно рассмотреть в увеличенном виде.',open:cardTier>=i+1,image:'assets/game/items/card'+(i+1)+'.png',condition:'Получить карточку соответствующего уровня'}));
@@ -119,13 +120,13 @@ function openModal(x,kind){
  modal.classList.add('open');modal.setAttribute('aria-hidden','false');
 }
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-document.addEventListener('click',e=>{const b=e.target.closest('.archive-tile');if(!b||b.classList.contains('is-locked'))return;const lists={medal:medals,grade:grades.map(([g,image])=>({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE',desc:'Оценка за прохождение сектора '+g+'.',image,open:true})),sim:simPasses,charm:charms,creature:creatures,item:items,lore};const kind=b.dataset.kind,x=lists[kind]?.[Number(b.dataset.index)];if(x)openModal(x,kind)});
+document.addEventListener('click',e=>{const b=e.target.closest('.archive-tile');if(!b||b.classList.contains('is-locked'))return;const lists={medal:medals,grade:grades.map(([g,image],i)=>({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE',desc:'Оценка за прохождение сектора '+g+'.',image,open:gradeOpen(i)})),sim:simPasses,charm:charms,creature:creatures,item:items,lore};const kind=b.dataset.kind,x=lists[kind]?.[Number(b.dataset.index)];if(x)openModal(x,kind)});
 renderGrid('medalGrid',medals,'medal');
-$('gradeGrid').innerHTML=grades.map(([g,image],i)=>tile({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE / '+g,open:cardTier>=i+1,image,desc:'Оценка за результат прохождения сектора. Чем выше итоговый балл, тем выше ранг допуска.'},'grade',i)).join('');
+$('gradeGrid').innerHTML=grades.map(([g,image],i)=>tile({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE / '+g,open:gradeOpen(i),image,desc:'Оценка за результат прохождения сектора. Ранг открывается по лучшему подтверждённому результату кампании.'},'grade',i)).join('');
 renderGrid('simPassGrid',simPasses,'sim');renderGrid('charmGrid',charms,'charm');renderGrid('creatureGrid',creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind,desc:x.desc} )),'creature');renderGrid('itemGrid',items,'item');renderGrid('loreGrid',lore,'lore');
 // unlock conditions for grade images and medals are read-only; a first archive result can unlock F.
 const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=creatures.filter(x=>x.open).length,unlockedItems=items.filter(x=>x.open).length;
-const openGrades=grades.filter((_,i)=>cardTier>=i+1).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
+const openGrades=grades.filter((_,i)=>gradeOpen(i)).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
 $('statSectors').textContent=String(sectorDone).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statMedals').textContent=unlockedMedals+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
 const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));$('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',(rank/6*100)+'%');$('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank];$('rankSub').textContent='ПРОГРЕСС СОХРАНЯЕТСЯ';
 $('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount();$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]).length;
