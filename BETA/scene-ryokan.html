@@ -2420,7 +2420,7 @@
 <script>
 (function(){
  try{
-  const target=document.querySelector('.immerse-box')||document.querySelector('.sc-body')||document.body;
+  const target=document.querySelector('.sc-body')||document.querySelector('main')||document.body;
   const raw=localStorage.getItem('limbo_sim_ryokan_v1');
   const state=raw?JSON.parse(raw):null;
   if(state&&state.ending){
