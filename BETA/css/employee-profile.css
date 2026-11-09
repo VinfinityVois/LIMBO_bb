@@ -244,3 +244,6 @@
 @media(prefers-reduced-motion:reduce){
   .archive-entry-nav button{transition:none}
 }
+
+.spider-main-art>.locked-detail-stamp{top:12px;left:12px;right:auto;bottom:auto;padding:.42rem .62rem}
+.modal-body.is-locked-entry .phase-thumb img{filter:grayscale(1) saturate(0) brightness(.62)}
