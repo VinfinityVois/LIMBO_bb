@@ -685,7 +685,10 @@ export class ImmersionScene {
     if (document.body.classList.contains('combat-active') || this.threatActive) return;
     this.threatKind = kind;
     this.threatActive = true;
-    this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5); saveState(this.state); this.renderVitals();
+    this.updateAwareness(2); this.state.sanity = Math.max(0,this.state.sanity-5);
+    this.state.flags['encounter_' + kind] = true;
+    this.state.flags['encounter_' + kind + '_yokai'] = true;
+    saveState(this.state); this.renderVitals();
     if (kind === 'light') simAudio.monsterBlind(this.state.muted);
     else if (kind === 'sound') simAudio.monsterListener(this.state.muted);
     else simAudio.monsterDweller(this.state.muted);
@@ -1093,6 +1096,7 @@ export class ImmersionScene {
     this.hsLayer.innerHTML = '';
     for (const hs of hotspotsFor(this.state.location)) {
       if (hs.id === 'hs_door' && this.state.flags.door_unlocked) continue;
+      if (hs.clueFlag && this.state.flags['filed_' + hs.clueFlag]) continue;
       const allFinds = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
       const allFlags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
       if (allFinds.length && allFlags.length && allFinds.every((_, i) => !!this.state.flags[allFlags[i] || ''])) continue;
@@ -1498,7 +1502,7 @@ export class ImmersionScene {
               this.state.flags[hs.clueFlag!] = true;
               this.state.flags['filed_' + hs.clueFlag!] = true;
               this.state.flags['collected_note_' + hs.id] = true;
-              this.rememberThought(hs.label + ': ' + hs.clueText);
+              if (!(this.state.memories || []).includes(hs.label + ': ' + hs.clueText)) this.rememberThought(hs.label + ': ' + hs.clueText);
               saveState(this.state); this.renderThoughtJournal(); this.buildHotspots();
               this.notify('Записка добавлена в личное дело. Бумага убрана с места находки.','ok');
               this.closeModal();
@@ -1546,6 +1550,21 @@ export class ImmersionScene {
           this.state.flags.clue_key_halves = true;
           saveState(this.state);
           read.textContent = 'ПЕРЕЧИТАТЬ ЗАПИСКУ';
+          if (!body.querySelector('.file-note-action')) {
+            const fileNote = document.createElement('button');
+            fileNote.type = 'button';
+            fileNote.className = 'inspection-action primary file-note-action';
+            fileNote.textContent = 'ЗАПИСАТЬ В ЛИЧНОЕ ДЕЛО';
+            fileNote.addEventListener('click', () => {
+              this.state.flags.filed_note_kokeshi = true;
+              if (!(this.state.memories || []).some(value => value.startsWith('Записка кокэси:'))) this.rememberThought('Записка кокэси: ключ, нить, бумага и огонь — порядок, который оставил автор.');
+              saveState(this.state); this.renderThoughtJournal();
+              this.notify('Записка внесена в личное дело. Её можно забрать отдельно.','ok');
+              fileNote.textContent = 'СОХРАНЕНО В ЛИЧНОМ ДЕЛЕ';
+              fileNote.disabled = true;
+            });
+            body.appendChild(fileNote);
+          }
           simAudio.whisper(this.state.muted);
           this.notify('Мы запомнили порядок: ключ → нить → бумага → огонь.','ok');
         });
@@ -1952,7 +1971,7 @@ export class ImmersionScene {
       const dangerousUsed = (['black_seed', 'stitched_mask'] as ItemId[]).filter(id => this.state.flags['used_' + id]);
       const encounters = [
         ...(['light', 'sound', 'dweller'].filter(k => this.state.flags['encounter_' + k]).map(k =>
-          ({ light: 'Слепой', sound: 'Слушатель', dweller: 'Жилец' } as Record<string, string>)[k]
+          ({ light: 'Юрэй / онрё', sound: 'Кидзё', dweller: 'Рокудзё-но Миясудокоро' } as Record<string, string>)[k]
         )),
         ...(this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3 ? ['Паутинница'] : [])
       ];
