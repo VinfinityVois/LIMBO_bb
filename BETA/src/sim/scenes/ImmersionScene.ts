@@ -1923,7 +1923,9 @@ export class ImmersionScene {
       completedAt: new Date().toISOString(), health: this.state.health, sanity: this.state.sanity,
       visited: this.state.visited.length, items: collected, studiedItems: allItems.filter(id => !!this.state.flags['studied_' + id]), clueNames: clueKeys.filter(k => !!this.state.flags[k]), secretNames: secretKeys.filter(k => !!this.state.flags[k]), encounters: [...(['light','sound','dweller'].filter(k => !!this.state.flags['encounter_' + k])), ...((this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3) ? ['spider'] : [])], charms: charmDrops
     });
-    if (!this.state.flags.campaign_recorded) {
+    if (!previousRun) {
+      // Refresh the run pointer whenever a new report is created, even if an old
+      // save still carries campaign_recorded=true from a previous session.
       this.state.flags.campaign_recorded = true;
       localStorage.setItem('limbo_campaign_current_run', archive.runs[archive.runs.length - 1]?.runId || '');
       saveState(this.state);
