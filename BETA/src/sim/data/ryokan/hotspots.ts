@@ -131,8 +131,8 @@ export const HOTSPOTS: HotspotDef[] = [
   {
     id: 'hs_mirror_fragments', location: 'hall', x: 63, y: 78, w: 10, h: 12,
     label: 'Осколки разбитого зеркала',
-    examine: 'Под шкафом лежат два похожих фрагмента. Каждый отражает разное время: один — комнату до пожара, другой — после. Можно забрать оба.',
-    items: ['mirror_shard', 'mirror_shard'],
+    examine: 'Под шкафом лежат два непохожих фрагмента. Один отражает комнату до пожара, другой — после. Это две отдельные находки, и каждая хранит своё отражение.',
+    items: ['mirror_shard_before_fire', 'mirror_shard_after_fire'],
     takenFlags: ['took_mirror_shard_a', 'took_mirror_shard_b'],
   },
   {
