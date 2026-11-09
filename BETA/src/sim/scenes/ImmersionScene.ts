@@ -1906,7 +1906,7 @@ export class ImmersionScene {
       score, grade, gradeTier, collected: collected.length, used: used.length,
       clues: clueCount, secrets: secretCount, ending: this.state.ending,
       completedAt: new Date().toISOString(), health: this.state.health, sanity: this.state.sanity,
-      visited: this.state.visited.length, items: collected, clueNames: clueKeys.filter(k => !!this.state.flags[k]), charms: charmDrops
+      visited: this.state.visited.length, items: collected, studiedItems: allItems.filter(id => !!this.state.flags['studied_' + id]), clueNames: clueKeys.filter(k => !!this.state.flags[k]), secretNames: secretKeys.filter(k => !!this.state.flags[k]), encounters: [...(['light','sound','dweller'].filter(k => !!this.state.flags['encounter_' + k])), ...((this.state.flags.spider_seen_0 || this.state.flags.spider_seen_1 || this.state.flags.spider_seen_2 || this.state.flags.spider_seen_3) ? ['spider'] : [])], charms: charmDrops
     });
     if (!this.state.flags.campaign_recorded) {
       this.state.flags.campaign_recorded = true;
