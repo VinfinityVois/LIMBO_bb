@@ -72,7 +72,7 @@ const medals=[
 {name:'ПЕРВЫЙ ПОРОГ',sub:'Вход в симуляцию',desc:'Зафиксировано первое посещение территории рёкана.',open:visited.length>0,icon:'⌂',condition:'Посетить первую локацию'},
 {name:'ОСКОЛКИ ПАМЯТИ',sub:'Собрать отражение',desc:'Собрать зеркальные фрагменты и восстановить линзу.',open:collected('mirror_lens')||flags.crafted_mirror_lens,icon:'◇',condition:'Создать зеркальную линзу'},
 {name:'СОБРАННЫЙ КЛЮЧ',sub:'Доступ к генкану',desc:'Соединить две половины ключа в единый предмет.',open:collected('ryokan_key','key')||flags.door_genkan_open,icon:'⚿',condition:'Собрать ключ рёкана'},
-{name:'ТИШИНА ПАУТИНЫ',sub:'Ёкай Дзерогумо',desc:'Встретить Дзерогумо, узнать её историю и повлиять на исход контакта.',open:!!(flags.spider_story_heard||flags.spider_released||flags.spider_defeated),icon:'✳',condition:'Завершить сюжетную встречу'},
+{name:'СЛЕД ДЗЕРОГУМО',sub:'Ёкай-паук · 絡新婦',desc:'Встретить Дзерогумо, узнать её историю и повлиять на исход контакта.',open:!!(flags.spider_story_heard||flags.spider_released||flags.spider_defeated),icon:'✳',condition:'Завершить сюжетную встречу'},
 {name:'СЛЕД НАБЛЮДАТЕЛЯ',sub:'Услышать присутствие',desc:'Зафиксировать шаги над потолком.',open:!!flags.heard_steps,icon:'◉',condition:'Услышать шаги'},
 {name:'ВОЗВРАЩЕНИЕ',sub:'Завершить сектор',desc:'Получить итоговый отчёт по сектору RK-01.',open:sectorDone>0,icon:'↗',condition:'Завершить сектор'}
 ];
@@ -146,10 +146,11 @@ function renderModalEntry(x,kind,list,index,direction=0){
   bodyEl.innerHTML=body;
  }
  if(list&&list.length>1){
-  bodyEl.insertAdjacentHTML('beforeend','<nav class="archive-entry-nav" aria-label="Переключение записей"><button type="button" class="entry-prev" '+(index<=0?'disabled':'')+' aria-label="Предыдущая запись"><span>←</span><small>ПРЕДЫДУЩАЯ</small></button><span class="entry-position">'+String(index+1).padStart(2,'0')+' <i>/</i> '+String(list.length).padStart(2,'0')+'</span><button type="button" class="entry-next" '+(index>=list.length-1?'disabled':'')+' aria-label="Следующая запись"><small>СЛЕДУЮЩАЯ</small><span>→</span></button></nav>');
+  const prevIndex=(index-1+list.length)%list.length,nextIndex=(index+1)%list.length;
+  bodyEl.insertAdjacentHTML('beforeend','<nav class="archive-entry-nav" aria-label="Переключение записей"><button type="button" class="entry-prev" aria-label="Предыдущая запись"><span aria-hidden="true">←</span><small>ПРЕДЫДУЩАЯ</small></button><span class="entry-position">'+String(index+1).padStart(2,'0')+' <i>/</i> '+String(list.length).padStart(2,'0')+'</span><button type="button" class="entry-next" aria-label="Следующая запись"><small>СЛЕДУЮЩАЯ</small><span aria-hidden="true">→</span></button></nav>');
   const prev=bodyEl.querySelector('.entry-prev'),next=bodyEl.querySelector('.entry-next');
-  if(prev)prev.addEventListener('click',()=>renderModalEntry(list[index-1],kind,list,index-1,-1));
-  if(next)next.addEventListener('click',()=>renderModalEntry(list[index+1],kind,list,index+1,1));
+  if(prev)prev.addEventListener('click',()=>renderModalEntry(list[prevIndex],kind,list,prevIndex,-1));
+  if(next)next.addEventListener('click',()=>renderModalEntry(list[nextIndex],kind,list,nextIndex,1));
  }
  if(direction)requestAnimationFrame(()=>requestAnimationFrame(()=>bodyEl.classList.remove('is-changing','slide-next','slide-prev')));
 }
