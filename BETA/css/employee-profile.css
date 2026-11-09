@@ -363,3 +363,46 @@
  .overview-lore-card img{height:42px}
  .overview-lore-card b{font-size:6px}
 }
+
+
+/* Each personnel archive tab is a standalone page. The hidden attribute must
+   win over component display rules (notably the flex overview and lore panel). */
+.employee-page [hidden]{
+  display:none!important;
+}
+.employee-layout{
+  min-height:calc(100dvh - 58px);
+}
+.employee-main{
+  min-height:calc(100dvh - 58px);
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
+}
+#section-overview.overview-section{
+  flex:1 0 auto;
+  min-height:calc(100dvh - 145px);
+  box-sizing:border-box;
+}
+#section-overview .overview-grid{
+  flex:1 1 auto;
+  align-items:stretch;
+}
+#section-overview .overview-grid>.data-panel{
+  min-height:0;
+}
+#section-overview .score-panel{
+  display:flex;
+  flex-direction:column;
+}
+#section-overview .run-timeline{
+  flex:1 1 auto;
+}
+@media(max-width:1050px){
+  #section-overview.overview-section{min-height:0}
+  #section-overview .overview-grid{flex:0 0 auto}
+}
+@media(max-width:760px){
+  .employee-main{min-height:100dvh}
+  #section-overview.overview-section{min-height:calc(100dvh - 100px)}
+}
