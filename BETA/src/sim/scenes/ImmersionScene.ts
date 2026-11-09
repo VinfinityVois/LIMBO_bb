@@ -315,7 +315,7 @@ export class ImmersionScene {
   private startInterfaceWatchdog() {
     if (this.interfaceWatchdogTimer) clearInterval(this.interfaceWatchdogTimer as number);
     this.interfaceWatchdogTimer = window.setInterval(() => {
-      if (document.hidden || this.diving || this.state.completed || this.state.defeated || !this.stage?.isConnected) return;
+      if (document.hidden || this.diving || this.state.completed || this.state.defeated) return;
       const combatOpen = document.getElementById('combatScreen')?.classList.contains('open');
       const modalOpen = document.getElementById('simModal')?.classList.contains('open');
       if (combatOpen || modalOpen || document.getElementById('spiderDialogue') || document.getElementById('systemConfirm')) return;
@@ -330,7 +330,7 @@ export class ImmersionScene {
         !(hs.clueFlag && this.state.flags['filed_' + hs.clueFlag])
       ).length;
       const expectedExits = LOCATIONS[this.state.location].exits.length;
-      const broken = !stage || stage !== this.stage || !hotspots || !exits || !inventory || !canvas ||
+      const broken = !stage || stage !== this.stage || !this.stage.isConnected || !hotspots || !exits || !inventory || !canvas ||
         (expectedHotspots > 0 && hotspots.querySelectorAll('.hotspot').length === 0) ||
         (expectedExits > 0 && exits.querySelectorAll('.exit-btn').length === 0) ||
         inventory.querySelectorAll('.inv-slot').length !== 12;
@@ -339,23 +339,38 @@ export class ImmersionScene {
   }
 
   private scheduleInterfaceRecovery(rebuild = true) {
-    if (this.diving || this.state.completed || !this.stage?.isConnected) return;
+    if (this.diving || this.state.completed) return;
     if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
     this.recoveryFrame = requestAnimationFrame(() => {
       this.recoveryFrame = 0;
       const currentStage = document.getElementById('simStage');
-      if (currentStage && currentStage !== this.stage) {
+      if (!currentStage) return;
+      const stageChanged = currentStage !== this.stage || !this.stage.isConnected;
+      if (stageChanged) {
         this.parallax.stop();
         this.stage = currentStage;
-        let canvas = document.getElementById('simCanvas') as HTMLCanvasElement | null;
-        if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'simCanvas'; this.stage.prepend(canvas); }
+      }
+      let canvas = document.getElementById('simCanvas') as HTMLCanvasElement | null;
+      if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'simCanvas'; this.stage.prepend(canvas); }
+      if (stageChanged || this.parallax.canvas !== canvas) {
+        this.parallax.stop();
         this.parallax = new ParallaxRenderer(canvas);
         void this.loadLoc(this.state.location);
       }
-      this.hsLayer = document.getElementById('hotspotLayer') || this.hsLayer;
-      this.exitLayer = document.getElementById('exitLayer') || this.exitLayer;
+      let hotspotRoot = document.getElementById('hotspotLayer');
+      if (!hotspotRoot) { hotspotRoot = document.createElement('div'); hotspotRoot.id = 'hotspotLayer'; hotspotRoot.className = 'hotspot-layer'; this.stage.appendChild(hotspotRoot); }
+      let exitRoot = document.getElementById('exitLayer');
+      if (!exitRoot) { exitRoot = document.createElement('div'); exitRoot.id = 'exitLayer'; exitRoot.className = 'exit-layer'; this.stage.appendChild(exitRoot); }
+      this.hsLayer = hotspotRoot;
+      this.exitLayer = exitRoot;
       this.invEl = document.getElementById('invSlots') || this.invEl;
       this.hoverCard = document.getElementById('hoverCard') || this.hoverCard;
+      if (!this.hoverCard?.isConnected) {
+        this.hoverCard = document.createElement('div');
+        this.hoverCard.id = 'hoverCard';
+        this.hoverCard.className = 'hover-card';
+        document.body.appendChild(this.hoverCard);
+      }
 
       this.resize();
       if (!this.parallax.running) this.parallax.start();
