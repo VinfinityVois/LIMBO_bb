@@ -134,26 +134,25 @@
 }
 
 
-/* Sector entry: the same geometric language as the exit finale, but opening inward. */
-.dive-overlay{position:fixed;inset:0;z-index:13000;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at center,#0a1c27 0,#03080e 58%,#010306 100%);opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s}
-.dive-overlay.active{opacity:1;visibility:visible}
-.dive-overlay:before,.dive-overlay:after{content:"";position:absolute;inset:-30%;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(112,225,238,.035) 4px),radial-gradient(ellipse at center,rgba(35,154,174,.18),transparent 58%);animation:dive-static 2.2s steps(3) infinite}
-.dive-overlay:after{inset:0;background:linear-gradient(90deg,transparent,rgba(75,218,231,.08),transparent);transform:translateX(-100%);animation:dive-scan 3.4s ease-in-out infinite}
-.dive-core{position:relative;z-index:2;width:min(560px,88vw);min-height:430px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 20px;text-align:center}
-.dive-ring{position:absolute;width:min(72vw,430px);aspect-ratio:1;border:1px solid rgba(76,219,231,.36);border-radius:50%;box-shadow:0 0 42px rgba(42,194,214,.12),inset 0 0 42px rgba(42,194,214,.08);animation:dive-rotate 14s linear infinite}
-.dive-ring:before,.dive-ring:after{content:"";position:absolute;inset:9%;border:1px dashed rgba(119,225,230,.28);border-radius:50%}
-.dive-ring:after{inset:22%;border-style:solid;border-color:rgba(119,225,230,.16)}
-.dive-ring.d2{width:min(54vw,320px);border-color:rgba(220,168,99,.25);animation:dive-rotate 22s linear infinite reverse}
-.dive-title{position:relative;margin-top:230px;color:#e2f6f6;font:700 clamp(16px,2vw,22px) var(--mono,monospace);letter-spacing:.34em;text-shadow:0 0 22px #42c6d8a6}
-.dive-log{position:relative;display:grid;gap:7px;min-height:96px;margin-top:20px;color:#8eabb5;font:9px/1.6 var(--mono,monospace);letter-spacing:.12em;text-align:left}
-.dive-line{animation:dive-line-in .45s ease both}
-.dive-line.dim{color:#66818d}.dive-line.cyan{color:#75e3ed;text-shadow:0 0 12px #4bc6dc55}.dive-line.hi{color:#e2c58e}
-.dive-overlay.out{opacity:0;visibility:hidden;filter:blur(8px);transform:scale(1.04);transition:opacity .7s,filter .7s,transform .7s}
-@keyframes dive-rotate{to{transform:rotate(360deg)}}
-@keyframes dive-static{0%,100%{transform:translate(0)}50%{transform:translate(1%,-1%)}}
-@keyframes dive-scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-@keyframes dive-line-in{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
-
+/* Sector entry · centered title with nothing but expanding circular ripples. */
+.dive-overlay{position:fixed;inset:0;z-index:13000;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at center,rgba(7,24,32,.56) 0,rgba(2,7,12,.96) 64%,#010306 100%);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .65s ease,visibility .65s ease}
+.dive-overlay.active{opacity:1;visibility:visible;pointer-events:auto}
+.dive-overlay:before,.dive-overlay:after{content:none!important;display:none!important}
+.dive-ripples{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.dive-core{position:relative;z-index:2;width:min(90vw,760px);min-height:0;padding:24px;display:grid;place-items:center;text-align:center;border:0!important;border-radius:0!important;outline:0!important;background:transparent!important;box-shadow:none!important}
+.dive-ring{position:absolute;left:50%;top:50%;width:min(34vw,360px);aspect-ratio:1;height:auto;border:1px solid rgba(115,225,231,.52);border-radius:50%;background:transparent;box-shadow:0 0 26px rgba(58,195,211,.09),inset 0 0 26px rgba(58,195,211,.035);transform:translate(-50%,-50%) scale(.12);opacity:0;animation:dive-ripple 5.4s cubic-bezier(.16,.5,.3,1) infinite}
+.dive-ring.ripple-2{animation-delay:1.08s;border-color:rgba(194,170,128,.4)}
+.dive-ring.ripple-3{animation-delay:2.16s}
+.dive-ring.ripple-4{animation-delay:3.24s;border-color:rgba(194,170,128,.3)}
+.dive-ring.ripple-5{animation-delay:4.32s}
+.dive-title{position:relative;z-index:3;margin:0!important;padding:0!important;color:#e7f8f6;font:600 clamp(17px,2.5vw,27px)/1.35 'Space Grotesk','JetBrains Mono',sans-serif;letter-spacing:.2em;text-align:center;text-shadow:0 0 28px rgba(83,218,225,.32)}
+.dive-overlay[data-mode="reboot"] .dive-title{color:#f1d9dd;text-shadow:0 0 28px rgba(220,65,91,.32)}
+.dive-overlay[data-mode="reboot"] .dive-ring{border-color:rgba(224,91,112,.42);box-shadow:0 0 30px rgba(220,48,76,.1)}
+.dive-overlay.out{opacity:0;visibility:hidden;filter:blur(5px);transform:scale(1.025);transition:opacity .7s,filter .7s,transform .7s}
+.dive-overlay.out .dive-ring{animation-play-state:paused}
+@keyframes dive-ripple{0%{transform:translate(-50%,-50%) scale(.12);opacity:0}12%{opacity:.72}78%{opacity:.2}100%{transform:translate(-50%,-50%) scale(3.1);opacity:0}}
+@media(max-width:700px){.dive-ring{width:min(58vw,340px)}.dive-title{letter-spacing:.12em}}
+@media(prefers-reduced-motion:reduce){.dive-ring{animation-duration:8s}.dive-overlay,.dive-overlay.out{transition-duration:.2s}}
 /* Rhythm puzzle has an audible demo and tactile response to every input. */
 .gutter-audio-hint{display:flex;align-items:center;gap:12px;margin:12px 0;padding:12px;border:1px solid rgba(73,195,211,.35);background:linear-gradient(100deg,rgba(7,33,44,.92),rgba(5,17,26,.72));}
 .gutter-audio-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid #4fc8d5;border-radius:50%;color:#8cecf0;font:700 13px var(--mono);box-shadow:0 0 18px #3cc4d633}
