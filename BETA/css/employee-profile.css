@@ -92,3 +92,24 @@
 .sidebar-foot b{font-size:7px}
 @media(max-width:1050px){.employee-layout{grid-template-columns:248px minmax(0,1fr)}}
 @media(max-width:760px){.employee-layout{display:block}.employee-sidebar{width:min(286px,86vw);padding:.72rem .78rem .62rem}.portrait-frame{width:108px;height:112px}}
+
+
+/* Archive detail carousel: animated record-to-record navigation */
+.modal-body{overflow:hidden}
+.modal-body.is-changing{opacity:.18;filter:blur(2px);transition:opacity .12s ease,filter .12s ease}
+.modal-body.slide-next .generic-detail,.modal-body.slide-next .spider-detail{animation:archiveSlideNext .28s cubic-bezier(.2,.75,.25,1) both}
+.modal-body.slide-prev .generic-detail,.modal-body.slide-prev .spider-detail{animation:archiveSlidePrev .28s cubic-bezier(.2,.75,.25,1) both}
+@keyframes archiveSlideNext{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:translateX(0)}}
+@keyframes archiveSlidePrev{from{opacity:0;transform:translateX(-34px)}to{opacity:1;transform:translateX(0)}}
+.archive-entry-nav{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;margin-top:1rem;padding-top:.85rem;border-top:1px solid rgba(0,212,232,.16)}
+.archive-entry-nav button{display:flex;align-items:center;gap:.55rem;width:max-content;max-width:100%;padding:.48rem .7rem;border:1px solid rgba(0,212,232,.2);background:rgba(0,212,232,.045);color:var(--cyan);cursor:pointer;transition:background .2s,border-color .2s,transform .2s,opacity .2s}
+.archive-entry-nav button:hover:not(:disabled){background:rgba(0,212,232,.13);border-color:rgba(0,212,232,.55);transform:translateX(2px)}
+.archive-entry-nav .entry-next{justify-self:end}
+.archive-entry-nav .entry-next:hover:not(:disabled){transform:translateX(-2px)}
+.archive-entry-nav button span{font-size:1.2rem;line-height:1}
+.archive-entry-nav button small{font:7px var(--font-mono);letter-spacing:.1em}
+.archive-entry-nav button:disabled{opacity:.22;cursor:not-allowed}
+.entry-position{font:9px var(--font-mono);letter-spacing:.12em;color:#d4e9ed;white-space:nowrap}
+.entry-position i{font-style:normal;color:var(--cyan);padding:0 .3rem}
+.detail-unlocked.is-locked{color:var(--amber)}
+@media(prefers-reduced-motion:reduce){.modal-body.slide-next .generic-detail,.modal-body.slide-next .spider-detail,.modal-body.slide-prev .generic-detail,.modal-body.slide-prev .spider-detail{animation:none}.archive-entry-nav button{transition:none}}
