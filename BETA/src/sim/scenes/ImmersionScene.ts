@@ -83,6 +83,8 @@ export class ImmersionScene {
   private spiderInCombat = false;
   private transitionBusy = false;
   private recoveryFrame = 0;
+  private interfaceWatchdogTimer = 0 as ReturnType<typeof setInterval> | number;
+  private lastSanityExposureAt = Date.now();
 
   constructor() {
     this.state = loadState();
@@ -183,6 +185,7 @@ export class ImmersionScene {
     this.notify('Ты внутри сектора · Рёкан', 'ok');
     this.scheduleEvents();
     this.startMatrixStreams();
+    this.startInterfaceWatchdog();
   }
 
   /** Boot: tunnel into Limbo */
@@ -309,11 +312,46 @@ export class ImmersionScene {
    * background. Rebind the scene's DOM roots and rebuild transient controls
    * when the page becomes visible again, without disturbing an open encounter.
    */
+  private startInterfaceWatchdog() {
+    if (this.interfaceWatchdogTimer) clearInterval(this.interfaceWatchdogTimer as number);
+    this.interfaceWatchdogTimer = window.setInterval(() => {
+      if (document.hidden || this.diving || this.state.completed || this.state.defeated || !this.stage?.isConnected) return;
+      const combatOpen = document.getElementById('combatScreen')?.classList.contains('open');
+      const modalOpen = document.getElementById('simModal')?.classList.contains('open');
+      if (combatOpen || modalOpen || document.getElementById('spiderDialogue') || document.getElementById('systemConfirm')) return;
+
+      const stage = document.getElementById('simStage');
+      const hotspots = document.getElementById('hotspotLayer');
+      const exits = document.getElementById('exitLayer');
+      const inventory = document.getElementById('invSlots');
+      const canvas = document.getElementById('simCanvas');
+      const expectedHotspots = hotspotsFor(this.state.location).filter(hs =>
+        !(hs.id === 'hs_door' && this.state.flags.door_unlocked) &&
+        !(hs.clueFlag && this.state.flags['filed_' + hs.clueFlag])
+      ).length;
+      const expectedExits = LOCATIONS[this.state.location].exits.length;
+      const broken = !stage || stage !== this.stage || !hotspots || !exits || !inventory || !canvas ||
+        (expectedHotspots > 0 && hotspots.querySelectorAll('.hotspot').length === 0) ||
+        (expectedExits > 0 && exits.querySelectorAll('.exit-btn').length === 0) ||
+        inventory.querySelectorAll('.inv-slot').length !== 12;
+      if (broken) this.scheduleInterfaceRecovery(true);
+    }, 2500);
+  }
+
   private scheduleInterfaceRecovery(rebuild = true) {
     if (this.diving || this.state.completed || !this.stage?.isConnected) return;
     if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
     this.recoveryFrame = requestAnimationFrame(() => {
       this.recoveryFrame = 0;
+      const currentStage = document.getElementById('simStage');
+      if (currentStage && currentStage !== this.stage) {
+        this.parallax.stop();
+        this.stage = currentStage;
+        let canvas = document.getElementById('simCanvas') as HTMLCanvasElement | null;
+        if (!canvas) { canvas = document.createElement('canvas'); canvas.id = 'simCanvas'; this.stage.prepend(canvas); }
+        this.parallax = new ParallaxRenderer(canvas);
+        void this.loadLoc(this.state.location);
+      }
       this.hsLayer = document.getElementById('hotspotLayer') || this.hsLayer;
       this.exitLayer = document.getElementById('exitLayer') || this.exitLayer;
       this.invEl = document.getElementById('invSlots') || this.invEl;
@@ -469,6 +507,28 @@ export class ImmersionScene {
     window.addEventListener('keydown', unlockAudio);
   }
 
+  private tickSanityExposure() {
+    const now = Date.now();
+    if (now - this.lastSanityExposureAt < 15000 || this.state.defeated || this.state.sanity <= 0) return;
+    this.lastSanityExposureAt = now;
+
+    const roomExposure = now - this.roomEnteredAt >= 30000;
+    const carryingDanger = this.state.inventory.some(id => id === 'black_seed' || id === 'stitched_mask');
+    const loss = (roomExposure ? 1 : 0) + (carryingDanger ? 1 : 0);
+    if (!loss) return;
+
+    this.state.sanity = Math.max(0, this.state.sanity - loss);
+    if (carryingDanger && roomExposure) {
+      this.showSense('◉', 'Комната давит на мысли. Опасная находка отзывается в ладони.', true);
+    } else if (carryingDanger) {
+      this.showSense('◉', 'Опасная находка тихо вытягивает рассудок.', true);
+    } else {
+      this.showSense('◉', 'Слишком долгое пребывание здесь стирает чувство реальности.', true);
+    }
+    saveState(this.state);
+    this.renderVitals();
+  }
+
   private scheduleEvents() {
     if (this.eventTimer) clearInterval(this.eventTimer as number);
     this.eventTimer = setInterval(() => {
@@ -480,6 +540,7 @@ export class ImmersionScene {
         saveState(this.state);
         if (this.state.health <= 0) return;
       } else this.sanityCollapseTick = 0;
+      this.tickSanityExposure();
       if (this.tickSpiderPresence()) return;
       if (this.spiderStage > 0 && !this.state.flags.spider_defeated && !this.state.flags.spider_released) return;
       if (this.threatActive || Date.now() < this.threatCooldown || this.state.defeated) return;
@@ -722,14 +783,19 @@ export class ImmersionScene {
     this.updateAwareness(Date.now() < this.noiseUntil ? 1 : 0);
     document.getElementById('sceneCreature')?.remove();
     const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = 'СИГНАЛ СТАБИЛЕН';
-    if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Юрэй потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
-    else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Кидзё потеряла источник шума.','ok'); }
-    else if(choice==='hide') {
-      if(Math.random()<.78){simAudio.whisper(this.state.muted);this.notify('Ты затаился. Шаги медленно удаляются.','ok');this.state.sanity=Math.max(0,this.state.sanity-1);}
-      else{simAudio.monster(this.state.muted);this.notify('Оно заметило движение!','warn');this.state.health=Math.max(0,this.state.health-9);this.state.sanity=Math.max(0,this.state.sanity-7);}
-    } else if(this.state.selected==='ember_lantern') {
-      simAudio.whoosh(this.state.muted);this.notify('Свет фонаря заставил существо отступить.','ok');this.state.sanity=Math.min(100,this.state.sanity+2);
-    } else {simAudio.deny(this.state.muted);this.notify('Без подходящего средства ты лишь разозлил его.','warn');this.state.health=Math.max(0,this.state.health-14);this.state.sanity=Math.max(0,this.state.sanity-8);}
+    if (this.threatKind === 'sound') {
+      this.noiseUntil = 0;
+      this.notify('Ты замер. Кидзё потеряла источник шума.', 'ok');
+    } else if (Math.random() < .78) {
+      simAudio.whisper(this.state.muted);
+      this.notify('Ты затаился. Шаги медленно удаляются.', 'ok');
+      this.state.sanity = Math.max(0, this.state.sanity - 1);
+    } else {
+      simAudio.monster(this.state.muted);
+      this.notify('Оно заметило движение!', 'warn');
+      this.state.health = Math.max(0, this.state.health - 9);
+      this.state.sanity = Math.max(0, this.state.sanity - 7);
+    }
     saveState(this.state);this.renderVitals();
   }
 
@@ -1517,7 +1583,7 @@ export class ImmersionScene {
               this.state.flags[hs.clueFlag!] = true;
               this.state.flags['filed_' + hs.clueFlag!] = true;
               this.state.flags['collected_note_' + hs.id] = true;
-              this.filePersonalNote(hs.clueFlag!, hs.label, hs.clueText);
+              this.filePersonalNote(hs.clueFlag!, hs.label, hs.clueText || '');
               saveState(this.state); this.renderThoughtJournal(); this.buildHotspots();
               this.notify('Записка добавлена в личное дело. Бумага убрана с места находки.','ok');
               this.closeModal();
@@ -1604,10 +1670,12 @@ export class ImmersionScene {
         if (flag) this.state.flags[flag] = true;
         if (id === 'black_seed') {
           this.state.sanity = Math.max(0, this.state.sanity - 13);
+          this.lastSanityExposureAt = Date.now();
           this.notify('Семя дёрнулось в ладони. Рассудок пошатнулся.', 'warn');
           simAudio.whisper(this.state.muted);
         } else if (id === 'stitched_mask') {
           this.state.sanity = Math.max(0, this.state.sanity - 8);
+          this.lastSanityExposureAt = Date.now();
           this.notify('Из маски донёсся короткий вдох.', 'warn');
           simAudio.maskWhisper(this.state.muted, 1.1);
         } else this.notify('Получено: ' + (item?.name || 'предмет'), 'ok');
