@@ -1,16 +1,20 @@
-import { RyokanScene } from './sim/scenes/RyokanScene';
-import { bindAudioUnlock } from './core/audio';
-import { simAudio } from './sim/audio/SimAudio';
-
-bindAudioUnlock();
+import { ImmersionScene } from './scenes/ImmersionScene';
 
 function boot() {
-  const once = () => simAudio.unlock();
-  window.addEventListener('pointerdown', once, { once: true });
-  window.addEventListener('keydown', once, { once: true });
-
-  const scene = new RyokanScene();
-  scene.start();
+  const root = document.getElementById('simStage');
+  if (!root) {
+    console.error('[SIM] #simStage not found');
+    return;
+  }
+  const scene = new ImmersionScene();
+  void scene.start().catch((e) => {
+    console.error('[SIM]', e);
+    const err = document.getElementById('stageError');
+    if (err) {
+      err.hidden = false;
+      err.textContent = 'Ошибка: ' + String(e);
+    }
+  });
 }
 
 if (document.readyState === 'loading') {
