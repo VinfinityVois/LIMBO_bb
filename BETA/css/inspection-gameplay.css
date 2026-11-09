@@ -372,19 +372,7 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
 #diveOverlay .dive-log{width:min(420px,100%)!important;margin-top:24px!important}
 #diveOverlay[data-mode="reboot"] .dive-title{color:#ff647b!important;text-shadow:0 0 20px #d92e50aa!important}
 #diveOverlay[data-mode="reboot"] .dive-core{border-color:rgba(218,58,83,.55)!important;box-shadow:0 0 90px rgba(218,40,70,.16),inset 0 0 55px rgba(218,40,70,.06)!important}
-.system-confirm{position:fixed!important;inset:0!important;z-index:4900!important;display:grid!important;place-items:center!important;
-  padding:24px!important;background:rgba(0,4,8,.78)!important;opacity:0!important;visibility:hidden!important;
-  transition:opacity .2s ease,visibility .2s ease!important}
-.system-confirm.visible{opacity:1!important;visibility:visible!important}
-.system-confirm-panel{width:min(480px,calc(100vw - 36px))!important;padding:26px!important;
-  border:1px solid rgba(67,186,210,.5)!important;background:linear-gradient(145deg,#0a1b27,#040b12)!important;
-  box-shadow:0 24px 90px #000c,0 0 35px #28c5df18!important}
-.system-confirm-kicker{color:#63cddd!important;font:9px 'JetBrains Mono',monospace!important;letter-spacing:.18em!important}
-.system-confirm-panel h2{margin:16px 0 10px!important;color:#e6f6f8!important;font:700 20px 'Space Grotesk',sans-serif!important;letter-spacing:.12em!important}
-.system-confirm-panel p{color:#a9c1cb!important;font:13px/1.6 'Space Grotesk',sans-serif!important}
-.system-confirm-actions{display:flex!important;justify-content:flex-end!important;gap:9px!important;margin-top:22px!important}
-.system-confirm-actions button{min-height:38px!important;padding:0 15px!important;border:1px solid #3d8395!important;border-radius:2px!important;background:#091b26!important;color:#c8e8ee!important;font:600 9px 'JetBrains Mono',monospace!important;letter-spacing:.1em!important;cursor:pointer!important}
-.system-confirm-actions button.danger{border-color:#b33d54!important;color:#ff9aaa!important;background:linear-gradient(90deg,#3a101d,#180b13)!important}
+/* Legacy confirmation modal rules removed: the new confirmation is only circular ripples. */
 .system-reboot-progress{height:3px;margin-top:22px;background:#182c36;overflow:hidden}
 .system-reboot-progress i{display:block;width:0;height:100%;background:#e34d67;box-shadow:0 0 14px #e34d67;animation:system-reboot-fill .65s ease-out forwards}
 @keyframes system-reboot-fill{to{width:100%}}
