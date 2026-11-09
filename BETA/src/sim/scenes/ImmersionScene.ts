@@ -163,7 +163,6 @@ export class ImmersionScene {
     this.resize();
     this.parallax.start();
     await this.playDiveIn();
-    await this.showControlsTutorial();
     await this.loadLoc(this.state.location);
     this.buildHotspots();
     this.buildExits();
@@ -173,6 +172,7 @@ export class ImmersionScene {
     this.checkDefeat();
     this.renderMinimap();
     this.updateZone();
+    await this.showControlsTutorial();
     this.startWorldClock();
     this.startSoundDynamics();
     simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
@@ -1950,6 +1950,20 @@ export class ImmersionScene {
       card.className = 'reward-card reward-id';
       card.innerHTML = '<img src="/assets/game/items/card' + archive.bestCardTier + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + Math.max(1, archive.bestCardTier) + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
       rewards.append(pass, card);
+      if (charmDrops.length) {
+        charmDrops.forEach(id => {
+          const number = Number(id.replace('charm_', ''));
+          const charm = document.createElement('article');
+          charm.className = 'reward-card reward-charm';
+          charm.innerHTML = '<img src="/assets/game/items/card' + number + '.png" alt="Новый брелок"><div><small>РЕДКАЯ НАХОДКА · БРЕЛОК ПЕРСОНАЖА</small><strong>НОВАЯ ЗАПИСЬ В КОЛЛЕКЦИИ</strong><b>БРЕЛОК ' + String(number).padStart(2,'0') + ' / 06</b><em>Награда выпала случайно и сохранена в личном деле сотрудника.</em></div>';
+          rewards.appendChild(charm);
+        });
+      } else {
+        const missed = document.createElement('article');
+        missed.className = 'reward-card reward-charm reward-charm-missed';
+        missed.innerHTML = '<div><small>КОЛЛЕКЦИОННЫЙ РЕЕСТР</small><strong>БРЕЛОК НЕ ОБНАРУЖЕН</strong><em>В этом прохождении редкая награда не выпала. Условия и шанс изменятся при следующем заходе.</em></div>';
+        rewards.appendChild(missed);
+      }
       body.appendChild(rewards);
 
       const cumulative = document.createElement('section');
