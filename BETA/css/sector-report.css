@@ -349,3 +349,8 @@
 .sector-briefing-footer button i{margin-left:12px;font-style:normal;color:#62dce5}
 @media(max-width:640px){.sector-briefing{padding:9px}.sector-briefing-panel{width:96vw;max-height:94vh;padding:16px}.sector-briefing-alerts{grid-template-columns:1fr}.sector-briefing-alerts article{grid-template-columns:65px 1fr}.sector-briefing-quick{grid-template-columns:repeat(2,minmax(0,1fr))}.sector-briefing-footer{align-items:stretch;flex-direction:column}.sector-briefing-footer button{width:100%}}
 @media(prefers-reduced-motion:reduce){.sector-briefing,.sector-briefing-panel{transition:none!important}}
+
+
+.sector-briefing-hotkeys{display:flex;flex-wrap:wrap;gap:7px 13px;margin-top:13px;padding:10px 0;border-top:1px solid rgba(80,155,170,.16);border-bottom:1px solid rgba(80,155,170,.16)}
+.sector-briefing-hotkeys span{display:flex;align-items:center;gap:5px;font:8px 'JetBrains Mono',monospace;letter-spacing:.04em;color:#7e9aa5}
+.sector-briefing-hotkeys kbd{padding:3px 5px;border:1px solid rgba(89,180,194,.3);color:#9ee3e8;font:600 8px 'JetBrains Mono',monospace}
