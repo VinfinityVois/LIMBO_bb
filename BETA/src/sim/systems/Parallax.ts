@@ -17,6 +17,7 @@ export class ParallaxRenderer {
   running = false;
   filter = '';
   private raf = 0;
+  private imageLoadToken = 0;
   rainEnabled = false;
   private rainDrops: Array<{ x:number; y:number; speed:number; length:number; alpha:number; width:number; drift:number }> = [];
 
@@ -61,15 +62,16 @@ export class ParallaxRenderer {
   }
 
   async loadImage(src: string, filter = ''): Promise<boolean> {
+    const token = ++this.imageLoadToken;
     this.filter = filter;
     return new Promise((resolve) => {
       const im = new Image();
       im.onload = () => {
-        this.img = im;
-        resolve(true);
+        if (token === this.imageLoadToken) this.img = im;
+        resolve(token === this.imageLoadToken);
       };
       im.onerror = () => {
-        this.img = null;
+        if (token === this.imageLoadToken) this.img = null;
         resolve(false);
       };
       im.src = src;
