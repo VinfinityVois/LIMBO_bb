@@ -299,7 +299,7 @@ export class ImmersionScene {
         overlay.classList.add('closing');
         window.setTimeout(() => {
           overlay.remove();
-          this.diving = false;
+          // start() releases the pause only after the briefing action has completed.
           if (action === 'echo') this.echo();
           else if (action === 'use') {
             const candidate = this.state.selected && this.state.inventory.includes(this.state.selected)
