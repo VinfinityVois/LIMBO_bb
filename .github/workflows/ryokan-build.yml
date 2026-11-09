@@ -1,0 +1,34 @@
+name: LIMBO build check
+
+on:
+  push:
+    branches:
+      - fix/ryokan-sector-report-rewards
+    paths:
+      - "BETA/**"
+      - ".github/workflows/ryokan-build.yml"
+  pull_request:
+    branches:
+      - fix/ryokan-sector-report-rewards
+    paths:
+      - "BETA/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BETA
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BETA/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: TypeScript and Vite build
+        run: npm run build
