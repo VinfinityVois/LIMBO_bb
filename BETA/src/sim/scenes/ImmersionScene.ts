@@ -166,6 +166,7 @@ export class ImmersionScene {
       document.body.classList.add('system-reboot');
     }
     this.resize();
+    simAudio.stopAmbient();
     this.parallax.start();
     await this.playDiveIn();
     this.diving = true;
@@ -175,9 +176,13 @@ export class ImmersionScene {
     this.renderDroppedItems();
     this.renderInv();
     this.renderVitals();
-    this.checkDefeat();
     this.renderMinimap();
     this.updateZone();
+    await this.showSectorBriefing();
+
+    // No game clock, sound, threat or control system runs behind the entry overlays.
+    this.diving = false;
+    this.checkDefeat();
     this.startWorldClock();
     this.startSoundDynamics();
     simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
@@ -187,8 +192,6 @@ export class ImmersionScene {
     this.scheduleEvents();
     this.startMatrixStreams();
     this.startInterfaceWatchdog();
-    await this.showSectorBriefing();
-    this.diving = false;
   }
 
   /** Boot: tunnel into Limbo */
@@ -196,7 +199,6 @@ export class ImmersionScene {
     return new Promise((resolve) => {
       const overlay = document.getElementById('diveOverlay');
       if (!overlay) {
-        this.diving = false;
         resolve();
         return;
       }
@@ -239,17 +241,14 @@ export class ImmersionScene {
         i++;
         if (i < lines.length) setTimeout(push, 280 + Math.random() * 120);
       };
-      simAudio.unlock();
-      simAudio.dive(this.state.muted);
+      // The boot screen is silent; game audio is enabled after the briefing.
       setTimeout(push, 200);
 
       setTimeout(() => {
         overlay.classList.add('out');
-        simAudio.whoosh(this.state.muted);
         setTimeout(() => {
           overlay.classList.remove('active', 'out');
           document.body.classList.remove('system-reboot');
-          this.diving = false;
           resolve();
         }, 700);
       }, 2200);
@@ -266,7 +265,6 @@ export class ImmersionScene {
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
       const hasLantern = this.state.inventory.includes('ember_lantern');
-      const hasSelected = !!this.state.selected && this.state.inventory.includes(this.state.selected);
       overlay.innerHTML = `
         <div class="sector-briefing-backdrop"></div>
         <div class="sector-briefing-panel">
@@ -274,17 +272,17 @@ export class ImmersionScene {
           <h2>ПЕРЕД ВХОДОМ В СЕКТОР</h2>
           <p class="sector-briefing-intro">Канал нестабилен. Проверь угрозы и быстрые действия перед продолжением.</p>
           <div class="sector-briefing-alerts">
-            <article><b>ЗВУК</b><strong>Кидзё слышит шум</strong><span>Эхо, звон и возня в инвентаре могут привлечь её. Чем громче звук, тем быстрее она приблизится.</span></article>
-            <article><b>СВЕТ</b><strong>Юрэй идёт на источник</strong><span>Зажжённый фонарь выдаёт положение. Погаси его, если заметишь движение в темноте.</span></article>
-            <article><b>ВРЕМЯ И ПРЕДМЕТЫ</b><strong>Опасность истощает рассудок</strong><span>Долгое пребывание в комнате и ношение чёрного семени или сшитой маски постепенно разрушают восприятие. При нуле рассудка начинает падать здоровье.</span></article>
-            <article><b>КОНТАКТ</b><strong>Не пропускай телеграф атаки</strong><span>В бою уклоняйся во время сигнала. Ошибка отнимает HP; атаки Кидзё дополнительно повреждают рассудок.</span></article>
+            <article><b><i class="briefing-icon" aria-hidden="true">♫</i> ЗВУК</b><strong>Кидзё слышит шум</strong><span>Эхо, звон и возня в инвентаре могут привлечь её. Чем громче звук, тем быстрее она приблизится.</span></article>
+            <article><b><i class="briefing-icon" aria-hidden="true">☼</i> СВЕТ</b><strong>Юрэй идёт на источник</strong><span>Зажжённый фонарь выдаёт положение. Погаси его, если заметишь движение в темноте.</span></article>
+            <article><b><i class="briefing-icon" aria-hidden="true">⌛</i> ВРЕМЯ И ПРЕДМЕТЫ</b><strong>Опасность истощает рассудок</strong><span>Долгое пребывание в комнате и ношение чёрного семени или сшитой маски постепенно разрушают восприятие. При нуле рассудка начинает падать здоровье.</span></article>
+            <article><b><i class="briefing-icon" aria-hidden="true">⚠</i> КОНТАКТ</b><strong>Не пропускай телеграф атаки</strong><span>В бою уклоняйся во время сигнала. Ошибка отнимает HP; атаки Кидзё дополнительно повреждают рассудок.</span></article>
           </div>
           <div class="sector-briefing-quick-label">БЫСТРЫЕ ДЕЙСТВИЯ</div>
           <div class="sector-briefing-quick">
             <button type="button" data-brief-action="echo"><kbd>Q</kbd><span><strong>ЭХО</strong><small>Послать звук в помещение</small></span></button>
-            <button type="button" data-brief-action="use" ${hasSelected ? '' : 'disabled'}><kbd>R</kbd><span><strong>ПРИМЕНИТЬ</strong><small>Использовать выбранный предмет</small></span></button>
-            <button type="button" data-brief-action="inspect" ${hasSelected ? '' : 'disabled'}><kbd>F</kbd><span><strong>ИЗУЧИТЬ</strong><small>Открыть выбранную находку</small></span></button>
-            <button type="button" data-brief-action="lantern" ${hasLantern ? '' : 'disabled'}><kbd>L</kbd><span><strong>${this.lightActive ? 'ПОГАСИТЬ СВЕТ' : 'ВЫБРАТЬ ФОНАРЬ'}</strong><small>${hasLantern ? 'Переключить источник света' : 'Фонарь ещё не найден'}</small></span></button>
+            <button type="button" data-brief-action="use"><kbd>R</kbd><span><strong>ПРИМЕНИТЬ</strong><small>Предмет из инвентаря</small></span></button>
+            <button type="button" data-brief-action="inspect"><kbd>F</kbd><span><strong>ИЗУЧИТЬ</strong><small>Осмотреть находку</small></span></button>
+            <button type="button" data-brief-action="lantern"><kbd>L</kbd><span><strong>${this.lightActive ? 'ПОГАСИТЬ СВЕТ' : 'ФОНАРЬ'}</strong><small>${hasLantern ? 'Переключить источник света' : 'Действие после нахождения фонаря'}</small></span></button>
           </div>
           <div class="sector-briefing-hotkeys"><span><kbd>E</kbd> ОСМОТР</span><span><kbd>Q</kbd> ЭХО</span><span><kbd>R</kbd> ПРИМЕНИТЬ</span><span><kbd>F</kbd> ИЗУЧИТЬ</span><span><kbd>X</kbd> ВЫБРОСИТЬ</span><span><kbd>1–9</kbd> СЛОТ</span><span><kbd>ESC</kbd> ЗАКРЫТЬ / ОТСТУПИТЬ</span><span><kbd>БОЙ</kbd> 1–4 ДЕЙСТВИЯ</span></div>
           <div class="sector-briefing-footer"><span>СИМУЛЯЦИЯ ПРИОСТАНОВЛЕНА</span><button type="button" data-brief-continue>ПРОДОЛЖИТЬ ПОГРУЖЕНИЕ <i>→</i></button></div>
@@ -300,9 +298,20 @@ export class ImmersionScene {
           overlay.remove();
           this.diving = false;
           if (action === 'echo') this.echo();
-          else if (action === 'use') this.useSelectedItem();
-          else if (action === 'inspect' && this.state.selected) this.openItemExam(this.state.selected);
-          else if (action === 'lantern' && hasLantern) { this.state.selected = 'ember_lantern'; this.useSelectedItem(); }
+          else if (action === 'use') {
+            const candidate = this.state.selected && this.state.inventory.includes(this.state.selected)
+              ? this.state.selected
+              : this.state.inventory.find(id => ['herbal_poultice','warding_charm','ember_lantern','stitched_mask'].includes(id)) || this.state.inventory[0];
+            if (candidate) { this.state.selected = candidate; saveState(this.state); this.useSelectedItem(); }
+            else this.notify('Инвентарь пока пуст. Сначала найди предмет.', 'info');
+          } else if (action === 'inspect') {
+            const candidate = this.state.selected && this.state.inventory.includes(this.state.selected) ? this.state.selected : this.state.inventory[0];
+            if (candidate) { this.state.selected = candidate; saveState(this.state); this.openItemExam(candidate); }
+            else this.notify('Пока нечего изучать. Найди первую находку.', 'info');
+          } else if (action === 'lantern') {
+            if (hasLantern) { this.state.selected = 'ember_lantern'; saveState(this.state); this.useSelectedItem(); }
+            else this.notify('Фонарь ещё не найден. Это действие станет доступно после находки.', 'info');
+          }
           resolve();
         }, 260);
       };
@@ -632,14 +641,31 @@ export class ImmersionScene {
       if (accept) accept.textContent = isExit ? 'СЕАНС ЗАВЕРШЁН' : 'СБРОС СОСТОЯНИЯ';
       if (cancelButton) cancelButton.remove();
       overlay.querySelector('.wave-confirm-foot')?.replaceChildren(document.createTextNode(isExit ? 'DISCONNECTING · RK-01' : 'REINITIALIZING · RK-01'));
+      this.diving = true;
       if (isExit) {
-        window.setTimeout(() => { window.location.href = '/scene-ryokan.html'; }, 1550);
+        this.stopRuntimeForExit();
+        window.setTimeout(() => window.location.assign(new URL('scene-ryokan.html', window.location.href).toString()), 1550);
       } else {
+        this.stopRuntimeForExit();
         document.body.classList.add('system-reboot');
         sessionStorage.setItem('limbo-sector-reboot', '1');
         window.setTimeout(() => { resetSim(); window.location.reload(); }, 1750);
       }
     });
+  }
+
+  private stopRuntimeForExit() {
+    const intervals = [this.eventTimer, this.matrixTimer, this.worldClockTimer, this.hallucinationTimer, this.soundUiTimer, this.threatApproachTimer, this.interfaceWatchdogTimer];
+    intervals.forEach(timer => { if (timer) clearInterval(timer as number); });
+    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
+    if (this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
+    if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
+    this.eventTimer = this.matrixTimer = this.worldClockTimer = this.hallucinationTimer = this.soundUiTimer = this.threatApproachTimer = this.interfaceWatchdogTimer = 0;
+    this.enemyTurnTimer = this.spiderDialogTimer = this.recoveryFrame = 0;
+    this.threatActive = false;
+    this.spiderInCombat = false;
+    simAudio.stopAmbient();
+    this.parallax.stop();
   }
 
   private bindChrome() {
@@ -952,6 +978,7 @@ export class ImmersionScene {
 
   private startWorldClock() {
     const update = () => {
+      if (this.diving || document.hidden || this.state.completed) return;
       const d = new Date();
       const time = document.getElementById('worldTime');
       const date = document.getElementById('worldDate');
@@ -975,7 +1002,7 @@ export class ImmersionScene {
   }
 
   private startThreat(kind: 'light' | 'sound' | 'dweller' = 'dweller') {
-    if (document.body.classList.contains('combat-active') || this.threatActive) return;
+    if (this.diving || document.hidden || this.state.completed || document.body.classList.contains('combat-active') || this.threatActive) return;
     this.threatKind = kind;
     this.threatActive = true;
     this.noiseEncounterPending = false;
@@ -1108,6 +1135,7 @@ export class ImmersionScene {
     fill(right);
     if (this.matrixTimer) clearInterval(this.matrixTimer as number);
     this.matrixTimer = setInterval(() => {
+      if (this.diving || document.hidden || this.state.completed) return;
       fill(left);
       fill(right);
     }, 2000);
@@ -2645,6 +2673,7 @@ export class ImmersionScene {
   private startSoundDynamics() {
     if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
     const update = () => {
+      if (this.diving || document.hidden || this.state.completed) return;
       const now = Date.now();
       const elapsed = this.noiseDuration > 0 ? (now - this.noiseStartedAt) / this.noiseDuration : 1;
       const fadingNoise = now < this.noiseUntil && elapsed < 1 ? this.noisePeak * (1 - Math.max(0, elapsed)) : 0;
@@ -3144,7 +3173,7 @@ export class ImmersionScene {
     };
     let lastDialogue = -1;
     const tick = () => {
-      if (!this.threatActive) return;
+      if (this.diving || document.hidden || this.state.completed || !this.threatActive) return;
       const progress = Math.min(1, (Date.now()-this.threatStartedAt)/duration);
       const fill = document.getElementById('threatApproachFill') as HTMLElement|null;
       const time = document.getElementById('threatApproachTime');
@@ -3184,6 +3213,7 @@ export class ImmersionScene {
   private startSanityDistortions() {
     if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
     this.hallucinationTimer = setInterval(() => {
+      if (this.diving || document.hidden || this.state.completed) return;
       const sanity = Math.max(0, Math.min(100, this.state.sanity ?? 100));
       if (sanity >= 65 || this.threatActive || document.getElementById('combatScreen')?.classList.contains('open')) return;
       const tier = sanity >= 45 ? 1 : sanity >= 25 ? 2 : 3;
