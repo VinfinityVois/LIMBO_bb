@@ -98,8 +98,12 @@ export function loadState(): GameState {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return defaultState();
     const p = JSON.parse(raw) as Partial<GameState>;
-    return {
-      ...defaultState(),
+    const defaults = defaultState();
+    const validGutterPattern = Array.isArray(p.gutterPattern) &&
+      p.gutterPattern.length >= 4 && p.gutterPattern.length <= 5 &&
+      p.gutterPattern.every(x => x === 'short' || x === 'long');
+    const state: GameState = {
+      ...defaults,
       ...p,
       inventory: Array.isArray(p.inventory) ? p.inventory : [],
       droppedItems: Array.isArray(p.droppedItems) ? p.droppedItems.filter((x): x is DroppedItem => !!x && typeof x.id === 'string' && typeof x.location === 'string' && typeof x.x === 'number' && typeof x.y === 'number') : [],
@@ -115,9 +119,11 @@ export function loadState(): GameState {
       injuries: Array.isArray(p.injuries) ? p.injuries.filter((x): x is string => typeof x === 'string') : [],
       memories: Array.isArray(p.memories) ? p.memories.filter((x): x is string => typeof x === 'string').slice(-80) : [],
       muted: localStorage.getItem('limbo_sim_mute') === '1',
-      gutterPattern: Array.isArray(p.gutterPattern) && p.gutterPattern.length >= 4 && p.gutterPattern.length <= 5 && p.gutterPattern.every(x => x === 'short' || x === 'long') ? p.gutterPattern : defaultState().gutterPattern,
+      gutterPattern: validGutterPattern ? p.gutterPattern! : defaults.gutterPattern,
       campaignRunId: typeof p.campaignRunId === 'string' && p.campaignRunId ? p.campaignRunId : null,
     };
+    try { localStorage.setItem('limbo_gutter_last_pattern', state.gutterPattern.join(',')); } catch { /* storage may be unavailable */ }
+    return state;
   } catch {
     return defaultState();
   }
