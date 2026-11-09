@@ -1896,7 +1896,7 @@ export class ImmersionScene {
     ];
     const existingArchive = loadCampaignArchive();
     const previousRun = this.state.flags.campaign_recorded
-      ? existingArchive.runs.find(run => run.runId === this.state.flags.campaign_run_id) || existingArchive.runs[existingArchive.runs.length - 1]
+      ? existingArchive.runs.find(run => run.runId === localStorage.getItem('limbo_campaign_current_run')) || existingArchive.runs[existingArchive.runs.length - 1]
       : null;
     const previouslyOwned = new Set(existingArchive.charms || []);
     const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
@@ -1910,7 +1910,7 @@ export class ImmersionScene {
     });
     if (!this.state.flags.campaign_recorded) {
       this.state.flags.campaign_recorded = true;
-      this.state.flags.campaign_run_id = archive.runs[archive.runs.length - 1]?.runId || '';
+      localStorage.setItem('limbo_campaign_current_run', archive.runs[archive.runs.length - 1]?.runId || '');
       saveState(this.state);
     }
     try {
