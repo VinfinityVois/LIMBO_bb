@@ -26,9 +26,21 @@ export const ITEMS: Record<ItemId, ItemDef> = {
   },
   mirror_shard: {
     id: 'mirror_shard', name: 'Зеркальный осколок', short: 'ОСКОЛОК',
-    examine: 'Осколок старого зеркала. На одной стороне отражается комната, на другой — будто бы сад. Их можно соединить с другими фрагментами, чтобы восстановить отражение.',
+    examine: 'Старый фрагмент зеркала. Отражает комнату до пожара. По краю видна копоть, которой нет на другой половине.',
     color: '#9bd7e8',
     svg: `<path d="M15 9 L51 17 L43 55 L9 42 Z" fill="#9bd7e8" fill-opacity=".2" stroke="#b9eaf4" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e0f8ff" stroke-width="1.2"/><path d="M22 20 L36 42" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>`,
+  },
+  mirror_shard_before_fire: {
+    id: 'mirror_shard_before_fire', name: 'Осколок зеркала · до пожара', short: 'ДО ПОЖАРА',
+    examine: 'Фрагмент отражает комнату до пожара. На стекле целая рама и нет следов дыма. В отражении кто-то стоит у двери, хотя за спиной пусто.',
+    color: '#9bd7e8',
+    svg: `<path d="M15 9 L51 17 L43 55 L9 42 Z" fill="#9bd7e8" fill-opacity=".2" stroke="#b9eaf4" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e0f8ff" stroke-width="1.2"/><path d="M22 20 L36 42 M26 17 L25 43" stroke="#ffffff" stroke-width="1.4" opacity=".75"/>`,
+  },
+  mirror_shard_after_fire: {
+    id: 'mirror_shard_after_fire', name: 'Осколок зеркала · после пожара', short: 'ПОСЛЕ ПОЖАРА',
+    examine: 'В этом фрагменте та же комната уже выгорела. На обороте — тёмный отпечаток пальцев; он ещё тёплый.',
+    color: '#b6a6a1',
+    svg: `<path d="M15 9 L51 17 L43 55 L9 42 Z" fill="#766b69" fill-opacity=".32" stroke="#c0a9a1" stroke-width="2"/><path d="M19 14 L44 20 L38 46 L14 37 Z" fill="none" stroke="#e5c9bd" stroke-width="1.2"/><path d="M20 18 L39 45 M41 19 L16 40" stroke="#4a3435" stroke-width="1.8" opacity=".8"/>`,
   },
   mirror_lens: {
     id: 'mirror_lens', name: 'Сшитая зеркальная линза', short: 'ЛИНЗА',
@@ -167,9 +179,14 @@ export const RECIPES = [
     message: 'Сырая спичка вспыхнула неестественно ровно. Осколок фонаря удержал огонёк.',
   },
   {
+    a: 'mirror_shard_before_fire' as ItemId, b: 'mirror_shard_after_fire' as ItemId,
+    result: 'mirror_lens' as ItemId,
+    message: 'Два отражения накладываются друг на друга: комната до пожара и после. В трещине проступает третье изображение — зеркальная линза собрана.',
+  },
+  {
     a: 'mirror_shard' as ItemId, b: 'silk_thread' as ItemId,
     result: 'mirror_lens' as ItemId,
-    message: 'Ты совмещаешь два отражения и стягиваешь трещину шёлковой нитью. Получилась зеркальная линза.',
+    message: 'Ты совмещаешь старый зеркальный фрагмент с шёлковой нитью. Получилась линза.',
   },
 ];
 
