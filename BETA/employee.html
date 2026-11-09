@@ -148,8 +148,11 @@
  const cardTier=Math.max(0,Math.min(6,Number(archive.bestCardTier)||0));
  const passNames=['КАРТА ДОПУСКА · I','КАРТА ДОПУСКА · II','КАРТА ДОПУСКА · III'];
  const passDescs=['Базовый уровень допуска к следующему сектору.','Расширенный допуск, полученный за устойчивое прохождение.','Высший уровень допуска по накопительному результату кампании.'];
- const passItems=passNames.map((name,i)=>({name,sub:'ПРОПУСК ЦЕФЕЯ · '+(i+1)+'/3',desc:passDescs[i],open:passTier>=i+1,icon:'▤',condition:'Накопительный рейтинг кампании'}));
- const characterItems=Array.from({length:6},(_,i)=>({name:'КАРТОЧКА ПЕРСОНАЖА '+String(i+1).padStart(2,'0'),sub:'COLLECTIBLE · FUTURE DROP',desc:'Слот зарезервирован для будущих карточек персонажей. После появления соответствующего события карточка будет открываться здесь автоматически.',open:false,icon:'▧',condition:'КОНТЕНТ ЕЩЁ НЕ ДОБАВЛЕН',soon:true}));
+ const passItems=passNames.map((name,i)=>({name,sub:'ПРОПУСК ЦЕФЕЯ · '+(i+1)+'/3',desc:passDescs[i],open:passTier>=i+1,icon:'▤',image:'assets/game/items/b'+(i+1)+'.png',condition:'Накопительный рейтинг кампании'}));
+ const characterItems=[
+  {name:'КАРТОЧКА СОТРУДНИКА A-55',sub:cardTier?'ЛИЧНАЯ КАРТОЧКА · GRADE '+cardTier:'ЛИЧНАЯ КАРТОЧКА · ОЖИДАЕТ НАГРАДУ',desc:cardTier?'Карточка сотрудника, выданная по итогам лучшего прохождения сектора.':'Карточка будет сформирована после получения первой награды кампании.',open:cardTier>0,icon:'▧',image:cardTier?'assets/game/items/card'+cardTier+'.png':null,condition:'Завершить сектор и получить оценку'},
+  ...Array.from({length:5},(_,i)=>({name:'КАРТОЧКА ПЕРСОНАЖА '+String(i+2).padStart(2,'0'),sub:'COLLECTIBLE · FUTURE DROP',desc:'Слот зарезервирован для будущих карточек персонажей. После появления соответствующего события карточка будет открываться здесь автоматически.',open:false,icon:'▧',condition:'КОНТЕНТ ЕЩЁ НЕ ДОБАВЛЕН',soon:true}))
+];
  let activeTab='medals';
  const card=(item,idx,category)=>'<button class="ep-item '+(item.open?'unlocked':'locked')+'" data-category="'+category+'" data-index="'+idx+'" '+(item.open?'':'aria-disabled="true"')+'><span class="ep-item-art">'+(item.icon||'◈')+'</span><span class="ep-item-copy"><b>'+item.name+'</b><small>'+item.sub+'</small></span><span class="ep-item-state">'+(item.open?'ОТКРЫТО':item.soon?'SOON':'ЗАКРЫТО')+'</span></button>';
  const catalog={
