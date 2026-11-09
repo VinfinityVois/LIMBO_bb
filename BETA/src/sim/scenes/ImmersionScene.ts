@@ -163,6 +163,7 @@ export class ImmersionScene {
     this.resize();
     this.parallax.start();
     await this.playDiveIn();
+    await this.showControlsTutorial();
     await this.loadLoc(this.state.location);
     this.buildHotspots();
     this.buildExits();
@@ -197,6 +198,15 @@ export class ImmersionScene {
       overlay.dataset.mode = reboot ? 'reboot' : 'initial';
       const title = overlay.querySelector<HTMLElement>('.dive-title');
       if (title) title.textContent = reboot ? 'ПЕРЕЗАПУСК СЕКТОРА' : 'ПОГРУЖЕНИЕ';
+      overlay.querySelector('.dive-module-stack')?.remove();
+      const moduleStack = document.createElement('div');
+      moduleStack.className = 'dive-module-stack';
+      moduleStack.innerHTML = '<span class="dive-module-caption">СИНХРОНИЗАЦИЯ МОДУЛЕЙ</span>' +
+        ['НЕЙРО-МОСТ','КАРТА СЕКТОРА','СЛОЙ ВОСПРИЯТИЯ','ИНВЕНТАРЬ','ПРОТОКОЛЫ УГРОЗ'].map((label,index) =>
+          '<div class="dive-module-row" style="--module-delay:'+index*180+'ms"><i></i><span>'+label+'</span><b>ПОДКЛЮЧЕНО</b></div>'
+        ).join('');
+      const diveCore = overlay.querySelector('.dive-core') || title?.parentElement;
+      diveCore?.appendChild(moduleStack);
       overlay.classList.add('active');
       const lines = reboot ? [
         { t: 'ЦЕФЕЙ · ПОЛНЫЙ СБРОС СЕАНСА', c: 'dim' },
@@ -235,6 +245,55 @@ export class ImmersionScene {
           resolve();
         }, 700);
       }, 2200);
+    });
+  }
+
+  private showControlsTutorial(): Promise<void> {
+    if (localStorage.getItem('limbo_controls_tutorial_seen') === '1') return Promise.resolve();
+    this.diving = true;
+    return new Promise(resolve => {
+      const overlay = document.createElement('section');
+      overlay.className = 'sim-tutorial-overlay';
+      overlay.setAttribute('role','dialog');
+      overlay.setAttribute('aria-modal','true');
+      overlay.setAttribute('aria-labelledby','simTutorialTitle');
+      overlay.innerHTML = `
+        <div class="sim-tutorial-backdrop"></div>
+        <div class="sim-tutorial-shell">
+          <div class="sim-tutorial-kicker">ЦЕФЕЙ · ПЕРВИЧНЫЙ ИНСТРУКТАЖ / RK-01</div>
+          <h2 id="simTutorialTitle">ПЕРЕД НАЧАЛОМ</h2>
+          <p class="sim-tutorial-intro">Связь установлена. Коротко о том, как ориентироваться в секторе и не потерять важные находки.</p>
+          <div class="sim-tutorial-grid">
+            <article><b>01 / ИССЛЕДОВАНИЕ</b><strong>Точки на локации</strong><span>Нажимай на отмеченные места, осматривай окружение. Записки можно прочитать, сохранить в личном деле и забрать.</span></article>
+            <article><b>02 / ИНВЕНТАРЬ</b><strong>Предметы и сочетания</strong><span>Выбери предмет в инвентаре, затем примени его к объекту. Некоторые вещи можно изучить, использовать или выбросить.</span></article>
+            <article><b>03 / ОПАСНОСТЬ</b><strong>Свет, звук и время</strong><span>Шум привлекает Кидзё, свет — Юрэй, а долгое пребывание в комнате может привлечь Рокудзё.</span></article>
+            <article><b>04 / ЛИЧНОЕ ДЕЛО</b><strong>Мысли и записи</strong><span>Открывай журнал в панели инвентаря. Там сохраняются прочитанные записки, наблюдения и изученные свойства.</span></article>
+          </div>
+          <div class="sim-tutorial-keys">
+            <div><b>E</b><span>Откликнуться / взаимодействовать</span></div>
+            <div><b>Q</b><span>Позвать — создать шум</span></div>
+            <div><b>R</b><span>Применить выбранный предмет</span></div>
+            <div><b>F</b><span>Изучить выбранный предмет</span></div>
+            <div><b>X</b><span>Выбросить выбранный предмет</span></div>
+            <div><b>1–9</b><span>Выбрать слот инвентаря</span></div>
+            <div><b>ESC</b><span>Закрыть окно / отступить в бою</span></div>
+            <div><b>БОЙ</b><span>1 атака · 2 уклонение · 3 защита · 4 предмет · 5 отступить</span></div>
+          </div>
+          <div class="sim-tutorial-actions">
+            <button type="button" data-tutorial-skip>ПРОПУСТИТЬ</button>
+            <button type="button" data-tutorial-accept>ПОНЯТНО · НАЧАТЬ СЕКТОР</button>
+          </div>
+          <small class="sim-tutorial-foot">СИМУЛЯЦИЯ ПРИОСТАНОВЛЕНА ДО ВАШЕГО РЕШЕНИЯ</small>
+        </div>`;
+      document.body.appendChild(overlay);
+      requestAnimationFrame(()=>overlay.classList.add('visible'));
+      const finish = () => {
+        localStorage.setItem('limbo_controls_tutorial_seen','1');
+        overlay.classList.add('closing');
+        window.setTimeout(()=>{overlay.remove();this.diving=false;resolve();},320);
+      };
+      overlay.querySelector('[data-tutorial-skip]')?.addEventListener('click',finish);
+      overlay.querySelector('[data-tutorial-accept]')?.addEventListener('click',finish);
     });
   }
 
@@ -1435,7 +1494,15 @@ export class ImmersionScene {
             letter.append(stamp, text);
             body.appendChild(letter);
             actions.innerHTML = '';
-            addAction('ЗАКРЫТЬ ЗАПИСКУ', 'primary', () => this.closeModal());
+            addAction('ЗАПИСАТЬ В ЛИЧНОЕ ДЕЛО И ЗАБРАТЬ', 'primary', () => {
+              this.state.flags[hs.clueFlag!] = true;
+              this.state.flags['filed_' + hs.clueFlag!] = true;
+              this.state.flags['collected_note_' + hs.id] = true;
+              this.rememberThought(hs.label + ': ' + hs.clueText);
+              saveState(this.state); this.renderThoughtJournal(); this.buildHotspots();
+              this.notify('Записка добавлена в личное дело. Бумага убрана с места находки.','ok');
+              this.closeModal();
+            });
             this.state.flags[hs.clueFlag!] = true;
             this.rememberThought(hs.label + ': ' + hs.clueText);
             saveState(this.state);
