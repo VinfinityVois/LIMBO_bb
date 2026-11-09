@@ -8,8 +8,6 @@ on:
       - "BETA/**"
       - ".github/workflows/ryokan-build.yml"
   pull_request:
-    branches:
-      - fix/ryokan-sector-report-rewards
     paths:
       - "BETA/**"
 
