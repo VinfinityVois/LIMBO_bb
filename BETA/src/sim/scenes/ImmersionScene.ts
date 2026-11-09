@@ -429,6 +429,28 @@ export class ImmersionScene {
       repaired = true;
     }
     const stage = document.getElementById('simStage');
+    if (stage) {
+      let hotspotRoot = document.getElementById('hotspotLayer');
+      if (!hotspotRoot) { hotspotRoot = document.createElement('div'); hotspotRoot.id = 'hotspotLayer'; hotspotRoot.className = 'hotspot-layer'; stage.appendChild(hotspotRoot); repaired = true; }
+      let exitRoot = document.getElementById('exitLayer');
+      if (!exitRoot) { exitRoot = document.createElement('div'); exitRoot.id = 'exitLayer'; exitRoot.className = 'exit-layer'; stage.appendChild(exitRoot); repaired = true; }
+      this.stage = stage;
+      this.hsLayer = hotspotRoot;
+      this.exitLayer = exitRoot;
+    }
+    let inventoryRoot = document.getElementById('invSlots');
+    if (!inventoryRoot) {
+      const inventoryHost = document.querySelector('.hud-inventory');
+      if (inventoryHost) { inventoryRoot = document.createElement('div'); inventoryRoot.id = 'invSlots'; inventoryRoot.className = 'inv'; inventoryHost.insertBefore(inventoryRoot, inventoryHost.querySelector('.inventory-hint')); repaired = true; }
+    }
+    if (inventoryRoot) this.invEl = inventoryRoot;
+    let hover = document.getElementById('hoverCard');
+    if (!hover) { hover = document.createElement('div'); hover.id = 'hoverCard'; hover.className = 'hover-card'; document.body.appendChild(hover); repaired = true; }
+    this.hoverCard = hover;
+    const hpValue = document.getElementById('hpText') || document.querySelector('.hud-vitals .health .vital-label b');
+    if (hpValue && !hpValue.id) hpValue.id = 'hpText';
+    const sanityValue = document.getElementById('sanText') || document.querySelector('.hud-vitals .sanity .vital-label b');
+    if (sanityValue && !sanityValue.id) sanityValue.id = 'sanText';
     if (stage && !document.getElementById('notifyHost')) {
       const host = document.createElement('div');
       host.id = 'notifyHost';
