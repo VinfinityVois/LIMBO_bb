@@ -264,6 +264,9 @@ export class ImmersionScene {
   }
 
   private showSectorBriefing(): Promise<void> {
+    // The RK-01 briefing is a first-entry instruction, not a page-load prompt.
+    // Keep the acknowledgement across refreshes and later returns to the sector.
+    if (localStorage.getItem('limbo_rk01_briefing_seen') === '1') return Promise.resolve();
     this.diving = true;
     document.getElementById('sectorBriefing')?.remove();
     return new Promise(resolve => {
@@ -304,6 +307,7 @@ export class ImmersionScene {
         overlay.classList.add('closing');
         window.setTimeout(() => {
           overlay.remove();
+          localStorage.setItem('limbo_rk01_briefing_seen', '1');
           // start() releases the pause only after the briefing action has completed.
           if (action === 'echo') this.echo();
           else if (action === 'use') {
@@ -2495,7 +2499,13 @@ export class ImmersionScene {
       modal.hidden = false;
       modal.setAttribute('aria-hidden', 'false');
       modal.classList.add('report-mode', 'open');
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.style.setProperty('box-sizing', 'border-box', 'important');
       modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('visibility', 'visible', 'important');
+      modal.style.setProperty('opacity', '1', 'important');
+      modal.style.setProperty('pointer-events', 'auto', 'important');
       modal.style.setProperty('position', 'fixed', 'important');
       modal.style.setProperty('inset', '0', 'important');
       modal.style.setProperty('z-index', '22000', 'important');
@@ -2503,8 +2513,12 @@ export class ImmersionScene {
       modal.style.setProperty('justify-content', 'center', 'important');
       const panel = modal.querySelector<HTMLElement>('.sim-modal-panel');
       if (panel) {
+        panel.style.setProperty('box-sizing', 'border-box', 'important');
         panel.style.setProperty('position', 'relative', 'important');
         panel.style.setProperty('display', 'flex', 'important');
+        panel.style.setProperty('flex', '0 1 1040px', 'important');
+        panel.style.setProperty('margin', 'auto', 'important');
+        panel.style.setProperty('min-width', '0', 'important');
         panel.style.setProperty('flex-direction', 'column', 'important');
         panel.style.setProperty('grid-template-columns', 'none', 'important');
         panel.style.setProperty('grid-template-areas', 'none', 'important');
@@ -2520,7 +2534,9 @@ export class ImmersionScene {
       }
       const row = modal.querySelector<HTMLElement>('.smp-body-row');
       if (row) {
+        row.style.setProperty('box-sizing', 'border-box', 'important');
         row.style.setProperty('display', 'flex', 'important');
+        row.style.setProperty('width', '100%', 'important');
         row.style.setProperty('flex-direction', 'column', 'important');
         row.style.setProperty('flex', '1 1 auto', 'important');
         row.style.setProperty('min-height', '0', 'important');
