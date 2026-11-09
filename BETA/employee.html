@@ -127,7 +127,7 @@
  const loreFound=[...clues.filter(([k])=>flags[k]),...secrets.filter(([k])=>flags[k])];
  const visited=Array.isArray(state.visited)?state.visited:[];
  const itemCount=itemDefs.filter(([id])=>collected(id)).length;
- const loreTotal=itemDefs.length+clues.length+secrets.length+6;
+ const loreTotal=itemDefs.length+clues.length+secrets.length;
  const loreCount=itemCount+clues.filter(([k])=>flags[k]).length+secrets.filter(([k])=>flags[k]).length;
  const lorePct=Math.round(loreCount/loreTotal*100);
  const monsters=[
