@@ -325,10 +325,15 @@ export class ImmersionScene {
       const exits = document.getElementById('exitLayer');
       const inventory = document.getElementById('invSlots');
       const canvas = document.getElementById('simCanvas');
-      const expectedHotspots = hotspotsFor(this.state.location).filter(hs =>
-        !(hs.id === 'hs_door' && this.state.flags.door_unlocked) &&
-        !(hs.clueFlag && this.state.flags['filed_' + hs.clueFlag])
-      ).length;
+      const expectedHotspots = hotspotsFor(this.state.location).filter(hs => {
+        if (hs.id === 'hs_door' && this.state.flags.door_unlocked) return false;
+        if (hs.clueFlag && this.state.flags['filed_' + hs.clueFlag]) return false;
+        const finds = hs.items?.length ? hs.items : (hs.item ? [hs.item] : []);
+        const flags = hs.takenFlags?.length ? hs.takenFlags : (hs.takenFlag ? [hs.takenFlag] : []);
+        if (finds.length && flags.length && finds.every((_, index) => !!this.state.flags[flags[index] || ''])) return false;
+        if (!finds.length && hs.takenFlag && this.state.flags[hs.takenFlag]) return false;
+        return true;
+      }).length;
       const expectedExits = LOCATIONS[this.state.location].exits.length;
       const broken = !stage || stage !== this.stage || !this.stage.isConnected || !hotspots || !exits || !inventory || !canvas ||
         (expectedHotspots > 0 && hotspots.querySelectorAll('.hotspot').length === 0) ||
