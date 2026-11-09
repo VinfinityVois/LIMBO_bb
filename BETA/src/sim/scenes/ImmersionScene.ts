@@ -87,6 +87,7 @@ export class ImmersionScene {
   private recoveryFrame = 0;
   private interfaceWatchdogTimer = 0 as ReturnType<typeof setInterval> | number;
   private lastSanityExposureAt = Date.now();
+  private sanityExposureTimer = 0 as ReturnType<typeof setInterval> | number;
 
   constructor() {
     simAudio.setLocked(true);
@@ -189,6 +190,8 @@ export class ImmersionScene {
     simAudio.setLocked(false);
     this.checkDefeat();
     this.startWorldClock();
+    if (this.sanityExposureTimer) clearInterval(this.sanityExposureTimer as number);
+    this.sanityExposureTimer = window.setInterval(() => this.tickSanityExposure(), 1000);
     this.startSoundDynamics();
     simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
     this.startSanityDistortions();
@@ -660,12 +663,12 @@ export class ImmersionScene {
   }
 
   private stopRuntimeForExit() {
-    const intervals = [this.eventTimer, this.matrixTimer, this.worldClockTimer, this.hallucinationTimer, this.soundUiTimer, this.threatApproachTimer, this.interfaceWatchdogTimer];
+    const intervals = [this.eventTimer, this.matrixTimer, this.worldClockTimer, this.hallucinationTimer, this.soundUiTimer, this.threatApproachTimer, this.interfaceWatchdogTimer, this.sanityExposureTimer];
     intervals.forEach(timer => { if (timer) clearInterval(timer as number); });
     if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
     if (this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
     if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
-    this.eventTimer = this.matrixTimer = this.worldClockTimer = this.hallucinationTimer = this.soundUiTimer = this.threatApproachTimer = this.interfaceWatchdogTimer = 0;
+    this.eventTimer = this.matrixTimer = this.worldClockTimer = this.hallucinationTimer = this.soundUiTimer = this.threatApproachTimer = this.interfaceWatchdogTimer = this.sanityExposureTimer = 0;
     this.enemyTurnTimer = this.spiderDialogTimer = this.recoveryFrame = 0;
     this.threatActive = false;
     this.spiderInCombat = false;
@@ -762,21 +765,27 @@ export class ImmersionScene {
 
   private tickSanityExposure() {
     const now = Date.now();
-    if (now - this.lastSanityExposureAt < 15000 || this.state.defeated || this.state.sanity <= 0) return;
+    if (this.diving || document.hidden || this.state.completed || this.state.defeated || this.state.sanity <= 0) return;
+    // Run independently of the random encounter loop: every 10 seconds of active play
+    // the current environmental and carried-object pressure is applied deterministically.
+    if (now - this.lastSanityExposureAt < 10000) return;
     this.lastSanityExposureAt = now;
 
-    const roomExposure = now - this.roomEnteredAt >= 30000;
+    const roomExposure = now - this.roomEnteredAt >= 20000;
     const carryingDanger = this.state.inventory.some(id => id === 'black_seed' || id === 'stitched_mask');
-    const loss = (roomExposure ? 1 : 0) + (carryingDanger ? 1 : 0);
+    const wearingMask = this.maskWorn;
+    const loss = (roomExposure ? 1 : 0) + (carryingDanger ? 2 : 0) + (wearingMask ? 1 : 0);
     if (!loss) return;
 
     this.state.sanity = Math.max(0, this.state.sanity - loss);
-    if (carryingDanger && roomExposure) {
-      this.showSense('◉', 'Комната давит на мысли. Опасная находка отзывается в ладони.', true);
+    if (carryingDanger && (roomExposure || wearingMask)) {
+      this.showSense('◉', 'Комната и опасная находка давят на мысли. Рассудок −' + loss + '.', true);
     } else if (carryingDanger) {
-      this.showSense('◉', 'Опасная находка тихо вытягивает рассудок.', true);
+      this.showSense('◉', 'Опасная находка вытягивает рассудок. −' + loss + '.', true);
+    } else if (wearingMask) {
+      this.showSense('◉', 'Маска запоминает твоё дыхание. Рассудок −' + loss + '.', true);
     } else {
-      this.showSense('◉', 'Слишком долгое пребывание здесь стирает чувство реальности.', true);
+      this.showSense('◉', 'Долгое пребывание в комнате стирает чувство реальности. Рассудок −' + loss + '.', true);
     }
     saveState(this.state);
     this.renderVitals();
@@ -794,7 +803,6 @@ export class ImmersionScene {
         saveState(this.state);
         if (this.state.health <= 0) return;
       } else this.sanityCollapseTick = 0;
-      this.tickSanityExposure();
       if (this.tickSpiderPresence()) return;
       if (this.threatActive || document.body.classList.contains('combat-active') || Date.now() < this.threatCooldown || this.state.defeated) return;
       const stayed = Date.now() - this.roomEnteredAt;
@@ -2185,6 +2193,10 @@ export class ImmersionScene {
   }
 
   private showRunReport() {
+    // The report must never depend on an inspection modal that another UI flow may have damaged.
+    this.ensureInterfaceWindows();
+    const reportRoot = document.getElementById('simModal');
+    if (reportRoot && reportRoot.parentElement !== document.body) document.body.appendChild(reportRoot);
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
     const visual = document.getElementById('modalVisual');
@@ -2455,7 +2467,42 @@ export class ImmersionScene {
       actions.appendChild(exit);
     }
     if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены. Повторное прохождение обновит результат RK-01, не стирая архив кампании.';
-    if (modal) { modal.hidden = false; modal.classList.add('report-mode', 'open'); modal.style.display = 'flex'; }
+    if (modal) {
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('report-mode', 'open');
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('position', 'fixed', 'important');
+      modal.style.setProperty('inset', '0', 'important');
+      modal.style.setProperty('z-index', '22000', 'important');
+      modal.style.setProperty('align-items', 'center', 'important');
+      modal.style.setProperty('justify-content', 'center', 'important');
+      const panel = modal.querySelector<HTMLElement>('.sim-modal-panel');
+      if (panel) {
+        panel.style.setProperty('position', 'relative', 'important');
+        panel.style.setProperty('display', 'flex', 'important');
+        panel.style.setProperty('flex-direction', 'column', 'important');
+        panel.style.setProperty('grid-template-columns', 'none', 'important');
+        panel.style.setProperty('grid-template-areas', 'none', 'important');
+        panel.style.setProperty('left', 'auto', 'important');
+        panel.style.setProperty('right', 'auto', 'important');
+        panel.style.setProperty('top', 'auto', 'important');
+        panel.style.setProperty('bottom', 'auto', 'important');
+        panel.style.setProperty('transform', 'none', 'important');
+        panel.style.setProperty('width', 'min(1040px, 96vw)', 'important');
+        panel.style.setProperty('max-width', '1040px', 'important');
+        panel.style.setProperty('max-height', '94vh', 'important');
+        panel.style.setProperty('overflow', 'hidden', 'important');
+      }
+      const row = modal.querySelector<HTMLElement>('.smp-body-row');
+      if (row) {
+        row.style.setProperty('display', 'flex', 'important');
+        row.style.setProperty('flex-direction', 'column', 'important');
+        row.style.setProperty('flex', '1 1 auto', 'important');
+        row.style.setProperty('min-height', '0', 'important');
+        row.style.setProperty('overflow', 'auto', 'important');
+      }
+    }
     document.body.classList.add('inspection-open', 'sector-finished');
   }
 
@@ -2470,17 +2517,9 @@ export class ImmersionScene {
       localStorage.setItem('limbo_pass_RK02', '1');
       localStorage.setItem('limbo_character_card_RK01', JSON.stringify({sector:'RK-01',subject:'СУБЪЕКТ 01',ending,health:this.state.health,sanity:this.state.sanity,visited:this.state.visited.length,createdAt:new Date().toISOString()}));
     } catch { /* архив недоступен — отчёт всё равно остаётся в сохранении сектора */ }
-    // Freeze every active loop before the exit cinematic: no more encounters, sanity drain or ambient threats.
-    if (this.eventTimer) clearInterval(this.eventTimer as number);
-    if (this.matrixTimer) clearInterval(this.matrixTimer as number);
-    if (this.worldClockTimer) clearInterval(this.worldClockTimer as number);
-    if (this.hallucinationTimer) clearInterval(this.hallucinationTimer as number);
-    if (this.soundUiTimer) clearInterval(this.soundUiTimer as number);
-    if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
-    if (this.enemyTurnTimer) clearTimeout(this.enemyTurnTimer as number);
-    if (this.spiderDialogTimer) clearTimeout(this.spiderDialogTimer as number);
-    this.threatActive = false;
-    this.spiderInCombat = false;
+    // Freeze every runtime loop before the exit cinematic, including sanity exposure and interface recovery.
+    this.diving = true;
+    this.stopRuntimeForExit();
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('combatScreen')?.classList.remove('open');
     document.getElementById('spiderDialogue')?.remove();
