@@ -36,6 +36,8 @@ export default defineConfig({
         dossier: resolve(__dirname, 'dossier.html'),
         scenes: resolve(__dirname, 'scenes.html'),
         ryokan: resolve(__dirname, 'scene-ryokan.html'),
+        sim: resolve(__dirname, 'sim.html'),
+        employee: resolve(__dirname, 'employee.html'),
         shanghai: resolve(__dirname, 'scene-shanghai.html'),
         quiet: resolve(__dirname, 'scene-quiet.html'),
         polygon: resolve(__dirname, 'polygon.html'),
