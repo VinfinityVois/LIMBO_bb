@@ -391,3 +391,42 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
 @media(max-width:700px){#sceneCreature .creature-sprite{max-width:82vw!important;max-height:62vh!important}}
 
 #diveOverlay.active.out{opacity:0!important;visibility:visible!important;transition:opacity .7s ease,visibility .7s ease!important}
+
+
+/* Dive-in module handshake: centered, readable, and visually attached to the title. */
+#diveOverlay{background:radial-gradient(ellipse at 50% 43%,rgba(7,30,42,.94) 0%,rgba(3,10,18,.97) 44%,rgba(1,4,9,.995) 78%)!important;backdrop-filter:blur(5px)}
+#diveOverlay .dive-core{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:clamp(14px,2.4vh,24px)!important;width:min(680px,92vw)!important;max-width:92vw!important}
+#diveOverlay .dive-title{width:100%;font-size:clamp(1.55rem,4vw,3rem)!important;letter-spacing:.2em!important;line-height:1.15!important;text-shadow:0 0 24px rgba(0,212,232,.3)!important}
+.dive-module-stack{width:min(430px,88vw);display:flex;flex-direction:column;gap:7px;margin:0 auto;position:relative;z-index:2}
+.dive-module-caption{font:600 8px var(--mono);letter-spacing:.22em;color:rgba(115,205,218,.72);text-align:center;margin-bottom:3px}
+.dive-module-row{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 11px;background:linear-gradient(90deg,rgba(8,26,37,.76),rgba(5,14,23,.52));border-bottom:1px solid rgba(0,212,232,.11);animation:diveModuleIn .45s both;animation-delay:var(--module-delay)}
+.dive-module-row>i{width:5px;height:5px;border-radius:50%;background:#53d6d4;box-shadow:0 0 10px rgba(83,214,212,.8)}
+.dive-module-row>span{font:500 9px var(--mono);letter-spacing:.13em;color:#b6cbd2}
+.dive-module-row>b{font:500 7px var(--mono);letter-spacing:.1em;color:rgba(91,201,177,.75)}
+@keyframes diveModuleIn{from{opacity:0;transform:translateY(7px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+
+/* Mandatory first-run instruction. The simulation is not started until a choice is made. */
+.sim-tutorial-overlay{position:fixed;inset:0;z-index:7000;display:grid;place-items:center;padding:22px;background:rgba(1,5,10,.88);backdrop-filter:blur(13px) saturate(.72);opacity:0;transition:opacity .32s ease}
+.sim-tutorial-overlay.visible{opacity:1}
+.sim-tutorial-overlay.closing{opacity:0}
+.sim-tutorial-backdrop{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 25%,rgba(0,212,232,.11),transparent 55%),linear-gradient(120deg,rgba(0,0,0,.1),rgba(0,12,20,.28))}
+.sim-tutorial-shell{position:relative;width:min(820px,96vw);max-height:min(90vh,920px);overflow:auto;padding:clamp(22px,4vw,42px);background:linear-gradient(150deg,rgba(8,20,31,.98),rgba(3,9,16,.98));border:1px solid rgba(0,212,232,.22);box-shadow:0 30px 100px rgba(0,0,0,.65),0 0 70px rgba(0,212,232,.055);clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+.sim-tutorial-kicker{font:600 8px var(--mono);letter-spacing:.2em;color:#5bc8d3}
+.sim-tutorial-shell h2{margin:12px 0 8px;text-align:center;font:700 clamp(1.45rem,4vw,2.4rem) var(--font);letter-spacing:.14em;color:#e8f3f5}
+.sim-tutorial-intro{max-width:620px;margin:0 auto 22px;text-align:center;color:#9fb1bc;font-size:.88rem;line-height:1.65}
+.sim-tutorial-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.sim-tutorial-grid article{display:flex;flex-direction:column;gap:7px;min-height:116px;padding:14px;background:rgba(10,28,40,.6);border:1px solid rgba(0,212,232,.11)}
+.sim-tutorial-grid article>b{font:600 7px var(--mono);letter-spacing:.15em;color:#5bc8d3}
+.sim-tutorial-grid article>strong{font:600 .82rem var(--font);color:#dbe9ed}
+.sim-tutorial-grid article>span{font-size:.73rem;line-height:1.55;color:#8fa2ad}
+.sim-tutorial-keys{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 18px;margin:18px 0;padding:15px 16px;border-top:1px solid rgba(0,212,232,.13);border-bottom:1px solid rgba(0,212,232,.13)}
+.sim-tutorial-keys>div{display:flex;align-items:center;gap:10px;min-width:0}
+.sim-tutorial-keys b{min-width:38px;padding:5px 6px;text-align:center;border:1px solid rgba(0,212,232,.22);background:rgba(0,212,232,.055);font:700 9px var(--mono);color:#80e1e7}
+.sim-tutorial-keys span{font-size:.68rem;line-height:1.4;color:#a6b7c0}
+.sim-tutorial-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}
+.sim-tutorial-actions button{min-height:42px;padding:0 20px;border:1px solid rgba(0,212,232,.28);background:rgba(0,212,232,.07);color:#bdeff1;font:600 9px var(--mono);letter-spacing:.12em;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.sim-tutorial-actions button:hover{background:rgba(0,212,232,.15);border-color:rgba(0,212,232,.58);transform:translateY(-1px)}
+.sim-tutorial-actions [data-tutorial-accept]{background:linear-gradient(100deg,rgba(0,130,146,.34),rgba(0,212,232,.12));color:#e7ffff}
+.sim-tutorial-foot{display:block;margin-top:16px;text-align:center;font:7px var(--mono);letter-spacing:.15em;color:#607985}
+@media(max-width:620px){.sim-tutorial-overlay{padding:10px}.sim-tutorial-shell{padding:20px 16px}.sim-tutorial-grid{grid-template-columns:1fr}.sim-tutorial-grid article{min-height:0}.sim-tutorial-keys{grid-template-columns:1fr;gap:7px}.sim-tutorial-actions{flex-direction:column}.sim-tutorial-actions button{width:100%}}
+@media(prefers-reduced-motion:reduce){.dive-module-row{animation:none}.sim-tutorial-overlay{transition:none}}
