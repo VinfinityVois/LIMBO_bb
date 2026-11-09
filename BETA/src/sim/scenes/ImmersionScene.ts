@@ -1906,12 +1906,16 @@ export class ImmersionScene {
       { id: 'charm_6', chance: .08, eligible: score >= 92 && this.state.ending === 'clear' }
     ];
     const existingArchive = loadCampaignArchive();
-    const previousRun = this.state.flags.campaign_recorded
-      ? existingArchive.runs.find(run => run.runId === localStorage.getItem('limbo_campaign_current_run')) || existingArchive.runs[existingArchive.runs.length - 1]
+    const currentRunId = localStorage.getItem('limbo_campaign_current_run');
+    // Reuse rewards only for this exact run. Never fall back to a previous run:
+    // that made the report display a charm that was not awarded in this playthrough.
+    const previousRun = this.state.flags.campaign_recorded && currentRunId
+      ? existingArchive.runs.find(run => run.runId === currentRunId) || null
       : null;
-    const previouslyOwned = new Set(existingArchive.charms || []);
+    // Each eligible charm gets an independent roll on every completed run.
+    // The dossier collection remains unique, while repeat runs can yield different charms.
     const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
-      rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
+      rule.eligible && Math.random() < rule.chance
     ).map(rule => rule.id);
     const archive = previousRun ? existingArchive : recordCampaignSector('RK-01', {
       score, grade, gradeTier, collected: collected.length, used: used.length,
