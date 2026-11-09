@@ -374,6 +374,8 @@ export class ImmersionScene {
   private ensureInterfaceWindows(): boolean {
     let repaired = false;
     let modal = document.getElementById('simModal');
+    const modalWasOpen = !!modal && (!modal.hidden || modal.classList.contains('open'));
+    const modalWasReport = !!modal?.classList.contains('report-mode');
     if (!modal) {
       modal = document.createElement('div');
       modal.id = 'simModal';
@@ -383,11 +385,14 @@ export class ImmersionScene {
     }
     if (!modal.querySelector('#modalTitle') || !modal.querySelector('#modalBody') || !modal.querySelector('#modalActions') || !modal.querySelector('#modalClose')) {
       modal.innerHTML = '<div class="sim-modal-backdrop" id="modalBackdrop"></div><div class="sim-modal-panel"><div class="smp-h"><span id="modalTitle">ОСМОТР</span><button type="button" id="modalClose" aria-label="Закрыть">×</button></div><div class="smp-body-row"><div class="smp-visual" id="modalVisual"></div><div class="smp-b" id="modalBody"></div><div class="smp-a" id="modalActions"></div><div class="smp-note" id="modalNote"></div></div></div>';
-      modal.hidden = true;
-      modal.classList.remove('open');
+      modal.hidden = !modalWasOpen;
+      modal.classList.toggle('open', modalWasOpen);
+      modal.classList.toggle('report-mode', modalWasReport);
+      if (modalWasOpen) document.body.classList.add('inspection-open');
       repaired = true;
     }
     let combat = document.getElementById('combatScreen');
+    const combatWasOpen = !!combat && (!combat.hidden || combat.classList.contains('open'));
     if (!combat) {
       combat = document.createElement('section');
       combat.id = 'combatScreen';
@@ -408,9 +413,10 @@ export class ImmersionScene {
           <div class="combat-actions" aria-label="Боевые действия"><button id="combatAttack" type="button"><kbd>1</kbd> АТАКОВАТЬ</button><button id="combatDodge" type="button" disabled><kbd>2</kbd> УКЛОНИТЬСЯ</button><button id="combatGuard" type="button"><kbd>3</kbd> ЗАЩИТИТЬСЯ</button><button id="combatNoise" type="button"><kbd>4</kbd> ОТВЛЕЧЬ</button></div>
           <div class="combat-controls-hint">ВЫБЕРИ ЗОНУ ПОПАДАНИЯ · УКЛОНЯЙСЯ В МОМЕНТ УДАРА · ESC — ОТСТУПИТЬ</div>
         </div>`;
-      combat.hidden = true;
-      combat.classList.remove('open');
-      combat.setAttribute('aria-hidden','true');
+      combat.hidden = !combatWasOpen;
+      combat.classList.toggle('open', combatWasOpen);
+      combat.setAttribute('aria-hidden', combatWasOpen ? 'false' : 'true');
+      if (combatWasOpen) document.body.classList.add('combat-active');
       repaired = true;
     }
     if (!document.getElementById('threatOverlay')) {
