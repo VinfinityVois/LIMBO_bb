@@ -287,12 +287,11 @@ export class ImmersionScene {
     overlay.setAttribute('aria-modal', 'true');
     overlay.innerHTML = `
       <div class="wave-confirm-scene" aria-hidden="true">
-        <div class="wave-orbit orbit-a"></div><div class="wave-orbit orbit-b"></div>
+        <div class="wave-orbit orbit-a"></div>
+        <div class="wave-orbit orbit-b"></div>
         <div class="wave-orbit orbit-c"></div>
-        <div class="wave-core"><i></i><b></b><span></span></div>
-        <div class="wave-horizon"></div>
-        <div class="wave-ribbon ribbon-a"></div><div class="wave-ribbon ribbon-b"></div>
-        <div class="wave-particles"></div>
+        <div class="wave-orbit orbit-d"></div>
+        <div class="wave-orbit orbit-e"></div>
       </div>
       <div class="wave-confirm-content">
         <div class="system-confirm-kicker">ЦЕФЕЙ <span>///</span> ${isExit ? 'ЗАВЕРШЕНИЕ СЕАНСА' : 'ЦИКЛ ВОССТАНОВЛЕНИЯ'}</div>
