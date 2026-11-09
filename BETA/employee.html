@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>П.Р.И.Н.Ц. // Карточка сотрудника</title>
+<link rel="stylesheet" href="css/system.css">
+<link rel="stylesheet" href="css/experience-polish.css">
+<link rel="stylesheet" href="css/employee-profile.css">
+</head>
+<body class="employee-page">
+<div class="noise"></div><div class="scanlines"></div><div class="vignette"></div>
+<header class="sys-topbar">
+ <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+ <div class="status-pill"><span class="dot"></span> ПРОФИЛЬ СИНХРОНИЗИРОВАН</div>
+ <nav class="sys-nav">
+  <a href="terminal.html">Терминал</a><a href="dossier.html">Досье</a>
+  <a href="scenes.html">Архив сцен</a><a href="employee.html" class="active">Сотрудник</a>
+ </nav>
+ <div class="right-meta"><span class="sec-level">SEC:LVL_5</span><span>РЕЖИМ: READ ONLY</span></div>
+</header>
+<main class="sys-page employee-shell">
+ <div class="ep-crumb"><span>#ЛИЧНОЕ_ДЕЛО</span> // СОТРУДНИКИ ШТАБА // <b>ПРОФИЛЬ № A-55</b></div>
+ <section class="ep-hero">
+  <div class="ep-identity">
+   <div class="ep-avatar" aria-label="Закреплённый портрет сотрудника">
+    <svg viewBox="0 0 180 210" role="img" aria-hidden="true">
+     <defs><linearGradient id="sil" x2="0" y2="1"><stop stop-color="#7896a5"/><stop offset="1" stop-color="#263746"/></linearGradient><radialGradient id="halo"><stop stop-color="#00d4e8" stop-opacity=".28"/><stop offset="1" stop-color="#00d4e8" stop-opacity="0"/></radialGradient></defs>
+     <circle cx="90" cy="88" r="82" fill="url(#halo)"/>
+     <path d="M90 24c-28 0-43 23-43 53 0 19 7 31 15 40-24 13-39 32-43 69h142c-4-37-19-56-43-69 8-9 15-21 15-40 0-30-15-53-43-53Z" fill="url(#sil)" opacity=".92"/>
+     <path d="M47 80c8-37 25-52 43-52s35 15 43 52M61 117c17 13 41 13 58 0" fill="none" stroke="#9cc3ce" stroke-opacity=".48" stroke-width="2"/>
+     <path d="M30 178h120M90 142v40" stroke="#00d4e8" stroke-opacity=".45"/>
+    </svg>
+    <span class="avatar-lock">● PORTRAIT LOCKED</span>
+   </div>
+   <div class="ep-nameblock">
+    <div class="ep-overline">PERSONNEL RECORD · A-55 / ACTIVE</div>
+    <h1>СОТРУДНИК <span>A-55</span></h1>
+    <div class="ep-role">ПОЛЕВОЙ ОПЕРАТОР · УЧАСТНИК ПРОЕКТА «ЛИМБО»</div>
+    <p>Персональная запись участника симуляций. Данные профиля закреплены центральным узлом и не подлежат редактированию.</p>
+    <div class="ep-tags"><span>● ДОПУСК ПОДТВЕРЖДЁН</span><span>ЛИЧНОСТЬ ЗАКРЕПЛЕНА</span><span>READ ONLY</span></div>
+   </div>
+  </div>
+  <div class="ep-level">
+   <div class="level-ring" id="levelRing"><div><b id="levelValue">01</b><small>РАНГ</small></div></div>
+   <div class="level-caption"><b id="rankName">НОВЫЙ ДОПУСК</b><span id="rankSub">ПРОГРЕСС СОХРАНЯЕТСЯ</span></div>
+  </div>
+ </section>
+ <section class="ep-statgrid">
+  <article class="ep-stat"><small>ПРОЙДЕНО СЕКТОРОВ</small><b id="statSectors">00</b><span>завершённые симуляции</span></article>
+  <article class="ep-stat"><small>ИЗУЧЕНО ЛОРА</small><b id="statLore">00<span>%</span></b><span id="loreSub">записи и сюжетные следы</span></article>
+  <article class="ep-stat"><small>МЕДАЛЬОНЫ</small><b id="statMedals">00<span>/06</span></b><span>личная коллекция</span></article>
+  <article class="ep-stat"><small>ВСТРЕЧИ</small><b id="statMonsters">00<span>/04</span></b><span>обнаруженные сущности</span></article>
+ </section>
+ <div class="ep-columns">
+  <section class="ep-panel ep-progress">
+   <div class="ep-panelhead"><div><small>// АНАЛИТИКА</small><h2>ХРОНОЛОГИЯ ПРОХОЖДЕНИЯ</h2></div><span class="ep-live">● LIVE DATA</span></div>
+   <div class="ep-charttop"><div><small>ОЦЕНКА СЕКТОРОВ</small><b id="averageScore">—<i>/100</i></b></div><div class="chart-legend"><span><i></i> РЕЗУЛЬТАТ</span><span class="muted">СРЕДНИЙ БАЛЛ</span></div></div>
+   <svg class="ep-chart" id="scoreChart" viewBox="0 0 640 190" role="img" aria-label="График результатов прохождения"><defs><linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00d4e8" stop-opacity=".26"/><stop offset="1" stop-color="#00d4e8" stop-opacity="0"/></linearGradient></defs><g class="chart-grid"><path d="M38 20H625M38 58H625M38 96H625M38 134H625M38 172H625"/></g><path id="chartArea" d="" fill="url(#chartFill)"/><path id="chartLine" d="" fill="none" stroke="#00d4e8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g id="chartDots"></g><g class="chart-labels"><text x="8" y="24">100</text><text x="16" y="100">50</text><text x="22" y="176">0</text><text x="38" y="188">СТАРТ</text><text x="625" y="188" text-anchor="end">СЕЙЧАС</text></g></svg>
+   <div class="ep-chartfoot" id="chartFoot">Данные появятся после завершения первого сектора</div>
+  </section>
+  <section class="ep-panel ep-activity">
+   <div class="ep-panelhead"><div><small>// СОСТОЯНИЕ АРХИВА</small><h2>СЛЕД ПРОХОЖДЕНИЯ</h2></div><span class="ep-miniicon">◉</span></div>
+   <div class="ep-donut-wrap"><svg viewBox="0 0 180 180" class="ep-donut"><circle cx="90" cy="90" r="67" class="donut-bg"/><circle cx="90" cy="90" r="67" class="donut-value" id="loreDonut" stroke-dasharray="0 421"/></svg><div class="donut-center"><b id="donutPercent">0%</b><small>ОТКРЫТО</small></div></div>
+   <div class="ep-breakdown"><div><span>Предметы</span><b id="breakItems">0</b></div><div><span>Подсказки</span><b id="breakClues">0</b></div><div><span>Сюжетные следы</span><b id="breakSecrets">0</b></div></div>
+  </section>
+ </div>
+ <section class="ep-panel collection-panel">
+  <div class="ep-panelhead"><div><small>// ЛИЧНЫЙ АРХИВ · КОЛЛЕКЦИИ</small><h2>РЕЕСТР ДОСТИЖЕНИЙ</h2></div><span class="ep-count" id="collectionCount">0 ОБЪЕКТОВ ОТКРЫТО</span></div>
+  <div class="ep-tabs" role="tablist">
+   <button class="active" data-tab="medals">МЕДАЛЬОНЫ <span id="tabMedals">0/6</span></button>
+   <button data-tab="passes">КАРТЫ ДОПУСКА <span id="tabPasses">0/3</span></button>
+   <button data-tab="monsters">СУЩНОСТИ <span id="tabMonsters">0/4</span></button>
+   <button data-tab="lore">ЛОР И ЗАПИСИ <span id="tabLore">0</span></button>
+   <button data-tab="characters">КАРТОЧКИ <span>SOON</span></button>
+  </div>
+  <div class="ep-collection" id="collectionGrid"></div>
+  <div class="ep-collection-note"><span>◈</span> Открытые записи доступны для изучения. Закрытые объекты отображаются в архиве в приглушённом режиме и откроются после соответствующих событий.</div>
+ </section>
+ <section class="ep-panel ep-bottom">
+  <div class="ep-panelhead"><div><small>// ПЕРСОНАЛЬНАЯ ЗАПИСЬ</small><h2>ПРОТОКОЛ АКТИВНОСТИ</h2></div><span class="ep-lock">НЕ РЕДАКТИРУЕТСЯ</span></div>
+  <div class="ep-protocol">
+   <div><small>ИДЕНТИФИКАТОР</small><b>A-55 / EMPLOYEE</b></div><div><small>ТЕКУЩИЙ СЕКТОР</small><b id="currentSector">НЕ ЗАФИКСИРОВАН</b></div><div><small>ПОСЛЕДНЯЯ КОНЦОВКА</small><b id="lastEnding">—</b></div><div><small>СИНХРОНИЗАЦИЯ</small><b id="syncStatus">ОЖИДАНИЕ ДАННЫХ</b></div>
+  </div>
+ </section>
+ <footer class="ep-footer"><span>П.Р.И.Н.Ц. // ЛИМБО · PERSONNEL DATABASE</span><span>RECORD A-55 · IMMUTABLE · <a href="scene-ryokan.html">ВЕРНУТЬСЯ К СЕКТОРУ →</a></span></footer>
+</main>
+<div class="ep-modal" id="detailModal" aria-hidden="true"><div class="ep-modal-backdrop" data-close></div><section class="ep-modal-card" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><button class="ep-modal-close" data-close aria-label="Закрыть">×</button><div class="ep-modal-eyebrow">ARCHIVE ENTRY · A-55</div><div class="ep-modal-icon" id="detailIcon">◈</div><h2 id="detailTitle">ЗАПИСЬ</h2><div class="ep-modal-status" id="detailStatus">ОТКРЫТО</div><p id="detailText"></p><div class="ep-modal-foot" id="detailFoot"></div></section></div>
+<script>
+(() => {
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const read=(key,fallback=null)=>{try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch{return fallback}};
+ const state=read('limbo_sim_ryokan_v1',{});
+ const archive=read('limbo_campaign_archive_v1',{results:{},completedSectors:[],scoreCount:0,averageScore:0,totalCollected:0,totalUsed:0,totalClues:0,totalSecrets:0,passTier:0,bestCardTier:0});
+ const flags=state.flags||{},inventory=Array.isArray(state.inventory)?state.inventory:[],dropped=Array.isArray(state.droppedItems)?state.droppedItems:[];
+ const results=archive.results&&typeof archive.results==='object'?Object.entries(archive.results):[];
+ const sectorDone=results.length;
+ const itemDefs=[
+  ['paper_lantern_shard','Осколок фонаря','Фрагмент бумаги с предупреждением о третьем ударе.'],
+  ['mirror_shard','Зеркальный осколок','Осколок, отражающий другую комнату.'],
+  ['mirror_lens','Сшитая зеркальная линза','Собранная линза позволяет увидеть скрытое отражение.'],
+  ['wet_key_half','Половина ключа · А','Первая часть ключа от рёкана.'],
+  ['wet_key_other','Половина ключа · Б','Вторая часть ключа. Излом совпадает с первой половиной.'],
+  ['ryokan_key','Ключ рёкана','Собранный ключ открывает генкан.'],
+  ['kokeshi_note','Записка кокэси','Предупреждение о звуке суставов и схема коридора.'],
+  ['silk_thread','Шёлковая нить','Нить, найденная в тёмном углу сада.'],
+  ['matchbox','Спичечный коробок','Коробок с печатью Восточного штаба.'],
+  ['medicinal_herbs','Горькие травы','Листья для лечебной повязки.'],
+  ['copper_bell','Медный колокольчик','Безъязычковый колокольчик, связанный с Паутинницей.'],
+  ['herbal_poultice','Травяная повязка','Самодельное средство для восстановления здоровья.'],
+  ['warding_charm','Тихий оберег','Оберег из бумаги и шёлка.'],
+  ['ember_lantern','Тлеющий фонарь','Источник слабого света.'],
+  ['black_seed','Чёрное семя','Опасный объект с неизвестным воздействием.'],
+  ['stitched_mask','Сшитая маска','Маска с зашитыми глазницами.']
+ ];
+ const collected=id=>!!(flags['collected_'+id]||flags['crafted_'+id]||flags['took_'+id]||inventory.includes(id)||dropped.some(x=>x.id===id));
+ const clues=[
+  ['note_read','Записка о суставном скрипе'],['clue_note_gate','Записка у водостока'],['clue_note_garden','Записка под камнем'],
+  ['clue_note_engawa','Записка под карнизом'],['clue_note_storage','Записка у якоря'],['clue_key_halves','Подсказка о половинах ключа'],
+  ['threaded_note','Записка о шёлковой нити'],['clue_rain_rhythm','Ритм дождя'],['clue_shadow_warning','Предупреждение о тени'],['clue_echo_answered','Ответ эха']
+ ];
+ const secrets=[
+  ['easter_mirror','Отражение из другого времени'],['spider_recognized','Паутинница узнала тебя'],['spider_story_heard','История Паутинницы'],
+  ['spider_thread_given','Нить, отданная Паутиннице'],['heard_steps','Шаги над потолком'],['mask_voice_known','Голос из маски']
+ ];
+ const loreFound=[...clues.filter(([k])=>flags[k]),...secrets.filter(([k])=>flags[k])];
+ const visited=Array.isArray(state.visited)?state.visited:[];
+ const itemCount=itemDefs.filter(([id])=>collected(id)).length;
+ const loreTotal=itemDefs.length+clues.length+secrets.length+6;
+ const loreCount=itemCount+clues.filter(([k])=>flags[k]).length+secrets.filter(([k])=>flags[k]).length;
+ const lorePct=Math.round(loreCount/loreTotal*100);
+ const monsters=[
+  {id:'listener',name:'СЛУШАТЕЛЬ',kind:'ЗВУКОВАЯ АНОМАЛИЯ',flag:!!flags.encounter_sound,desc:'Реагирует на шум и приближается к источнику звука. Зафиксирован контакт с сущностью.'},
+  {id:'blind',name:'СЛЕПОЙ',kind:'СВЕТОЧУВСТВИТЕЛЬНАЯ АНОМАЛИЯ',flag:!!flags.encounter_light,desc:'Реагирует на свет. Его поведение связано с освещённостью помещения.'},
+  {id:'dweller',name:'ЖИЛЕЦ',kind:'ТЕНЕВАЯ АНОМАЛИЯ',flag:!!flags.encounter_dweller,desc:'Появляется при длительном пребывании в одной зоне. Наблюдение за ним нестабильно.'},
+  {id:'spider',name:'ПАУТИННИЦА',kind:'СУЩНОСТЬ РЁКАНА',flag:!!(flags.spider_seen_0||flags.spider_seen_1||flags.spider_seen_2||flags.spider_seen_3||flags.spider_story_heard||flags.spider_recognized),desc:'Сущность, связанная с нитями, дверями и чужими воспоминаниями. Её реакция зависит от решений сотрудника.'}
+ ];
+ const medals=[
+  {name:'ПЕРВЫЙ ПОРОГ',sub:'Вход в симуляцию',desc:'Зафиксировано первое посещение территории рёкана.',open:visited.length>0,icon:'⌂',condition:'Посетить первую локацию'},
+  {name:'ОСКОЛКИ ПАМЯТИ',sub:'Собрать отражение',desc:'Собрать зеркальные фрагменты и восстановить линзу.',open:collected('mirror_lens')||!!flags.crafted_mirror_lens,icon:'◇',condition:'Создать зеркальную линзу'},
+  {name:'СОБРАННЫЙ КЛЮЧ',sub:'Доступ к генкану',desc:'Соединить две половины ключа в единый предмет.',open:collected('ryokan_key')||!!flags.door_genkan_open,icon:'⚿',condition:'Собрать ключ рёкана'},
+  {name:'ТИШИНА ПАУТИНЫ',sub:'Контакт с Паутинницей',desc:'Разрешить встречу с Паутинницей и повлиять на её историю.',open:!!(flags.spider_story_heard||flags.spider_released||flags.spider_defeated),icon:'✳',condition:'Завершить сюжетную встречу'},
+  {name:'СЛЕД НАБЛЮДАТЕЛЯ',sub:'Услышать присутствие',desc:'Зафиксировать шаги над потолком.',open:!!flags.heard_steps,icon:'◉',condition:'Услышать шаги'},
+  {name:'ВОЗВРАЩЕНИЕ',sub:'Завершить сектор',desc:'Получить итоговый отчёт по сектору RK-01.',open:sectorDone>0,icon:'↗',condition:'Завершить сектор'}
+ ];
+ const passTier=Math.max(0,Math.min(3,Number(archive.passTier)||0));
+ const cardTier=Math.max(0,Math.min(6,Number(archive.bestCardTier)||0));
+ const passNames=['КАРТА ДОПУСКА · I','КАРТА ДОПУСКА · II','КАРТА ДОПУСКА · III'];
+ const passDescs=['Базовый уровень допуска к следующему сектору.','Расширенный допуск, полученный за устойчивое прохождение.','Высший уровень допуска по накопительному результату кампании.'];
+ const passItems=passNames.map((name,i)=>({name,sub:'ПРОПУСК ЦЕФЕЯ · '+(i+1)+'/3',desc:passDescs[i],open:passTier>=i+1,icon:'▤',condition:'Накопительный рейтинг кампании'}));
+ const characterItems=Array.from({length:6},(_,i)=>({name:'КАРТОЧКА ПЕРСОНАЖА '+String(i+1).padStart(2,'0'),sub:'COLLECTIBLE · FUTURE DROP',desc:'Слот зарезервирован для будущих карточек персонажей. После появления соответствующего события карточка будет открываться здесь автоматически.',open:false,icon:'▧',condition:'КОНТЕНТ ЕЩЁ НЕ ДОБАВЛЕН',soon:true}));
+ let activeTab='medals';
+ const card=(item,idx,category)=>'<button class="ep-item '+(item.open?'unlocked':'locked')+'" data-category="'+category+'" data-index="'+idx+'" '+(item.open?'':'aria-disabled="true"')+'><span class="ep-item-art">'+(item.icon||'◈')+'</span><span class="ep-item-copy"><b>'+item.name+'</b><small>'+item.sub+'</small></span><span class="ep-item-state">'+(item.open?'ОТКРЫТО':item.soon?'SOON':'ЗАКРЫТО')+'</span></button>';
+ const catalog={
+  medals:medals,
+  passes:passItems,
+  monsters:monsters.map(m=>({name:m.name,sub:m.kind,desc:m.desc,open:m.flag,icon:'♜',condition:'Обнаружить сущность в симуляции'})),
+  lore:[
+   ...itemDefs.map(([id,name,desc])=>({name,sub:'ПРЕДМЕТ · RK-01',desc,open:collected(id),icon:'◇',condition:'Найти или создать предмет'})),
+   ...clues.map(([flag,name])=>({name,sub:'ЗАПИСЬ · ПОДСКАЗКА',desc:'Запись добавлена в личный журнал после соответствующего взаимодействия.',open:!!flags[flag],icon:'≡',condition:'Обнаружить подсказку'})),
+   ...secrets.map(([flag,name])=>({name,sub:'СЮЖЕТНЫЙ СЛЕД',desc:'Скрытый сюжетный фрагмент. Он фиксирует необязательную деталь истории сектора.',open:!!flags[flag],icon:'✧',condition:'Открыть сюжетный след'}))
+  ],
+  characters:characterItems
+ };
+ function renderTab(tab){
+  activeTab=tab;document.querySelectorAll('.ep-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const arr=catalog[tab]||[];$('collectionGrid').innerHTML=arr.map((it,i)=>card(it,i,tab)).join('')||'<div class="ep-empty">ЗАПИСИ ПОКА ОТСУТСТВУЮТ</div>';
+  $('collectionGrid').querySelectorAll('.ep-item').forEach(btn=>btn.addEventListener('click',()=>{
+   const item=arr[Number(btn.dataset.index)];if(!item||!item.open)return;openDetail(item);
+  }));
+ }
+ function openDetail(item){
+  $('detailIcon').textContent=item.icon||'◈';$('detailTitle').textContent=item.name;$('detailStatus').textContent=item.open?'● ДОСТУП РАЗРЕШЁН':'◌ ДОСТУП ЗАКРЫТ';
+  $('detailText').textContent=item.desc;$('detailFoot').textContent=item.open?'ЗАПИСЬ ЗАГРУЖЕНА ИЗ ЛИЧНОГО АРХИВА':'УСЛОВИЕ: '+(item.condition||'НЕИЗВЕСТНО');
+  $('detailModal').classList.add('open');$('detailModal').setAttribute('aria-hidden','false');
+ }
+ function closeDetail(){$('detailModal').classList.remove('open');$('detailModal').setAttribute('aria-hidden','true')}
+ document.querySelectorAll('[data-close]').forEach(x=>x.addEventListener('click',closeDetail));
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail()});
+ document.querySelectorAll('.ep-tabs button').forEach(b=>b.addEventListener('click',()=>renderTab(b.dataset.tab)));
+ function chart(){
+  const scores=results.map(([id,r])=>({id,score:Math.max(0,Math.min(100,Number(r.score)||0))}));
+  const line=$('chartLine'),area=$('chartArea'),dots=$('chartDots');
+  if(!scores.length){line.setAttribute('d','');area.setAttribute('d','');dots.innerHTML='';$('chartFoot').textContent='Данные появятся после завершения первого сектора';return}
+  const pts=scores.map((x,i)=>({x:scores.length===1?330:38+i*(587/(scores.length-1)),y:172-x.score*1.52,score:x.score}));
+  const d=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  line.setAttribute('d',d);area.setAttribute('d',d+' L '+pts[pts.length-1].x+' 172 L '+pts[0].x+' 172 Z');
+  dots.innerHTML=pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="#07111a" stroke="#00d4e8" stroke-width="2"><title>'+p.score+'/100</title></circle>').join('');
+  $('chartFoot').textContent=scores.length+' завершённых результатов · последний: '+scores[scores.length-1].score+'/100';
+ }
+ const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=monsters.filter(x=>x.flag).length;
+ const openPasses=passItems.filter(x=>x.open).length;
+ $('statSectors').textContent=String(sectorDone).padStart(2,'0');$('statLore').innerHTML=lorePct+'<span>%</span>';$('loreSub').textContent=loreCount+' / '+loreTotal+' записей архива';
+ $('statMedals').innerHTML=String(unlockedMedals).padStart(2,'0')+'<span>/06</span>';$('statMonsters').innerHTML=String(unlockedMonsters).padStart(2,'0')+'<span>/04</span>';
+ const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));
+ $('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',Math.min(100,rank/6*100)+'%');
+ $('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank]||'НОВЫЙ ДОПУСК';
+ $('rankSub').textContent='РАСЧЁТ ПО ОТКРЫТЫМ ДОСТИЖЕНИЯМ';
+ $('averageScore').innerHTML=(sectorDone?Math.round(Number(archive.averageScore)||0):'—')+'<i>/100</i>';
+ $('breakItems').textContent=itemCount;$('breakClues').textContent=clues.filter(([k])=>flags[k]).length;$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]).length;
+ $('donutPercent').textContent=lorePct+'%';$('loreDonut').setAttribute('stroke-dasharray',(421*lorePct/100)+' 421');
+ $('tabMedals').textContent=unlockedMedals+'/6';$('tabPasses').textContent=openPasses+'/3';$('tabMonsters').textContent=unlockedMonsters+'/4';$('tabLore').textContent=loreCount;
+ $('collectionCount').textContent=(unlockedMedals+openPasses+unlockedMonsters+loreCount)+' ОБЪЕКТОВ ОТКРЫТО';
+ $('currentSector').textContent=state.completed?'RK-01 · ЗАВЕРШЁН':visited.length?'RK-01 · В ПРОЦЕССЕ':'НЕ ЗАФИКСИРОВАН';
+ $('lastEnding').textContent=({clear:'ЧИСТЫЙ ВЫХОД',bind:'СВЯЗЬ СОХРАНЕНА',break:'РАЗРЫВ'}[state.ending]||'—');
+ $('syncStatus').textContent=sectorDone?'АРХИВ СИНХРОНИЗИРОВАН':'ОЖИДАНИЕ ПЕРВОГО ОТЧЁТА';
+ renderTab('medals');chart();
+})();
+</script>
+</body></html>
