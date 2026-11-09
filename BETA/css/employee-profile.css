@@ -54,3 +54,41 @@
 
 /* Compact sector/run rows in the employee dossier */
 .run-entry{padding:7px 10px;min-height:54px;gap:9px}.run-main{gap:2px}.run-main>b{line-height:1.2}.run-grade{padding:4px 7px}.run-timeline{gap:5px}
+
+
+/* Compact personnel rail — denser layout, stronger archive identity */
+.employee-layout{grid-template-columns:264px minmax(0,1fr)}
+.employee-sidebar{padding:.72rem .78rem .62rem;background:
+ radial-gradient(ellipse at 50% 17%,rgba(0,212,232,.085),transparent 38%),
+ linear-gradient(180deg,rgba(9,19,30,.985),rgba(4,9,16,.99))}
+.employee-sidebar:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;background:repeating-linear-gradient(0deg,transparent 0 23px,rgba(0,212,232,.08) 24px,transparent 25px);mask-image:linear-gradient(180deg,#000,transparent 78%)}
+.employee-sidebar>*{position:relative}
+.sidebar-top{padding-bottom:.48rem}
+.sidebar-portrait{padding:.52rem .2rem .35rem}
+.portrait-frame{width:116px;height:120px;background:radial-gradient(ellipse,rgba(0,212,232,.17),rgba(4,10,17,.94) 70%);box-shadow:0 0 28px rgba(0,212,232,.07),inset 0 0 22px rgba(0,212,232,.06)}
+.portrait-frame:after{inset:5px}
+.portrait-frame span{padding:.23rem;font-size:6px}
+.sidebar-identity{padding:.08rem 0 .52rem}
+.sidebar-identity h1{font-size:1.12rem;margin:.2rem 0}
+.identity-status{font-size:6px}
+.sidebar-rank{justify-content:flex-start;gap:.65rem;padding:.5rem .35rem}
+.rank-orbit{width:51px;height:51px;flex-basis:51px}
+.rank-orbit:before{inset:4px}
+.rank-orbit b{font-size:1.08rem}
+.sidebar-rank>div:last-child b{font-size:.52rem}
+.sidebar-rank>div:last-child small{font-size:6px}
+.sidebar-stats{margin:.55rem 0 .48rem;gap:1px}
+.sidebar-stats>div{padding:.36rem .5rem;gap:.12rem;min-height:43px}
+.sidebar-stats small{font-size:6px;letter-spacing:.09em}
+.sidebar-stats b{font-size:.94rem}
+.sidebar-nav{gap:.12rem;margin-top:0}
+.sidebar-nav>small{padding:.18rem .45rem .28rem;font-size:6px}
+.side-link{min-height:33px;padding:.38rem .46rem;grid-template-columns:21px 1fr auto;gap:.38rem;font-size:.51rem;border-radius:2px}
+.side-link>span{font-size:.92rem}
+.side-link>i{font-size:7px}
+.side-link.active{box-shadow:inset 2px 0 0 var(--cyan),0 0 14px rgba(0,212,232,.035)}
+.side-link:hover{transform:translateX(2px);border-color:rgba(0,212,232,.12)}
+.sidebar-foot{padding-top:.52rem;gap:.2rem;font-size:5px}
+.sidebar-foot b{font-size:7px}
+@media(max-width:1050px){.employee-layout{grid-template-columns:248px minmax(0,1fr)}}
+@media(max-width:760px){.employee-layout{display:block}.employee-sidebar{width:min(286px,86vw);padding:.72rem .78rem .62rem}.portrait-frame{width:108px;height:112px}}
