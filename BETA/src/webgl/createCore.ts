@@ -167,7 +167,8 @@ export function createCore(container: HTMLElement): CoreHandle | null {
     network.dispose();
     particles.dispose();
     hero.mesh.geometry.dispose();
-    hero.mesh.material.dispose();
+    const heroMaterials = Array.isArray(hero.mesh.material) ? hero.mesh.material : [hero.mesh.material];
+    heroMaterials.forEach((material) => material.dispose());
     renderer.dispose();
     if (renderer.domElement.parentNode) {
       renderer.domElement.parentNode.removeChild(renderer.domElement);
