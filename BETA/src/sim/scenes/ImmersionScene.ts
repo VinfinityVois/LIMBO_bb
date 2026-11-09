@@ -427,7 +427,7 @@ export class ImmersionScene {
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
       const dangerValue = document.getElementById('dangerValue');
       const watchValue = document.getElementById('watchValue');
-      const activeNoise = this.currentSoundLevel >= 38;
+      const activeNoise = this.currentSoundLevel >= 16;
       const watched = activeNoise && Math.random() < Math.min(.72, this.currentSoundLevel / 115);
       this.updateAwareness(this.threatActive ? 2 : watched || activeNoise ? 1 : 0);
       if (dangerFill) dangerFill.style.width = (this.threatActive ? 100 : activeNoise ? 72 : watched ? 42 : 12) + '%';
@@ -2243,8 +2243,8 @@ export class ImmersionScene {
     const now = Date.now();
     const carriedLevel = Math.max(this.currentSoundLevel, this.noisePeak * Math.max(0, 1 - (now - this.noiseStartedAt) / Math.max(1, this.noiseDuration)));
     this.noiseStartedAt = now;
-    this.noiseDuration = 14000;
-    this.noisePeak = Math.min(100, carriedLevel + 24);
+    this.noiseDuration = 16000;
+    this.noisePeak = Math.min(100, carriedLevel + 34);
     this.noiseUntil = now + this.noiseDuration;
     const caption = document.getElementById('soundCaption');
     if (caption) caption.textContent = 'ШУМ · источник — ты';
