@@ -1111,7 +1111,7 @@ export class ImmersionScene {
 
   private itemAsset(id: ItemId): string {
     const files: Record<ItemId, string> = {
-      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
+      paper_lantern_shard: 'lantern_shard', mirror_shard: 'mirror_shard', mirror_shard_before_fire: 'mirror_shard', mirror_shard_after_fire: 'mirror_shard', mirror_lens: 'mirror_shard', wet_key_half: 'key_half_1', wet_key_other: 'key_half_2',
       ryokan_key: 'key', kokeshi_note: 'letter', silk_thread: 'rope', matchbox: 'matches',
       medicinal_herbs: 'herbs', copper_bell: 'bell', herbal_poultice: 'bandage',
       warding_charm: 'amulet', ember_lantern: 'lantern', black_seed: 'black_seed',
@@ -2389,6 +2389,8 @@ export class ImmersionScene {
         wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
         paper_lantern_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью или со спичками · расходуется 1 осколок',
         mirror_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью · расходуется 1 осколок',
+        mirror_shard_before_fire: 'ПРИМЕНЕНИЕ: соединить с осколком зеркала после пожара',
+        mirror_shard_after_fire: 'ПРИМЕНЕНИЕ: соединить с осколком зеркала до пожара',
         mirror_lens: 'ПРИМЕНЕНИЕ: приложить к потемневшему стеклу в коридоре',
         kokeshi_note: 'ПРИМЕНЕНИЕ: прочитать и сохранить подсказку',
         silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
