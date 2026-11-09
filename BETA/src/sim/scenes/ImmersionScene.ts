@@ -45,7 +45,7 @@ export class ImmersionScene {
   private noiseUntil = 0;
   private monsterHp = 42;
   private monsterMaxHp = 42;
-  private monsterName = 'СЛУШАТЕЛЬ';
+  private monsterName = 'КИДЗЁ';
   private combatTurn = 0;
   private guarding = false;
   private dodgeReady = false;
@@ -719,8 +719,8 @@ export class ImmersionScene {
     this.updateAwareness(Date.now() < this.noiseUntil ? 1 : 0);
     document.getElementById('sceneCreature')?.remove();
     const radar = document.getElementById('radarSignal'); if (radar) radar.textContent = 'СИГНАЛ СТАБИЛЕН';
-    if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Слепой потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
-    else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Слушатель потерял источник шума.','ok'); }
+    if(this.threatKind==='light' && choice==='confront' && this.lightActive) { this.lightActive=false; simAudio.whoosh(this.state.muted); this.notify('Ты погасил свет. Юрэй потерял ориентир.','ok'); this.state.sanity=Math.min(100,this.state.sanity+2); }
+    else if(this.threatKind==='sound' && choice==='hide') { this.noiseUntil=0; this.notify('Ты замер. Кидзё потеряла источник шума.','ok'); }
     else if(choice==='hide') {
       if(Math.random()<.78){simAudio.whisper(this.state.muted);this.notify('Ты затаился. Шаги медленно удаляются.','ok');this.state.sanity=Math.max(0,this.state.sanity-1);}
       else{simAudio.monster(this.state.muted);this.notify('Оно заметило движение!','warn');this.state.health=Math.max(0,this.state.health-9);this.state.sanity=Math.max(0,this.state.sanity-7);}
@@ -2385,7 +2385,7 @@ export class ImmersionScene {
         ? '«Тише. Я слышу, как ты думаешь».'
         : '«Под полом осталось место. Для ещё одного».';
     el.innerHTML = `<img class="creature-sprite" src="/assets/game/creatures/${this.threatKind === 'light' ? 'blind' : this.threatKind === 'sound' ? 'listener' : 'lodger'}.png" alt=""><span class="creature-dialogue">${creatureLine}</span>`;
-    el.setAttribute('aria-label', this.threatKind === 'light' ? 'Слепой' : this.threatKind === 'sound' ? 'Слушатель' : 'Жилец');
+    el.setAttribute('aria-label', this.threatKind === 'light' ? 'Юрэй / онрё' : this.threatKind === 'sound' ? 'Кидзё' : 'Рокудзё');
     this.stage.appendChild(el);
     requestAnimationFrame(() => el.classList.add('visible'));
   }
@@ -2486,13 +2486,13 @@ export class ImmersionScene {
       case 'ember_lantern':
         return this.threatKind !== 'light'
           ? { usable: true, reason: 'Огонь обожжёт существо и вернёт инициативу.' }
-          : { usable: false, reason: 'Слепой идёт на свет. Фонарь только ускорит его атаку.' };
+          : { usable: false, reason: 'Юрэй идёт на свет. Фонарь только ускорит его атаку.' };
       case 'stitched_mask':
         return { usable: true, reason: 'Чужой голос маски заставит существо отшатнуться, но отнимет 6 рассудка.' };
       case 'copper_bell':
         return this.threatKind === 'sound' || this.threatKind === 'dweller'
           ? { usable: true, reason: 'Собьёт ритм атаки и замедлит существо.' }
-          : { usable: false, reason: 'Слепой реагирует на звук слишком резко. Звонок опасен.' };
+          : { usable: false, reason: 'Юрэй реагирует на звук слишком резко. Звонок опасен.' };
       default:
         return { usable: false, reason: 'В этой схватке предмет не поможет. Сохрани его для исследования.' };
     }
@@ -2594,7 +2594,7 @@ export class ImmersionScene {
       } else if (id === 'ember_lantern') {
         this.monsterHp = Math.max(0, this.monsterHp - (this.threatKind === 'light' ? 2 : 14));
         this.initiative = Math.min(100, this.initiative + 18);
-        log = this.threatKind === 'light' ? 'Слепой не боится света. Он бросается ближе.' : 'Пламя обжигает тварь. +18 инициативы.';
+        log = this.threatKind === 'light' ? 'Юрэй не боится света. Он бросается ближе.' : 'Пламя обжигает тварь. +18 инициативы.';
       } else if (id === 'copper_bell') {
         this.enemyLegsSlowed = true;
         this.initiative = Math.min(100, this.initiative + 24);
@@ -2628,9 +2628,9 @@ export class ImmersionScene {
 
   private enemyAttackDescription() {
     if (this.spiderInCombat) return 'Паутинница поднимает руки. Между пальцами натягиваются нити.';
-    if (this.threatKind==='light') return 'Слепой собирается прыгнуть из темноты.';
-    if (this.threatKind==='sound') return 'Слушатель накапливает звуковую волну.';
-    return 'Жилец тянется к тебе длинными руками.';
+    if (this.threatKind==='light') return 'Юрэй собирается выплыть из тумана.';
+    if (this.threatKind==='sound') return 'Кидзё накапливает звуковую волну.';
+    return 'Рокудзё тянется к тебе из складок кимоно.';
   }
 
   private beginEnemyAttack() {
@@ -2919,7 +2919,7 @@ export class ImmersionScene {
       warding_charm: { field: 'sanity', amount: 20, message: 'Оберег холодеет в ладони. Мысли становятся яснее.' },
       ember_lantern: { field: 'sanity', amount: 12, message: 'Маленький огонь отгоняет навязчивый шёпот.' },
     };
-    if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; document.body.classList.toggle('mask-worn', this.maskWorn); this.state.maskWorn = this.maskWorn; this.state.maskExposure = Math.max(0,this.state.maskExposure || 0); this.maskLastTick = Date.now(); this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Слепой хуже различает твой силуэт, но маска начинает запоминать тебя.' : 'Ты снял маску. Шёпот стих, но на внутренней стороне проступило твоё имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · воздействие нарастает' : 'Маска снята · влияние ослабевает', this.maskWorn); simAudio.maskWhisper(this.state.muted, this.maskWorn ? 1.2 : .5); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderVitals(); return; }
+    if (id === 'stitched_mask') { this.maskWorn = !this.maskWorn; document.body.classList.toggle('mask-worn', this.maskWorn); this.state.maskWorn = this.maskWorn; this.state.maskExposure = Math.max(0,this.state.maskExposure || 0); this.maskLastTick = Date.now(); this.state.sanity = Math.max(0, Math.min(100, this.state.sanity + (this.maskWorn ? -7 : 2))); saveState(this.state); this.notify(this.maskWorn ? 'Ты надел маску. Юрэй хуже различает твой силуэт, но маска начинает запоминать тебя.' : 'Ты снял маску. Шёпот стих, но на внутренней стороне проступило твоё имя.', this.maskWorn ? 'warn' : 'ok'); this.showSense('◉', this.maskWorn ? 'Маска надета · воздействие нарастает' : 'Маска снята · влияние ослабевает', this.maskWorn); simAudio.maskWhisper(this.state.muted, this.maskWorn ? 1.2 : .5); this.makeNoise('Ткань и бумага шуршат у лица.'); this.renderVitals(); return; }
     if (id === 'ember_lantern') { this.lightActive = !this.lightActive; this.noiseStartedAt = Date.now(); this.noiseDuration = 7000; this.noisePeak = this.lightActive ? 38 : 4; this.noiseUntil = this.noiseStartedAt + this.noiseDuration; this.notify(this.lightActive ? 'Фонарь зажжён. Свет виден издалека.' : 'Ты погасил фонарь.', this.lightActive ? 'warn' : 'ok'); this.showSense('☼', this.lightActive ? 'Источник света активен' : 'Свет погашен', this.lightActive); simAudio.click(this.state.muted); return; }
     const effect = effects[id];
     if (!effect) {
