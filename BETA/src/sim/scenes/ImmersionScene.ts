@@ -371,10 +371,107 @@ export class ImmersionScene {
    * background. Rebind the scene's DOM roots and rebuild transient controls
    * when the page becomes visible again, without disturbing an open encounter.
    */
+  private ensureInterfaceWindows(): boolean {
+    let repaired = false;
+    let modal = document.getElementById('simModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'simModal';
+      modal.className = 'sim-modal';
+      document.body.appendChild(modal);
+      repaired = true;
+    }
+    if (!modal.querySelector('#modalTitle') || !modal.querySelector('#modalBody') || !modal.querySelector('#modalActions') || !modal.querySelector('#modalClose')) {
+      modal.innerHTML = '<div class="sim-modal-backdrop" id="modalBackdrop"></div><div class="sim-modal-panel"><div class="smp-h"><span id="modalTitle">ОСМОТР</span><button type="button" id="modalClose" aria-label="Закрыть">×</button></div><div class="smp-body-row"><div class="smp-visual" id="modalVisual"></div><div class="smp-b" id="modalBody"></div><div class="smp-a" id="modalActions"></div><div class="smp-note" id="modalNote"></div></div></div>';
+      modal.hidden = true;
+      modal.classList.remove('open');
+      repaired = true;
+    }
+    let combat = document.getElementById('combatScreen');
+    if (!combat) {
+      combat = document.createElement('section');
+      combat.id = 'combatScreen';
+      combat.className = 'combat-screen';
+      document.body.appendChild(combat);
+      repaired = true;
+    }
+    const combatRequired = ['combatMonsterName','combatMonsterSprite','monsterHpText','monsterHpFill','combatPlayerHp','combatPlayerFill','combatLog','combatPhase','initiativeFill','enemyInitiativeFill','enemyTelegraph','combatWounds','combatInventoryItems','combatItemHint','combatAttack','combatDodge','combatGuard','combatNoise','combatFlee'];
+    if (combatRequired.some(id => !combat!.querySelector('#' + id))) {
+      combat.innerHTML = `
+        <div class="combat-backdrop"></div>
+        <div class="combat-panel">
+          <div class="combat-top"><div class="combat-location"><strong id="combatLocationLabel">РЁКАН</strong><span id="combatLocationSub">RK-01 · СЕКТОР</span></div><span class="hud-eyebrow">КОНТАКТ · RK-01</span><strong id="combatPhase">ТВОЙ ХОД</strong><button id="combatFlee" type="button">ОТСТУПИТЬ</button></div>
+          <div class="combat-arena"><div class="combat-monster-art" id="combatMonsterArt"><img id="combatMonsterSprite" class="combat-sprite" src="/assets/game/creatures/listener.png" alt=""><i></i><b></b></div><div class="combat-stats"><strong id="combatMonsterName">КИДЗЁ</strong><span>ЗДОРОВЬЕ СУЩЕСТВА <b id="monsterHpText">42 / 42</b></span><div class="combat-bar monster"><i id="monsterHpFill"></i></div><p id="combatLog">Оно приближается.</p></div></div>
+          <div class="combat-player"><span>ТВОЁ ЗДОРОВЬЕ <b id="combatPlayerHp">100</b></span><div class="combat-bar player"><i id="combatPlayerFill"></i></div><div class="initiative-row"><span>ИНИЦИАТИВА</span><div class="combat-bar initiative"><i id="initiativeFill"></i></div><span>УГРОЗА</span><div class="combat-bar enemy-initiative"><i id="enemyInitiativeFill"></i></div></div><div class="enemy-telegraph"><span>ТЕЛЕГРАФ АТАКИ</span><i><b id="enemyTelegraph"></b></i></div><div class="combat-wounds" id="combatWounds">ТЯЖЁЛЫХ РАН НЕТ</div></div>
+          <div class="combat-targets"><span>ЦЕЛЬ УДАРА</span><button type="button" data-hit-zone="head">ГОЛОВА</button><button type="button" data-hit-zone="torso" class="selected">КОРПУС</button><button type="button" data-hit-zone="arms">РУКИ</button><button type="button" data-hit-zone="legs">НОГИ</button></div>
+          <section class="combat-inventory" aria-label="Предметы, доступные в бою"><div class="combat-inventory-heading"><span>СНАРЯЖЕНИЕ</span><small>ЦВЕТНОЕ — МОЖНО ПРИМЕНИТЬ · СЕРОЕ — НЕ ПОДХОДИТ</small></div><div class="combat-inventory-items" id="combatInventoryItems"></div><p class="combat-item-hint" id="combatItemHint">Нажми на цветной предмет, чтобы применить его.</p></section>
+          <div class="combat-actions" aria-label="Боевые действия"><button id="combatAttack" type="button"><kbd>1</kbd> АТАКОВАТЬ</button><button id="combatDodge" type="button" disabled><kbd>2</kbd> УКЛОНИТЬСЯ</button><button id="combatGuard" type="button"><kbd>3</kbd> ЗАЩИТИТЬСЯ</button><button id="combatNoise" type="button"><kbd>4</kbd> ОТВЛЕЧЬ</button></div>
+          <div class="combat-controls-hint">ВЫБЕРИ ЗОНУ ПОПАДАНИЯ · УКЛОНЯЙСЯ В МОМЕНТ УДАРА · ESC — ОТСТУПИТЬ</div>
+        </div>`;
+      combat.hidden = true;
+      combat.classList.remove('open');
+      combat.setAttribute('aria-hidden','true');
+      repaired = true;
+    }
+    if (!document.getElementById('threatOverlay')) {
+      const threat = document.createElement('section');
+      threat.id = 'threatOverlay';
+      threat.className = 'threat-overlay';
+      threat.setAttribute('aria-hidden','true');
+      threat.innerHTML = '<div class="threat-silhouette" aria-hidden="true"><span></span><i></i></div><div class="threat-copy"><span class="hud-eyebrow">ДВИЖЕНИЕ В ТЕМНОТЕ</span><strong id="threatTitle">ЧТО-ТО ПРИБЛИЖАЕТСЯ</strong><p id="threatText">Не двигайся.</p></div><div class="threat-actions"><button type="button" class="hud-action" id="btnHide">ЗАТАИТЬСЯ</button><button type="button" class="hud-action primary" id="btnConfront">ОТОГНАТЬ</button></div>';
+      document.body.appendChild(threat);
+      repaired = true;
+    }
+    const stage = document.getElementById('simStage');
+    if (stage && !document.getElementById('notifyHost')) {
+      const host = document.createElement('div');
+      host.id = 'notifyHost';
+      host.className = 'notify-host';
+      stage.appendChild(host);
+      repaired = true;
+    }
+    const hpTrack = document.querySelector('.hud-vitals .health .vital-track');
+    if (hpTrack && !document.getElementById('hpBar')) {
+      const bar = document.createElement('span'); bar.id = 'hpBar'; bar.style.width = this.state.health + '%'; hpTrack.appendChild(bar); repaired = true;
+    }
+    const sanityTrack = document.querySelector('.hud-vitals .sanity .vital-track');
+    if (sanityTrack && !document.getElementById('sanBar')) {
+      const bar = document.createElement('span'); bar.id = 'sanBar'; bar.style.width = this.state.sanity + '%'; sanityTrack.appendChild(bar); repaired = true;
+    }
+    return repaired;
+  }
+
+  private bindRebuiltWindowControls() {
+    const bind = (id: string, key: string, action: () => void) => {
+      const node = document.getElementById(id) as HTMLButtonElement | null;
+      if (!node || node.dataset[key] === '1') return;
+      node.dataset[key] = '1';
+      node.addEventListener('click', action);
+    };
+    bind('modalClose','simBound',() => this.closeModal());
+    bind('modalBackdrop','simBound',() => { if (!document.getElementById('simModal')?.classList.contains('report-mode')) this.closeModal(); });
+    bind('combatAttack','simBound',() => this.combatAction('attack'));
+    bind('combatGuard','simBound',() => this.combatAction('guard'));
+    bind('combatDodge','simBound',() => this.combatDodge());
+    bind('combatNoise','simBound',() => this.combatAction('noise'));
+    bind('combatFlee','simBound',() => this.combatAction('flee'));
+    document.querySelectorAll<HTMLButtonElement>('[data-hit-zone]').forEach(node => {
+      if (node.dataset.simBound === '1') return;
+      node.dataset.simBound = '1';
+      node.addEventListener('click', () => {
+        const zone = node.dataset.hitZone;
+        if (zone === 'head' || zone === 'torso' || zone === 'arms' || zone === 'legs') this.selectCombatTarget(zone);
+      });
+    });
+    bind('btnHide','simBound',() => this.resolveThreat('hide'));
+    bind('btnConfront','simBound',() => this.startCombat());
+  }
+
   private startInterfaceWatchdog() {
     if (this.interfaceWatchdogTimer) clearInterval(this.interfaceWatchdogTimer as number);
     this.interfaceWatchdogTimer = window.setInterval(() => {
       if (document.hidden || this.diving || this.state.completed || this.state.defeated) return;
+      if (this.ensureInterfaceWindows()) this.bindRebuiltWindowControls();
       const combatOpen = document.getElementById('combatScreen')?.classList.contains('open');
       const modalOpen = document.getElementById('simModal')?.classList.contains('open');
       if (combatOpen || modalOpen || document.getElementById('spiderDialogue') || document.getElementById('systemConfirm')) return;
@@ -407,6 +504,7 @@ export class ImmersionScene {
     if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
     this.recoveryFrame = requestAnimationFrame(() => {
       this.recoveryFrame = 0;
+      if (this.ensureInterfaceWindows()) this.bindRebuiltWindowControls();
       const currentStage = document.getElementById('simStage');
       if (!currentStage) return;
       const stageChanged = currentStage !== this.stage || !this.stage.isConnected;
@@ -635,7 +733,7 @@ export class ImmersionScene {
       } else this.sanityCollapseTick = 0;
       this.tickSanityExposure();
       if (this.tickSpiderPresence()) return;
-      if (this.threatActive || Date.now() < this.threatCooldown || this.state.defeated) return;
+      if (this.threatActive || document.body.classList.contains('combat-active') || Date.now() < this.threatCooldown || this.state.defeated) return;
       const stayed = Date.now() - this.roomEnteredAt;
       this.tickMaskEffects();
       const dangerFill = document.getElementById('dangerFill') as HTMLElement | null;
