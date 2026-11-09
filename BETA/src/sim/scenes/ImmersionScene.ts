@@ -2182,7 +2182,7 @@ export class ImmersionScene {
     this.renderVitals();
     const copy = ending === 'clear' ? 'Канал очищен. В голове впервые за долгое время становится тихо.' :
       ending === 'bind' ? 'Связь принята. За нами теперь кто-то отвечает из темноты.' :
-      'Узел разрушен. По ту сторону что-то закричало — и замолчало.';
+      'Переход сорван. По ту сторону что-то закричало — и внезапно замолчало.';
     this.notify('ВЫХОД ИЗ СЕКТОРА · '+copy,'ok');
     this.showSense('◇','Сектор покинут. Данные переданы Цефею.',ending !== 'clear');
     this.stage.classList.add('sector-exit');
@@ -2430,7 +2430,7 @@ export class ImmersionScene {
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.spiderInCombat ? 62 : this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.spiderInCombat ? 'ПАУТИННИЦА' : this.threatKind === 'light' ? 'ЮРЭЙ · ОНРЁ' : this.threatKind === 'sound' ? 'КИДЗЁ' : 'РОКУДЗЁ-НО МИЯСУДОКОРО';
+    this.monsterName = this.spiderInCombat ? 'ДЗЕРОГУМО' : this.threatKind === 'light' ? 'ЮРЭЙ · ОНРЁ' : this.threatKind === 'sound' ? 'КИДЗЁ' : 'РОКУДЗЁ-НО МИЯСУДОКОРО';
     this.combatTurn = 0; this.combatTarget = 'torso';
     this.state.flags['encounter_' + this.threatKind] = true;
     this.state.flags['encounter_' + this.threatKind + '_yokai'] = true;
