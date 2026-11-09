@@ -417,7 +417,7 @@ export class ImmersionScene {
     this.ensureThoughtJournal();
     document.getElementById('btnExit')?.addEventListener('click', () => this.showSystemConfirm('exit'));
     document.getElementById('btnReset')?.addEventListener('click', () => this.showSystemConfirm('reset'));
-    document.getElementById('btnInspectItem')?.addEventListener('click', () => {
+    (document.getElementById('btnInspectItem') || document.getElementById('btnExamine'))?.addEventListener('click', () => {
       if (!this.state.selected) { this.notify('Сначала выбери предмет в инвентаре', 'warn'); return; }
       this.openItemExam(this.state.selected);
     });
@@ -1558,7 +1558,7 @@ export class ImmersionScene {
         read.addEventListener('click', () => {
           const letter = document.createElement('article');
           letter.className = 'note-letter';
-          letter.innerHTML = '<div class="note-letter-stamp">ЛИЧНАЯ ЗАПИСЬ · М.</div><p>Если ты читаешь это, значит, дверь уже закрылась за тобой. Не верь шагам, которые повторяют твои. Это не эхо — оно учится.</p><p>Первый ключ лежит там, где вода не отражает небо. Вторую половину спрятали под доской, отмеченной тремя короткими царапинами. Соедини их, но не открывай дверь, пока не найдёшь нить.</p><p>Нить удерживает бумагу. Бумага помнит огонь. А колокольчик без языка всё ещё может предупредить того, кто слушает не ушами.</p><p class="note-sign">М. · если маска заговорит твоим голосом — не отвечай.</p>';
+          letter.innerHTML = '<div class="note-letter-stamp">ЛИЧНАЯ ЗАПИСЬ · М.</div><p>Дверь уже закрылась. Не верь шагам, которые повторяют твои: это не эхо, оно учится.</p><p>Первую половину ключа ищи у чёрной воды, вторую — под доской с тремя царапинами. Нить удержит бумагу; колокольчик предупредит того, кто умеет слушать.</p><p class="note-sign">М. · Не отвечай, если маска заговорит твоим голосом.</p>';
           body.querySelector('.note-letter')?.remove();
           body.appendChild(letter);
           this.state.flags.note_read = true;
@@ -1664,22 +1664,29 @@ export class ImmersionScene {
     if (visual) visual.innerHTML = '<div class="inspection-scan" aria-hidden="true"><span></span><i></i><b></b></div>';
     if (!body || !actions) return;
     body.innerHTML = ''; actions.innerHTML = '';
+    const expected = this.state.gutterPattern;
     const intro = document.createElement('p'); intro.className = 'inspection-description';
-    intro.textContent = 'Вода ударяет по металлу. На краю вырезаны три короткие черты и одна длинная. Повтори услышанное: три коротких удара, затем один протяжный.';
+    intro.textContent = 'Вода отбивает по металлу неровный ритм. Прислушайся и повтори последовательность ударами. При новом прохождении рисунок изменится.';
     body.appendChild(intro);
     const audioHint=document.createElement('div');audioHint.className='gutter-audio-hint';
-    audioHint.innerHTML='<span class="gutter-audio-icon" aria-hidden="true">◖))</span><span><strong>УСЛЫШАТЬ РИТМ</strong><small>Три коротких удара · один длинный</small></span>';
+    audioHint.innerHTML='<span class="gutter-audio-icon" aria-hidden="true">◖))</span><span><strong>УСЛЫШАТЬ РИТМ</strong><small>Последовательность насечек меняется каждый раз</small></span>';
     const listen=document.createElement('button');listen.type='button';listen.className='inspection-action primary gutter-listen';listen.textContent='ПРОСЛУШАТЬ ПОДСКАЗКУ';
-    listen.addEventListener('click',()=>{simAudio.unlock();simAudio.gutterSequence(this.state.muted);audioHint.classList.add('playing');window.setTimeout(()=>audioHint.classList.remove('playing'),1500);});
+    listen.addEventListener('click',()=>{
+      simAudio.unlock();
+      expected.forEach((beat,index)=>window.setTimeout(()=>{
+        if(beat==='short')simAudio.shortTap(this.state.muted);else simAudio.longTap(this.state.muted);
+      },index*560));
+      audioHint.classList.add('playing');
+      window.setTimeout(()=>audioHint.classList.remove('playing'),expected.length*560+250);
+    });
     audioHint.appendChild(listen);body.appendChild(audioHint);
     const display = document.createElement('div'); display.className = 'gutter-sequence-display';
     const pattern = document.createElement('div'); pattern.className = 'gutter-sequence-pattern';
     display.appendChild(pattern); body.appendChild(display);
-    const expected = ['short', 'short', 'short', 'long'];
-    const entered: string[] = [];
+    const entered: Array<'short'|'long'> = [];
     const render = () => {
       pattern.innerHTML = '';
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < expected.length; i++) {
         const beat = document.createElement('i');
         beat.className = 'gutter-beat ' + (entered[i] || 'empty');
         beat.textContent = entered[i] ? (entered[i] === 'short' ? '·' : '━') : '—';
@@ -1687,22 +1694,23 @@ export class ImmersionScene {
       }
     };
     render();
-    const addBeat = (kind: string) => {
-      if (entered.length >= 4) entered.length = 0;
-      entered.push(kind); render(); if(kind==='short')simAudio.shortTap(this.state.muted);else simAudio.longTap(this.state.muted);
-      if (entered.length === 4) {
+    const addBeat = (kind: 'short'|'long') => {
+      if (entered.length >= expected.length) entered.length = 0;
+      entered.push(kind); render();
+      if(kind==='short')simAudio.shortTap(this.state.muted);else simAudio.longTap(this.state.muted);
+      if (entered.length === expected.length) {
         if (entered.every((beat, index) => beat === expected[index])) {
           this.state.flags.gutter_puzzle_solved = true;
           this.state.flags.clue_rain_rhythm = true;
           this.state.flags.clue_echo_answered = true;
-          this.rememberThought('Водосток: три коротких удара и один длинный. Это не случайный шум — Рёкан отвечает тем же ритмом.');
+          this.rememberThought('Водосток: последовательность ударов совпала с ответом рёкана.');
           saveState(this.state);
           simAudio.complete(this.state.muted);
           this.notify('РИТМ СОПОСТАВЛЕН · ПОДСКАЗКА СОХРАНЕНА', 'ok');
           this.openModal(hs);
         } else {
           simAudio.deny(this.state.muted);
-          this.notify('Ритм не совпал. Вода сбивается, но рисунок остаётся.', 'warn');
+          this.notify('Ритм не совпал. Вода сбивается, но подсказку можно прослушать снова.', 'warn');
           entered.length = 0; render();
         }
       }
@@ -1716,7 +1724,7 @@ export class ImmersionScene {
     actions.append(short, long, reset);
     const close = document.createElement('button'); close.type = 'button'; close.className = 'inspection-action quiet'; close.textContent = 'ЗАКРЫТЬ';
     close.addEventListener('click', () => this.closeModal()); actions.appendChild(close);
-    if (note) note.textContent = 'Подсказка: три коротких удара и один длинный. Ошибка не наказывается — можно попробовать снова.';
+    if (note) note.textContent = 'Повтори услышанный рисунок. Ошибка не наказывается — можно попробовать снова.';
   }
 
   private syncAnchorProgress() {
@@ -1906,11 +1914,10 @@ export class ImmersionScene {
       { id: 'charm_6', chance: .08, eligible: score >= 92 && this.state.ending === 'clear' }
     ];
     const existingArchive = loadCampaignArchive();
-    const currentRunId = localStorage.getItem('limbo_campaign_current_run');
-    // Reuse rewards only for this exact run. Never fall back to a previous run:
-    // that made the report display a charm that was not awarded in this playthrough.
-    const previousRun = this.state.flags.campaign_recorded && currentRunId
-      ? existingArchive.runs.find(run => run.runId === currentRunId) || null
+    // The run id belongs to this save, not a global pointer that can be left behind
+    // after a replay. This prevents a previous run's charm from appearing in a new report.
+    const previousRun = this.state.campaignRunId
+      ? existingArchive.runs.find(run => run.runId === this.state.campaignRunId) || null
       : null;
     // Each eligible, not-yet-owned charm gets its own independent roll on this run.
     // The exact run record is reused on refresh, so report and dossier always agree.
@@ -1928,7 +1935,8 @@ export class ImmersionScene {
       // Refresh the run pointer whenever a new report is created, even if an old
       // save still carries campaign_recorded=true from a previous session.
       this.state.flags.campaign_recorded = true;
-      localStorage.setItem('limbo_campaign_current_run', archive.runs[archive.runs.length - 1]?.runId || '');
+      this.state.campaignRunId = archive.runs[archive.runs.length - 1]?.runId || null;
+      localStorage.setItem('limbo_campaign_current_run', this.state.campaignRunId || '');
       saveState(this.state);
     }
     try {
@@ -2273,54 +2281,62 @@ export class ImmersionScene {
   }
 
   private syncHand() {
-    const sel = document.getElementById('handLabel');
-    if (!sel) return;
-    sel.textContent = this.state.selected
-      ? 'В РУКАХ: ' + ITEMS[this.state.selected].name
-      : 'В РУКАХ: —';
-    const preview = document.getElementById('selectedItemPreview');
-    if (preview) {
-      if (this.state.selected) {
-        const def = ITEMS[this.state.selected];
-        preview.innerHTML = '<div class="selected-art"></div><div class="selected-copy"><strong></strong><span></span><small>ПКМ по слоту — подробный осмотр</small></div>';
-        preview.querySelector('.selected-art')!.innerHTML = `<img class="item-art-image" src="${this.itemAsset(this.state.selected)}" alt="">`;
-        preview.querySelector('strong')!.textContent = def.name;
-        preview.querySelector('.selected-copy span')!.textContent = def.examine;
-        const help: Partial<Record<ItemId, string>> = {
-          herbal_poultice: 'ИСПОЛЬЗОВАТЬ: восстановит 25 HP · расходуется',
-          warding_charm: 'ИСПОЛЬЗОВАТЬ: восстановит 20 рассудка · расходуется',
-          ember_lantern: 'ИСПОЛЬЗОВАТЬ: включить/выключить свет · свет привлекает существ',
-          stitched_mask: 'ИСПОЛЬЗОВАТЬ: надеть/снять · защита от взгляда, но рассудок постепенно падает',
-          medicinal_herbs: 'ПРИМЕНЕНИЕ: использовать на подходящем объекте или изучить',
-          matchbox: 'ПРИМЕНЕНИЕ: зажечь источник света, если он найден',
-          copper_bell: 'ПРИМЕНЕНИЕ: отвлечь существо звуком — но шум может привлечь другое',
-          black_seed: 'ПРИМЕНЕНИЕ: пока неизвестно. Не держи долго в руках',
-          ryokan_key: 'ПРИМЕНЕНИЕ: открыть соответствующий замок на локации',
-          wet_key_half: 'ПРИМЕНЕНИЕ: соединить со второй половиной ключа',
-          wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
-          paper_lantern_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью для оберега или со спичками для фонаря · расходуется 1 осколок',
-          mirror_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью, чтобы собрать зеркальную линзу · расходуется 1 осколок',
-          mirror_lens: 'ПРИМЕНЕНИЕ: приложить к потемневшему стеклу в коридоре',
-          kokeshi_note: 'ПРИМЕНЕНИЕ: изучить; подсказка к тайнику или механизму',
-          silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
-        };
-        let hint = preview.querySelector('.selected-copy small');
-        if (!hint) { hint = document.createElement('small'); preview.querySelector('.selected-copy')?.appendChild(hint); }
-        const stackCount = this.state.inventory.filter(item => item === this.state.selected).length;
-        const recipes = RECIPES.filter(recipe => recipe.a === this.state.selected || recipe.b === this.state.selected);
-        const recipeHints = recipes.map(recipe => {
-          const partner = recipe.a === this.state.selected ? recipe.b : recipe.a;
-          return ITEMS[partner].name + ' → ' + ITEMS[recipe.result].name;
-        });
-        if (hint) hint.textContent = (help[this.state.selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить') +
-          (stackCount > 1 ? ' · В СТЕКЕ: ' + stackCount + ' · расходуется по 1 шт.' : '') +
-          (recipeHints.length ? ' · СОЕДИНИТЬ: ' + recipeHints.join(' / ') : '');
-      } else {
-        preview.innerHTML = '<div class="selected-art">—</div><div class="selected-copy">Выбери предмет в инвентаре</div>';
-      }
+    const selected = this.state.selected && this.state.inventory.includes(this.state.selected)
+      ? this.state.selected : null;
+    if (selected !== this.state.selected) {
+      this.state.selected = selected;
+      saveState(this.state);
     }
+    const handLabel = document.getElementById('handLabel');
+    if (handLabel) handLabel.textContent = selected ? 'В РУКАХ: ' + ITEMS[selected].name : 'В РУКАХ: —';
+    const art = document.getElementById('selectedArt');
+    const copy = document.getElementById('selectedCopy');
+    const useButton = document.getElementById('btnUseItem') as HTMLButtonElement | null;
+    const examineButton = document.getElementById('btnExamine') as HTMLButtonElement | null;
+    if (!selected) {
+      if (art) art.textContent = '—';
+      if (copy) copy.innerHTML = '<strong>НИЧЕГО</strong><small>Выберите предмет в инвентаре</small>';
+      if (useButton) useButton.disabled = true;
+      if (examineButton) examineButton.disabled = true;
+      return;
+    }
+    const def = ITEMS[selected];
+    if (art) art.innerHTML = '<img class="item-art-image" src="' + this.itemAsset(selected) + '" alt="' + def.name + '" draggable="false">';
+    if (copy) {
+      copy.innerHTML = '<strong></strong><span></span><small></small>';
+      copy.querySelector('strong')!.textContent = def.name;
+      copy.querySelector('span')!.textContent = def.examine;
+      const help: Partial<Record<ItemId, string>> = {
+        herbal_poultice: 'ИСПОЛЬЗОВАТЬ: восстановит 25 HP · расходуется',
+        warding_charm: 'ИСПОЛЬЗОВАТЬ: восстановит 20 рассудка · расходуется',
+        ember_lantern: 'ИСПОЛЬЗОВАТЬ: включить/выключить свет · свет привлекает существ',
+        stitched_mask: 'ИСПОЛЬЗОВАТЬ: надеть/снять · защита от взгляда, но рассудок постепенно падает',
+        medicinal_herbs: 'ПРИМЕНЕНИЕ: использовать на подходящем объекте или изучить',
+        matchbox: 'ПРИМЕНЕНИЕ: зажечь источник света, если он найден',
+        copper_bell: 'ПРИМЕНЕНИЕ: отвлечь существо звуком — но шум может привлечь другое',
+        black_seed: 'ПРИМЕНЕНИЕ: пока неизвестно. Не держи долго в руках',
+        ryokan_key: 'ПРИМЕНЕНИЕ: открыть соответствующий замок на локации',
+        wet_key_half: 'ПРИМЕНЕНИЕ: соединить со второй половиной ключа',
+        wet_key_other: 'ПРИМЕНЕНИЕ: соединить с первой половиной ключа',
+        paper_lantern_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью или со спичками · расходуется 1 осколок',
+        mirror_shard: 'ПРИМЕНЕНИЕ: соединить с шёлковой нитью · расходуется 1 осколок',
+        mirror_lens: 'ПРИМЕНЕНИЕ: приложить к потемневшему стеклу в коридоре',
+        kokeshi_note: 'ПРИМЕНЕНИЕ: прочитать и сохранить подсказку',
+        silk_thread: 'ПРИМЕНЕНИЕ: соединить с подходящим предметом',
+      };
+      const stackCount = this.state.inventory.filter(item => item === selected).length;
+      const recipes = RECIPES.filter(recipe => recipe.a === selected || recipe.b === selected);
+      const recipeHints = recipes.map(recipe => {
+        const partner = recipe.a === selected ? recipe.b : recipe.a;
+        return ITEMS[partner].name + ' → ' + ITEMS[recipe.result].name;
+      });
+      copy.querySelector('small')!.textContent = (help[selected] || 'ПКМ — осмотреть · выбери объект сцены, чтобы попробовать применить') +
+        (stackCount > 1 ? ' · В СТЕКЕ: ' + stackCount + ' · расходуется по 1 шт.' : '') +
+        (recipeHints.length ? ' · СОЕДИНИТЬ: ' + recipeHints.join(' / ') : '');
+    }
+    if (useButton) useButton.disabled = false;
+    if (examineButton) examineButton.disabled = false;
   }
-
 
 
   /** The sound meter measures how much noise we make, not speaker volume. */
@@ -3022,7 +3038,7 @@ export class ImmersionScene {
       read.className = 'inspection-action secondary note-read-action';
       read.textContent = 'ПРОЧИТАТЬ';
       read.onclick = () => {
-        examBody.textContent = 'ЛИЧНАЯ ЗАПИСЬ · М.\\n\\nЕсли ты читаешь это, значит, дверь уже закрылась за тобой. Не верь шагам, которые повторяют твои. Это не эхо — оно учится.\\n\\nПервый ключ лежит там, где вода не отражает небо. Вторую половину спрятали под доской с тремя царапинами. Соедини их, но не открывай дверь, пока не найдёшь нить.\\n\\nНить удерживает бумагу. Бумага помнит огонь. Колокольчик без языка всё ещё может предупредить того, кто слушает не ушами.\\n\\nМ. · если маска заговорит твоим голосом — не отвечай.';
+        examBody.textContent = 'ЛИЧНАЯ ЗАПИСЬ · М.\\n\\nНе верь шагам, которые повторяют твои: это не эхо, оно учится. Первая половина ключа — у чёрной воды, вторая — под доской с тремя царапинами. Нить удержит бумагу, а колокольчик предупредит того, кто слушает.\\n\\nМ. · Не отвечай, если маска заговорит твоим голосом.';
         this.state.flags.note_read = true;
         this.state.flags.clue_key_halves = true;
         this.rememberThought('Записка М.: первый ключ — там, где вода не отражает небо; второй — под доской с тремя царапинами. Нить удерживает бумагу, бумага помнит огонь.');
