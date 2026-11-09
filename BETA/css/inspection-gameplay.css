@@ -363,15 +363,11 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
   repeating-linear-gradient(0deg,transparent 0 3px,rgba(70,210,230,.035) 4px 5px)!important;
   opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 #diveOverlay.active{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
-#diveOverlay .dive-core{position:relative;width:min(620px,calc(100vw - 40px))!important;
-  min-height:260px!important;display:flex!important;flex-direction:column!important;
-  align-items:center!important;justify-content:center!important;padding:44px 30px!important;
-  border:1px solid rgba(55,207,232,.36)!important;background:rgba(2,11,18,.72)!important;
-  box-shadow:0 0 70px rgba(30,186,220,.13),inset 0 0 55px rgba(30,186,220,.05)!important}
-#diveOverlay .dive-title{font-size:clamp(18px,3vw,28px)!important;letter-spacing:.24em!important}
-#diveOverlay .dive-log{width:min(420px,100%)!important;margin-top:24px!important}
-#diveOverlay[data-mode="reboot"] .dive-title{color:#ff647b!important;text-shadow:0 0 20px #d92e50aa!important}
-#diveOverlay[data-mode="reboot"] .dive-core{border-color:rgba(218,58,83,.55)!important;box-shadow:0 0 90px rgba(218,40,70,.16),inset 0 0 55px rgba(218,40,70,.06)!important}
+/* Dive overlay is intentionally transparent: only centered type and circular waves. */
+#diveOverlay .dive-core{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;outline:0!important}
+#diveOverlay .dive-title{margin:0!important;text-align:center!important}
+#diveOverlay .dive-ring{border-radius:50%!important}
+#diveOverlay .dive-log{display:none!important}
 /* Legacy confirmation modal rules removed: the new confirmation is only circular ripples. */
 .system-reboot-progress{height:3px;margin-top:22px;background:#182c36;overflow:hidden}
 .system-reboot-progress i{display:block;width:0;height:100%;background:#e34d67;box-shadow:0 0 14px #e34d67;animation:system-reboot-fill .65s ease-out forwards}
