@@ -55,9 +55,18 @@ export interface GameState {
 const SAVE_KEY = 'limbo_sim_ryokan_v1';
 
 function createGutterPattern(): Array<'short' | 'long'> {
-  const length = 4 + Math.floor(Math.random() * 2);
-  const pattern = Array.from({ length }, () => Math.random() < .5 ? 'short' as const : 'long' as const);
-  if (pattern.every(beat => beat === pattern[0])) pattern[Math.floor(Math.random() * length)] = pattern[0] === 'short' ? 'long' : 'short';
+  const key = 'limbo_gutter_last_pattern';
+  let previous = '';
+  try { previous = localStorage.getItem(key) || ''; } catch { /* storage may be unavailable */ }
+  const make = () => {
+    const length = 4 + Math.floor(Math.random() * 2);
+    const pattern = Array.from({ length }, () => Math.random() < .5 ? 'short' as const : 'long' as const);
+    if (pattern.every(beat => beat === pattern[0])) pattern[Math.floor(Math.random() * length)] = pattern[0] === 'short' ? 'long' : 'short';
+    return pattern;
+  };
+  let pattern = make();
+  for (let attempt = 0; attempt < 12 && pattern.join(',') === previous; attempt++) pattern = make();
+  try { localStorage.setItem(key, pattern.join(',')); } catch { /* saved game still keeps its own pattern */ }
   return pattern;
 }
 
