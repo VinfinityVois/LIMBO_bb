@@ -1707,14 +1707,12 @@
         <div class="immerse-box">
           <div class="ib-eyebrow">SECTOR LINK · READY</div>
           <div class="ib-title">ПОГРУЖЕНИЕ В СЕКТОР</div>
-          <p class="ib-desc">Нейро-мост Цефей · сцена «Рёкан» · проводник МО</p>
+          <p class="ib-desc">Нейро-мост Цефей · сцена «Рёкан»</p>
           <a class="btn-immerse" id="btnImmerse" href="sim.html">
             <span>ПЕРЕЙТИ К ПОГРУЖЕНИЮ</span>
             <span class="arr">→</span>
           </a>
-          <div class="immerse-stub">
-            <b>МО</b> · handshake A-55 · ветки и отношение сохраняются
-          </div>
+          <div id="campaignArchiveInline" class="campaign-archive-inline" hidden></div>
         </div>
       </div>
     </div>
@@ -2422,7 +2420,7 @@
 <script>
 (function(){
  try{
-  const target=document.querySelector('.sc-body')||document.querySelector('main')||document.body;
+  const target=document.querySelector('.immerse-box')||document.querySelector('.sc-body')||document.body;
   const raw=localStorage.getItem('limbo_sim_ryokan_v1');
   const state=raw?JSON.parse(raw):null;
   if(state&&state.ending){
@@ -2441,12 +2439,14 @@
   if(archive&&archive.version===1&&archive.scoreCount){
    const tier=Math.max(1,Math.min(3,Number(archive.passTier)||1));
    const cardTier=Math.max(1,Math.min(6,Number(archive.bestCardTier)||1));
-   const panel=document.createElement('aside'); panel.className='ending-campaign-carryover';
-   panel.innerHTML=
-    '<div class="ecc-art"><img src="/assets/game/items/b'+tier+'.png" alt="Накопительный пропуск"><small>ПРОПУСК · УРОВЕНЬ '+tier+'/3</small></div>'+
-    '<div class="ecc-art"><img src="/assets/game/items/card'+cardTier+'.png" alt="Карточка персонажа"><small>КАРТОЧКА · '+cardTier+'/6</small></div>'+
-    '<div class="ecc-data"><b>АРХИВ ЦЕФЕЯ · НАКОПИТЕЛЬНЫЙ ПРОГРЕСС</b><strong>'+archive.completedSectors.length+' СЕКТОР(А) · '+archive.averageScore+'/100 СРЕДНИЙ БАЛЛ</strong><span>Найдено: '+archive.totalCollected+' · применено: '+archive.totalUsed+' · подсказок: '+archive.totalClues+' · сюжетных следов: '+archive.totalSecrets+'</span></div>';
-   target.prepend(panel);
+   const panel=document.getElementById('campaignArchiveInline');
+   if(panel){
+    panel.hidden=false;
+    panel.innerHTML=
+     '<div class="archive-art"><img src="/assets/game/items/b'+tier+'.png" alt="Накопительный пропуск"><small>ПРОПУСК '+tier+'/3</small></div>'+
+     '<div class="archive-art"><img src="/assets/game/items/card'+cardTier+'.png" alt="Карточка персонажа"><small>КАРТОЧКА '+cardTier+'/6</small></div>'+
+     '<div class="archive-data"><b>АРХИВ ЦЕФЕЯ</b><strong>'+archive.completedSectors.length+' СЕКТОР(А) · '+archive.averageScore+'/100</strong><span>Найдено '+archive.totalCollected+' · применено '+archive.totalUsed+' · подсказок '+archive.totalClues+' · следов '+archive.totalSecrets+'</span></div>';
+   }
   }
  }catch(e){}
 })();
@@ -2454,15 +2454,16 @@
 <style>
 .ending-carryover{display:flex;flex-direction:column;gap:6px;margin:14px auto;padding:13px 16px;max-width:1100px;border:1px solid rgba(53,200,230,.35);border-left:3px solid #35c8e6;background:linear-gradient(90deg,rgba(6,25,36,.96),rgba(6,13,22,.82));color:#b8d1da;font:12px/1.5 var(--font-ui,sans-serif)}
 .ending-carryover b{color:#53d7ed;font:600 10px var(--font-mono,monospace);letter-spacing:.16em}
-.ending-campaign-carryover{display:grid;grid-template-columns:120px 120px minmax(0,1fr);gap:16px;align-items:center;margin:14px auto;padding:14px 18px;max-width:1100px;border:1px solid rgba(53,200,230,.32);background:linear-gradient(100deg,rgba(6,25,36,.96),rgba(6,13,22,.88));color:#b8d1da}
-.ending-campaign-carryover .ecc-art{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
-.ending-campaign-carryover .ecc-art img{width:100%;height:86px;object-fit:contain;filter:drop-shadow(0 5px 14px rgba(40,190,215,.18))}
-.ending-campaign-carryover .ecc-art small{font:8px var(--font-mono,monospace);letter-spacing:.1em;color:#78c9d5}
-.ending-campaign-carryover .ecc-data{display:flex;flex-direction:column;gap:7px;min-width:0}
-.ending-campaign-carryover .ecc-data b{font:600 9px var(--font-mono,monospace);letter-spacing:.15em;color:#53d7ed}
-.ending-campaign-carryover .ecc-data strong{font:600 13px var(--font-mono,monospace);color:#e1f4f6}
-.ending-campaign-carryover .ecc-data span{font:11px/1.5 var(--font-ui,sans-serif);color:#91aeb8}
-@media(max-width:650px){.ending-campaign-carryover{grid-template-columns:82px 82px minmax(0,1fr);gap:8px;padding:10px}.ending-campaign-carryover .ecc-art img{height:64px}.ending-campaign-carryover .ecc-data strong{font-size:10px}.ending-campaign-carryover .ecc-data span{font-size:9px}}
+.campaign-archive-inline{display:grid;grid-template-columns:64px 64px minmax(0,1fr);gap:10px;align-items:center;margin:15px auto 0;padding:12px 0 0;max-width:520px;border:0;border-top:1px solid rgba(53,200,230,.18);background:transparent;color:#b8d1da;text-align:left}
+.campaign-archive-inline[hidden]{display:none!important}
+.campaign-archive-inline .archive-art{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.campaign-archive-inline .archive-art img{width:100%;height:54px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(40,190,215,.18))}
+.campaign-archive-inline .archive-art small{font:7px var(--font-mono,monospace);letter-spacing:.07em;color:#78c9d5}
+.campaign-archive-inline .archive-data{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campaign-archive-inline .archive-data b{font:600 8px var(--font-mono,monospace);letter-spacing:.14em;color:#53d7ed}
+.campaign-archive-inline .archive-data strong{font:600 11px var(--font-mono,monospace);color:#e1f4f6}
+.campaign-archive-inline .archive-data span{font:10px/1.45 var(--font-ui,sans-serif);color:#91aeb8}
+@media(max-width:650px){.campaign-archive-inline{grid-template-columns:48px 48px minmax(0,1fr);gap:7px}.campaign-archive-inline .archive-art img{height:46px}.campaign-archive-inline .archive-data strong{font-size:9px}.campaign-archive-inline .archive-data span{font-size:8px}}
 </style>
 
 </body>
