@@ -208,14 +208,13 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 </head>
 <body class="immerse" data-matrix="idle">
   <!-- dive-in intro -->
-  <div id="diveOverlay" class="dive-overlay">
-    <div class="dive-core">
-      <div class="dive-ring"></div>
-      <div class="dive-ring d2"></div>
-      <div class="dive-scanline" aria-hidden="true"></div>
-      <div class="dive-title">ПОГРУЖЕНИЕ</div>
-      <div id="diveLog" class="dive-log"></div>
+  <div id="diveOverlay" class="dive-overlay" aria-hidden="true">
+    <div class="dive-ripples" aria-hidden="true">
+      <span class="dive-ring ripple-1"></span><span class="dive-ring ripple-2"></span>
+      <span class="dive-ring ripple-3"></span><span class="dive-ring ripple-4"></span>
+      <span class="dive-ring ripple-5"></span>
     </div>
+    <div class="dive-core"><div class="dive-title">ПОГРУЖЕНИЕ</div></div>
   </div>
 
   <div class="matrix-rail left" id="matrixLeft" aria-hidden="true"></div>
