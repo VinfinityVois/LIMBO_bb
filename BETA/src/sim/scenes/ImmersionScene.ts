@@ -163,6 +163,7 @@ export class ImmersionScene {
     this.resize();
     this.parallax.start();
     await this.playDiveIn();
+    this.diving = true;
     await this.loadLoc(this.state.location);
     this.buildHotspots();
     this.buildExits();
@@ -173,6 +174,7 @@ export class ImmersionScene {
     this.renderMinimap();
     this.updateZone();
     await this.showControlsTutorial();
+    this.diving = false;
     this.startWorldClock();
     this.startSoundDynamics();
     simAudio.startAtmosphere(this.state.muted, LOCATIONS[this.state.location].ambient);
@@ -435,6 +437,7 @@ export class ImmersionScene {
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => { if (document.getElementById('simModal')?.classList.contains('report-mode')) return; this.closeModal(); });
     document.addEventListener('keydown', (e) => {
+      if (this.diving) return;
       if (e.key === 'Escape') {
         if (document.getElementById('combatScreen')?.classList.contains('open')) this.combatAction('flee');
         else if (!document.getElementById('simModal')?.classList.contains('report-mode')) this.closeModal();
