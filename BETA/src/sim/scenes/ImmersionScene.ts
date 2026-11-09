@@ -81,6 +81,8 @@ export class ImmersionScene {
   private spiderNextAt = Date.now() + 16000;
   private spiderDialogTimer: ReturnType<typeof setTimeout> | number = 0;
   private spiderInCombat = false;
+  private transitionBusy = false;
+  private recoveryFrame = 0;
 
   constructor() {
     this.state = loadState();
@@ -135,7 +137,14 @@ export class ImmersionScene {
       if (!id || !this.state.inventory.includes(id)) return;
       e.preventDefault(); this.dropItem(id, e.clientX, e.clientY);
     });
-    window.addEventListener('resize', () => this.resize());
+    window.addEventListener('resize', () => {
+      this.resize();
+      this.scheduleInterfaceRecovery(false);
+    });
+    window.addEventListener('pageshow', () => this.scheduleInterfaceRecovery(true));
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) this.scheduleInterfaceRecovery(true);
+    });
   }
 
   async start() {
@@ -232,6 +241,39 @@ export class ImmersionScene {
   private resize() {
     const r = this.stage.getBoundingClientRect();
     this.parallax.resize(r.width, r.height);
+  }
+
+  /**
+   * Browsers may suspend canvas animation and timers while the tab is in the
+   * background. Rebind the scene's DOM roots and rebuild transient controls
+   * when the page becomes visible again, without disturbing an open encounter.
+   */
+  private scheduleInterfaceRecovery(rebuild = true) {
+    if (this.diving || this.state.completed || !this.stage?.isConnected) return;
+    if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
+    this.recoveryFrame = requestAnimationFrame(() => {
+      this.recoveryFrame = 0;
+      this.hsLayer = document.getElementById('hotspotLayer') || this.hsLayer;
+      this.exitLayer = document.getElementById('exitLayer') || this.exitLayer;
+      this.invEl = document.getElementById('invSlots') || this.invEl;
+      this.hoverCard = document.getElementById('hoverCard') || this.hoverCard;
+
+      this.resize();
+      if (!this.parallax.running) this.parallax.start();
+      if (!rebuild || document.getElementById('combatScreen')?.classList.contains('open') ||
+          document.getElementById('spiderDialogue') ||
+          document.getElementById('simModal')?.classList.contains('open') ||
+          document.getElementById('systemConfirm')) return;
+
+      this.ensurePerceptionOverlay();
+      this.buildHotspots();
+      this.buildExits();
+      this.renderDroppedItems();
+      this.renderInv();
+      this.renderVitals();
+      this.renderMinimap();
+      this.updateZone();
+    });
   }
 
   private showSystemConfirm(mode: 'exit' | 'reset') {
@@ -398,11 +440,12 @@ export class ImmersionScene {
       // Three independent creature behaviours, with a small shared encounter roll.
       // The type is chosen from the player's current behaviour and room, not a single hard-coded room gate.
       const lightChance = this.lightActive && !this.maskWorn ? .22 : 0;
-      const soundChance = this.currentSoundLevel >= 24 ? Math.min(.24, .025 + this.currentSoundLevel * .0022) : 0;
-      const dwellChance = stayed > 45000 ? Math.min(.18, .035 + stayed / 900000 + this.currentSoundLevel * .001) : 0;
+      const soundPressure = this.currentSoundLevel / 100;
+      const soundChance = this.currentSoundLevel >= 16 ? Math.min(.52, .04 + this.currentSoundLevel * .0048) : 0;
+      const dwellChance = stayed > 45000 ? Math.min(.26, .025 + stayed / 1100000 + soundPressure * .18) : 0;
       const encounter = Math.random();
       const totalChance = lightChance + soundChance + dwellChance;
-      if (totalChance > 0 && encounter < Math.min(.42, totalChance)) {
+      if (totalChance > 0 && encounter < Math.min(.62, totalChance)) {
         const pick = Math.random() * totalChance;
         this.startThreat(pick < lightChance ? 'light' : pick < lightChance + soundChance ? 'sound' : 'dweller');
         return;
@@ -607,7 +650,8 @@ export class ImmersionScene {
     if (this.threatApproachTimer) clearInterval(this.threatApproachTimer as number);
     this.threatApproachTimer = 0;
     if (choice === 'confront') { this.startCombat(); return; }
-    this.threatActive=false; this.threatCooldown=Date.now()+35000;
+    this.threatActive=false;
+    this.threatCooldown=Date.now() + Math.max(8500, 28000 - this.currentSoundLevel * 195);
     document.getElementById('threatOverlay')?.classList.remove('open');
     document.getElementById('threatOverlay')?.setAttribute('aria-hidden','true');
     document.body.classList.remove('threat-active','threat-kind-light','threat-kind-sound','threat-kind-dweller');
@@ -1087,38 +1131,48 @@ export class ImmersionScene {
   }
 
   private async go(to: LocationId) {
-    // Distinct footsteps before the transition, followed by a soft movement whoosh.
-    simAudio.steps(this.state.muted);
-    window.setTimeout(() => simAudio.steps(this.state.muted), 230);
-    window.setTimeout(() => simAudio.steps(this.state.muted), 470);
-    window.setTimeout(() => simAudio.whoosh(this.state.muted), 590);
-    this.makeNoise('Шаги эхом разнеслись по локации.');
-    this.state.location = to;
-    this.roomEnteredAt = Date.now();
-    this.noiseStartedAt = Date.now(); this.noiseDuration = 4500; this.noisePeak = 58;
-    this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
-    if (!this.state.visited.includes(to)) this.state.visited.push(to);
-    saveState(this.state);
-    this.stage.classList.add('fade');
-    // reveal flash
-    const flash = document.getElementById('revealFlash');
-    if (flash) {
-      flash.classList.add('on');
-      setTimeout(() => flash.classList.remove('on'), 500);
+    // Ignore repeated clicks while a room transition is already loading.
+    if (this.transitionBusy || this.threatActive || document.body.classList.contains('combat-active')) return;
+    this.transitionBusy = true;
+    try {
+      // Distinct footsteps before the transition, followed by a soft movement whoosh.
+      simAudio.steps(this.state.muted);
+      window.setTimeout(() => simAudio.steps(this.state.muted), 230);
+      window.setTimeout(() => simAudio.steps(this.state.muted), 470);
+      window.setTimeout(() => simAudio.whoosh(this.state.muted), 590);
+      this.makeNoise('Шаги эхом разнеслись по локации.');
+      this.state.location = to;
+      this.roomEnteredAt = Date.now();
+      this.noiseStartedAt = Date.now(); this.noiseDuration = 4500; this.noisePeak = 58;
+      this.noiseUntil = this.noiseStartedAt + this.noiseDuration;
+      if (!this.state.visited.includes(to)) this.state.visited.push(to);
+      saveState(this.state);
+      this.stage.classList.add('fade');
+      const flash = document.getElementById('revealFlash');
+      if (flash) {
+        flash.classList.add('on');
+        window.setTimeout(() => flash.classList.remove('on'), 500);
+      }
+      await new Promise((resolve) => window.setTimeout(resolve, 320));
+      await this.loadLoc(to);
+      this.buildHotspots();
+      this.buildExits();
+      this.renderDroppedItems();
+      this.renderMinimap();
+      this.updateZone();
+      this.stage.classList.remove('fade');
+      this.stage.classList.add('reveal');
+      window.setTimeout(() => this.stage.classList.remove('reveal'), 600);
+      this.pulseMatrix('ok');
+      simAudio.open(this.state.muted);
+    } catch (error) {
+      console.error('[LIMBO] Room transition failed:', error);
+      this.notify('Кадр комнаты не загрузился. Интерфейс восстановлен; попробуй перейти ещё раз.', 'warn');
+      this.scheduleInterfaceRecovery(true);
+    } finally {
+      this.stage.classList.remove('fade');
+      this.transitionBusy = false;
     }
-    await new Promise((r) => setTimeout(r, 320));
-    await this.loadLoc(to);
-    this.buildHotspots();
-    this.buildExits();
-    this.renderDroppedItems();
-    this.renderMinimap();
-    this.updateZone();
-    this.stage.classList.remove('fade');
-    this.stage.classList.add('reveal');
-    setTimeout(() => this.stage.classList.remove('reveal'), 600);
-    // The location title is already shown in the fixed scene header; do not duplicate it as a toast.
-    this.pulseMatrix('ok');
-    simAudio.open(this.state.muted);
   }
 
   private onHotspot(hs: HotspotDef, element?: HTMLButtonElement) {
@@ -2613,7 +2667,10 @@ export class ImmersionScene {
       meter.innerHTML = '<div class="threat-approach-label"><span>ДИСТАНЦИЯ ДО СУЩЕСТВА</span><b id="threatApproachTime">08.0</b></div><div class="threat-approach-track"><i id="threatApproachFill"></i></div>';
       panel.querySelector('.threat-copy')?.appendChild(meter);
     }
-    const duration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    const baseDuration = this.threatKind === 'light' ? 9500 : this.threatKind === 'sound' ? 8000 : 7200;
+    // Noise gives the creature a precise trail: at maximum noise it closes in
+    // considerably faster, while silence preserves the original suspense window.
+    const duration = Math.max(2600, Math.round(baseDuration * (1 - (this.currentSoundLevel / 100) * .62)));
     const dialogueLines: Record<string,string[]> = {
       light: ['«Не гаси свет. Я почти вспомнил твоё лицо».','«Ты несёшь маленькое солнце. Оно пахнет страхом».','«Остановись. Я хочу посмотреть на тебя».'],
       sound: ['«Тише. Я слышу, как ты думаешь».','«Ты повторил этот вдох. В прошлый раз он был последним».','«Не оборачивайся. Я уже стою за твоим голосом».'],
