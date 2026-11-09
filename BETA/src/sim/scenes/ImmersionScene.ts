@@ -286,6 +286,7 @@ export class ImmersionScene {
             <button type="button" data-brief-action="inspect" ${hasSelected ? '' : 'disabled'}><kbd>F</kbd><span><strong>ИЗУЧИТЬ</strong><small>Открыть выбранную находку</small></span></button>
             <button type="button" data-brief-action="lantern" ${hasLantern ? '' : 'disabled'}><kbd>L</kbd><span><strong>${this.lightActive ? 'ПОГАСИТЬ СВЕТ' : 'ВЫБРАТЬ ФОНАРЬ'}</strong><small>${hasLantern ? 'Переключить источник света' : 'Фонарь ещё не найден'}</small></span></button>
           </div>
+          <div class="sector-briefing-hotkeys"><span><kbd>E</kbd> ОСМОТР</span><span><kbd>Q</kbd> ЭХО</span><span><kbd>R</kbd> ПРИМЕНИТЬ</span><span><kbd>F</kbd> ИЗУЧИТЬ</span><span><kbd>X</kbd> ВЫБРОСИТЬ</span><span><kbd>1–9</kbd> СЛОТ</span><span><kbd>ESC</kbd> ЗАКРЫТЬ / ОТСТУПИТЬ</span><span><kbd>БОЙ</kbd> 1–4 ДЕЙСТВИЯ</span></div>
           <div class="sector-briefing-footer"><span>СИМУЛЯЦИЯ ПРИОСТАНОВЛЕНА</span><button type="button" data-brief-continue>ПРОДОЛЖИТЬ ПОГРУЖЕНИЕ <i>→</i></button></div>
         </div>`;
       document.body.appendChild(overlay);
