@@ -19,6 +19,7 @@ export const simAudio = {
   meterFrame: 0,
   pendingAmbient: '',
   ambientMuted: false,
+  locked: true,
   master: null as DynamicsCompressorNode | null,
   outputGain: null as GainNode | null,
 
@@ -43,7 +44,16 @@ export const simAudio = {
     this.outputGain.connect(this.ctx.destination);
   },
 
+  setLocked(value: boolean) {
+    this.locked = value;
+    if (value) {
+      this.stopAmbient();
+      if (this.ctx?.state === 'running') void this.ctx.suspend().catch(() => undefined);
+    }
+  },
+
   unlock() {
+    if (this.locked) return;
     this.init();
     if (!this.ctx) return;
     if (this.ctx.state === 'suspended') {
@@ -56,7 +66,7 @@ export const simAudio = {
   },
 
   tone(muted: boolean, freq: number, dur: number, type: Osc = 'sine', vol = 0.03, slide?: number) {
-    if (muted || !this.ctx) return;
+    if (this.locked || muted || !this.ctx) return;
     if (this.ctx.state !== 'running') {
       const context = this.ctx;
       void context.resume().then(() => { if (this.ctx === context) this.tone(muted, freq, dur, type, vol, slide); }).catch(() => undefined);
@@ -78,7 +88,7 @@ export const simAudio = {
   },
 
   noiseBurst(muted: boolean, dur = 0.12, vol = 0.04, filterType: BiquadFilterType = 'bandpass', frequency = 1200) {
-    if (muted || !this.ctx) return;
+    if (this.locked || muted || !this.ctx) return;
     if (this.ctx.state !== 'running') {
       const context = this.ctx;
       void context.resume().then(() => { if (this.ctx === context) this.noiseBurst(muted, dur, vol, filterType, frequency); }).catch(() => undefined);
@@ -191,7 +201,7 @@ export const simAudio = {
     setTimeout(() => this.tone(m, 165, 0.66, 'sawtooth', 0.022, 28), 210);
   },
   giggle(m: boolean) {
-    if (m || !this.ctx) return;
+    if (this.locked || m || !this.ctx) return;
     [0, 115, 260, 390].forEach((delay, index) => {
       setTimeout(() => {
         this.tone(false, 620 + (index % 2) * 170, 0.12, 'triangle', 0.012, 390 + index * 28);
@@ -212,10 +222,10 @@ export const simAudio = {
   startAtmosphere(m: boolean, kind: string) {
     if (this.atmosphereId) clearInterval(this.atmosphereId as number);
     this.atmosphereId = 0;
-    if (m) return;
+    if (this.locked || m) return;
     const indoor = kind.toLowerCase().includes('interior');
     this.atmosphereId = window.setInterval(() => {
-      if (this.ambientMuted || !this.ctx || this.ctx.state !== 'running' || Math.random() > 0.34) return;
+      if (this.locked || this.ambientMuted || !this.ctx || this.ctx.state !== 'running' || Math.random() > 0.34) return;
       const roll = Math.random();
       if (roll < 0.34) this.giggle(false);
       else if (roll < 0.68) this.howl(false);
@@ -277,7 +287,7 @@ export const simAudio = {
     this.pendingAmbient = kind;
     this.ambientMuted = m;
     this.stopAmbient();
-    if (m) return;
+    if (this.locked || m) return;
     this.init();
     if (!this.ctx) return;
     if (this.ctx.state !== 'running') {
@@ -331,7 +341,7 @@ export const simAudio = {
     // Sparse droplets / wooden ticks give the ambience a sense of space.
     const rain = isRain || isVeranda;
     const drip = () => {
-      if (m || !this.ctx || this.ctx.state !== 'running') return;
+      if (this.locked || m || !this.ctx || this.ctx.state !== 'running') return;
       if (rain && Math.random() < 0.82) {
         const pitch = 1250 + Math.random() * 1850;
         this.noiseBurst(false, 0.035 + Math.random() * 0.045, 0.022, 'highpass', pitch);
