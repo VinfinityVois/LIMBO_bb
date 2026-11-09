@@ -1912,6 +1912,8 @@ export class ImmersionScene {
     body.classList.remove('thought-text');
     showArea();
     modal.hidden = false;
+    modal.classList.remove('report-mode');
+    modal.style.removeProperty('display');
     modal.classList.add('open');
     document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
@@ -2388,8 +2390,7 @@ export class ImmersionScene {
       actions.appendChild(exit);
     }
     if (note) note.textContent = 'Брелок-пропуск и карточка персонажа сохранены. Повторное прохождение обновит результат RK-01, не стирая архив кампании.';
-    modal?.classList.add('report-mode', 'open');
-    if (modal) modal.style.display = 'flex';
+    if (modal) { modal.hidden = false; modal.classList.add('report-mode', 'open'); modal.style.display = 'flex'; }
     document.body.classList.add('inspection-open', 'sector-finished');
   }
 
@@ -2467,8 +2468,8 @@ export class ImmersionScene {
 
   private closeModal() {
     const modal = document.getElementById('simModal');
-    modal?.classList.remove('open');
-    if (modal) modal.hidden = true;
+    modal?.classList.remove('open', 'report-mode');
+    if (modal) { modal.hidden = true; modal.style.removeProperty('display'); }
     document.body.classList.remove('inspection-open');
     document.querySelectorAll('.hotspot.being-inspected').forEach(node => node.classList.remove('being-inspected'));
   }
@@ -3329,6 +3330,8 @@ export class ImmersionScene {
     close.onclick = () => this.closeModal();
     actions.appendChild(close);
     modal.hidden = false;
+    modal.classList.remove('report-mode');
+    modal.style.removeProperty('display');
     modal.classList.add('open');
     document.body.classList.add('inspection-open');
     simAudio.open(this.state.muted);
