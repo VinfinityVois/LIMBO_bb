@@ -51,3 +51,6 @@
 .tile-condition{font-size:7px!important;line-height:1.45;color:#a9bbc4!important;letter-spacing:.02em!important;max-width:100%}
 .reward-charm{border-color:rgba(205,158,86,.25)!important}.reward-charm img{filter:drop-shadow(0 0 12px rgba(211,166,92,.22))}
 .reward-charm-missed{opacity:.72;filter:saturate(.55)}
+
+/* Compact sector/run rows in the employee dossier */
+.run-entry{padding:7px 10px;min-height:54px;gap:9px}.run-main{gap:2px}.run-main>b{line-height:1.2}.run-grade{padding:4px 7px}.run-timeline{gap:5px}
