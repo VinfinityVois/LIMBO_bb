@@ -20,6 +20,7 @@ export const simAudio = {
   pendingAmbient: '',
   ambientMuted: false,
   master: null as DynamicsCompressorNode | null,
+  outputGain: null as GainNode | null,
 
   init() {
     if (this.ctx) return;
@@ -36,7 +37,10 @@ export const simAudio = {
     this.master.attack.value = 0.012;
     this.master.release.value = 0.24;
     this.analyser.connect(this.master);
-    this.master.connect(this.ctx.destination);
+    this.outputGain = this.ctx.createGain();
+    this.outputGain.gain.value = 2.0;
+    this.master.connect(this.outputGain);
+    this.outputGain.connect(this.ctx.destination);
   },
 
   unlock() {
@@ -303,7 +307,7 @@ export const simAudio = {
     filter.type = isRain ? 'bandpass' : 'lowpass';
     filter.frequency.value = isRain ? 1650 : isIndoor ? 760 : isVeranda ? 980 : 520;
     filter.Q.value = isRain ? 0.48 : 0.55;
-    gain.gain.value = isRain ? 0.008 : isIndoor ? 0.0048 : isVeranda ? 0.006 : 0.0055;
+    gain.gain.value = isRain ? 0.018 : isIndoor ? 0.014 : isVeranda ? 0.016 : 0.014;
     source.connect(filter);
     filter.connect(gain);
     gain.connect(this.analyser || this.master || this.ctx.destination);
@@ -317,7 +321,7 @@ export const simAudio = {
     const roomGain = this.ctx.createGain();
     room.type = 'sine';
     room.frequency.value = kind.toLowerCase().includes('wood') ? 57 : 43;
-    roomGain.gain.value = 0.00018;
+    roomGain.gain.value = 0.00032;
     room.connect(roomGain);
     roomGain.connect(this.analyser || this.master || this.ctx.destination);
     room.start();
@@ -330,12 +334,12 @@ export const simAudio = {
       if (m || !this.ctx || this.ctx.state !== 'running') return;
       if (rain && Math.random() < 0.82) {
         const pitch = 1250 + Math.random() * 1850;
-        this.noiseBurst(false, 0.035 + Math.random() * 0.045, 0.018, 'highpass', pitch);
-        this.tone(false, pitch, 0.055 + Math.random() * 0.045, 'sine', 0.014);
+        this.noiseBurst(false, 0.035 + Math.random() * 0.045, 0.026, 'highpass', pitch);
+        this.tone(false, pitch, 0.055 + Math.random() * 0.045, 'sine', 0.022);
       } else if (isIndoor && Math.random() < 0.58) {
         // Rain heard from inside: low, softened roof impacts and distant gutter drips.
-        this.noiseBurst(false, 0.11 + Math.random() * 0.12, 0.006, 'lowpass', 420 + Math.random() * 380);
-        this.tone(false, 95 + Math.random() * 55, 0.16, 'sine', 0.004);
+        this.noiseBurst(false, 0.11 + Math.random() * 0.12, 0.012, 'lowpass', 420 + Math.random() * 380);
+        this.tone(false, 95 + Math.random() * 55, 0.16, 'sine', 0.009);
       } else if (!rain && Math.random() < 0.28) {
         this.noiseBurst(false, 0.14, 0.009, 'bandpass', 420 + Math.random() * 900);
       }
