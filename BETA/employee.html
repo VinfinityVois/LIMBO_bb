@@ -64,9 +64,9 @@
 (()=>{'use strict';
 const $=id=>document.getElementById(id),read=(k,d={})=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}};
 const state=read('limbo_sim_ryokan_v1'),archive=read('limbo_campaign_archive_v1',{results:{},averageScore:0,passTier:0,bestCardTier:0});
-const flags=state.flags||{},inventory=Array.isArray(state.inventory)?state.inventory:[],visited=Array.isArray(state.visited)?state.visited:[];
+const flags=state.flags||{},inventory=Array.isArray(state.inventory)?state.inventory:[],dropped=Array.isArray(state.droppedItems)?state.droppedItems:[],visited=Array.isArray(state.visited)?state.visited:[];
 const results=archive.results&&typeof archive.results==='object'?Object.entries(archive.results):[],sectorDone=results.length;
-const collected=(...ids)=>ids.some(id=>!!(flags['collected_'+id]||flags['took_'+id]||flags['crafted_'+id]||inventory.includes(id)));
+const collected=(...ids)=>ids.some(id=>!!(flags['collected_'+id]||flags['took_'+id]||flags['crafted_'+id]||inventory.includes(id)||dropped.some(x=>x&&x.id===id)));
 const medals=[
 {name:'ПЕРВЫЙ ПОРОГ',sub:'Вход в симуляцию',desc:'Зафиксировано первое посещение территории рёкана.',open:visited.length>0,icon:'⌂',condition:'Посетить первую локацию'},
 {name:'ОСКОЛКИ ПАМЯТИ',sub:'Собрать отражение',desc:'Собрать зеркальные фрагменты и восстановить линзу.',open:collected('mirror_lens')||flags.crafted_mirror_lens,icon:'◇',condition:'Создать зеркальную линзу'},
