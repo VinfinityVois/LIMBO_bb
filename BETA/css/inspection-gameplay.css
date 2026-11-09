@@ -430,3 +430,13 @@ body.immerse:after{border-color:var(--mind-red,transparent)!important;box-shadow
 .sim-tutorial-foot{display:block;margin-top:16px;text-align:center;font:7px var(--mono);letter-spacing:.15em;color:#607985}
 @media(max-width:620px){.sim-tutorial-overlay{padding:10px}.sim-tutorial-shell{padding:20px 16px}.sim-tutorial-grid{grid-template-columns:1fr}.sim-tutorial-grid article{min-height:0}.sim-tutorial-keys{grid-template-columns:1fr;gap:7px}.sim-tutorial-actions{flex-direction:column}.sim-tutorial-actions button{width:100%}}
 @media(prefers-reduced-motion:reduce){.dive-module-row{animation:none}.sim-tutorial-overlay{transition:none}}
+
+
+/* Yokai treatment: pale hitodama, a red Kijo aura and drifting onryo mist. */
+#sceneCreature{isolation:isolate}
+body.threat-kind-light #sceneCreature:after{content:"";position:absolute;z-index:-1;left:50%;bottom:5%;width:125%;height:38%;transform:translateX(-50%);pointer-events:none;background:radial-gradient(ellipse at 25% 72%,rgba(185,255,242,.25),transparent 14%),radial-gradient(ellipse at 72% 56%,rgba(157,255,236,.2),transparent 12%),radial-gradient(ellipse at 48% 88%,rgba(170,220,230,.2),transparent 42%);filter:blur(10px);animation:onryoMist 5.5s ease-in-out infinite alternate}
+body.threat-kind-sound #sceneCreature:after{content:"";position:absolute;z-index:-1;inset:8% 8% 5%;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,rgba(196,14,43,.24),transparent 38%);filter:blur(18px);animation:kijoPulse 2.4s ease-in-out infinite}
+body.threat-kind-dweller #sceneCreature:after{content:"";position:absolute;z-index:-1;left:50%;top:4%;width:120%;height:95%;transform:translateX(-50%);pointer-events:none;background:radial-gradient(ellipse at 50% 75%,rgba(70,176,183,.15),transparent 40%),radial-gradient(ellipse at 20% 38%,rgba(160,185,195,.1),transparent 23%);filter:blur(20px);animation:onryoMist 7s ease-in-out infinite alternate}
+@keyframes onryoMist{from{opacity:.35;transform:translate(-50%,2%) scale(.94)}to{opacity:.82;transform:translate(-50%,-2%) scale(1.04)}}
+@keyframes kijoPulse{0%,100%{opacity:.3;filter:blur(20px)}50%{opacity:.72;filter:blur(25px)}}
+@media(prefers-reduced-motion:reduce){body.threat-kind-light #sceneCreature:after,body.threat-kind-sound #sceneCreature:after,body.threat-kind-dweller #sceneCreature:after{animation:none}}
