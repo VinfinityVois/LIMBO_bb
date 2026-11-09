@@ -21,11 +21,11 @@
   <div class="sidebar-identity"><small>ПОЛЕВОЙ ОПЕРАТОР</small><h1>СОТРУДНИК<br><em>A-55</em></h1><span class="identity-status"><i></i> ДОПУСК ПОДТВЕРЖДЁН</span></div>
   <div class="sidebar-rank"><div class="rank-orbit" id="levelRing"><b id="levelValue">01</b><small>РАНГ</small></div><div><b id="rankName">НОВЫЙ ДОПУСК</b><small id="rankSub">ПРОГРЕСС СОХРАНЯЕТСЯ</small></div></div>
   <div class="sidebar-stats">
-   <div><small>СЕКТОРЫ</small><b id="statSectors">00</b></div><div><small>ЛОР</small><b id="statLore">0%</b></div><div><small>МЕДАЛЬОНЫ</small><b id="statMedals">0/6</b></div><div><small>СУЩНОСТИ</small><b id="statMonsters">0/4</b></div>
+   <div><small>СЕКТОРЫ</small><b id="statSectors">00</b></div><div><small>ЛОР</small><b id="statLore">0%</b></div><div><small>БРЕЛОКИ</small><b id="statCharms">0/6</b></div><div><small>СУЩНОСТИ</small><b id="statMonsters">0/4</b></div>
   </div>
   <div class="sidebar-nav"><small>АРХИВ СОТРУДНИКА</small>
    <button class="side-link active" data-section="overview"><span>◫</span> ОБЗОР <i>01</i></button>
-   <button class="side-link" data-section="medals"><span>✧</span> МЕДАЛЬОНЫ <i>02</i></button>
+   <button class="side-link" data-section="medals"><span>✧</span> ДОСТИЖЕНИЯ <i>02</i></button>
    <button class="side-link" data-section="passes"><span>▤</span> КАРТЫ ДОПУСКА <i>03</i></button>
    <button class="side-link" data-section="characters"><span>▧</span> БРЕЛОКИ / КАРТОЧКИ <i>04</i></button>
    <button class="side-link" data-section="monsters"><span>♜</span> БЕСТИАРИЙ <i>05</i></button>
@@ -44,13 +44,13 @@
     <section class="data-panel lore-panel"><div class="panel-head"><div><small>// ИССЛЕДОВАНИЕ</small><h3>ИЗУЧЕНИЕ ЛОРА</h3></div><span>ARCHIVE</span></div><div class="lore-meter"><svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="68" class="meter-bg"/><circle cx="90" cy="90" r="68" id="loreDonut" class="meter-value"/></svg><div><b id="donutPercent">0%</b><small>ОТКРЫТО</small></div></div><div class="lore-breakdown"><span>Предметы <b id="breakItems">0</b></span><span>Подсказки <b id="breakClues">0</b></span><span>Сюжетные следы <b id="breakSecrets">0</b></span></div></section>
    </div>
    <div class="quick-collections">
-    <button data-section="medals"><span class="quick-symbol">✧</span><b>МЕДАЛЬОНЫ</b><small id="quickMedals">0 ИЗ 6</small><i>→</i></button>
+    <button data-section="medals"><span class="quick-symbol">✧</span><b>ДОСТИЖЕНИЯ</b><small id="quickMedals">0 ИЗ 6</small><i>→</i></button>
     <button data-section="passes"><span class="quick-symbol">▤</span><b>ДОПУСКИ</b><small id="quickPasses">0 ИЗ 7</small><i>→</i></button>
     <button data-section="monsters"><span class="quick-symbol">♜</span><b>БЕСТИАРИЙ</b><small id="quickMonsters">0 ИЗ 4</small><i>→</i></button>
     <button data-section="items"><span class="quick-symbol">◇</span><b>ПРЕДМЕТЫ</b><small id="quickItems">0 ОБНАРУЖЕНО</small><i>→</i></button>
    </div>
   </section>
-  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>МЕДАЛЬОНЫ</h2><p>Отметки о важных событиях и достижениях сотрудника.</p></div><span class="section-count" id="medalCount">0 / 6</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
+  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>ДОСТИЖЕНИЯ</h2><p>Отметки о важных событиях и важных этапах исследования сектора.</p></div><span class="section-count" id="medalCount">0 / 6</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
   <section class="collection-section" id="section-passes" hidden><div class="section-heading"><div><small>// SECURITY CLEARANCE</small><h2>КАРТЫ ДОПУСКА</h2><p>Оценки за прохождение сектора и пропуска, полученные в симуляции.</p></div><span class="section-count" id="passCount">0 / 10</span></div><div class="subsection-title">ОЦЕНКИ ПРОХОЖДЕНИЯ <span>F — S</span></div><div class="pass-grid" id="gradeGrid"></div><div class="subsection-title">ПРОПУСКИ СИМУЛЯЦИИ <span>RK / CAMPAIGN</span></div><div class="pass-grid sim-pass-grid" id="simPassGrid"></div></section>
   <section class="collection-section" id="section-characters" hidden><div class="section-heading"><div><small>// PERSONAL CHARMS</small><h2>БРЕЛОКИ И КАРТОЧКИ</h2><p>Коллекционные карточки персонажей и сотрудников. Неоткрытые позиции ждут появления в истории.</p></div><span class="section-count" id="charmCount">0 / 6</span></div><div class="charm-grid" id="charmGrid"></div></section>
   <section class="collection-section" id="section-monsters" hidden><div class="section-heading"><div><small>// ENTITY DATABASE</small><h2>БЕСТИАРИЙ</h2><p>Зафиксированные формы, поведенческие особенности и стадии контакта.</p></div><span class="section-count" id="monsterCount">0 / 4</span></div><div class="creature-grid" id="creatureGrid"></div></section>
@@ -152,7 +152,7 @@ renderGrid('simPassGrid',simPasses,'sim');renderGrid('charmGrid',charms,'charm')
 // unlock conditions for grade images and medals are read-only; a first archive result can unlock F.
 const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=creatures.filter(x=>x.open).length,unlockedItems=items.filter(x=>x.open).length;
 const openGrades=grades.filter((_,i)=>gradeOpen(i)).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
-$('statSectors').textContent=String(sectorCount).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statMedals').textContent=unlockedMedals+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
+$('statSectors').textContent=String(sectorCount).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statCharms').textContent=openCharms+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
 const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));$('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',(rank/6*100)+'%');$('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank];$('rankSub').textContent='ПРОГРЕСС СОХРАНЯЕТСЯ';
 $('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount();$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]||historicalSecrets.has(k)).length;
 function cluesCount(){return clues.filter(([k])=>flags[k]||historicalClues.has(k)).length}
