@@ -1294,7 +1294,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
   <div class="hud-corner bl">
     <div class="row">PING <b id="hudPing">8ms</b></div>
     <div class="row">ENC <b>AES-256</b></div>
-    <div class="row">SESSION <b id="hudSession">A-55</b></div>
+    <div class="row">SESSION <b id="hudSession">A-00</b></div>
   </div>
   <div class="hud-corner br">
     <div class="row">CLOCK <b id="hudClock">--:--:--</b></div>
@@ -1317,7 +1317,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
   </nav>
   <div class="right-meta">
     <span class="sec-level">SEC:LVL_5</span>
-    <span>ОПЕРАТОР: A-55</span>
+    <span>ОПЕРАТОР: A-00</span>
   </div>
 </header>
 
@@ -1415,7 +1415,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
           <div class="row">СОСТОЯНИЕ ЛИМБО: <b id="limboState">ВТОРАЯ ФАЗА РАСПАДА</b></div>
           <div class="row">СКОРОСТЬ ВЕТРА: <span class="cyan" id="windSpeed">11.4 m/s</span> · ВЛАЖНОСТЬ: <span class="cyan" id="humidity">87%</span></div>
           <div class="row">СТАТУС ОБЪЕКТА: <span class="cyan" id="objStatus">СТАЦИОНАРНЫЙ</span> <span class="red">[ДРЕЙФ МИНИМАЛЕН]</span></div>
-          <div class="row" style="margin-top:0.2rem;">КЛАСС УГРОЗЫ: <span class="red" id="threatLevel">ZERO-1</span> · ОПЕРАТОР: <span class="cyan">A-55</span></div>
+          <div class="row" style="margin-top:0.2rem;">КЛАСС УГРОЗЫ: <span class="red" id="threatLevel">ZERO-1</span> · ОПЕРАТОР: <span class="cyan">A-00</span></div>
         </div>
       </div>
 
@@ -1543,7 +1543,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
         <!-- ═══ NEW v5: MINI-EEG ═══ -->
         <div class="eeg-panel">
           <div class="eeg-header">
-            <span>ЭЭГ · СУБЪЕКТ A-55 · 4 КАНАЛА</span>
+            <span>ЭЭГ · СУБЪЕКТ A-00 · 4 КАНАЛА</span>
             <div class="channels">
               <span class="ch alpha">α</span>
               <span class="ch beta">β</span>
@@ -1657,9 +1657,9 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
       <a href="dossier.html" class="tac-node priority reveal has-art" style="background-image:linear-gradient(180deg,rgba(5,8,16,.2),rgba(5,8,16,.96)),url('img/limbo_1.png');">
         <div class="shine"></div><div class="tac-banner"></div>
         <div class="tac-body">
-          <div class="tac-id">NODE · A-55 · ВОСТОК</div>
+          <div class="tac-id">NODE · A-00 · ВОСТОК</div>
           <h4>Хэ Ючоу</h4>
-          <p>Досье Смотрящего A-55. Психопрофиль, соматическая совместимость, протоколы допуска.</p>
+          <p>Досье Смотрящего A-00. Психопрофиль, соматическая совместимость, протоколы допуска.</p>
           <div class="tac-hint">Маршрут: /dossier · SEC:LVL_5</div>
           <div class="tac-foot"><span class="tac-status">● ONLINE</span><span class="tag">ДОСЬЕ</span></div>
         </div>
@@ -1843,7 +1843,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 
   /* ═══ BG STREAMS ═══ */
   const streams = $('#bgStreams');
-  const st = ['CEFEY_OK','0x4FF8','SYNC','LMB_T1','A-55','SECTOR_SH','NEURO_LOCK','94.2TB','FPS:60','SOMATIC','TRACE','LVL_5','AES-256','CLASSIFIED','NODE_0x00','ANOMALY'];
+  const st = ['CEFEY_OK','0x4FF8','SYNC','LMB_T1','A-00','SECTOR_SH','NEURO_LOCK','94.2TB','FPS:60','SOMATIC','TRACE','LVL_5','AES-256','CLASSIFIED','NODE_0x00','ANOMALY'];
   for (let i = 0; i < 18; i++) {
     const s = document.createElement('span');
     s.textContent = st[i % st.length] + '  ' + st[(i + 5) % st.length];
@@ -2053,7 +2053,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
       theme: 'gorod',
       objects: [
         { id:'O1', img: 'img/gorod/b1.png', frames: ['img/gorod/b1.png','img/gorod/b2.png','img/gorod/b0.jpg'], box: { w: 22, h: 32 }, label: 'OBJECT_01: МЯСОЙ БЛОК C-12', color: 'cyan', distance: '218.4м', height: '84м', static: 'НЕТ', type: 'СТРОЕНИЕ', material: 'БЕТОН·СТЕКЛО', history: 'Заброшен после «Серого дождя».', integrity: 34, threat: 12, temp: 18 },
-        { id:'O2', img: 'img/gorod/b2.png', frames: ['img/gorod/b2.png','img/gorod/b4.png','img/gorod/b3.png'], box: { w: 24, h: 26 }, label: 'OBJECT_02: СИНТЕТИЧЕСКАЯ ФЛОРА', color: 'pink', distance: '212.8м', height: '12м', static: 'ДА', type: 'БИОМ', material: 'ГИБРИД', history: 'Реагирует на оператора A-55.', integrity: 88, threat: 18, temp: 24 },
+        { id:'O2', img: 'img/gorod/b2.png', frames: ['img/gorod/b2.png','img/gorod/b4.png','img/gorod/b3.png'], box: { w: 24, h: 26 }, label: 'OBJECT_02: СИНТЕТИЧЕСКАЯ ФЛОРА', color: 'pink', distance: '212.8м', height: '12м', static: 'ДА', type: 'БИОМ', material: 'ГИБРИД', history: 'Реагирует на оператора A-00.', integrity: 88, threat: 18, temp: 24 },
         { id:'O3', img: 'img/gorod/b3.png', frames: ['img/gorod/b3.png','img/gorod/b1.png','img/gorod/b4.png'], box: { w: 20, h: 30 }, label: 'OBJECT_03: ТРАССА ЭВАКУАЦИИ', color: 'amber', distance: '142.8м', height: '—', static: 'ДА', type: 'МАРШРУТ', material: 'СТАЛЬ', history: 'Штаб Восток. Активен.', integrity: 76, threat: 6, temp: 21 },
       ],
     },
@@ -2881,7 +2881,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
   const journal = $('#journalBody');
   const seedLogs = [
     { cls: 'ok', text: 'Инициализация протокола «Цефей» завершена. Канал соматического сна стабилен.' },
-    { cls: '', text: 'Смотрящий A-55 (Хэ Ючоу) подключился к сектору «Шанхай // Сцена 02».' },
+    { cls: '', text: 'Смотрящий A-00 (Хэ Ючоу) подключился к сектору «Шанхай // Сцена 02».' },
     { cls: 'warn', text: 'АНОМАЛИЯ: Попытка несанкционированного искажения текстур в квадранте 9.' },
     { cls: '', text: 'Проверка нейро-шлюза «Цефей-1»: без сбоев.' },
     { cls: 'error', text: 'Перегрузка Шанхай // Разрыв памяти #02 — субъект Сюань У исключён.' },
@@ -2897,7 +2897,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
     { cls: 'error', text: 'Попытка доступа к NODE · ROOT — отклонена' },
     { cls: 'ok', text: 'Крио-контур: −18.2°C · номинал' },
     { cls: 'warn', text: 'Психошок субъекта в капсуле #1104: 71%' },
-    { cls: '', text: 'SEC:LVL_5 · сессия оператора A-55 подтверждена' },
+    { cls: '', text: 'SEC:LVL_5 · сессия оператора A-00 подтверждена' },
     { cls: '', text: 'Трассировка канала «Цефей-1»: без утечек' },
     { cls: '', text: 'Фоновый дамп памяти Сцены 02 завершён' },
     { cls: 'ok', text: 'AES-256 tunnel integrity: OK' },
@@ -2971,7 +2971,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
     btn.disabled = true; btn.textContent = 'СИНХРОНИЗАЦИЯ…';
     $('#gatewayState').textContent = 'SYNC…';
     showToast('НЕЙРОСЕТЕВОЙ МОСТ', 'Установка канала с ядром Цефей-1…', false, 2000);
-    addLog('', 'Запрос синхронизации нейросетевого моста оператором A-55', true);
+    addLog('', 'Запрос синхронизации нейросетевого моста оператором A-00', true);
     beep(520, 0.08, 'sine', 0.03);
     setTimeout(() => {
       addLog('ok', 'Нейро-шлюз «Цефей-1»: синхронизация завершена · 100%', true);
@@ -3009,7 +3009,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
       main.style.transition = 'filter 0.4s, opacity 0.8s';
     }
     setTimeout(() => {
-      addLog('error', 'Сессия оператора A-55 принудительно завершена', true);
+      addLog('error', 'Сессия оператора A-00 принудительно завершена', true);
       addLog('warn', 'Нейро-шлюз закрыт · выгрузка из Лимбо…', true);
       $('#gatewayState').textContent = 'OFFLINE';
       showToast('СЕССИЯ ПРЕРВАНА', 'Вы выброшены из системы.', true, 2000);
