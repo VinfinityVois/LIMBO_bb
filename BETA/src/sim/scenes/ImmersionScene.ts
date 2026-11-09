@@ -132,11 +132,13 @@ export class ImmersionScene {
       }
     });
     this.stage.addEventListener('contextmenu', (e) => {
+      if (this.diving) { e.preventDefault(); return; }
       if ((e.target as HTMLElement).closest('.inv-slot,.spider-dialogue,.sim-modal,.combat-screen,button,a')) return;
       e.preventDefault(); this.echo();
     });
-    this.stage.addEventListener('dragover', (e) => { if (Array.from(e.dataTransfer?.types || []).includes('text/limbo-item')) e.preventDefault(); });
+    this.stage.addEventListener('dragover', (e) => { if (!this.diving && Array.from(e.dataTransfer?.types || []).includes('text/limbo-item')) e.preventDefault(); });
     this.stage.addEventListener('drop', (e) => {
+      if (this.diving) { e.preventDefault(); return; }
       const id = e.dataTransfer?.getData('text/limbo-item') as ItemId;
       if (!id || !this.state.inventory.includes(id)) return;
       e.preventDefault(); this.dropItem(id, e.clientX, e.clientY);
@@ -166,6 +168,7 @@ export class ImmersionScene {
       document.body.classList.add('system-reboot');
     }
     this.resize();
+    simAudio.ambientMuted = true;
     simAudio.stopAmbient();
     this.parallax.start();
     await this.playDiveIn();
@@ -284,7 +287,7 @@ export class ImmersionScene {
             <button type="button" data-brief-action="inspect"><kbd>F</kbd><span><strong>ИЗУЧИТЬ</strong><small>Осмотреть находку</small></span></button>
             <button type="button" data-brief-action="lantern"><kbd>L</kbd><span><strong>${this.lightActive ? 'ПОГАСИТЬ СВЕТ' : 'ФОНАРЬ'}</strong><small>${hasLantern ? 'Переключить источник света' : 'Действие после нахождения фонаря'}</small></span></button>
           </div>
-          <div class="sector-briefing-hotkeys"><span><kbd>E</kbd> ОСМОТР</span><span><kbd>Q</kbd> ЭХО</span><span><kbd>R</kbd> ПРИМЕНИТЬ</span><span><kbd>F</kbd> ИЗУЧИТЬ</span><span><kbd>X</kbd> ВЫБРОСИТЬ</span><span><kbd>1–9</kbd> СЛОТ</span><span><kbd>ESC</kbd> ЗАКРЫТЬ / ОТСТУПИТЬ</span><span><kbd>БОЙ</kbd> 1–4 ДЕЙСТВИЯ</span></div>
+          <div class="sector-briefing-hotkeys"><span><kbd>E</kbd> ОТВЕТ НА СИГНАЛ</span><span><kbd>Q</kbd> ЭХО / ШУМ</span><span><kbd>R</kbd> ПРИМЕНИТЬ</span><span><kbd>F</kbd> ИЗУЧИТЬ</span><span><kbd>X</kbd> ВЫБРОСИТЬ</span><span><kbd>1–9</kbd> СЛОТ</span><span><kbd>ESC</kbd> ЗАКРЫТЬ / ОТСТУПИТЬ</span><span><kbd>БОЙ</kbd> 1–4 ДЕЙСТВИЯ</span></div>
           <div class="sector-briefing-footer"><span>СИМУЛЯЦИЯ ПРИОСТАНОВЛЕНА</span><button type="button" data-brief-continue>ПРОДОЛЖИТЬ ПОГРУЖЕНИЕ <i>→</i></button></div>
         </div>`;
       document.body.appendChild(overlay);
