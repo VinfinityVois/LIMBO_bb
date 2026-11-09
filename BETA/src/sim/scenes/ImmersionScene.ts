@@ -608,6 +608,11 @@ export class ImmersionScene {
     overlay.dataset.mode = mode;
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
+    // The sector report uses z-index 22000; keep confirmation above it so its controls receive clicks.
+    overlay.style.setProperty('position', 'fixed', 'important');
+    overlay.style.setProperty('inset', '0', 'important');
+    overlay.style.setProperty('z-index', '24000', 'important');
+    overlay.style.setProperty('pointer-events', 'auto', 'important');
     overlay.innerHTML = `
       <div class="wave-confirm-scene" aria-hidden="true">
         <div class="wave-orbit orbit-a"></div>
