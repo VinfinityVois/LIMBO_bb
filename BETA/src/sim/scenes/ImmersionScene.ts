@@ -657,7 +657,26 @@ export class ImmersionScene {
         this.stopRuntimeForExit();
         document.body.classList.add('system-reboot');
         sessionStorage.setItem('limbo-sector-reboot', '1');
-        window.setTimeout(() => { resetSim(); window.location.reload(); }, 1750);
+
+        // Clear the sector save before navigating. A cache-busted navigation is
+        // more reliable here than reload(): it guarantees a fresh scene document
+        // and prevents the completed report from being restored from stale state.
+        try {
+          resetSim();
+        } catch (error) {
+          console.error('[LIMBO] Не удалось очистить сохранение сектора перед повтором:', error);
+          sessionStorage.removeItem('limbo-sector-reboot');
+          overlay.classList.remove('wave-restarting');
+          overlay.classList.add('dismissing');
+          window.setTimeout(() => overlay.remove(), 620);
+          return;
+        }
+
+        window.setTimeout(() => {
+          const replayUrl = new URL('scene-ryokan.html', window.location.href);
+          replayUrl.searchParams.set('replay', String(Date.now()));
+          window.location.replace(replayUrl.toString());
+        }, 1550);
       }
     });
   }
