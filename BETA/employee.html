@@ -65,7 +65,7 @@
 const $=id=>document.getElementById(id),read=(k,d={})=>{try{return JSON.parse(localStorage.getItem(k))||d}catch{return d}};
 const state=read('limbo_sim_ryokan_v1'),archive=read('limbo_campaign_archive_v1',{results:{},averageScore:0,passTier:0,bestCardTier:0});
 const flags=state.flags||{},inventory=Array.isArray(state.inventory)?state.inventory:[],dropped=Array.isArray(state.droppedItems)?state.droppedItems:[],visited=Array.isArray(state.visited)?state.visited:[];
-const latestResults=archive.results&&typeof archive.results==='object'?Object.entries(archive.results):[],runs=Array.isArray(archive.runs)?archive.runs:latestResults.map(([sectorId,r])=>({...r,sectorId,legacy:true})),sectorDone=runs.length;
+const latestResults=archive.results&&typeof archive.results==='object'?Object.entries(archive.results):[],runs=Array.isArray(archive.runs)?archive.runs:latestResults.map(([sectorId,r])=>({...r,sectorId,legacy:true})),sectorDone=runs.length,sectorCount=Array.isArray(archive.completedSectors)?archive.completedSectors.length:latestResults.length;
 const historicalItems=new Set(runs.flatMap(r=>r.items||[])),historicalStudied=new Set(runs.flatMap(r=>r.studiedItems||[])),historicalClues=new Set(runs.flatMap(r=>r.clueNames||[])),historicalSecrets=new Set(runs.flatMap(r=>r.secretNames||[])),historicalEncounters=new Set(runs.flatMap(r=>r.encounters||[]));
 const collected=(...ids)=>ids.some(id=>!!(flags['collected_'+id]||flags['took_'+id]||flags['crafted_'+id]||inventory.includes(id)||dropped.some(x=>x&&x.id===id)||historicalItems.has(id)));
 const medals=[
@@ -152,7 +152,7 @@ renderGrid('simPassGrid',simPasses,'sim');renderGrid('charmGrid',charms,'charm')
 // unlock conditions for grade images and medals are read-only; a first archive result can unlock F.
 const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=creatures.filter(x=>x.open).length,unlockedItems=items.filter(x=>x.open).length;
 const openGrades=grades.filter((_,i)=>gradeOpen(i)).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
-$('statSectors').textContent=String(sectorDone).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statMedals').textContent=unlockedMedals+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
+$('statSectors').textContent=String(sectorCount).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statMedals').textContent=unlockedMedals+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
 const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));$('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',(rank/6*100)+'%');$('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank];$('rankSub').textContent='ПРОГРЕСС СОХРАНЯЕТСЯ';
 $('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount();$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]).length;
 function cluesCount(){return clues.filter(([k])=>flags[k]).length}
