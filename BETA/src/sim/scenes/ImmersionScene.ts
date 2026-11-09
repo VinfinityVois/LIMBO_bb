@@ -499,7 +499,8 @@ export class ImmersionScene {
     if (this.interfaceWatchdogTimer) clearInterval(this.interfaceWatchdogTimer as number);
     this.interfaceWatchdogTimer = window.setInterval(() => {
       if (document.hidden || this.diving || this.state.completed || this.state.defeated) return;
-      if (this.ensureInterfaceWindows()) this.bindRebuiltWindowControls();
+      this.ensureInterfaceWindows();
+      this.bindRebuiltWindowControls();
       const combatOpen = document.getElementById('combatScreen')?.classList.contains('open');
       const modalOpen = document.getElementById('simModal')?.classList.contains('open');
       if (combatOpen || modalOpen || document.getElementById('spiderDialogue') || document.getElementById('systemConfirm')) return;
@@ -532,7 +533,8 @@ export class ImmersionScene {
     if (this.recoveryFrame) cancelAnimationFrame(this.recoveryFrame);
     this.recoveryFrame = requestAnimationFrame(() => {
       this.recoveryFrame = 0;
-      if (this.ensureInterfaceWindows()) this.bindRebuiltWindowControls();
+      this.ensureInterfaceWindows();
+      this.bindRebuiltWindowControls();
       const currentStage = document.getElementById('simStage');
       if (!currentStage) return;
       const stageChanged = currentStage !== this.stage || !this.stage.isConnected;
@@ -679,6 +681,7 @@ export class ImmersionScene {
     }));
     document.getElementById('modalClose')?.addEventListener('click', () => this.closeModal());
     document.getElementById('modalBackdrop')?.addEventListener('click', () => { if (document.getElementById('simModal')?.classList.contains('report-mode')) return; this.closeModal(); });
+    document.querySelectorAll<HTMLElement>('#modalClose,#modalBackdrop,#combatAttack,#combatGuard,#combatDodge,#combatNoise,#combatFlee,#btnHide,#btnConfront,[data-hit-zone]').forEach(node => { node.dataset.simBound = '1'; });
     document.addEventListener('keydown', (e) => {
       if (this.diving) return;
       if (e.key === 'Escape') {
