@@ -1571,7 +1571,7 @@ export class ImmersionScene {
             fileNote.className = 'inspection-action primary file-note-action';
             fileNote.textContent = 'ЗАПИСАТЬ В ЛИЧНОЕ ДЕЛО';
             fileNote.addEventListener('click', () => {
-              this.filePersonalNote('note_read','Записка кокэси','Если услышишь суставы — уже поздно. Ключ лежит там, где вода не отражает небо; вторую половину спрятали под доской с тремя царапинами. Нить удерживает бумагу, бумага помнит огонь, а колокольчик без языка предупреждает того, кто слушает не ушами.');
+              this.filePersonalNote('note_read','Записка кокэси','Не верь повторяющимся шагам. Первая половина ключа — у чёрной воды, вторая — под доской с тремя царапинами. Нить удержит бумагу, а колокольчик предупредит того, кто слушает.');
               saveState(this.state); this.renderThoughtJournal();
               this.notify('Записка внесена в личное дело. Её можно забрать отдельно.','ok');
               fileNote.textContent = 'СОХРАНЕНО В ЛИЧНОМ ДЕЛЕ';
@@ -1921,7 +1921,8 @@ export class ImmersionScene {
       : null;
     // Each eligible, not-yet-owned charm gets its own independent roll on this run.
     // The exact run record is reused on refresh, so report and dossier always agree.
-    const previouslyOwned = new Set(existingArchive.charms || []);
+    const runCharmRows = existingArchive.runs.filter(run => Array.isArray(run.charms));
+    const previouslyOwned = new Set(runCharmRows.length ? runCharmRows.flatMap(run => run.charms || []) : (existingArchive.charms || []));
     const charmDrops = previousRun ? (previousRun.charms || []) : charmRules.filter(rule =>
       rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
     ).map(rule => rule.id);
