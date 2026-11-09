@@ -13,7 +13,7 @@ import { hotspotsFor, type HotspotDef } from '../data/ryokan/hotspots';
 import { ITEMS, RECIPES, itemSvgMarkup } from '../data/ryokan/items';
 import { ParallaxRenderer } from '../systems/Parallax';
 import { simAudio } from '../audio/SimAudio';
-import { recordCampaignSector } from '../state/CampaignProgress';
+import { loadCampaignArchive, recordCampaignSector } from '../state/CampaignProgress';
 
 function actionsFor(hs: HotspotDef, state: GameState): string[] {
   const a: string[] = ['Осмотреть'];
@@ -638,8 +638,8 @@ export class ImmersionScene {
     const panel=document.getElementById('threatOverlay');
     const title=document.getElementById('threatTitle');
     const copy=document.getElementById('threatText');
-    if(title) title.textContent=kind==='light'?'СЛЕПОЙ ИДЁТ НА СВЕТ':kind==='sound'?'СЛУШАТЕЛЬ ИДЁТ НА ШУМ':'ЖИЛЕЦ ВЫХОДИТ ИЗ СТЕНЫ';
-    if(copy) copy.textContent=kind==='light'?'Существо тянется к источнику света. Погаси фонарь и не двигайся.':kind==='sound'?'Оно услышало тебя и приближается на звук. Замри или попробуй отвлечь его.':'Ты слишком долго оставался в одной комнате. Оно уже здесь.';
+    if(title) title.textContent=kind==='light'?'ЮРЭЙ ИДЁТ НА СВЕТ':kind==='sound'?'КИДЗЁ СЛЫШИТ ТЕБЯ':'РОКУДЗЁ ВЫХОДИТ ИЗ ТЕНИ';
+    if(copy) copy.textContent=kind==='light'?'Юрэй в погребальном саване тянется к свету. Погаси источник и не двигайся.':kind==='sound'?'Кидзё уловила твой голос. Замри или попробуй отвлечь демоницу.':'Рокудзё слишком долго наблюдала из соседней комнаты. Теперь она рядом.';
     panel?.classList.add('open'); panel?.setAttribute('aria-hidden','false');
     this.startThreatApproach();
   }
@@ -1793,19 +1793,37 @@ export class ImmersionScene {
       5 * this.state.health / 100 +
       5 * (this.state.ending === 'clear' ? 1 : this.state.ending === 'bind' ? 0.7 : 0.4)
     )));
-    const grade = score >= 92 ? 'A' : score >= 82 ? 'B' : score >= 68 ? 'C' : score >= 52 ? 'D' : score >= 40 ? 'E' : 'F';
-    const gradeTier = ({ F: 1, E: 2, D: 3, C: 4, B: 5, A: 6 } as Record<string, number>)[grade];
-    const gradeArt = ({ F: 'F.png', E: 'Е.png', D: 'D.png', C: 'С.png', B: 'В.png', A: 'А.png' } as Record<string, string>)[grade];
+    const grade = score >= 98 ? 'S' : score >= 92 ? 'A' : score >= 82 ? 'B' : score >= 68 ? 'C' : score >= 52 ? 'D' : score >= 40 ? 'E' : 'F';
+    const gradeTier = ({ F: 1, E: 2, D: 3, C: 4, B: 5, A: 6, S: 7 } as Record<string, number>)[grade];
+    const gradeArt = ({ F: 'F.png', E: 'Е.png', D: 'D.png', C: 'С.png', B: 'В.png', A: 'А.png', S: 'S.png' } as Record<string, string>)[grade];
 
-    const archive = recordCampaignSector('RK-01', {
+    const charmRules = [
+      { id: 'charm_1', chance: .32, eligible: this.state.ending === 'clear' || score >= 65 },
+      { id: 'charm_2', chance: .34, eligible: !!(this.state.flags.spider_story_heard || this.state.flags.spider_recognized) },
+      { id: 'charm_3', chance: .24, eligible: !!this.state.flags.encounter_light },
+      { id: 'charm_4', chance: .22, eligible: !!this.state.flags.encounter_sound },
+      { id: 'charm_5', chance: .16, eligible: !!this.state.flags.encounter_dweller && secretCount > 0 },
+      { id: 'charm_6', chance: .08, eligible: score >= 92 && this.state.ending === 'clear' }
+    ];
+    const previouslyOwned = new Set(loadCampaignArchive().charms || []);
+    const charmDrops = !this.state.flags.campaign_recorded ? charmRules.filter(rule =>
+      rule.eligible && !previouslyOwned.has(rule.id) && Math.random() < rule.chance
+    ).map(rule => rule.id) : [];
+    const archive = this.state.flags.campaign_recorded ? loadCampaignArchive() : recordCampaignSector('RK-01', {
       score, grade, gradeTier, collected: collected.length, used: used.length,
-      clues: clueCount, secrets: secretCount, ending: this.state.ending
+      clues: clueCount, secrets: secretCount, ending: this.state.ending,
+      completedAt: new Date().toISOString(), health: this.state.health, sanity: this.state.sanity,
+      visited: this.state.visited.length, items: collected, clueNames: clueKeys.filter(k => !!this.state.flags[k]), charms: charmDrops
     });
+    if (!this.state.flags.campaign_recorded) {
+      this.state.flags.campaign_recorded = true;
+      saveState(this.state);
+    }
     try {
       localStorage.setItem('limbo_pass_RK02', '1');
       localStorage.setItem('limbo_character_card_RK01', JSON.stringify({
         sector: 'RK-01', subject: 'СУБЪЕКТ 01', ending: this.state.ending,
-        grade, score, card: 'card' + gradeTier + '.png', health: this.state.health,
+        grade, score, card: 'card' + Math.min(6, gradeTier) + '.png', health: this.state.health,
         sanity: this.state.sanity, visited: this.state.visited.length,
         createdAt: new Date().toISOString()
       }));
@@ -1844,7 +1862,7 @@ export class ImmersionScene {
       pass.innerHTML = '<img src="/assets/game/items/b' + archive.passTier + '.png" alt="Пропуск следующего сектора"><div><small>БРЕЛОК-ПРОПУСК · НАКОПИТЕЛЬНЫЙ</small><strong>ДОСТУП К СЛЕДУЮЩЕЙ ЛОКАЦИИ</strong><b>УРОВЕНЬ ' + archive.passTier + ' / 3</b><em>Средняя оценка кампании: ' + archive.averageScore + ' · секторов: ' + archive.scoreCount + '</em></div>';
       const card = document.createElement('article');
       card.className = 'reward-card reward-id';
-      card.innerHTML = '<img src="/assets/game/items/card' + archive.bestCardTier + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + archive.bestCardTier + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
+      card.innerHTML = '<img src="/assets/game/items/card' + archive.bestCardTier + '.png" alt="Карточка персонажа"><div><small>КАРТОЧКА ПЕРСОНАЖА · АРХИВ ЦЕФЕЯ</small><strong>СУБЪЕКТ 01</strong><b>КАРТОЧКА ' + Math.max(1, archive.bestCardTier) + ' / 6</b><em>Текущая оценка: ' + grade + ' · лучший ранг сохраняется между секторами</em></div>';
       rewards.append(pass, card);
       body.appendChild(rewards);
 
@@ -2286,9 +2304,10 @@ export class ImmersionScene {
     this.dodgeReady = false; this.guarding = false; this.initiative = 100; this.enemyArmsWeakened = false; this.enemyLegsSlowed = false;
     this.monsterMaxHp = this.spiderInCombat ? 62 : this.threatKind === 'light' ? 42 : this.threatKind === 'sound' ? 34 : 54;
     this.monsterHp = this.monsterMaxHp;
-    this.monsterName = this.spiderInCombat ? 'ПАУТИННИЦА' : this.threatKind === 'light' ? 'СЛЕПОЙ' : this.threatKind === 'sound' ? 'СЛУШАТЕЛЬ' : 'ЖИЛЕЦ';
+    this.monsterName = this.spiderInCombat ? 'ПАУТИННИЦА' : this.threatKind === 'light' ? 'ЮРЭЙ · ОНРЁ' : this.threatKind === 'sound' ? 'КИДЗЁ' : 'РОКУДЗЁ-НО МИЯСУДОКОРО';
     this.combatTurn = 0; this.combatTarget = 'torso';
     this.state.flags['encounter_' + this.threatKind] = true;
+    this.state.flags['encounter_' + this.threatKind + '_yokai'] = true;
     const locationLabel = document.getElementById('combatLocationLabel');
     const locationSub = document.getElementById('combatLocationSub');
     const zoneLabel = document.getElementById('zoneLabel')?.textContent?.trim();
@@ -2308,9 +2327,9 @@ export class ImmersionScene {
     this.renderCombatInventory();
     const creatureVoice: Record<string,string> = {
       spider: 'Паутинница шепчет: «Ты всё-таки пришёл. Я оставила тебе место между нитями».',
-      light: 'Слепой шепчет: «Свет… ты принёс мне глаза. Отдай их обратно».',
-      sound: 'Слушатель отвечает твоим голосом: «Не зови. Я уже запомнил, как ты звучишь».',
-      dweller: 'Жилец скребёт по полу: «Под досками ещё кто-то. Он считает шаги вместо нас».',
+      light: 'Юрэй шепчет из-под повязки: «Свет… ты принёс мне глаза. Отдай их обратно».',
+      sound: 'Кидзё отвечает твоим голосом: «Не зови. Я уже запомнила, как ты звучишь».',
+      dweller: 'Рокудзё шепчет из складок кимоно: «Под досками ещё кто-то. Он считает шаги вместо нас».',
     };
     this.updateCombatHud(this.spiderInCombat ? creatureVoice.spider : creatureVoice[this.threatKind]);
     this.state.flags['heard_' + this.threatKind] = true;
