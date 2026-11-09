@@ -154,8 +154,8 @@ const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=creatures.
 const openGrades=grades.filter((_,i)=>gradeOpen(i)).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
 $('statSectors').textContent=String(sectorCount).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statMedals').textContent=unlockedMedals+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
 const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));$('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',(rank/6*100)+'%');$('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank];$('rankSub').textContent='ПРОГРЕСС СОХРАНЯЕТСЯ';
-$('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount();$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]).length;
-function cluesCount(){return clues.filter(([k])=>flags[k]).length}
+$('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount();$('breakSecrets').textContent=secrets.filter(([k])=>flags[k]||historicalSecrets.has(k)).length;
+function cluesCount(){return clues.filter(([k])=>flags[k]||historicalClues.has(k)).length}
 $('donutPercent').textContent=lorePct+'%';$('loreDonut').style.strokeDasharray=(427*lorePct/100)+' 427';
 $('averageScore').innerHTML=(sectorDone?Math.round(Number(archive.averageScore)||0):'—')+'<small>/100</small>';
 $('quickMedals').textContent=unlockedMedals+' ИЗ 6';$('quickPasses').textContent=(openGrades+openPasses)+' ИЗ 10';$('quickMonsters').textContent=unlockedMonsters+' ИЗ 4';$('quickItems').textContent=unlockedItems+' ОБНАРУЖЕНО';
