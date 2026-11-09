@@ -354,3 +354,20 @@
 .sector-briefing-hotkeys{display:flex;flex-wrap:wrap;gap:7px 13px;margin-top:13px;padding:10px 0;border-top:1px solid rgba(80,155,170,.16);border-bottom:1px solid rgba(80,155,170,.16)}
 .sector-briefing-hotkeys span{display:flex;align-items:center;gap:5px;font:8px 'JetBrains Mono',monospace;letter-spacing:.04em;color:#7e9aa5}
 .sector-briefing-hotkeys kbd{padding:3px 5px;border:1px solid rgba(89,180,194,.3);color:#9ee3e8;font:600 8px 'JetBrains Mono',monospace}
+
+
+/* Briefing warning symbols: compact pictograms instead of plain text labels. */
+.sector-briefing-alerts article>b{display:flex;align-items:center;gap:7px}
+.sector-briefing-alerts .briefing-icon{
+  display:inline-grid;place-items:center;flex:0 0 25px;width:25px;height:25px;
+  border:1px solid rgba(105,205,216,.28);border-radius:50%;
+  background:radial-gradient(circle,rgba(49,153,168,.18),rgba(5,18,27,.2));
+  color:#8de0e4;font:600 15px/1 'Space Grotesk',sans-serif;
+  text-shadow:0 0 12px rgba(94,221,226,.45)
+}
+.sector-briefing-alerts article:nth-child(2) .briefing-icon{color:#e4c78d;border-color:rgba(214,179,111,.3);text-shadow:0 0 12px rgba(214,179,111,.35)}
+.sector-briefing-alerts article:nth-child(3) .briefing-icon{color:#b8a6e8;border-color:rgba(164,139,219,.3)}
+.sector-briefing-alerts article:nth-child(4) .briefing-icon{color:#e99a9f;border-color:rgba(221,116,129,.3)}
+.sector-briefing-quick button{min-height:58px}
+.sector-briefing-quick button:disabled{opacity:1;filter:none;cursor:pointer}
+.sector-briefing-quick button:focus-visible,.sector-briefing-footer button:focus-visible{outline:2px solid #8de0e4;outline-offset:3px}
