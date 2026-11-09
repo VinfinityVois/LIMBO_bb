@@ -401,7 +401,7 @@ export class ImmersionScene {
       document.body.appendChild(modal);
       repaired = true;
     }
-    if (!modal.querySelector('#modalTitle') || !modal.querySelector('#modalBody') || !modal.querySelector('#modalActions') || !modal.querySelector('#modalClose')) {
+    if (!modal.querySelector('.sim-modal-panel') || !modal.querySelector('.smp-body-row') || !modal.querySelector('.smp-visual') || !modal.querySelector('.smp-a') || !modal.querySelector('.smp-note') || !modal.querySelector('#modalTitle') || !modal.querySelector('#modalBody') || !modal.querySelector('#modalActions') || !modal.querySelector('#modalClose')) {
       modal.innerHTML = '<div class="sim-modal-backdrop" id="modalBackdrop"></div><div class="sim-modal-panel"><div class="smp-h"><span id="modalTitle">ОСМОТР</span><button type="button" id="modalClose" aria-label="Закрыть">×</button></div><div class="smp-body-row"><div class="smp-visual" id="modalVisual"></div><div class="smp-b" id="modalBody"></div><div class="smp-a" id="modalActions"></div><div class="smp-note" id="modalNote"></div></div></div>';
       modal.hidden = !modalWasOpen;
       modal.classList.toggle('open', modalWasOpen);
