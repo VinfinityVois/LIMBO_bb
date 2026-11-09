@@ -434,7 +434,6 @@ export class ImmersionScene {
       if (!hotspotRoot) { hotspotRoot = document.createElement('div'); hotspotRoot.id = 'hotspotLayer'; hotspotRoot.className = 'hotspot-layer'; stage.appendChild(hotspotRoot); repaired = true; }
       let exitRoot = document.getElementById('exitLayer');
       if (!exitRoot) { exitRoot = document.createElement('div'); exitRoot.id = 'exitLayer'; exitRoot.className = 'exit-layer'; stage.appendChild(exitRoot); repaired = true; }
-      this.stage = stage;
       this.hsLayer = hotspotRoot;
       this.exitLayer = exitRoot;
     }
