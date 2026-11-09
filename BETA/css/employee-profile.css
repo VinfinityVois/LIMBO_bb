@@ -13,7 +13,7 @@
 .ep-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}.ep-tags span{font-size:.48rem;padding:.28rem .45rem;border:1px solid rgba(0,212,232,.18);color:#7b9aa8;background:rgba(0,212,232,.035)}
 .ep-tags span:first-child{color:var(--green);border-color:rgba(30,201,154,.28)}
 .ep-level{display:flex;flex-direction:column;align-items:center;gap:.6rem;min-width:150px}
-.level-ring{--progress:16%;width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--cyan) var(--progress),rgba(0,212,232,.09) 0);position:relative;filter:drop-shadow(0 0 12px rgba(0,212,232,.15))}
+.level-ring{--progress:16%;width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--cyan) 0 var(--progress),rgba(0,212,232,.09) var(--progress) 100%);position:relative;filter:drop-shadow(0 0 12px rgba(0,212,232,.15))}
 .level-ring:before{content:"";position:absolute;inset:7px;border-radius:50%;background:#08111b;border:1px solid rgba(0,212,232,.14)}
 .level-ring>div{position:relative;display:flex;flex-direction:column;align-items:center}.level-ring b{font:700 2rem var(--font-display);color:#e7f8fa}.level-ring small{font:8px var(--font-mono);letter-spacing:.15em;color:var(--cyan)}
 .level-caption{text-align:center;display:flex;flex-direction:column;gap:.18rem}.level-caption b{font:600 .56rem var(--font-mono);letter-spacing:.12em;color:var(--amber)}.level-caption span{font:8px var(--font-mono);color:var(--text-muted)}
