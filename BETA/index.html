@@ -35,6 +35,104 @@
   pointer-events: none !important;
 }
 .cursor, .cursor-dot { pointer-events: none !important; }
+
+/* ── Interaction + visual pass: calm signal, reliable hit-testing ── */
+html, body { cursor: auto !important; }
+body.breach-mode { background: #030811; }
+.scene { isolation: isolate; }
+.scene.active { z-index: 30; }
+.scene:not(.active) { pointer-events: none !important; }
+.scene > .signal-noise, .scene > .wave-grid, .scene > .breach-bg,
+.scene > .login-environment, .scene .warning-scanline,
+.scene .warning-icon-pulse, .scene .threat-matrix,
+.scene .align-vortex .av-ring, .scene .align-vortex .av-reticle {
+  pointer-events: none !important;
+}
+.signal-noise { animation: none !important; opacity: .18 !important; }
+.wave { animation-duration: 7s !important; opacity: .48; }
+#matrixCanvas { opacity: .075 !important; }
+.noise { opacity: .008 !important; }
+.scanlines { opacity: .075 !important; }
+.hud, .side-stream { pointer-events: none !important; }
+#cursor {
+  width: 22px !important; height: 22px !important;
+  border: 1.5px solid #8df5ff !important;
+  background: rgba(4, 20, 29, .24) !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 232, .12), 0 0 14px rgba(0, 212, 232, .38) !important;
+  mix-blend-mode: normal !important;
+  z-index: 10020 !important;
+}
+#cursor::before, #cursor::after {
+  content: ""; position: absolute; background: #b9fbff;
+  box-shadow: 0 0 5px rgba(0,212,232,.55);
+}
+#cursor::before { width: 1px; height: 30px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+#cursor::after { height: 1px; width: 30px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+#cursor.hover {
+  width: 34px !important; height: 34px !important;
+  border-color: #d5ffff !important; background: rgba(0,212,232,.12) !important;
+}
+#cursorDot { width: 4px !important; height: 4px !important; background: #fff !important; box-shadow: 0 0 8px #00d4e8; z-index: 10021 !important; }
+button, a, input, [role="button"], [data-cursor] { cursor: pointer !important; }
+input { cursor: text !important; }
+.cyber-btn, #btnProceed, #btnLogin, #btnStartAlign {
+  position: relative; z-index: 60 !important; pointer-events: auto !important;
+  min-height: 48px; touch-action: manipulation;
+}
+.warning-frame, .login-wrap, .terminal-shell, .align-rules-panel {
+  border-radius: 12px !important;
+  border-color: rgba(119, 178, 195, .22) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.48), 0 0 34px rgba(0,190,210,.055) !important;
+}
+.warning-frame {
+  background: linear-gradient(145deg, rgba(12,18,29,.98), rgba(5,9,17,.98)) !important;
+}
+.warning-top { border-color: rgba(224,80,92,.2) !important; }
+.warning-icon-wrap { filter: saturate(.72); }
+.warning-icon-pulse, .warning-scanline, .blink-red { animation: none !important; }
+.warning-icon-pulse { opacity: .18 !important; }
+.warning-meter i { transition: width .65s ease !important; }
+.cyber-btn {
+  border-radius: 7px !important;
+  background: rgba(0, 212, 232, .055) !important;
+  box-shadow: none !important;
+}
+.cyber-btn:hover { background: rgba(0,212,232,.11) !important; box-shadow: 0 8px 24px rgba(0,0,0,.22) !important; }
+.cyber-btn.danger { border-color: rgba(220,105,112,.58) !important; color: #e99ba1 !important; }
+.cyber-btn:focus-visible { outline: 2px solid #8df5ff !important; outline-offset: 4px; }
+#systemNoticeHost {
+  position: fixed; right: clamp(14px, 2vw, 30px); top: clamp(64px, 8vh, 92px);
+  z-index: 11000; width: min(390px, calc(100vw - 28px));
+  display: grid; gap: 10px; pointer-events: none;
+}
+.system-notice {
+  display: grid; grid-template-columns: 4px 1fr auto; gap: 12px;
+  align-items: start; padding: 14px 14px 13px;
+  color: #dbe7ed; background: linear-gradient(145deg, rgba(13,22,34,.98), rgba(5,10,18,.98));
+  border: 1px solid rgba(125,170,190,.24); border-radius: 9px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.48); backdrop-filter: blur(14px);
+  font: 12px/1.5 var(--font-ui, system-ui); pointer-events: auto;
+  animation: noticeIn .24s ease both;
+}
+.system-notice::before { content:""; width:3px; height:100%; min-height:38px; grid-column:1; grid-row:1; background:#6ccbd1; border-radius:3px; }
+.system-notice[data-kind="error"]::before { background:#d97880; }
+.system-notice[data-kind="warning"]::before { background:#c9a66a; }
+.system-notice-copy { grid-column:2; min-width:0; }
+.system-notice-title { display:block; margin-bottom:3px; color:#d9f4f5; font:600 10px/1.4 var(--font-mono,monospace); letter-spacing:.12em; text-transform:uppercase; }
+.system-notice-message { color:#aab9c6; overflow-wrap:anywhere; }
+.system-notice-close { grid-column:3; border:0; padding:0 3px; color:#8295a5; background:transparent; font-size:18px; line-height:1; cursor:pointer; }
+@keyframes noticeIn { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:none; } }
+@media (max-width: 760px) {
+  .hud { opacity:.45; transform:scale(.82); transform-origin:top left; }
+  .hud-tr, .hud-br { transform-origin:top right; }
+  .warning-frame { width:min(94vw,760px) !important; padding:26px 22px !important; max-height:88vh; overflow:auto; }
+  #systemNoticeHost { top:12px; right:12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wave, .signal-noise, .warning-icon-pulse, .warning-scanline { animation:none !important; }
+  .system-notice { animation:none !important; }
+}
+
 </style>
 
 </head>
@@ -55,6 +153,7 @@
 <!-- ═══ CURSOR ═══ -->
 <div class="cursor" id="cursor"><div class="cursor-cross c1"></div><div class="cursor-cross c2"></div></div>
 <div class="cursor-dot" id="cursorDot"></div>
+<div id="systemNoticeHost" aria-live="polite" aria-relevant="additions"></div>
 
 <!-- ═══ HUD ═══ -->
 <div class="hud hud-tl">
@@ -453,9 +552,51 @@
   const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
 
   const scene = id => {
-    $$('.scene').forEach(x => x.classList.remove('active'));
-    $(id).classList.add('active');
+    const target = $(id);
+    if (!target) return;
+    $('.scene').forEach(x => {
+      const active = x === target;
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-hidden', active ? 'false' : 'true');
+      x.inert = !active;
+    });
+    document.body.dataset.activeScene = target.id;
   };
+
+  // A single, non-blocking notification layer for runtime errors and system notices.
+  const noticeHost = document.getElementById('systemNoticeHost');
+  function showSystemNotice(kind, title, message) {
+    if (!noticeHost) return;
+    const card = document.createElement('section');
+    card.className = 'system-notice';
+    card.dataset.kind = kind;
+    card.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    const copy = document.createElement('div');
+    copy.className = 'system-notice-copy';
+    const heading = document.createElement('strong');
+    heading.className = 'system-notice-title';
+    heading.textContent = title;
+    const detail = document.createElement('div');
+    detail.className = 'system-notice-message';
+    detail.textContent = String(message || 'Операция не выполнена.');
+    copy.append(heading, detail);
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'system-notice-close';
+    close.setAttribute('aria-label', 'Закрыть уведомление'); close.textContent = '×';
+    close.addEventListener('click', () => card.remove());
+    card.append(copy, close);
+    noticeHost.appendChild(card);
+    while (noticeHost.children.length > 3) noticeHost.firstElementChild.remove();
+    window.setTimeout(() => card.remove(), kind === 'error' ? 9000 : 5200);
+  }
+  window.addEventListener('error', event => {
+    const message = event.message || 'Неизвестная ошибка интерфейса';
+    showSystemNotice('error', 'ОШИБКА СИСТЕМЫ', message);
+  });
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    showSystemNotice('error', 'СБОЙ ОПЕРАЦИИ', reason && reason.message ? reason.message : String(reason || 'Необработанная ошибка'));
+  });
 
   // ─── CURSOR ───
   const cursor = $('#cursor'), dot = $('#cursorDot');
@@ -477,7 +618,8 @@
   document.addEventListener('mouseout', e => {
     if (e.target.closest('button,input,[data-cursor],a')) cursor.classList.remove('hover');
   });
-  if (matchMedia('(pointer:fine)').matches) document.body.style.cursor = 'none';
+  // Keep the native pointer available; the reticle is only an additional visual guide.
+  document.body.style.cursor = 'auto';
 
   // ─── MATRIX ───
   const canvas = $('#matrixCanvas'), ctx = canvas.getContext('2d');
@@ -491,8 +633,12 @@
   }
   resizeCanvas();
   addEventListener('resize', resizeCanvas);
-  function matrix() {
-    ctx.fillStyle = 'rgba(3, 5, 10, 0.09)';
+  let matrixLastFrame = 0;
+  function matrix(now = 0) {
+    requestAnimationFrame(matrix);
+    if (now - matrixLastFrame < 72) return;
+    matrixLastFrame = now;
+    ctx.fillStyle = 'rgba(3, 5, 10, 0.12)';
     ctx.fillRect(0, 0, W, H);
     ctx.font = '12px JetBrains Mono, monospace';
     for (let i = 0; i < cols; i++) {
@@ -515,9 +661,8 @@
       drops[i] += Math.random() * 0.7 + 0.25;
       if (y > H && Math.random() > 0.975) drops[i] = Math.random() * -30;
     }
-    requestAnimationFrame(matrix);
   }
-  matrix();
+  requestAnimationFrame(matrix);
 
   // ─── AUDIO (mechanical keys + tension drone) ───
   let audio = null, masterGain = null, droneNodes = null;
@@ -616,23 +761,22 @@
   // ─── GLITCH FX ───
   const glitchFlash = $('#glitchFlash'), rgbSplit = $('#rgbSplit'), glitchOverlay = $('#glitchOverlay'), scanBeam = $('#scanBeam'), chroma = $('#chroma'), breachFlash = $('#breachFlash');
 
-  function glitchBurst(intensity = 3) {
+  function glitchBurst(intensity = 1) {
+    // Glitch is a restrained transition accent, never a full-screen white/red flash.
     let i = 0;
-    const colors = ['#00fff9', '#ff00aa', '#e02848', '#9b00d4', '#e8a020', '#fff'];
     const go = () => {
-      glitchFlash.style.background = pick(colors);
-      glitchFlash.style.opacity = String(0.08 + Math.random() * 0.08);
+      glitchFlash.style.background = 'rgba(24, 145, 158, .22)';
+      glitchFlash.style.opacity = '.025';
       rgbSplit.classList.add('on');
-      glitchOverlay.style.opacity = String(0.12 + Math.random() * 0.1);
-      chroma.style.opacity = String(0.06 + Math.random() * 0.06);
-      noiseBurst(0.04, 0.04);
+      glitchOverlay.style.opacity = '.035';
+      chroma.style.opacity = '.02';
       setTimeout(() => {
         glitchFlash.style.opacity = '0';
         rgbSplit.classList.remove('on');
         glitchOverlay.style.opacity = '0';
         chroma.style.opacity = '0';
-        if (++i < intensity) setTimeout(go, rand(30, 90));
-      }, rand(25, 55));
+        if (++i < Math.min(1, intensity)) setTimeout(go, 220);
+      }, 90);
     };
     go();
   }
@@ -720,7 +864,7 @@
     signalBars.querySelectorAll('i').forEach(b => {
       b.style.height = rand(3, 26) + 'px';
     });
-  }, 180);
+  }, 620);
 
   async function bootSignal() {
     ensureAudio();
