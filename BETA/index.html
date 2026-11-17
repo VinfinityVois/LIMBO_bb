@@ -554,7 +554,7 @@ input { cursor: text !important; }
   const scene = id => {
     const target = $(id);
     if (!target) return;
-    $('.scene').forEach(x => {
+    $$('.scene').forEach(x => {
       const active = x === target;
       x.classList.toggle('active', active);
       x.setAttribute('aria-hidden', active ? 'false' : 'true');
