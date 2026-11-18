@@ -345,3 +345,50 @@ button,a,[role=button]{-webkit-tap-highlight-color:transparent}
 @media(prefers-reduced-motion:reduce){
   #mission-intro .intro-panel,#bios-boot *{scroll-behavior:auto}
 }
+
+
+/* Breach protocol: compact, scroll-safe mobile terminal/login stages */
+@media(max-width:760px){
+  #scene2 .terminal-body{display:flex;flex-direction:column;min-height:0}
+  #scene2 .terminal-left{width:100%;min-width:0}
+  #scene2 .terminal-right{width:100%;min-width:0;max-height:220px;overflow:auto}
+  #scene3 .access-body{display:flex;flex-direction:column;min-width:0}
+  #scene3 .access-sidebar{width:100%;min-width:0}
+  #scene3 .login-main{width:100%;min-width:0}
+  #scene3 .login-form{width:100%;min-width:0}
+  #scene3 .login-wrap{max-height:none}
+  #scene4 .auth-final.capture-interface{max-height:none;overflow:visible}
+  #scene4 .align-vortex{width:min(58vw,300px);height:min(58vw,300px);max-width:300px;max-height:300px}
+  #scene4 .capture-instruction{font-size:11px;text-align:center}
+}
+@media(max-width:520px){
+  #scene2 .terminal-top{font-size:9px;line-height:1.4}
+  #scene2 .terminal-logo .princ-emblem{width:28px;height:28px;flex-basis:28px}
+  #scene2 .terminal-sub{font-size:9px}
+  #scene2 .terminal-right{max-height:190px}
+  #scene2 .terminal-log{font-size:9px;line-height:1.45;overflow-wrap:anywhere}
+  #scene3 .access-header .header-left h1{font-size:26px}
+  #scene3 .access-header .header-left p{font-size:9px;line-height:1.5}
+  #scene3 .access-status{max-width:100%}
+  #scene3 .access-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:11px}
+  #scene3 .side-title,#scene3 .side-log{grid-column:1/-1}
+  #scene3 .side-item{min-width:0;overflow-wrap:anywhere;font-size:9px}
+  #scene3 .login-main{padding:13px 10px}
+  #scene3 .field-block{min-width:0}
+  #scene3 input{min-height:46px;font-size:16px!important}
+  #scene4 .capture-status-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  #scene4 .capture-readout{min-width:0;padding:8px}
+  #scene4 .align-vortex{width:min(68vw,250px);height:min(68vw,250px)}
+  #scene4 .final-title{font-size:clamp(21px,7vw,30px)}
+}
+@media(orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  #scene2 .terminal-body{flex-direction:row}
+  #scene2 .terminal-left{width:38%}
+  #scene2 .terminal-right{width:62%;max-height:calc(100svh - 130px)}
+  #scene3 .access-body{flex-direction:row}
+  #scene3 .access-sidebar{width:35%;display:block}
+  #scene3 .login-main{width:65%}
+  #scene4 .auth-final.capture-interface{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  #scene4 .capture-heading,#scene4 .capture-status-grid,#scene4 .capture-instruction{grid-column:1/-1}
+  #scene4 .align-vortex{grid-column:1;grid-row:4/8;width:min(36vw,220px);height:min(36vw,220px)}
+}
