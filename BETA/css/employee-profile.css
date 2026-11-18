@@ -1008,3 +1008,126 @@
   .employee-page .quick-collections button{min-height:62px}
   .employee-page .quick-symbol{width:44px;height:44px}
 }
+
+
+/* ── A-00 dashboard restoration: fluid workspace, stable archive navigation ── */
+html:has(body.employee-page), body.employee-page {
+  width:100%;
+  min-width:0;
+  min-height:100%;
+  height:auto;
+  max-height:none;
+  margin:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+body.employee-page {display:block}
+.employee-page .sc-topbar {width:100%;max-width:none;flex:0 0 auto}
+.employee-page .employee-layout {
+  display:grid!important;
+  width:100%;
+  max-width:none;
+  min-width:0;
+  height:auto;
+  min-height:calc(100dvh - 58px);
+  overflow:visible;
+  grid-template-columns:clamp(236px,20vw,292px) minmax(0,1fr);
+  align-items:stretch;
+}
+.employee-page .employee-sidebar {
+  position:sticky!important;
+  top:0!important;
+  align-self:start;
+  width:auto!important;
+  height:calc(100dvh - 58px)!important;
+  min-height:0!important;
+  max-height:calc(100dvh - 58px);
+  overflow-y:auto!important;
+}
+.employee-page .employee-main {
+  display:block;
+  width:100%;
+  max-width:none!important;
+  min-width:0;
+  height:auto;
+  min-height:calc(100dvh - 58px);
+  margin:0!important;
+  padding:clamp(12px,1.5vw,24px);
+  overflow:visible;
+}
+.employee-page .overview-section,
+.employee-page .collection-section {
+  width:100%;
+  max-width:none;
+  min-width:0;
+}
+.employee-page .overview-section {
+  display:flex;
+  flex-direction:column;
+  gap:clamp(10px,1.2vw,16px);
+}
+.employee-page .overview-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.45fr) minmax(300px,.9fr);
+  align-items:stretch;
+  gap:clamp(10px,1vw,16px);
+}
+.employee-page .data-panel {min-width:0;min-height:0;overflow:hidden}
+.employee-page .score-panel {display:flex;flex-direction:column}
+.employee-page .run-timeline {
+  flex:0 1 auto;
+  min-height:0;
+  max-height:clamp(170px,25vh,280px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(0,212,232,.35) rgba(3,10,18,.45);
+}
+.employee-page .run-entry {min-width:0}
+.employee-page .run-main {min-width:0}
+.employee-page .collection-section:not([hidden]) {display:block}
+.employee-page .overview-section[hidden],
+.employee-page .collection-section[hidden] {display:none!important}
+.employee-page .collection-grid,
+.employee-page .medal-grid,
+.employee-page .pass-grid,
+.employee-page .sim-pass-grid,
+.employee-page .charm-grid,
+.employee-page .creature-grid,
+.employee-page .item-grid {
+  width:100%;
+  min-width:0;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,245px),1fr));
+  align-items:stretch;
+}
+.employee-page .archive-tile {height:100%;min-width:0}
+.employee-page .employee-footer {width:100%}
+@media (max-width:1100px) {
+  .employee-page .employee-layout {grid-template-columns:clamp(220px,25vw,264px) minmax(0,1fr)}
+  .employee-page .overview-grid {grid-template-columns:minmax(0,1fr)}
+  .employee-page .run-timeline {max-height:clamp(180px,30vh,320px)}
+}
+@media (max-width:760px) {
+  html:has(body.employee-page),body.employee-page {width:100%;min-height:100dvh;height:auto;max-height:none;overflow-x:hidden;overflow-y:auto}
+  .employee-page .employee-layout {display:block!important;width:100%;height:auto;min-height:0;overflow:visible}
+  .employee-page .employee-sidebar {position:fixed!important;top:0!important;bottom:0!important;left:0!important;width:min(310px,88vw)!important;height:100dvh!important;max-height:100dvh;min-height:0;z-index:2147482000}
+  .employee-page .employee-main {width:100%!important;max-width:none!important;min-height:0;height:auto;margin:0!important;padding:14px 12px calc(28px + env(safe-area-inset-bottom))!important;overflow:visible}
+  .employee-page .overview-grid {grid-template-columns:minmax(0,1fr)!important}
+  .employee-page .run-timeline {max-height:230px}
+  .employee-page .collection-grid,
+  .employee-page .medal-grid,
+  .employee-page .pass-grid,
+  .employee-page .sim-pass-grid,
+  .employee-page .charm-grid,
+  .employee-page .creature-grid,
+  .employee-page .item-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px) {
+  .employee-page .collection-grid,
+  .employee-page .medal-grid,
+  .employee-page .pass-grid,
+  .employee-page .sim-pass-grid,
+  .employee-page .charm-grid,
+  .employee-page .creature-grid,
+  .employee-page .item-grid {grid-template-columns:minmax(0,1fr)}
+}
