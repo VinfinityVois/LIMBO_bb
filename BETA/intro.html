@@ -536,6 +536,15 @@ tailwind.config = {
 
 <script>
 (() => {
+  // Do not allow a direct/unconfirmed game launch. Authorization is granted
+  // by the terminal confirmation or by the completed operator-auth sequence.
+  let launchAuthorized = false;
+  try { launchAuthorized = sessionStorage.getItem('limbo_launch_authorized') === '1'; } catch (error) {}
+  if (!launchAuthorized) {
+    window.location.replace('terminal.html?launch=required');
+    return;
+  }
+
   const LORE = {
     '0x7F': 'Фрагмент журнала Смотрящего. Сбой коллизий, Шанхай.',
     '0x9A': 'Сигнатура протокола «Цефей». Нужна для ключа шлюза.',
