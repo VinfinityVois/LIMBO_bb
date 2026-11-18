@@ -1,0 +1,215 @@
+/* LIMBO · mobile performance and device layout layer */
+:root {
+  --limbo-mobile-safe-top: env(safe-area-inset-top, 0px);
+  --limbo-mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overscroll-behavior-x: none; }
+img, canvas, video, svg { max-width: 100%; }
+button, a, input, select, textarea { touch-action: manipulation; }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* Tablets are intentionally landscape-only. The opaque gate also blocks taps
+   underneath, so the page cannot be used until the device is rotated. */
+@media (pointer: coarse) and (min-width: 600px) and (max-width: 1100px) and (orientation: portrait) {
+  html, body { overflow: hidden !important; height: 100%; }
+  html::after {
+    content: "ПОВЕРНИТЕ УСТРОЙСТВО\\A\\A LIMBO рассчитан на горизонтальный режим планшета.\\A\\A Переверните планшет, чтобы продолжить.";
+    white-space: pre-wrap;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(28px, env(safe-area-inset-top)) 9vw max(28px, env(safe-area-inset-bottom));
+    background:
+      radial-gradient(ellipse at 50% 42%, rgba(0, 183, 205, .13), transparent 54%),
+      linear-gradient(145deg, #07111a, #02050b 72%);
+    border: 1px solid rgba(91, 219, 229, .24);
+    color: #d8f7f8;
+    text-align: center;
+    font: 700 clamp(18px, 3vw, 28px)/1.8 "JetBrains Mono", monospace;
+    letter-spacing: .12em;
+    text-shadow: 0 0 22px rgba(0, 220, 235, .22);
+    pointer-events: auto;
+  }
+  html::before {
+    content: "ROTATE DEVICE / LANDSCAPE REQUIRED";
+    position: fixed;
+    z-index: 2147483001;
+    left: 0; right: 0; bottom: 12%;
+    color: #6f9ca7;
+    text-align: center;
+    font: 10px/1.4 "JetBrains Mono", monospace;
+    letter-spacing: .2em;
+    pointer-events: none;
+  }
+}
+
+/* Lower the cost of large blur layers, filters and perpetual effects on touch hardware. */
+@media (pointer: coarse), (max-width: 760px) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+  [class*="backdrop-blur"], .backdrop-blur-md, .backdrop-blur-lg,
+  .warning-frame, .login-wrap, .terminal-shell, .panel, .modal-panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .noise, .scanlines, .rgb-split, .chroma, .glitch-overlay,
+  .glitch-flash, .scan-beam, .ambient-grid, .wave-grid {
+    mix-blend-mode: normal !important;
+  }
+  .boot-event, .system-notice, .warning-frame, .warning-icon,
+  .warning-title, .warning-scanline, .warning-icon-pulse {
+    animation-duration: 1s !important;
+  }
+  .scene:not(.active) *, .scene:not(.active)::before, .scene:not(.active)::after {
+    animation-play-state: paused !important;
+  }
+  .sys-page, main, .scene, .panel, .card, .modal-panel {
+    min-width: 0;
+    max-width: 100%;
+  }
+  button, .cyber-btn, .btn, [role="button"] { min-height: 42px; }
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Intrusion / unauthorized access warning: always keep the continue action reachable. */
+@media (max-width: 760px) {
+  #scene1 .breach-container {
+    min-height: 100svh !important;
+    min-height: 100dvh !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: calc(8px + var(--limbo-mobile-safe-top)) 9px calc(8px + var(--limbo-mobile-safe-bottom)) !important;
+  }
+  #scene1 .warning-frame {
+    display: flex !important;
+    flex-direction: column !important;
+    width: min(100%, 560px) !important;
+    max-height: calc(100dvh - 16px - var(--limbo-mobile-safe-top) - var(--limbo-mobile-safe-bottom)) !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding: clamp(12px, 3.2vw, 20px) clamp(12px, 3vw, 18px) !important;
+    gap: 8px;
+  }
+  #scene1 .warning-top { font-size: 9px !important; line-height: 1.4; }
+  #scene1 .warning-icon-wrap { margin: 3px auto !important; transform: scale(.76); }
+  #scene1 .warning-title { font-size: clamp(16px, 4.8vw, 22px) !important; line-height: 1.15 !important; }
+  #scene1 .warning-sub { font-size: 11px !important; line-height: 1.4 !important; margin: 2px auto 5px !important; }
+  #scene1 .warning-meter-wrap { margin: 2px 0 !important; }
+  #scene1 .warning-meta { display: grid !important; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px 8px; font-size: 8px !important; }
+  #scene1 .warning-log { max-height: 54px !important; min-height: 0 !important; overflow: auto; font-size: 8px !important; }
+  #scene1 #btnProceed {
+    position: sticky !important;
+    bottom: 0;
+    flex: 0 0 auto;
+    width: 100% !important;
+    min-height: 50px !important;
+    margin-top: 4px !important;
+    padding: 12px 10px !important;
+    background: linear-gradient(110deg, #35101d, #160b16) !important;
+    box-shadow: 0 -8px 20px rgba(5, 7, 15, .92) !important;
+  }
+  #scene1 .tiny-warning { font-size: 8px !important; line-height: 1.35; margin-top: 2px; }
+}
+
+/* Phone: replace the tiny maze canvas with legible, tactile mission cards. */
+.mobile-mission-board { display: none; }
+@media (pointer: coarse) and (max-width: 600px) {
+  body:has(#game-canvas) { height: 100dvh; min-height: 100dvh; overflow: hidden; }
+  body:has(#game-canvas) > header { flex: 0 0 auto; }
+  body:has(#game-canvas) > main {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 5px !important;
+    overflow: hidden;
+  }
+  body:has(#game-canvas) > main > .tech-corner {
+    position: relative;
+    width: 100%;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+  #game-canvas, #glitch-canvas, #hud-tasks, #touch-controls { display: none !important; }
+  .mobile-mission-board {
+    position: absolute;
+    inset: 0;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: clamp(12px, 3.5vw, 18px);
+    overflow-y: auto;
+    color: #d9edf2;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(0, 205, 220, .09), transparent 50%),
+      linear-gradient(160deg, rgba(5, 12, 22, .99), rgba(2, 5, 12, .99));
+    font-family: "JetBrains Mono", monospace;
+    overscroll-behavior: contain;
+  }
+  .mobile-board-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding-bottom:9px; border-bottom:1px solid rgba(0,240,255,.2); }
+  .mobile-board-kicker { color:#6d9eaa; font-size:8px; letter-spacing:.18em; }
+  .mobile-board-title { color:#8ff5f4; font:700 clamp(17px,5vw,23px)/1.1 "Space Grotesk",sans-serif; margin-top:4px; }
+  .mobile-board-state { flex:0 0 auto; padding:6px 8px; border:1px solid rgba(0,240,255,.28); color:#8ff5f4; font-size:9px; }
+  .mobile-board-summary { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .mobile-board-stat { min-width:0; padding:9px; background:rgba(12,25,38,.72); border:1px solid rgba(115,165,185,.16); }
+  .mobile-board-stat small { display:block; color:#6f899b; font-size:8px; letter-spacing:.12em; }
+  .mobile-board-stat strong { display:block; margin-top:4px; color:#d8eff2; font-size:12px; overflow-wrap:anywhere; }
+  .mobile-board-section { color:#7ea5b1; font-size:9px; letter-spacing:.16em; margin:2px 0 0; }
+  .mobile-route-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  .mobile-route-card {
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between;
+    min-height:82px; padding:11px; text-align:left;
+    border:1px solid rgba(0,210,225,.3); border-radius:4px;
+    background:linear-gradient(145deg,rgba(10,27,40,.96),rgba(5,12,22,.96));
+    color:#d9f7f7; touch-action:manipulation;
+  }
+  .mobile-route-card:disabled { opacity:.38; border-color:rgba(125,145,160,.14); color:#71818e; }
+  .mobile-route-card .route-dir { font-size:11px; font-weight:700; letter-spacing:.08em; }
+  .mobile-route-card .route-hint { color:#7798a5; font-size:8px; line-height:1.35; }
+  .mobile-route-card .route-arrow { align-self:flex-end; color:#5fe7e9; font-size:18px; line-height:1; }
+  .mobile-board-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:auto; }
+  .mobile-board-action {
+    min-width:0; min-height:48px; padding:8px 5px;
+    border:1px solid rgba(0,220,235,.3); border-radius:4px;
+    background:rgba(5,19,30,.95); color:#9ce8e9;
+    font:700 9px/1.3 "JetBrains Mono",monospace;
+  }
+  .mobile-board-action:disabled { opacity:.35; }
+  .mobile-board-footer { color:#66818f; font-size:8px; line-height:1.45; border-top:1px solid rgba(120,160,180,.14); padding-top:8px; }
+  #toast-interaction { top:8px !important; left:8px !important; right:8px !important; transform:none !important; max-width:none !important; z-index:80 !important; }
+  #danger-alert { top:8px !important; left:8px !important; right:8px !important; transform:none !important; z-index:75 !important; }
+  #game-status-card { z-index:100 !important; }
+  body:has(#game-canvas) > footer { flex:0 0 auto; }
+}
+@media (pointer: coarse) and (max-width: 380px) {
+  .mobile-route-card { min-height:74px; padding:9px; }
+  .mobile-board-stat { padding:7px; }
+  .mobile-board-action { font-size:8px; }
+}
+
+/* Tablet landscape: keep the canvas readable and reserve space for touch controls. */
+@media (pointer: coarse) and (min-width: 600px) and (max-width: 1100px) and (orientation: landscape) {
+  body:has(#game-canvas) > main > .tech-corner { height: min(70dvh, 620px) !important; min-height: 300px !important; }
+  #game-canvas, #glitch-canvas { image-rendering: auto; }
+  #hud-tasks { width: min(260px, 31vw); max-height: 38%; }
+}
+
+/* Consistent responsive behavior for the remaining LIMBO pages. */
+@media (max-width: 760px) {
+  .sc-topbar, .sys-topbar, .site-topbar, header { max-width: 100%; }
+  .sys-page, .scene-page, .employee-page, .dossier-page, .poly-page { width: min(100% - 20px, 100%); }
+  .sys-title, .page-title, h1 { overflow-wrap: anywhere; }
+  .modal-overlay, .confirm-overlay, .archive-modal { padding: 8px !important; }
+  .modal-panel, .confirm-panel, .archive-dialog { width: 100% !important; max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important; overflow: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
