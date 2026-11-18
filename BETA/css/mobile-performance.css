@@ -83,6 +83,9 @@ button { -webkit-tap-highlight-color: transparent; }
     justify-content: center !important;
     padding: calc(8px + var(--limbo-mobile-safe-top)) 9px calc(8px + var(--limbo-mobile-safe-bottom)) !important;
   }
+  #scene1 .threat-matrix, #scene1 .warning-scanline, #scene1 .warning-icon-pulse { display: none !important; }
+  #scene1 .warning-frame, #scene1 .warning-frame::before, #scene1 .warning-frame::after,
+  #scene1 .warning-icon, #scene1 .warning-title, #scene1 .blink-red { animation: none !important; }
   #scene1 .warning-frame {
     display: flex !important;
     flex-direction: column !important;
