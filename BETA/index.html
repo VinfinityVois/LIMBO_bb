@@ -608,69 +608,7 @@ body.breach-mode:after{
 </style>
 
 
-<style id="limbo-hacking-console">
-#scene2.terminal-scene{overflow:hidden!important;padding:clamp(8px,1.5vh,18px)!important;align-items:center!important;justify-content:center!important}
-#scene2 .terminal-shell{width:min(1440px,calc(100vw - 24px))!important;height:min(900px,calc(100dvh - 24px))!important;min-height:0!important;overflow:hidden!important}
-#scene2 .terminal-body{grid-template-columns:minmax(220px,27%) minmax(0,1fr)!important;min-height:0!important}
-#scene2 .terminal-left{padding:clamp(14px,2vw,28px)!important;overflow:hidden!important}
-#scene2 .terminal-logo{font-size:clamp(25px,3vw,42px)!important;gap:10px!important}
-#scene2 .terminal-logo .princ-emblem{width:clamp(48px,5.4vw,76px)!important}
-#scene2 .terminal-sub{font-size:7px!important;margin-top:7px!important}
-#scene2 .ascii-block{margin-top:clamp(10px,1.8vh,20px)!important;min-height:70px!important;padding:8px!important}
-#scene2 .subsystem-list{margin-top:12px!important;padding-top:9px!important}
-#scene2 .sub-row{font-size:8px!important;line-height:1.75!important}
-#scene2 .progress-big{left:18px!important;right:18px!important;bottom:38px!important}
-#scene2 .boot-percent{right:18px!important;bottom:12px!important}
-#scene2 .terminal-right{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;padding:0 clamp(12px,1.8vw,24px)!important}
-#scene2 .terminal-console-heading{height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(81,166,183,.18);color:#6e9aa8;font:8px 'JetBrains Mono',monospace;letter-spacing:.15em}
-#scene2 .terminal-console-heading b{display:flex;align-items:center;gap:7px;color:#54d8b7;font-weight:500}
-#scene2 .terminal-console-heading b i{width:5px;height:5px;border-radius:50%;background:#54d8b7;box-shadow:0 0 8px #54d8b7}
-#scene2 .terminal-log{flex:1 1 0!important;min-height:100px!important;padding:clamp(12px,1.8vw,24px) 4px!important;font-size:clamp(9px,.72vw,11px)!important;line-height:1.7!important;overflow:auto!important}
-#scene2 .terminal-telemetry-panel{flex:0 0 auto;min-height:132px;margin:0 0 8px;padding:9px 11px;border:1px solid rgba(81,166,183,.16);background:linear-gradient(120deg,rgba(3,15,24,.82),rgba(3,9,17,.58));}
-#scene2 .terminal-telemetry-title{display:flex;justify-content:space-between;gap:8px;color:#68a3b1;font:8px 'JetBrains Mono',monospace;letter-spacing:.13em}
-#scene2 .terminal-telemetry-title small{color:#456b79;font-size:7px}
-#scene2 #terminalGraph{display:block;width:100%;height:62px;margin-top:5px}
-#scene2 .terminal-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-#scene2 .terminal-action-row button{min-width:0;min-height:30px;padding:6px 5px;border:1px solid rgba(0,208,224,.32);background:rgba(0,90,110,.12);color:#72dce5;font:8px 'JetBrains Mono',monospace;letter-spacing:.07em;cursor:pointer;transition:background .18s,border-color .18s}
-#scene2 .terminal-action-row button:hover{background:rgba(0,190,210,.13);border-color:rgba(0,235,245,.7)}
-#scene2 .terminal-action-row button:nth-child(2){border-color:rgba(255,75,105,.28);color:#e68a9b}
-#scene2 .terminal-action-row button:nth-child(3){border-color:rgba(74,214,170,.3);color:#78dcb8}
-#scene2 .hex-dump{flex:0 0 26px!important;height:26px!important;padding:6px 2px!important;white-space:nowrap;overflow:hidden}
-#scene2 .terminal-prompt{flex:0 0 38px!important;height:38px!important;padding:10px 18px!important}
-@media(max-height:760px) and (min-width:621px){
- #scene2 .terminal-shell{height:calc(100dvh - 14px)!important}
- #scene2 .terminal-left{padding:12px!important}
- #scene2 .ascii-block{display:none}
- #scene2 .terminal-telemetry-panel{min-height:112px}
- #scene2 #terminalGraph{height:44px}
- #scene2 .terminal-log{padding:8px 3px!important}
-}
-@media(max-width:760px){
- #scene2 .terminal-shell{width:calc(100vw - 12px)!important;height:calc(100dvh - 12px)!important}
- #scene2 .terminal-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important}
- #scene2 .terminal-left{padding:9px 12px!important;max-height:31vh!important;border-right:0!important;border-bottom:1px solid rgba(92,178,194,.16)}
- #scene2 .terminal-logo{font-size:24px!important}
- #scene2 .terminal-logo .princ-emblem{width:42px!important}
- #scene2 .terminal-sub,#scene2 .ascii-block{display:none!important}
- #scene2 .subsystem-list{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 8px;margin-top:5px!important;padding-top:5px!important}
- #scene2 .sub-row{font-size:7px!important;line-height:1.55!important}
- #scene2 .progress-big{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;margin-top:7px}
- #scene2 .boot-percent{position:static!important;align-self:flex-end;margin-top:3px}
- #scene2 .terminal-right{padding:0 10px!important}
- #scene2 .terminal-console-heading{height:27px;flex-basis:27px;font-size:7px}
- #scene2 .terminal-log{min-height:70px!important;padding:8px 2px!important;font-size:8px!important;line-height:1.55!important}
- #scene2 .terminal-telemetry-panel{min-height:105px;padding:7px;margin-bottom:5px}
- #scene2 #terminalGraph{height:35px}
- #scene2 .terminal-action-row{gap:4px}
- #scene2 .terminal-action-row button{font-size:7px;min-height:28px}
- #scene2 .hex-dump{display:none!important}
- #scene2 .terminal-prompt{height:32px!important;flex-basis:32px!important;padding:8px 10px!important;font-size:9px}
-}
-@media(max-width:380px){
- #scene2 .terminal-action-row button{font-size:6px;letter-spacing:0}
- #scene2 .subsystem-list{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-</style>
+
 </head>
 <body class="breach-mode">
 <!-- ═══ OVERLAYS ═══ -->
@@ -2455,5 +2393,122 @@ close?.addEventListener('click',hide);modal?.addEventListener('click',e=>{if(e.t
  }
 })();
 </script>
+
+<style id="limbo-final-layout-overrides">
+/* Loaded after legacy page styles so the compact layouts win the cascade. */
+#scene1{height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+#scene1 .breach-reference-header{position:relative!important;flex:0 0 auto!important;padding:7px 14px!important}
+#scene1 .breach-layout{height:auto!important;min-height:0!important;flex:1 1 auto!important;padding:8px clamp(10px,1.5vw,22px)!important;gap:10px!important;overflow:hidden!important;align-items:stretch!important}
+#scene1 .breach-terminal,#scene1 .breach-diagnostics{min-height:0!important;overflow:hidden!important}
+#scene1 .breach-terminal{padding:clamp(10px,1.1vw,16px)!important}
+#scene1 .breach-incident{padding:5px 0!important}
+#scene1 .breach-emblem{width:42px!important;height:42px!important;margin:5px auto!important}
+#scene1 .warning-title{font-size:clamp(20px,2.2vw,30px)!important;line-height:1.05!important}
+#scene1 .warning-sub{margin:5px auto!important;font-size:10px!important;line-height:1.35!important}
+#scene1 .breach-equalizer{margin:5px 0!important;padding:6px 8px!important}
+#scene1 .breach-eq-bars{height:20px!important}
+#scene1 .warning-meter-wrap{margin:5px 0!important}
+#scene1 .warning-meta{padding:6px!important;font-size:8px!important}
+#scene1 .breach-console{display:block!important;min-height:0!important;margin-top:5px!important}
+#scene1 .breach-console-head{padding-bottom:4px!important;margin-bottom:4px!important}
+#scene1 .warning-log{display:block!important;min-height:38px!important;max-height:clamp(38px,7vh,64px)!important;padding:4px 7px!important;overflow:hidden!important}
+#scene1 .warn-log-row{font-size:8px!important;line-height:1.45!important}
+#scene1 .breach-actions{padding-top:7px!important;margin-top:auto!important;flex:0 0 auto!important}
+#scene1 #btnProceed{min-height:42px!important;padding:8px 12px!important}
+#scene1 .breach-reference-actions{margin-top:5px!important;gap:6px!important}
+#scene1 .breach-secondary{min-height:30px!important;padding:5px 7px!important;font-size:7px!important}
+#scene1 .tiny-warning{margin-top:4px!important;font-size:7px!important}
+#scene1 .breach-diagnostics{padding:10px!important}
+#scene1 .breach-hologram{min-height:0!important;flex:1 1 auto!important;margin:5px 0!important}
+@media(max-height:820px){
+ #scene1 .breach-diagnostics{display:none!important}
+ #scene1 .breach-terminal{width:min(900px,100%)!important;margin:auto!important}
+ #scene1 .breach-layout{justify-content:center!important}
+ #scene1 .breach-emblem{display:none!important}
+ #scene1 .warning-sub{display:none!important}
+ #scene1 .breach-equalizer{margin:4px 0!important}
+}
+@media(max-width:760px){
+ #scene1 .breach-layout{display:flex!important;flex-direction:column!important;justify-content:center!important;padding:6px 8px!important}
+ #scene1 .breach-diagnostics{display:none!important}
+ #scene1 .breach-terminal{width:100%!important;max-width:680px!important;margin:auto!important;padding:10px!important}
+ #scene1 .breach-emblem{display:none!important}
+ #scene1 .warning-title{font-size:clamp(19px,5.5vw,26px)!important}
+ #scene1 .warning-meta{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #scene1 .breach-console{display:block!important}
+ #scene1 .warning-log{max-height:44px!important;min-height:36px!important}
+ #scene1 .breach-actions{padding-top:6px!important}
+ #scene1 #btnProceed{min-height:44px!important}
+ #scene1 .breach-reference-actions{grid-template-columns:1fr 1fr!important}
+ #scene1 .breach-secondary{min-height:32px!important;font-size:6.5px!important}
+ #scene1 .tiny-warning{display:none!important}
+}
+@media(max-width:380px){
+ #scene1 .breach-reference-actions{grid-template-columns:1fr!important}
+}
+</style>
+<style id="limbo-hacking-console">
+#scene2.terminal-scene{overflow:hidden!important;padding:clamp(8px,1.5vh,18px)!important;align-items:center!important;justify-content:center!important}
+#scene2 .terminal-shell{width:min(1440px,calc(100vw - 24px))!important;height:min(900px,calc(100dvh - 24px))!important;min-height:0!important;overflow:hidden!important}
+#scene2 .terminal-body{grid-template-columns:minmax(220px,27%) minmax(0,1fr)!important;min-height:0!important}
+#scene2 .terminal-left{padding:clamp(14px,2vw,28px)!important;overflow:hidden!important}
+#scene2 .terminal-logo{font-size:clamp(25px,3vw,42px)!important;gap:10px!important}
+#scene2 .terminal-logo .princ-emblem{width:clamp(48px,5.4vw,76px)!important}
+#scene2 .terminal-sub{font-size:7px!important;margin-top:7px!important}
+#scene2 .ascii-block{margin-top:clamp(10px,1.8vh,20px)!important;min-height:70px!important;padding:8px!important}
+#scene2 .subsystem-list{margin-top:12px!important;padding-top:9px!important}
+#scene2 .sub-row{font-size:8px!important;line-height:1.75!important}
+#scene2 .progress-big{left:18px!important;right:18px!important;bottom:38px!important}
+#scene2 .boot-percent{right:18px!important;bottom:12px!important}
+#scene2 .terminal-right{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:0!important;padding:0 clamp(12px,1.8vw,24px)!important}
+#scene2 .terminal-console-heading{height:34px;flex:0 0 34px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(81,166,183,.18);color:#6e9aa8;font:8px 'JetBrains Mono',monospace;letter-spacing:.15em}
+#scene2 .terminal-console-heading b{display:flex;align-items:center;gap:7px;color:#54d8b7;font-weight:500}
+#scene2 .terminal-console-heading b i{width:5px;height:5px;border-radius:50%;background:#54d8b7;box-shadow:0 0 8px #54d8b7}
+#scene2 .terminal-log{flex:1 1 0!important;min-height:100px!important;padding:clamp(12px,1.8vw,24px) 4px!important;font-size:clamp(9px,.72vw,11px)!important;line-height:1.7!important;overflow:auto!important}
+#scene2 .terminal-telemetry-panel{flex:0 0 auto;min-height:132px;margin:0 0 8px;padding:9px 11px;border:1px solid rgba(81,166,183,.16);background:linear-gradient(120deg,rgba(3,15,24,.82),rgba(3,9,17,.58));}
+#scene2 .terminal-telemetry-title{display:flex;justify-content:space-between;gap:8px;color:#68a3b1;font:8px 'JetBrains Mono',monospace;letter-spacing:.13em}
+#scene2 .terminal-telemetry-title small{color:#456b79;font-size:7px}
+#scene2 #terminalGraph{display:block;width:100%;height:62px;margin-top:5px}
+#scene2 .terminal-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+#scene2 .terminal-action-row button{min-width:0;min-height:30px;padding:6px 5px;border:1px solid rgba(0,208,224,.32);background:rgba(0,90,110,.12);color:#72dce5;font:8px 'JetBrains Mono',monospace;letter-spacing:.07em;cursor:pointer;transition:background .18s,border-color .18s}
+#scene2 .terminal-action-row button:hover{background:rgba(0,190,210,.13);border-color:rgba(0,235,245,.7)}
+#scene2 .terminal-action-row button:nth-child(2){border-color:rgba(255,75,105,.28);color:#e68a9b}
+#scene2 .terminal-action-row button:nth-child(3){border-color:rgba(74,214,170,.3);color:#78dcb8}
+#scene2 .hex-dump{flex:0 0 26px!important;height:26px!important;padding:6px 2px!important;white-space:nowrap;overflow:hidden}
+#scene2 .terminal-prompt{flex:0 0 38px!important;height:38px!important;padding:10px 18px!important}
+@media(max-height:760px) and (min-width:621px){
+ #scene2 .terminal-shell{height:calc(100dvh - 14px)!important}
+ #scene2 .terminal-left{padding:12px!important}
+ #scene2 .ascii-block{display:none}
+ #scene2 .terminal-telemetry-panel{min-height:112px}
+ #scene2 #terminalGraph{height:44px}
+ #scene2 .terminal-log{padding:8px 3px!important}
+}
+@media(max-width:760px){
+ #scene2 .terminal-shell{width:calc(100vw - 12px)!important;height:calc(100dvh - 12px)!important}
+ #scene2 .terminal-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important}
+ #scene2 .terminal-left{padding:9px 12px!important;max-height:31vh!important;border-right:0!important;border-bottom:1px solid rgba(92,178,194,.16)}
+ #scene2 .terminal-logo{font-size:24px!important}
+ #scene2 .terminal-logo .princ-emblem{width:42px!important}
+ #scene2 .terminal-sub,#scene2 .ascii-block{display:none!important}
+ #scene2 .subsystem-list{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 8px;margin-top:5px!important;padding-top:5px!important}
+ #scene2 .sub-row{font-size:7px!important;line-height:1.55!important}
+ #scene2 .progress-big{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;margin-top:7px}
+ #scene2 .boot-percent{position:static!important;align-self:flex-end;margin-top:3px}
+ #scene2 .terminal-right{padding:0 10px!important}
+ #scene2 .terminal-console-heading{height:27px;flex-basis:27px;font-size:7px}
+ #scene2 .terminal-log{min-height:70px!important;padding:8px 2px!important;font-size:8px!important;line-height:1.55!important}
+ #scene2 .terminal-telemetry-panel{min-height:105px;padding:7px;margin-bottom:5px}
+ #scene2 #terminalGraph{height:35px}
+ #scene2 .terminal-action-row{gap:4px}
+ #scene2 .terminal-action-row button{font-size:7px;min-height:28px}
+ #scene2 .hex-dump{display:none!important}
+ #scene2 .terminal-prompt{height:32px!important;flex-basis:32px!important;padding:8px 10px!important;font-size:9px}
+}
+@media(max-width:380px){
+ #scene2 .terminal-action-row button{font-size:6px;letter-spacing:0}
+ #scene2 .subsystem-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
 </body>
 </html>
