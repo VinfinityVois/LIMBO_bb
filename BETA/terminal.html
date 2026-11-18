@@ -1291,9 +1291,85 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 @media(max-width:900px){.sys-page{width:calc(100vw - 28px)}}
 @media(prefers-reduced-motion:reduce){.panel,.ms-card,.telem-metric,.spark-card,.sys-page .reveal{transition:none!important}.panel:hover,.ms-card:hover,.telem-metric:hover,.spark-card:hover{transform:none}}
 </style>
+<style id="terminal-rebuild-pass">
+/* Terminal rebuild — quieter command-center hierarchy */
+body.terminal-mode{background:#03070d;color:#dce8ed}
+body.terminal-mode:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(rgba(94,169,184,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(94,169,184,.025) 1px,transparent 1px);background-size:56px 56px;mask-image:linear-gradient(180deg,#000,transparent 86%)}
+body.terminal-mode .sys-page{width:min(1420px,calc(100vw - 72px));padding-bottom:72px}
+body.terminal-mode .sys-header{max-width:960px;margin:clamp(30px,5vh,62px) auto 26px;text-align:center}
+body.terminal-mode .sys-header .eyebrow{color:#688b99;letter-spacing:.18em}
+body.terminal-mode .sys-title{font-size:clamp(2.1rem,5vw,4.2rem);letter-spacing:.11em}
+body.terminal-mode .sys-header .desc{max-width:760px;margin:14px auto;color:#91a7b1;line-height:1.75}
+body.terminal-mode .status-row{justify-content:center}
+body.terminal-mode .warn-ticker{max-width:1120px;margin:18px auto 0;border-radius:5px;background:rgba(30,13,21,.54);border-color:rgba(190,83,98,.2)}
+body.terminal-mode .sc-topbar{position:sticky;top:0;background:rgba(3,8,14,.9);border-bottom-color:rgba(92,176,190,.18)}
+body.terminal-mode .cam-wall{border-radius:8px;border-color:rgba(91,166,182,.2);background:linear-gradient(145deg,rgba(8,18,28,.96),rgba(3,8,15,.98));box-shadow:0 24px 70px rgba(0,0,0,.35)}
+body.terminal-mode .cam-wall-header{padding:13px 18px;color:#a8bec7}
+body.terminal-mode .cam-main{aspect-ratio:21/8.8}
+body.terminal-mode .cam-thumbs{gap:5px;padding:5px;background:rgba(0,0,0,.3)}
+body.terminal-mode .cam-thumb{border-radius:4px;opacity:.66}
+body.terminal-mode .cam-thumb.active{border-color:#6bcbd5;box-shadow:0 0 0 1px rgba(107,203,213,.15)}
+body.terminal-mode .panel{border-radius:8px;border-color:rgba(91,166,182,.18);background:linear-gradient(150deg,rgba(8,18,28,.94),rgba(3,8,15,.97))}
+body.terminal-mode .panel-header{padding:14px 17px;color:#9db5bf}
+body.terminal-mode .journal-panel-fixed,body.terminal-mode .telem-panel-fixed{min-height:560px;max-height:680px}
+body.terminal-mode .telem-metric{border-radius:5px}
+body.terminal-mode .metric-strip{gap:12px}
+body.terminal-mode .ms-card{border-radius:7px;min-height:110px}
+body.terminal-mode .docs-stack{gap:14px}
+body.terminal-mode .doc-card{border-radius:8px}
+body.terminal-mode .tactical-grid{gap:14px}
+body.terminal-mode .tac-node{border-radius:8px;min-height:220px}
+.launch-console{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) minmax(270px,390px);gap:26px;align-items:center;max-width:1120px;margin:0 auto 34px;padding:clamp(22px,3vw,34px);overflow:hidden;border:1px solid rgba(89,190,201,.27);border-radius:9px;background:radial-gradient(ellipse at 12% 0%,rgba(24,112,128,.16),transparent 48%),linear-gradient(125deg,rgba(9,24,35,.97),rgba(4,11,19,.98) 68%);box-shadow:0 24px 70px rgba(0,0,0,.38),inset 0 1px rgba(220,250,255,.045)}
+.launch-console:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(110deg,transparent 0 62%,rgba(79,188,199,.045) 62.1%,transparent 62.4%),repeating-linear-gradient(0deg,transparent 0 5px,rgba(117,193,204,.018) 6px,transparent 7px 12px)}
+.launch-console:after{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#65d5dc 28%,#65d5dc 72%,transparent);opacity:.8}
+.launch-kicker{display:flex;align-items:center;gap:9px;color:#7196a2;font:600 9px var(--font-mono,monospace);letter-spacing:.2em}
+.launch-live-dot{width:6px;height:6px;border-radius:50%;background:#70d7bf;box-shadow:0 0 9px rgba(112,215,191,.5)}
+.launch-console h2{margin:13px 0 8px;color:#e2f5f6;font:600 clamp(20px,2.4vw,29px)/1.2 var(--font-display,system-ui);letter-spacing:.12em}
+.launch-console p{max-width:680px;color:#91a9b4;font:12px/1.7 var(--font-ui,system-ui)}
+.launch-meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:17px;color:#66818d;font:8px var(--font-mono,monospace);letter-spacing:.12em}
+.launch-meta b{margin-left:5px;color:#b8d9df;font-weight:500}
+.launch-console-action{display:grid;gap:12px}
+.launch-state{display:flex;align-items:center;gap:8px;color:#7b9ca7;font:8px var(--font-mono,monospace);letter-spacing:.14em}
+.launch-state i{width:6px;height:6px;border-radius:50%;background:#d5a85f;box-shadow:0 0 8px rgba(213,168,95,.4)}
+.launch-button{display:flex;align-items:center;gap:13px;width:100%;min-height:72px;padding:12px 15px;text-align:left;border:1px solid rgba(101,211,219,.56);border-radius:5px;color:#e9ffff;background:linear-gradient(105deg,rgba(34,134,148,.25),rgba(8,34,46,.58));cursor:pointer;transition:background .25s,border-color .25s,transform .25s,box-shadow .25s}
+.launch-button:hover{transform:translateY(-2px);border-color:#8ef4f3;background:linear-gradient(105deg,rgba(34,156,167,.36),rgba(8,42,54,.72));box-shadow:0 12px 32px rgba(0,190,205,.13)}
+.launch-button:focus-visible,.launch-confirm:focus-visible,.launch-cancel:focus-visible{outline:2px solid #9cf7f5;outline-offset:4px}
+.launch-button-icon{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid rgba(116,221,225,.35);border-radius:4px;color:#8ce9e8;font-size:24px}
+.launch-button b{display:block;font:600 11px var(--font-mono,monospace);letter-spacing:.12em}
+.launch-button small{display:block;margin-top:5px;color:#86aab4;font:7px var(--font-mono,monospace);letter-spacing:.12em}
+.launch-arrow{margin-left:auto;color:#8ee7e9;font-size:20px}
+.launch-console-index{position:absolute;right:18px;top:15px;color:rgba(125,188,197,.35);font:600 10px var(--font-mono,monospace);letter-spacing:.12em}
+.launch-console-index span{color:#6acbd3}
+.launch-confirm-overlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(0,4,9,.82);backdrop-filter:blur(12px)}
+.launch-confirm-overlay[hidden]{display:none}
+.launch-confirm-panel{width:min(480px,100%);padding:26px;border:1px solid rgba(99,194,202,.36);border-radius:8px;background:linear-gradient(145deg,#0b1b27,#040a12);box-shadow:0 30px 100px rgba(0,0,0,.7),0 0 42px rgba(0,180,200,.08)}
+.launch-confirm-code{color:#74b7c0;font:8px var(--font-mono,monospace);letter-spacing:.18em}
+.launch-confirm-panel h3{margin:13px 0 8px;color:#e4f6f7;font:600 19px var(--font-display,system-ui);letter-spacing:.1em}
+.launch-confirm-panel p{color:#9bb0b9;font:12px/1.7 var(--font-ui,system-ui)}
+.launch-confirm-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px}
+.launch-cancel,.launch-confirm{min-height:42px;padding:0 16px;border-radius:4px;font:9px var(--font-mono,monospace);letter-spacing:.1em;cursor:pointer}
+.launch-cancel{border:1px solid rgba(133,166,178,.25);color:#a6bac2;background:rgba(255,255,255,.025)}
+.launch-confirm{border:1px solid #66cbd1;color:#eaffff;background:linear-gradient(100deg,rgba(40,150,161,.55),rgba(12,68,82,.6))}
+.launch-cancel:hover{border-color:rgba(133,201,210,.55)}
+.launch-confirm:hover{background:linear-gradient(100deg,rgba(48,174,184,.72),rgba(16,83,96,.72))}
+@media(max-width:800px){body.terminal-mode .sys-page{width:calc(100vw - 28px)}.launch-console{grid-template-columns:1fr;gap:20px}.launch-console-action{max-width:420px}.launch-console-index{top:13px;right:14px}body.terminal-mode .sys-header{margin-top:28px}}
+@media(max-width:560px){.launch-console{padding:21px 18px}.launch-meta{gap:10px}.launch-confirm-panel{padding:21px}.launch-confirm-actions{flex-direction:column-reverse}.launch-confirm-actions button{width:100%}body.terminal-mode .cam-main{aspect-ratio:16/10}}
+@media(prefers-reduced-motion:reduce){.launch-button{transition:none}.launch-button:hover{transform:none}}
+</style>
+
 <link rel="stylesheet" href="css/navigation-unified.css">
 </head>
 <body class="terminal-mode">
+
+<div class="launch-confirm-overlay" id="launchConfirmOverlay" hidden>
+  <section class="launch-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="launchConfirmTitle" aria-describedby="launchConfirmText">
+    <div class="launch-confirm-code">P.R.I.N.C. // AUTHORIZATION GATE · 0xRY-01</div>
+    <h3 id="launchConfirmTitle">ПОДТВЕРДИТЬ ПОГРУЖЕНИЕ?</h3>
+    <p id="launchConfirmText">Будет создана игровая сессия и выполнен переход в сектор Рёкан. После подтверждения начнётся интерактивная часть.</p>
+    <div class="launch-confirm-actions"><button type="button" class="launch-cancel" id="launchCancel">ОТМЕНА</button><button type="button" class="launch-confirm" id="launchConfirm">ПОДТВЕРЖДАЮ · ЗАПУСК</button></div>
+  </section>
+</div>
+
 
 <div class="noise"></div>
 <div class="scanlines"></div>
@@ -1363,6 +1439,22 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
       <div class="status-chip amber">НЕЙРО-ШЛЮЗ <strong id="gatewayState">СИНХР</strong></div>
       <div class="status-chip"><span class="signal-pulse"></span>КАНАЛ LIVE</div>
     </div>
+
+  <section class="launch-console" aria-labelledby="launchTitle">
+    <div class="launch-console-copy">
+      <div class="launch-kicker"><span class="launch-live-dot"></span> DIRECTIVE // OPERATOR A-00</div>
+      <h2 id="launchTitle">КАНАЛ ПОГРУЖЕНИЯ</h2>
+      <p>Сектор Рёкан готов к загрузке. Перед запуском проверьте состояние сессии и подтвердите переход в интерактивную сцену.</p>
+      <div class="launch-meta"><span>СЦЕНА <b>RYOKAN / 01</b></span><span>РЕЖИМ <b>IMMERSION</b></span><span>ДОПУСК <b>LVL_5</b></span></div>
+    </div>
+    <div class="launch-console-action">
+      <span class="launch-state"><i></i> КАНАЛ ОЖИДАЕТ КОМАНДУ</span>
+      <button type="button" class="launch-button" id="launchGameButton">
+        <span class="launch-button-icon">↳</span><span><b>ЗАПУСТИТЬ ИГРУ</b><small>ТРЕБУЕТСЯ ПОДТВЕРЖДЕНИЕ</small></span><span class="launch-arrow">→</span>
+      </button>
+    </div>
+    <div class="launch-console-index">01 <span>/</span> 04</div>
+  </section>
   </div>
 
   <!-- ═══ SURVEILLANCE ═══ -->
@@ -3281,6 +3373,38 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
     if (document.hidden) return;
     if (Math.random() < 0.55) briefGlitch();
   }, 4200 + Math.random() * 1800);
+})();
+</script>
+
+
+<script>
+(() => {
+  const trigger=document.getElementById('launchGameButton');
+  const overlay=document.getElementById('launchConfirmOverlay');
+  const cancel=document.getElementById('launchCancel');
+  const confirm=document.getElementById('launchConfirm');
+  if(!trigger||!overlay||!cancel||!confirm)return;
+  let previousFocus=null,launching=false;
+  const close=()=>{overlay.hidden=true;trigger.focus();};
+  trigger.addEventListener('click',()=>{previousFocus=document.activeElement;overlay.hidden=false;confirm.focus();});
+  cancel.addEventListener('click',close);
+  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
+  document.addEventListener('keydown',event=>{
+    if(overlay.hidden)return;
+    if(event.key==='Escape'){event.preventDefault();close();}
+    if(event.key==='Tab'){
+      const controls=[cancel,confirm];
+      if(event.shiftKey&&document.activeElement===controls[0]){event.preventDefault();controls[1].focus();}
+      else if(!event.shiftKey&&document.activeElement===controls[1]){event.preventDefault();controls[0].focus();}
+    }
+  });
+  confirm.addEventListener('click',()=>{
+    if(launching)return;
+    launching=true;confirm.disabled=true;cancel.disabled=true;
+    confirm.textContent='СОЗДАНИЕ СЕССИИ…';
+    try{sessionStorage.setItem('limbo_launch_authorized','1');}catch(error){}
+    window.location.assign('intro.html');
+  });
 })();
 </script>
 
