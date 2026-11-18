@@ -1012,7 +1012,7 @@ tailwind.config = {
       p.sonarActive -= 0.014;
     }
     fctx.restore();
-    ctx.drawImage(fogCanvas, 0, 0);
+    ctx.drawImage(fogCanvas, 0, 0, canvas.width, canvas.height);
 
     const dist = Math.hypot(p.x - watcher.x, p.y - watcher.y);
     let minV = 99;
