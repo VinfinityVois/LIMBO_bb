@@ -850,3 +850,99 @@
   .employee-page .lore-panel .lore-meter:before{animation:none}
   .employee-page .lore-panel .overview-lore-card{transition:none}
 }
+
+
+/* ── A-00 desktop overview: fit the first screen without page scrolling ── */
+@media (min-width: 1051px) {
+  html:has(body.employee-page), body.employee-page {
+    width:100%;height:100%;min-height:0;max-height:100dvh;overflow:hidden;
+  }
+  body.employee-page {display:flex;flex-direction:column}
+  .employee-page .sc-topbar {flex:0 0 48px;min-height:48px}
+  .employee-layout {flex:1 1 auto;height:calc(100dvh - 48px);min-height:0;overflow:hidden;grid-template-columns:264px minmax(0,1fr)}
+  .employee-sidebar {height:100%;min-height:0;overflow-y:auto}
+  .employee-main {height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:12px clamp(14px,1.2vw,22px) 10px}
+  .employee-main>.main-crumb {flex:0 0 auto;padding:0 0 9px}
+  .employee-main>.overview-section {flex:1 1 auto;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:10px}
+  .employee-page .welcome-line {min-height:82px;margin:0;padding:12px 16px;align-items:center}
+  .employee-page .overview-grid {min-height:0;grid-template-columns:minmax(0,1.55fr) minmax(330px,.95fr);gap:10px}
+  .employee-page .data-panel {min-height:0;padding:12px 14px;overflow:hidden}
+  .employee-page .score-panel {display:flex;flex-direction:column}
+  .employee-page #scoreChart {flex:0 0 auto;max-height:clamp(150px,21vh,230px)}
+  .employee-page .run-timeline {flex:1 1 auto;min-height:70px;max-height:clamp(112px,17vh,190px);overflow-y:auto}
+  .employee-page .lore-panel {gap:clamp(7px,.8vh,12px);padding:14px}
+  .employee-page .lore-panel .lore-meter {width:clamp(190px,17vw,248px);height:clamp(190px,17vw,248px);margin:0 auto}
+  .employee-page .lore-panel .lore-meter>div b {font-size:clamp(2.6rem,3.7vw,3.8rem)}
+  .employee-page .lore-panel .overview-lore-card {min-height:clamp(104px,12vh,140px)}
+  .employee-page .quick-collections {flex:0 0 auto;margin:0;gap:8px}
+  .employee-page .quick-collections button {min-height:76px;padding:10px}
+  .employee-page .employee-footer {display:none}
+  .employee-page .collection-section {flex:1 1 auto;min-height:0;overflow:auto}
+  .employee-page .collection-section:not([hidden]) {display:block}
+  .employee-page .overview-section[hidden] {display:none}
+}
+@media (min-width: 1051px) and (max-height: 820px) {
+  .employee-main {padding-top:8px;padding-bottom:7px}
+  .employee-main>.main-crumb {padding-bottom:6px}
+  .employee-main>.overview-section {gap:7px}
+  .employee-page .welcome-line {min-height:68px;padding:9px 13px}
+  .employee-page .welcome-line h2 {font-size:clamp(1.25rem,2vw,1.8rem);margin:.2rem 0}
+  .employee-page .welcome-line p {font-size:.68rem}
+  .employee-page .overview-grid {gap:7px}
+  .employee-page .data-panel {padding:9px 11px}
+  .employee-page .lore-panel .lore-meter {width:clamp(150px,14vw,190px);height:clamp(150px,14vw,190px)}
+  .employee-page .lore-panel .lore-meter>div b {font-size:2.45rem}
+  .employee-page .quick-collections button {min-height:62px}
+  .employee-page .run-timeline {max-height:15vh}
+}
+
+/* Real collection emblems, shared by the sidebar and overview shortcuts. */
+.employee-page .archive-nav-icon {display:grid;place-items:center;width:22px;height:22px;overflow:hidden}
+.employee-page .archive-nav-icon img {width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 5px rgba(0,212,232,.2))}
+.employee-page .side-link.active .archive-nav-icon img {filter:drop-shadow(0 0 8px rgba(0,212,232,.55))}
+.employee-page .quick-symbol {padding:3px;overflow:hidden}
+.employee-page .quick-symbol img {display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 8px rgba(0,212,232,.2))}
+.employee-page .quick-collections button:hover .quick-symbol img {transform:scale(1.08);filter:drop-shadow(0 0 10px rgba(0,212,232,.45))}
+.employee-page .quick-symbol img {transition:transform .25s,filter .25s}
+
+/* Lore index: a larger instrument with layered orbital motion and live pulse. */
+.employee-page .lore-panel .lore-meter {
+  --lore-pct:0%;
+  isolation:isolate;
+  background:
+    radial-gradient(circle,rgba(12,61,75,.4) 0 27%,rgba(5,21,32,.18) 48%,transparent 70%),
+    conic-gradient(from -90deg,rgba(70,205,216,.12) 0 var(--lore-pct),rgba(70,205,216,.025) var(--lore-pct) 100%);
+}
+.employee-page .lore-panel .lore-meter:before {
+  inset:-3%;border:1px dashed rgba(91,204,215,.28);
+  box-shadow:0 0 22px rgba(0,184,201,.08);
+  animation:loreOrbit 24s linear infinite;
+}
+.employee-page .lore-panel .lore-meter:after {
+  inset:11%;border:1px solid rgba(82,211,221,.2);
+  box-shadow:0 0 44px rgba(0,190,207,.12),inset 0 0 30px rgba(0,172,194,.08);
+  animation:loreCorePulse 3.8s ease-in-out infinite;
+}
+.employee-page .lore-panel .lore-meter svg {filter:drop-shadow(0 0 12px rgba(0,220,230,.32))}
+.employee-page .lore-panel .lore-meter .meter-bg {stroke:rgba(95,171,185,.2);stroke-width:6}
+.employee-page .lore-panel .lore-meter .meter-value {
+  stroke:#5ce0e5;stroke-width:8;
+  filter:drop-shadow(0 0 5px rgba(77,221,228,.7));
+  stroke-dasharray:427 427;
+  stroke-dashoffset:calc(427 - (427 * var(--lore-pct) / 100));
+}
+.employee-page .lore-panel .lore-meter>div b {
+  font-size:clamp(2.7rem,3.8vw,4.1rem);
+  text-shadow:0 0 15px rgba(0,206,220,.34),0 0 38px rgba(0,206,220,.18);
+  animation:loreNumberPulse 4.2s ease-in-out infinite;
+}
+.employee-page .lore-panel .lore-meter>div small {letter-spacing:.28em}
+@keyframes loreCorePulse {0%,100%{transform:scale(.96);opacity:.55}50%{transform:scale(1.04);opacity:1}}
+@keyframes loreNumberPulse {0%,100%{filter:brightness(.92);text-shadow:0 0 15px rgba(0,206,220,.28)}50%{filter:brightness(1.22);text-shadow:0 0 22px rgba(0,206,220,.55),0 0 48px rgba(0,206,220,.2)}}
+@media (max-width:1050px) {
+  .employee-page .lore-panel .lore-meter {width:clamp(180px,25vw,230px);height:clamp(180px,25vw,230px)}
+  .employee-page .lore-panel .lore-meter>div b {font-size:clamp(2.8rem,5vw,3.8rem)}
+}
+@media (prefers-reduced-motion:reduce) {
+  .employee-page .lore-panel .lore-meter:after,.employee-page .lore-panel .lore-meter>div b {animation:none!important}
+}
