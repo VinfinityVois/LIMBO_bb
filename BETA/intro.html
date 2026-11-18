@@ -1256,7 +1256,7 @@ tailwind.config = {
     if ($('mission-intro') && $('mission-intro').classList.contains('show')) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        nextIntroStep();
+        closeIntro();
       }
       return;
     }
