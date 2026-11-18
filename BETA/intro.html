@@ -684,6 +684,7 @@ tailwind.config = {
   const $ = id => document.getElementById(id);
   const phoneCardMode = window.matchMedia('(pointer: coarse) and (max-width: 600px)').matches;
   let mobileBoard = null;
+  let mobileMapCells = [];
   if (phoneCardMode) {
     const stage = document.getElementById('game-canvas')?.parentElement;
     if (stage) {
@@ -725,7 +726,7 @@ tailwind.config = {
         <div class="mobile-board-footer" id="mobile-board-hint">Цель: собрать 5 ◆, затем пройти через G в нижней части карты. Терминалы дают бонус к результату, но не обязательны для выхода.</div>
       `;
       const mobileMap = mobileBoard.querySelector('#mobile-sector-map');
-      const mobileMapCells = [];
+      mobileMapCells = [];
       for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
         const cell = document.createElement('button');
         cell.type = 'button';
