@@ -1746,6 +1746,8 @@ body.breach-mode:after{
 
     // immersion threat words + eyes feel via glitch
     await sleep(1600);
+    // Successful operator authorization is required before entering the game.
+    try { sessionStorage.setItem('limbo_launch_authorized', '1'); } catch (error) {}
     try { window.location.href = 'intro.html'; }
     catch { /* preview */ }
   }
