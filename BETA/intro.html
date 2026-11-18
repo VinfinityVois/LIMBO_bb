@@ -2,7 +2,7 @@
 <html class="dark" lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>П.Р.И.Н.Ц. // ЛИМБО — ТАКТИЧЕСКИЙ ТЕРМИНАЛ</title>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Space+Grotesk:wght@300..900&display=swap" rel="stylesheet"/>
@@ -512,6 +512,23 @@ tailwind.config = {
         <span class="material-symbols-outlined text-[15px]">sensors</span>
         <span class="font-bold">СОНАР</span>
       </button>
+    </div>
+
+    <!-- Touch controls: shown only on touch devices -->
+    <div id="touch-controls" class="touch-controls" aria-label="Сенсорное управление">
+      <div class="touch-pad" aria-label="Передвижение">
+        <span></span>
+        <button type="button" data-move="0,-1" aria-label="Вверх">▲</button>
+        <span></span>
+        <button type="button" data-move="-1,0" aria-label="Влево">◀</button>
+        <button type="button" data-move="0,1" aria-label="Вниз">▼</button>
+        <button type="button" data-move="1,0" aria-label="Вправо">▶</button>
+      </div>
+      <div class="touch-actions">
+        <button type="button" class="touch-action stealth" id="touch-stealth">СТЕЛС</button>
+        <button type="button" class="touch-action sonar" id="touch-sonar">СОНАР</button>
+        <button type="button" class="touch-action terminal" id="touch-terminal">ТЕРМ.</button>
+      </div>
     </div>
   </div>
 </main>
@@ -1296,6 +1313,17 @@ tailwind.config = {
 
   $('btn-stealth-action').onclick = toggleStealth;
   $('btn-sonar-action').onclick = triggerSonar;
+  // Touch controls use the same movement/actions as the keyboard bindings.
+  document.querySelectorAll('[data-move]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (state.dead || state.escaped) return;
+      const [dx, dy] = button.dataset.move.split(',').map(Number);
+      movePlayer(dx, dy);
+    });
+  });
+  $('touch-stealth')?.addEventListener('click', toggleStealth);
+  $('touch-sonar')?.addEventListener('click', triggerSonar);
+  $('touch-terminal')?.addEventListener('click', hackTerminal);
   $('btn-modal-restart').onclick = restartMission;
   $('victory-continue').onclick = goToTerminal; // ═══ NEW
   $('btn-toggle-hud').onclick = () => {
