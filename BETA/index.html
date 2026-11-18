@@ -839,11 +839,12 @@ body.breach-mode:after{
   // ─── MATRIX ───
   const canvas = $('#matrixCanvas'), ctx = canvas.getContext('2d');
   let W, H, cols, drops = [];
+  const lowPowerMode = window.matchMedia('(pointer: coarse)').matches;
   const GLYPHS = '01ABCDEF<>[]{}#$%&*/\\|+=-_ЖДЫЛФЦЩЭЮЯ';
   function resizeCanvas() {
     W = canvas.width = innerWidth;
     H = canvas.height = innerHeight;
-    cols = Math.ceil(W / 16);
+    cols = Math.ceil(W / (lowPowerMode ? 28 : 16));
     drops = Array.from({length: cols}, () => Math.random() * -50);
   }
   resizeCanvas();
@@ -851,11 +852,11 @@ body.breach-mode:after{
   let matrixLastFrame = 0;
   function matrix(now = 0) {
     requestAnimationFrame(matrix);
-    if (now - matrixLastFrame < 72) return;
+    if (document.hidden || now - matrixLastFrame < (lowPowerMode ? 150 : 72)) return;
     matrixLastFrame = now;
     ctx.fillStyle = 'rgba(3, 5, 10, 0.12)';
     ctx.fillRect(0, 0, W, H);
-    ctx.font = '12px JetBrains Mono, monospace';
+    ctx.font = lowPowerMode ? '10px JetBrains Mono, monospace' : '12px JetBrains Mono, monospace';
     for (let i = 0; i < cols; i++) {
       const ch = GLYPHS.charAt(rand(0, GLYPHS.length - 1));
       const y = drops[i] * 16;
@@ -871,7 +872,7 @@ body.breach-mode:after{
           ctx.fillStyle = 'rgba(0, 212, 232, 0.11)';
           ctx.shadowBlur = 0;
         }
-        ctx.fillText(ch, i * 16, y);
+        ctx.fillText(ch, i * (lowPowerMode ? 28 : 16), y);
       }
       drops[i] += Math.random() * 0.7 + 0.25;
       if (y > H && Math.random() > 0.975) drops[i] = Math.random() * -30;
@@ -1797,11 +1798,11 @@ body.breach-mode:after{
     const context=canvas.getContext('2d',{alpha:true}); if(!context)return;
     const glyphs='01ABCDEF<>[]{}#$%&*/\\|+=-_ЖДЫЛФЦЩЭЮЯ',fontSize=12;
     let width=0,height=0,columns=0,rows=0,matrix=[],pointerX=-1000,pointerY=-1000,frame=0,raf=0;
-    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function resize(){const rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,1.5);width=Math.max(1,rect.width);height=Math.max(1,rect.height);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);context.setTransform(dpr,0,0,dpr,0,0);columns=Math.ceil(width/fontSize);rows=Math.ceil(height/fontSize);matrix=Array.from({length:columns},()=>Array.from({length:rows},()=>glyphs[Math.floor(Math.random()*glyphs.length)]));}
+    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;const touchMode=window.matchMedia&&window.matchMedia('(pointer: coarse)').matches;
+    function resize(){const rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,touchMode?1:1.5);width=Math.max(1,rect.width);height=Math.max(1,rect.height);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);context.setTransform(dpr,0,0,dpr,0,0);columns=Math.ceil(width/fontSize);rows=Math.ceil(height/fontSize);matrix=Array.from({length:columns},()=>Array.from({length:rows},()=>glyphs[Math.floor(Math.random()*glyphs.length)]));}
     function onPointer(e){const rect=canvas.getBoundingClientRect();pointerX=e.clientX-rect.left;pointerY=e.clientY-rect.top;}
-    window.addEventListener('resize',resize,{passive:true});window.addEventListener('pointermove',onPointer,{passive:true});resize();
-    function draw(){raf=requestAnimationFrame(draw);if(document.hidden||!$('#scene0').classList.contains('active'))return;if(!reduced&&++frame%3!==0)return;context.clearRect(0,0,width,height);context.font=fontSize+'px monospace';
+    window.addEventListener('resize',resize,{passive:true});if(!touchMode)window.addEventListener('pointermove',onPointer,{passive:true});resize();
+    function draw(){raf=requestAnimationFrame(draw);if(document.hidden||!$('#scene0').classList.contains('active'))return;if(!reduced&&++frame%(touchMode?6:3)!==0)return;context.clearRect(0,0,width,height);context.font=fontSize+'px monospace';
       for(let x=0;x<columns;x++)for(let y=0;y<rows;y++){if(!reduced&&Math.random()<.002)matrix[x][y]=glyphs[Math.floor(Math.random()*glyphs.length)];const px=x*fontSize+6,py=y*fontSize+14,dx=px-pointerX,dy=py-pointerY,dist=Math.sqrt(dx*dx+dy*dy),reveal=reduced ? 0.05 : Math.max(0,1-dist/210),alpha=.025+reveal*.22;context.fillStyle='rgba(91,177,190,'+alpha.toFixed(3)+')';context.fillText(matrix[x][y],px,py);if(reveal>.12&&(x+y+frame)%5===0){context.fillStyle='rgba(105,226,224,'+(reveal*.52).toFixed(3)+')';context.fillText(matrix[x][y],px,py);}}
     }
     draw();window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
@@ -1900,7 +1901,7 @@ body.breach-mode:after{
   let w=0,h=0,dpr=1,t=0,values=Array.from({length:100},()=>.28+Math.random()*.28);
   const resize=()=>{const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,1.5);w=Math.max(1,r.width);h=Math.max(1,r.height);canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)};
   new ResizeObserver(resize).observe(canvas);resize();
-  function draw(){requestAnimationFrame(draw);if(document.hidden||!document.querySelector('#scene2')?.classList.contains('active'))return;t++;if(t%5===0){values.push(Math.max(.08,Math.min(.94,values[values.length-1]+(Math.random()-.46)*.13)));values.shift()}
+  let lastDraw=0;function draw(now=0){requestAnimationFrame(draw);if(document.hidden||!document.querySelector('#scene2')?.classList.contains('active')||now-lastDraw<110)return;lastDraw=now;t++;if(t%5===0){values.push(Math.max(.08,Math.min(.94,values[values.length-1]+(Math.random()-.46)*.13)));values.shift()}
     ctx.clearRect(0,0,w,h);ctx.strokeStyle='rgba(87,153,169,.13)';ctx.lineWidth=1;for(let y=12;y<h;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
     const colors=['rgba(70,202,211,.85)','rgba(105,151,185,.55)','rgba(190,112,143,.4)'];
     values.forEach((v,i)=>{const x=i/(values.length-1)*w,bh=v*(h-12);ctx.fillStyle=colors[i%3];ctx.globalAlpha=.32+v*.45;ctx.fillRect(x,h-bh,Math.max(1,w/values.length-1),bh)});ctx.globalAlpha=1;
