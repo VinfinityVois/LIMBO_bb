@@ -1,41 +1,34 @@
-/* P.R.I.N.C. cross-page transition layer */
+/* P.R.I.N.C. luminous cross-page dissolve */
 (() => {
-  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const makeOverlay = () => {
-    let node = document.getElementById('page-transition');
-    if (!node) {
-      node = document.createElement('div');
-      node.id = 'page-transition';
-      node.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(node);
-    }
-    return node;
-  };
-  const enter = () => {
-    document.documentElement.classList.add('page-transition-ready');
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const reveal = () => {
     if (reduce) return;
-    requestAnimationFrame(() => {
-      document.documentElement.classList.add('page-transition-enter');
-      window.setTimeout(() => document.documentElement.classList.remove('page-transition-enter'), 620);
-    });
+    document.documentElement.classList.add('page-transition-ready');
+    window.setTimeout(() => document.documentElement.classList.remove('page-transition-ready'), 950);
   };
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enter, {once:true});
-  else enter();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reveal, {once:true});
+  else reveal();
 
   document.addEventListener('click', event => {
     const link = event.target.closest('a[href]');
     if (!link || reduce || event.defaultPrevented || event.button !== 0 ||
         event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
-        link.target && link.target !== '_self' || link.hasAttribute('download')) return;
+        (link.target && link.target !== '_self') || link.hasAttribute('download')) return;
     let destination;
-    try { destination = new URL(link.href, window.location.href); } catch (_) { return; }
-    if (destination.origin !== window.location.origin ||
+    try { destination = new URL(link.href, location.href); } catch (_) { return; }
+    if (destination.origin !== location.origin ||
         !/\.html?$/i.test(destination.pathname) ||
-        destination.pathname === window.location.pathname && destination.search === window.location.search) return;
+        (destination.pathname === location.pathname && destination.search === location.search)) return;
     event.preventDefault();
-    const overlay = makeOverlay();
+    let overlay = document.getElementById('page-transition');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'page-transition';
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(overlay);
+    }
     document.documentElement.classList.add('page-transition-leave');
     overlay.classList.add('is-active');
-    window.setTimeout(() => { window.location.href = destination.href; }, 360);
+    window.setTimeout(() => { location.href = destination.href; }, 520);
   });
 })();
