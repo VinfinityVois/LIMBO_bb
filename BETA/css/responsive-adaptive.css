@@ -269,3 +269,79 @@ button,a,[role=button]{-webkit-tap-highlight-color:transparent}
   #touch-controls{bottom:4px}
   #touch-controls button{min-height:36px;min-width:38px}
 }
+
+
+/* Mission intro / BIOS overlays and on-screen directional pad */
+.touch-controls{display:none}
+@media(max-width:760px){
+  body:has(#game-canvas)>main{align-items:center;justify-content:center}
+  body:has(#game-canvas)>main>.tech-corner{
+    position:relative;height:min(56dvh,520px);min-height:270px;max-height:calc(100dvh - 118px);
+    aspect-ratio:16/10;flex:0 1 auto;overflow:hidden
+  }
+  #game-canvas,#glitch-canvas{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain}
+  #touch-controls{
+    position:absolute;z-index:60;left:9px;right:9px;bottom:9px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:10px;
+    pointer-events:none;font-family:'JetBrains Mono',monospace
+  }
+  #touch-controls .touch-pad{
+    display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);
+    gap:4px;pointer-events:auto;touch-action:manipulation
+  }
+  #touch-controls .touch-pad>span{display:block}
+  #touch-controls button{
+    display:grid;place-items:center;min-width:42px;min-height:42px;padding:0;
+    border:1px solid rgba(105,215,223,.42);border-radius:5px;
+    color:#b9eff0;background:rgba(5,15,24,.88);font:700 15px 'JetBrains Mono',monospace;
+    box-shadow:0 4px 14px rgba(0,0,0,.35);touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;user-select:none
+  }
+  #touch-controls button:active{background:rgba(36,105,116,.92);border-color:#8de8e8}
+  #touch-controls .touch-actions{display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+  #touch-controls .touch-action{min-width:76px;min-height:42px;padding:7px 10px;font-size:10px;letter-spacing:.08em}
+  #touch-controls .stealth{color:#e1bd75;border-color:rgba(225,189,117,.48)}
+  #touch-controls .sonar{color:#8de8e8}
+  #touch-controls .terminal{color:#d8a9f4;border-color:rgba(184,129,220,.45)}
+  #btn-stealth-action,#btn-sonar-action{display:none!important}
+  #bios-boot{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  #bios-boot>.relative{padding:clamp(12px,4vw,22px);min-height:0}
+  #bios-logo{font-size:clamp(5px,1.65vw,10px);white-space:pre;overflow:hidden;max-width:100%}
+  #bios-log{min-height:0;max-height:45dvh;overflow:auto;overflow-wrap:anywhere}
+  #btn-bios-enter{min-height:46px;width:100%;padding:12px 14px;font-size:10px}
+  #bios-boot .relative>div:last-child{width:100%;align-items:stretch}
+  #bios-boot .relative>div:last-child span{font-size:9px;line-height:1.5}
+  #mission-intro{padding:calc(8px + env(safe-area-inset-top)) 9px calc(8px + env(safe-area-inset-bottom));align-items:flex-start}
+  #mission-intro .intro-panel{width:100%;max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;padding:18px 14px}
+  #mission-intro .intro-heading{font-size:clamp(24px,7.5vw,32px)}
+  #mission-intro .intro-story{font-size:12px;line-height:1.55;margin-bottom:14px;padding:10px 12px}
+  #mission-intro .intro-mission{padding:12px}
+  #mission-intro .intro-objective{align-items:flex-start;gap:9px}
+  #mission-intro .intro-objective strong{font-size:11px}
+  #mission-intro .intro-objective small{font-size:9px;line-height:1.4}
+  #mission-intro .intro-controls{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #mission-intro .intro-actions{flex-direction:column;align-items:stretch;gap:10px}
+  #mission-intro .intro-btn-next{width:100%;min-height:46px;justify-content:center}
+  #mission-intro .intro-footnote{max-width:none}
+  #victory-screen{padding:10px;overflow-y:auto;align-items:flex-start}
+  #victory-screen .victory-panel{width:100%;max-height:calc(100dvh - 20px);overflow:auto;padding:18px 14px}
+  #toast-interaction{z-index:70}
+}
+@media(max-width:420px){
+  #touch-controls .touch-pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px);gap:3px}
+  #touch-controls button{min-width:38px;min-height:38px;font-size:13px}
+  #touch-controls .touch-action{min-width:66px;min-height:39px;font-size:9px}
+  body:has(#game-canvas)>main>.tech-corner{height:min(54dvh,440px);min-height:250px}
+  #hud-tasks{font-size:8px}
+  #mission-intro .intro-topline{font-size:8px;letter-spacing:.12em}
+}
+@media(orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  body:has(#game-canvas)>main>.tech-corner{height:calc(100dvh - 86px);min-height:220px;max-height:none;aspect-ratio:16/9}
+  #touch-controls .touch-pad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(2,36px)}
+  #touch-controls button{min-width:36px;min-height:36px}
+  #touch-controls .touch-actions{flex-direction:row}
+  #mission-intro .intro-panel{max-width:680px}
+}
+@media(prefers-reduced-motion:reduce){
+  #mission-intro .intro-panel,#bios-boot *{scroll-behavior:auto}
+}
