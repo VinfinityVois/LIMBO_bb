@@ -1950,6 +1950,7 @@ body.breach-mode:after{
     captureProgress = 0;
     captureTargetProgress = 0;
     captureStartedAt = performance.now();
+    const checkpointTriggered = new Set();
 
     scene('#scene4');
     const hudSec = $('#hudSec');
@@ -2096,11 +2097,12 @@ body.breach-mode:after{
       const ss = String(Math.floor(elapsed/1000)%60).padStart(2,'0');
       const cs = String(Math.floor(elapsed/10)%100).padStart(2,'0');
       $('#captureTimecode').textContent = hh+':'+mm+':'+ss+':'+cs;
-      if (p >= 12) markChk(0,'CHECK');
-      if (p >= 32) markChk(1,'CHECK');
-      if (p >= 52) markChk(2,'CHECK');
-      if (p >= 72) markChk(3,'CHECK');
-      if (p >= 90) markChk(4,'CHECK');
+      [[12,0],[32,1],[52,2],[72,3],[90,4]].forEach(([threshold,index]) => {
+        if (p >= threshold && !checkpointTriggered.has(index)) {
+          checkpointTriggered.add(index);
+          markChk(index,'CHECK');
+        }
+      });
       captureFrame = requestAnimationFrame(tick);
     };
     if (captureFrame) cancelAnimationFrame(captureFrame);
@@ -2115,6 +2117,7 @@ body.breach-mode:after{
       captureLockTimer = null;
       captureTargetProgress = 0;
       captureProgress = 0;
+      checkpointTriggered.clear();
       capturePointerActive = false;
       centerReticle();
       reticle.classList.remove('aligned');
