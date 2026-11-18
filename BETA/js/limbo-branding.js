@@ -6,13 +6,16 @@ const brand=document.querySelector('.sc-brand');
 if(brand&&!brand.querySelector('.limbo-brand-logo')){
  const img=document.createElement('img');img.className='limbo-brand-logo';img.src=logo;img.alt='LIMBO';img.width=30;img.height=30;
  const live=brand.querySelector('.live');if(live)live.insertAdjacentElement('afterend',img);else brand.prepend(img);
-}
-else if(!brand){
+}else if(!brand){
  const header=document.querySelector('header');
  if(header&&!header.querySelector('.limbo-page-logo')){
-  const img=document.createElement('img');img.className='limbo-page-logo';img.src=logo;img.alt='LIMBO';img.width=34;img.height=34;
-  const anchor=header.firstElementChild;
-  if(anchor)anchor.insertAdjacentElement('afterbegin',img);else header.appendChild(img);
+  const img=document.createElement('img');img.src=logo;img.alt='LIMBO';img.width=34;img.height=34;
+  const first=header.firstElementChild;
+  if(first&&/(^|\\s)flex(\\s|$)/.test(first.className.baseVal||first.className||'')){
+   img.className='limbo-page-logo';first.insertAdjacentElement('afterbegin',img);
+  }else{
+   img.className='limbo-fixed-logo';document.body.appendChild(img);
+  }
  }
 }
 })();
