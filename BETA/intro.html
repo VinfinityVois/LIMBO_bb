@@ -625,10 +625,13 @@ tailwind.config = {
   const ctx = canvas.getContext('2d');
   const glitchCanvas = document.getElementById('glitch-canvas');
   const glitchCtx = glitchCanvas.getContext('2d');
+  glitchCanvas.width = 160;
+  glitchCanvas.height = 90;
   const fogCanvas = document.createElement('canvas');
-  fogCanvas.width = canvas.width;
-  fogCanvas.height = canvas.height;
+  fogCanvas.width = 640;
+  fogCanvas.height = 360;
   const fctx = fogCanvas.getContext('2d');
+  if (fctx) fctx.scale(.5, .5);
 
   const COLS = 32, ROWS = 18, TILE = 40;
   const MAP = [
@@ -678,6 +681,54 @@ tailwind.config = {
   };
 
   const $ = id => document.getElementById(id);
+  const phoneCardMode = window.matchMedia('(pointer: coarse) and (max-width: 600px)').matches;
+  let mobileBoard = null;
+  if (phoneCardMode) {
+    const stage = document.getElementById('game-canvas')?.parentElement;
+    if (stage) {
+      mobileBoard = document.createElement('section');
+      mobileBoard.className = 'mobile-mission-board';
+      mobileBoard.setAttribute('aria-label', 'Карточное управление миссией');
+      mobileBoard.innerHTML = `
+        <div class="mobile-board-top">
+          <div><div class="mobile-board-kicker">LIMBO // SUB-04 · ROUTE CONTROL</div><div class="mobile-board-title">КАРТА СЕКТОРА</div></div>
+          <div class="mobile-board-state" id="mobile-board-state">ПАТРУЛЬ</div>
+        </div>
+        <div class="mobile-board-summary">
+          <div class="mobile-board-stat"><small>СОБРАНО БАЙТОВ</small><strong id="mobile-board-shards">1 / 5</strong></div>
+          <div class="mobile-board-stat"><small>ТЕРМИНАЛЫ</small><strong id="mobile-board-terms">0 / 3</strong></div>
+          <div class="mobile-board-stat"><small>ЭНЕРГИЯ</small><strong id="mobile-board-power">100%</strong></div>
+          <div class="mobile-board-stat"><small>УГРОЗА</small><strong id="mobile-board-threat">НЕ ОБНАРУЖЕНА</strong></div>
+        </div>
+        <div class="mobile-board-section">ВЫБЕРИТЕ МАРШРУТ · ОДНА КАРТОЧКА = ОДИН ШАГ</div>
+        <div class="mobile-route-grid">
+          <button class="mobile-route-card" data-mobile-move="0,-1"><span class="route-dir">↑ СЕВЕР</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
+          <button class="mobile-route-card" data-mobile-move="1,0"><span class="route-dir">→ ВОСТОК</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
+          <button class="mobile-route-card" data-mobile-move="-1,0"><span class="route-dir">← ЗАПАД</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
+          <button class="mobile-route-card" data-mobile-move="0,1"><span class="route-dir">↓ ЮГ</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↘</span></button>
+        </div>
+        <div class="mobile-board-section">ИНСТРУМЕНТЫ ОПЕРАТОРА</div>
+        <div class="mobile-board-actions">
+          <button class="mobile-board-action" id="mobile-board-stealth">◌ МАСКИРОВКА</button>
+          <button class="mobile-board-action" id="mobile-board-sonar">⌁ СОНАР · 5%</button>
+          <button class="mobile-board-action" id="mobile-board-terminal" disabled>▣ ТЕРМИНАЛ</button>
+        </div>
+        <div class="mobile-board-footer" id="mobile-board-hint">Собирайте фрагменты памяти и считывайте терминалы. Избегайте сигнатур — используйте маскировку.</div>
+      `;
+      stage.appendChild(mobileBoard);
+      mobileBoard.addEventListener('click', event => {
+        const move = event.target.closest('[data-mobile-move]');
+        if (move && !move.disabled) {
+          const [dx, dy] = move.dataset.mobileMove.split(',').map(Number);
+          movePlayer(dx, dy);
+          updateMobileBoard();
+        }
+      });
+      mobileBoard.querySelector('#mobile-board-stealth').addEventListener('click', () => { toggleStealth(); updateMobileBoard(); });
+      mobileBoard.querySelector('#mobile-board-sonar').addEventListener('click', () => { triggerSonar(); updateMobileBoard(); });
+      mobileBoard.querySelector('#mobile-board-terminal').addEventListener('click', () => { hackTerminal(); updateMobileBoard(); });
+    }
+  }
   function showToast(msg, lore) {
     const box = $('toast-interaction');
     $('toast-message').textContent = msg;
@@ -698,6 +749,46 @@ tailwind.config = {
     if (t === 1 || t === 3 || t === 4) return true;
     if (t === 2 && !state.gateUnlocked) return true;
     return false;
+  }
+
+  function updateMobileBoard() {
+    if (!mobileBoard) return;
+    const p = state.player;
+    const directions = [
+      { key: '0,-1', dx: 0, dy: -1, name: 'СЕВЕР' },
+      { key: '1,0', dx: 1, dy: 0, name: 'ВОСТОК' },
+      { key: '-1,0', dx: -1, dy: 0, name: 'ЗАПАД' },
+      { key: '0,1', dx: 0, dy: 1, name: 'ЮГ' }
+    ];
+    directions.forEach(d => {
+      const button = mobileBoard.querySelector('[data-mobile-move="' + d.key + '"]');
+      if (!button) return;
+      const nx = p.x + d.dx, ny = p.y + d.dy;
+      const blocked = isSolid(nx, ny);
+      button.disabled = blocked || state.dead || state.escaped;
+      const tile = nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS ? MAP[ny][nx] : 1;
+      const hint = button.querySelector('.route-hint');
+      if (hint) hint.textContent = blocked ? (tile === 2 ? 'Шлюз заблокирован' : 'Проход перекрыт') :
+        tile === 5 ? 'Сигнал терминала' : tile === 7 ? 'Опасный участок' : 'Исследовать сектор';
+    });
+    const nearest = Math.min(Math.hypot(p.x - watcher.x, p.y - watcher.y), ...viruses.map(v => Math.hypot(p.x-v.x,p.y-v.y)));
+    const threat = mobileBoard.querySelector('#mobile-board-threat');
+    if (threat) threat.textContent = nearest < 3 ? 'КРИТИЧЕСКАЯ' : nearest < 6 ? 'ПОБЛИЗОСТИ' : 'НЕ ОБНАРУЖЕНА';
+    const stateLabel = mobileBoard.querySelector('#mobile-board-state');
+    if (stateLabel) stateLabel.textContent = p.stealth ? 'МАСКИРОВКА' : state.dead ? 'КАНАЛ ПОТЕРЯН' : state.escaped ? 'ЭВАКУАЦИЯ' : 'ПАТРУЛЬ';
+    mobileBoard.querySelector('#mobile-board-shards').textContent = state.collectedFish + ' / 5';
+    mobileBoard.querySelector('#mobile-board-terms').textContent = state.hackedTerms + ' / 3';
+    mobileBoard.querySelector('#mobile-board-power').textContent = state.power + '%';
+    const nearbyTerminal = terminals.some(t => Math.abs(t.x-p.x)<=1 && Math.abs(t.y-p.y)<=1);
+    const terminalButton = mobileBoard.querySelector('#mobile-board-terminal');
+    terminalButton.disabled = !nearbyTerminal || terminals.every(t => t.hacked || Math.abs(t.x-p.x)>1 || Math.abs(t.y-p.y)>1) || state.dead || state.escaped;
+    mobileBoard.querySelector('#mobile-board-sonar').disabled = state.power < 5 || state.dead || state.escaped;
+    mobileBoard.querySelector('#mobile-board-stealth').disabled = state.dead || state.escaped;
+    const hint = mobileBoard.querySelector('#mobile-board-hint');
+    if (hint) hint.textContent = nearest < 4 && !p.stealth ? 'ОПАСНО: включите маскировку и меняйте маршрут. Не задерживайтесь на открытом участке.' :
+      nearbyTerminal ? 'РЯДОМ ТЕРМИНАЛ: выберите «ТЕРМИНАЛ», чтобы считать данные.' :
+      state.gateUnlocked ? 'ШЛЮЗ ALPHA ОТКРЫТ. Найдите выход в южной части сектора.' :
+      'Собирайте фрагменты памяти и считывайте терминалы. Карточка направления делает один шаг.';
   }
 
   function drawWorld() {
@@ -889,7 +980,7 @@ tailwind.config = {
     const p = state.player;
     const px = p.x * TILE + TILE / 2, py = p.y * TILE + TILE / 2;
     fctx.fillStyle = 'rgba(2,3,8,0.82)';
-    fctx.fillRect(0, 0, fogCanvas.width, fogCanvas.height);
+    fctx.fillRect(0, 0, 1280, 720);
     fctx.save();
     fctx.globalCompositeOperation = 'destination-out';
     if (p.flashlight && !p.stealth) {
@@ -946,7 +1037,11 @@ tailwind.config = {
     }
   }
 
+  let lastGlitchRender = 0;
   function renderGlitch(intensity) {
+    const now = performance.now();
+    if (now - lastGlitchRender < 90) return;
+    lastGlitchRender = now;
     intensity = intensity == null ? 0.3 : intensity;
     const w = glitchCanvas.width, h = glitchCanvas.height;
     const img = glitchCtx.createImageData(w, h);
@@ -1339,11 +1434,16 @@ tailwind.config = {
     $('audio-label').textContent = m ? 'MUTE' : 'SFX';
   };
 
-  function loop() {
+  let lastFrameTime = 0;
+  const frameInterval = phoneCardMode ? Infinity : 1000 / (window.matchMedia('(pointer: coarse)').matches ? 30 : 40);
+  function loop(now = 0) {
+    requestAnimationFrame(loop);
+    if (phoneCardMode || document.hidden) return;
+    if (now - lastFrameTime < frameInterval) return;
+    lastFrameTime = now;
     drawWorld();
     drawPlayer();
     drawLighting();
-    requestAnimationFrame(loop);
   }
 
   // ═══ SINGLE-SCREEN MISSION BRIEFING ═══
@@ -1417,6 +1517,8 @@ tailwind.config = {
     });
   })();
 
+  updateMobileBoard();
+  if (mobileBoard) window.setInterval(updateMobileBoard, 450);
   requestAnimationFrame(loop);
 })();
 </script>
