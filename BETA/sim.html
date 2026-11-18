@@ -175,6 +175,95 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 
 <link rel="stylesheet" href="/css/sim-story-readability.css" />
 <link rel="stylesheet" href="/css/combat-inventory-ui.css" />
 <link rel="stylesheet" href="/css/sector-report.css" />
+
+<style id="limbo-sim-visual-refine">
+/* LIMBO gameplay — layered atmosphere, readable HUD, restrained motion */
+:root{--hud-h:188px;--sim-glass:rgba(5,15,24,.88);--sim-edge:rgba(76,160,183,.27)}
+body.immerse{background:#02070c}
+.sim-stage{isolation:isolate;background:#02070c}
+.sim-stage canvas{filter:saturate(.9) contrast(1.04)}
+.sim-stage>.vignette{background:radial-gradient(ellipse at 50% 48%,transparent 42%,rgba(0,0,0,.34) 100%);opacity:.75}
+.zone-whisper{left:clamp(22px,3.2vw,56px);top:clamp(20px,3vh,34px);padding:12px 16px;border-left:1px solid rgba(78,191,207,.62);background:linear-gradient(90deg,rgba(4,13,21,.72),transparent);text-shadow:0 2px 12px #000}
+#zoneLabel{font-size:clamp(16px,1.5vw,20px);letter-spacing:.16em}
+#zoneSub{color:#9db4bd;font-size:9px;letter-spacing:.18em}
+.world-clock{right:clamp(20px,3vw,46px);top:20px}
+.clock-mark,.world-clock strong{border-color:var(--sim-edge);background:rgba(4,13,21,.78);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.sound-readout{right:clamp(20px,3vw,46px);top:66px}
+.sound-meter i{border-radius:2px;box-shadow:0 0 8px rgba(43,214,242,.08)}
+.sense-feed{left:clamp(20px,3vw,46px);top:180px}
+.sense-feed>*{border-color:rgba(76,160,183,.22);background:linear-gradient(90deg,rgba(4,14,22,.88),rgba(4,14,22,.38));box-shadow:0 6px 20px rgba(0,0,0,.15);backdrop-filter:blur(7px)}
+.interact-prompt{border:1px solid rgba(84,191,205,.32);border-left:2px solid var(--cyan);border-radius:4px;background:rgba(3,12,20,.88);box-shadow:0 12px 32px rgba(0,0,0,.36);backdrop-filter:blur(12px);padding:10px 14px}
+.target-reticle{filter:drop-shadow(0 0 7px rgba(43,214,242,.52))}
+.game-hud{height:var(--hud-h);grid-template-columns:minmax(210px,260px) minmax(320px,1fr) minmax(250px,300px) 150px;gap:10px;padding:10px 16px 22px;background:linear-gradient(180deg,rgba(5,14,22,.94),rgba(2,7,12,.985));border-top:1px solid rgba(83,175,191,.24);box-shadow:0 -18px 48px rgba(0,0,0,.34);backdrop-filter:blur(16px)}
+.game-hud>*{padding:11px 13px;border-color:rgba(82,162,181,.2);border-radius:5px;background:linear-gradient(145deg,rgba(8,21,31,.9),rgba(4,11,18,.94));box-shadow:inset 0 1px rgba(220,250,255,.035),0 8px 22px rgba(0,0,0,.16)}
+.hud-vitals{gap:8px}
+.hud-avatar{border-radius:4px;background:rgba(43,214,242,.06);box-shadow:0 0 18px rgba(43,214,242,.12)}
+.vital-track{height:6px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.065)}
+.vital-track span{border-radius:6px;transition:width .35s ease}
+.inventory-heading strong,.utility-heading strong{font-size:10px;letter-spacing:.18em}
+.inv{grid-template-columns:repeat(9,minmax(0,1fr));gap:7px;margin-top:12px}
+.inv>*{height:58px;border-radius:4px;border-color:rgba(105,172,187,.22);background:linear-gradient(145deg,rgba(15,36,49,.88),rgba(5,17,26,.95));transition:border-color .2s,background .2s,box-shadow .2s,transform .2s}
+.inv>*:hover{transform:translateY(-2px);border-color:rgba(92,217,226,.62);box-shadow:0 8px 20px rgba(0,0,0,.22),0 0 14px rgba(43,214,242,.1)}
+.inv>.selected,.inv>.sel,.inv>.active,.inv>[aria-pressed=true]{border-color:#62dce7;background:linear-gradient(145deg,rgba(19,70,82,.75),rgba(5,22,32,.96));box-shadow:0 0 0 1px rgba(43,214,242,.2),0 0 18px rgba(43,214,242,.14)}
+.inventory-hint{gap:12px;font-size:7.5px;color:#77929d}
+.hud-utility{grid-template-columns:78px minmax(0,1fr);column-gap:11px}
+.selected-art{width:78px;height:88px;border-radius:4px;border-color:rgba(86,170,187,.24);background:radial-gradient(circle at 50% 45%,rgba(37,91,108,.28),rgba(3,12,20,.96) 72%)}
+.selected-copy{font-size:10px;color:#b6cbd2}
+.selected-copy strong{font-size:10px}
+.hud-actions{gap:7px}
+.hud-actions .hud-action{height:28px;border-radius:4px;font-size:8px;letter-spacing:.1em;transition:background .2s,border-color .2s,transform .2s}
+.hud-actions .hud-action:hover{transform:translateY(-1px);background:rgba(43,214,242,.14)}
+.hud-actions .hud-action:disabled{opacity:.35;cursor:not-allowed}
+.hud-radar{border-radius:5px}
+#miniMap{left:10px;top:10px;width:112px;height:112px;border-color:rgba(110,190,202,.3);box-shadow:inset 0 0 22px rgba(43,214,242,.07),0 0 18px rgba(0,0,0,.22)}
+.float-ctrl{top:14px;gap:5px;opacity:.78}
+.float-ctrl button{height:30px;border-radius:4px;border-color:rgba(95,174,190,.3);background:rgba(4,13,21,.84);backdrop-filter:blur(8px);transition:color .2s,border-color .2s,background .2s}
+.float-ctrl button:hover{color:#e6ffff;border-color:var(--cyan);background:rgba(13,47,59,.94)}
+#simModal .sim-modal-panel{border-radius:7px;border-color:rgba(91,185,198,.36);box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 32px rgba(43,214,242,.09);backdrop-filter:blur(14px)}
+#simModal .smp-visual{border-radius:4px}
+#simModal .smp-a button{transition:color .2s,border-color .2s,background .2s}
+#simModal .smp-a button:hover{color:#fff;border-color:rgba(43,214,242,.55);background:rgba(43,214,242,.07)}
+.threat-overlay{backdrop-filter:blur(8px)}
+@media(max-width:1280px){
+  :root{--hud-h:184px}
+  .game-hud{grid-template-columns:minmax(200px,245px) minmax(280px,1fr) minmax(230px,280px)}
+  .hud-radar{display:none}
+}
+@media(max-width:900px){
+  :root{--hud-h:220px}
+  .game-hud{grid-template-columns:minmax(180px,.75fr) minmax(0,1.25fr);grid-template-rows:1fr 1fr;gap:7px;padding:7px 10px 16px}
+  .game-hud>*{padding:8px 10px}
+  .hud-utility{grid-template-columns:62px minmax(0,1fr)}
+  .selected-art{width:62px;height:65px}
+  .inv{gap:5px;margin-top:7px}
+  .inv>*{height:42px}
+  .inventory-hint{gap:6px;flex-wrap:wrap}
+  .sense-feed{display:none}
+}
+@media(max-width:560px){
+  :root{--hud-h:248px}
+  .game-hud{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:5px;padding:5px 6px 12px}
+  .hud-player{gap:8px}.hud-avatar{width:30px;height:30px}
+  .vital-label{font-size:8px}.vital-track{height:5px}
+  .inv{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+  .inv>*{height:32px}.inv>*::after{bottom:-13px;font-size:7px}
+  .inventory-hint{font-size:6px;gap:4px}
+  .inventory-hint kbd{height:12px;font-size:7px}
+  .hud-utility{grid-template-columns:52px minmax(0,1fr);column-gap:7px}
+  .selected-art{width:52px;height:54px}
+  .selected-copy{font-size:8px}.selected-copy strong{font-size:8px}
+  .selected-copy small{font-size:7px}
+  .hud-actions{flex-wrap:wrap}.hud-actions .hud-action{height:24px;padding:0 7px;font-size:7px}
+  .world-clock{right:14px;top:12px}.sound-readout{right:14px;top:54px}
+  .zone-whisper{left:14px;top:14px}
+  #zoneLabel{font-size:14px}
+  .float-ctrl{top:auto;bottom:calc(var(--hud-h) + 8px);opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+  .inv>*,.hud-actions .hud-action,.float-ctrl button{transition:none!important}
+}
+</style>
+
 </head>
 <body class="immerse" data-matrix="idle">
   <div id="diveOverlay" class="dive-overlay" aria-hidden="true">
