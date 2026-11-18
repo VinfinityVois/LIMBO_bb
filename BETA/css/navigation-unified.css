@@ -61,3 +61,38 @@
 @media(prefers-reduced-motion:reduce){
   .sys-nav a,.sc-nav a{transition:none}
 }
+
+/* Cross-document transition curtain and restrained entrance motion */
+#page-transition{
+  position:fixed;inset:0;z-index:99999;pointer-events:none;opacity:0;
+  background:
+    linear-gradient(90deg,transparent 0 49.8%,rgba(0,212,232,.12) 50%,transparent 50.2%),
+    radial-gradient(ellipse at 50% 50%,rgba(0,34,48,.94),rgba(1,5,11,.985) 68%);
+  transform:scaleY(.985);
+  transition:opacity .34s ease,transform .34s cubic-bezier(.2,.8,.2,1);
+}
+#page-transition:before,#page-transition:after{
+  content:"";position:absolute;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,212,232,.8),transparent);
+  box-shadow:0 0 18px rgba(0,212,232,.35);
+}
+#page-transition:before{top:22%}
+#page-transition:after{bottom:22%;opacity:.45}
+#page-transition.is-active{opacity:1;transform:scaleY(1)}
+html.page-transition-ready body>header,
+html.page-transition-ready body>main,
+html.page-transition-ready body>.sys-page{
+  animation:princPageEnter .52s cubic-bezier(.2,.75,.25,1) both;
+}
+html.page-transition-leave body{cursor:progress}
+html.page-transition-leave body>*:not(#page-transition){transition:filter .3s ease,opacity .3s ease;filter:brightness(.48) saturate(.7)}
+@keyframes princPageEnter{
+  from{opacity:0;transform:translateY(9px);filter:blur(2px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  #page-transition{display:none!important}
+  html.page-transition-ready body>header,
+  html.page-transition-ready body>main,
+  html.page-transition-ready body>.sys-page{animation:none!important}
+}
