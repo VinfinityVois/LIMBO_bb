@@ -2012,7 +2012,7 @@ body.breach-mode:after{
 })();
 </script>
 <script id="signal-acquisition-telemetry">
-(()=>{const source=document.getElementById('microReadout'),target=document.getElementById('acqHandshake');if(!source||!target)return;const sync=()=>{const t=source.textContent.match(/HANDSHAKE\\s+(\\d+)%/i);if(t)target.textContent=t[1]+'%'};new MutationObserver(sync).observe(source,{subtree:true,childList:true,characterData:true});sync()})();
+(()=>{const source=document.getElementById('microReadout'),target=document.getElementById('acqHandshake');if(!source||!target)return;const sync=()=>{const t=source.textContent.match(/HANDSHAKE\s+(\d+)%/i);if(t)target.textContent=t[1]+'%'};new MutationObserver(sync).observe(source,{subtree:true,childList:true,characterData:true});sync()})();
 </script>
 <script src="js/mobile-navigation.js" defer></script>
 <script src="js/limbo-branding.js"></script>
