@@ -221,3 +221,143 @@ button { -webkit-tap-highlight-color: transparent; }
   #bootCodeCanvas { display: none !important; }
   #matrixCanvas { opacity: .035 !important; }
 }
+
+
+/* ── LIMBO mobile navigation ───────────────────────────────────────────── */
+.limbo-mobile-menu-button{display:none}
+.limbo-mobile-menu{display:none}
+@media(max-width:760px){
+  .limbo-mobile-menu-button{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    position:fixed;top:calc(9px + env(safe-area-inset-top));right:10px;z-index:2147483100;
+    width:46px;height:44px;padding:0;border:1px solid rgba(91,219,229,.38);
+    border-radius:5px;background:rgba(4,12,21,.96);color:#9cf5f4;
+    box-shadow:0 8px 24px rgba(0,0,0,.42);font:700 10px "JetBrains Mono",monospace;
+    touch-action:manipulation;
+  }
+  .limbo-mobile-menu-button .burger-lines{display:grid;gap:5px;width:19px}
+  .limbo-mobile-menu-button .burger-lines i{height:2px;background:currentColor;display:block;transition:transform .18s,opacity .18s}
+  .limbo-mobile-menu-button[aria-expanded=true] .burger-lines i:first-child{transform:translateY(7px) rotate(45deg)}
+  .limbo-mobile-menu-button[aria-expanded=true] .burger-lines i:nth-child(2){opacity:0}
+  .limbo-mobile-menu-button[aria-expanded=true] .burger-lines i:last-child{transform:translateY(-7px) rotate(-45deg)}
+  .limbo-mobile-menu{
+    display:flex;position:fixed;top:calc(60px + env(safe-area-inset-top));right:10px;z-index:2147483099;
+    width:min(290px,calc(100vw - 20px));max-height:calc(100dvh - 80px);
+    flex-direction:column;gap:5px;padding:10px;overflow:auto;
+    border:1px solid rgba(91,219,229,.28);border-radius:6px;
+    background:rgba(3,9,17,.985);box-shadow:0 22px 60px rgba(0,0,0,.72);
+    opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .16s,transform .16s,visibility .16s;
+  }
+  .limbo-mobile-menu.is-open{opacity:1;visibility:visible;transform:none}
+  .limbo-mobile-menu .menu-caption{padding:7px 9px 9px;color:#658d9c;font:8px "JetBrains Mono",monospace;letter-spacing:.18em;border-bottom:1px solid rgba(100,160,180,.16)}
+  .limbo-mobile-menu a{display:flex;align-items:center;min-height:44px;padding:10px 12px;border:1px solid rgba(100,150,170,.14);background:rgba(12,25,38,.72);color:#c5e0e5;text-decoration:none;font:10px "JetBrains Mono",monospace;letter-spacing:.06em}
+  .limbo-mobile-menu a[aria-current=page]{border-color:rgba(0,220,235,.48);color:#8ff5f4;background:rgba(0,170,190,.12)}
+  .sc-topbar .sc-nav, header nav{display:none!important}
+  body.limbo-menu-open{overflow:hidden!important}
+}
+
+/* ── Phone mission: readable map, objectives and actionable directions ─── */
+@media(pointer:coarse) and (max-width:600px){
+  .mobile-mission-board{gap:7px;padding:10px 10px calc(12px + env(safe-area-inset-bottom));}
+  .mobile-board-top{padding-bottom:6px}
+  .mobile-board-title{font-size:19px}
+  .mobile-mission-brief{display:grid;gap:4px;padding:9px 10px;border:1px solid rgba(0,210,225,.28);background:linear-gradient(135deg,rgba(8,29,42,.94),rgba(5,12,22,.96))}
+  .mobile-mission-brief strong{color:#e1f5f6;font:700 12px/1.3 "Space Grotesk",sans-serif}
+  .mobile-mission-brief p{margin:0;color:#9ab6c1;font:9px/1.45 "JetBrains Mono",monospace}
+  .mobile-legend{display:flex;flex-wrap:wrap;gap:5px 10px;color:#7197a4;font:8px "JetBrains Mono",monospace}
+  .mobile-board-summary{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .mobile-board-stat{padding:6px 5px}
+  .mobile-board-stat small{font-size:7px;letter-spacing:.04em}
+  .mobile-board-stat strong{font-size:10px}
+  .mobile-map-wrap{width:100%;padding:6px;border:1px solid rgba(86,169,188,.22);background:rgba(2,8,15,.9);overflow:hidden}
+  .mobile-sector-map{display:grid;grid-template-columns:repeat(32,minmax(0,1fr));gap:1px;width:100%;aspect-ratio:32/18;touch-action:manipulation}
+  .mobile-map-cell{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;padding:0;border:0;border-radius:1px;background:rgba(25,45,60,.32);color:#466574;font:700 clamp(5px,1.7vw,8px)/1 "JetBrains Mono",monospace}
+  .mobile-map-cell.is-wall{background:#111d2a;color:transparent}
+  .mobile-map-cell.is-reachable{outline:1px solid rgba(105,208,218,.55);background:rgba(30,100,118,.42);color:#b7f6f3}
+  .mobile-map-cell.is-player{background:#e5ffff;color:#05202a;box-shadow:0 0 7px #43f3f5}
+  .mobile-map-cell.is-data{background:#075d68;color:#9efff7;box-shadow:0 0 5px rgba(0,240,255,.45)}
+  .mobile-map-cell.is-terminal{background:#59431b;color:#ffe19a}
+  .mobile-map-cell.is-threat{background:#701f35;color:#ffd1dc}
+  .mobile-map-cell.is-gate{background:#682238;color:#ff9caf}
+  .mobile-map-cell.is-gate-open{background:#075b62;color:#a4ffff}
+  .mobile-map-cell:disabled{opacity:1}
+  .mobile-route-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .mobile-route-card{min-height:49px;padding:6px 3px;align-items:center;text-align:center}
+  .mobile-route-card .route-dir{font-size:9px}
+  .mobile-route-card .route-hint{display:none}
+  .mobile-board-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .mobile-board-action{min-height:42px;font-size:8px;padding:5px 3px}
+  .mobile-board-footer{font-size:8px;padding-top:5px}
+}
+
+/* ── Scene backgrounds: crop to the viewport, never widen the page ──────── */
+@media(max-width:760px){
+  html,body.scene-page{width:100%;max-width:100%;overflow-x:clip!important}
+  .scene-page .sc-topbar,.scene-page .sc-body,.scene-page .sys-page{width:100%;max-width:100%;min-width:0}
+  .scene-page .viewport{width:100%;max-width:100%;min-width:0;overflow:hidden;aspect-ratio:16/10}
+  .scene-page .viewport img,.scene-page .viewport picture,.scene-page .viewport video{width:100%;height:100%;max-width:100%;object-fit:cover;object-position:center}
+  .scene-page .viewport [style*="background-image"]{background-size:cover!important;background-position:center center!important;max-width:100%}
+  .scene-page .cam-strip,.scene-page .cam-thumbs{max-width:100%;min-width:0}
+}
+@media(max-width:520px){
+  .scene-page .viewport{aspect-ratio:4/3;min-height:0}
+  .scene-page .sc-body{padding-left:10px;padding-right:10px}
+}
+
+/* ── Immersion game on phones: preserve world area, dock controls compactly ─ */
+@media(max-width:600px){
+  body.immerse{width:100vw;height:100dvh;min-height:0;max-height:100dvh;overflow:hidden!important}
+  body.immerse .sim-stage{position:fixed!important;inset:0 0 184px 0!important;width:100vw;height:auto!important;max-height:none;overflow:hidden}
+  body.immerse .sim-stage canvas{width:100%;height:100%;object-fit:cover}
+  body.immerse .game-hud{position:fixed!important;left:7px!important;right:7px!important;bottom:7px!important;width:auto!important;max-height:170px!important;min-height:0!important;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)!important;gap:6px!important;padding:6px!important}
+  body.immerse .hud-vitals{grid-column:1;grid-row:1;display:grid!important;grid-template-columns:1fr 1fr!important;gap:5px!important}
+  body.immerse .hud-player{grid-column:1/-1!important;grid-row:2!important}
+  body.immerse .hud-inventory{grid-column:2;grid-row:1/3;min-width:0!important;max-height:150px!important;overflow:hidden!important}
+  body.immerse .hud-inventory .inv{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:3px!important;overflow:hidden!important}
+  body.immerse .hud-inventory .inv-slot{width:auto!important;min-width:0!important;min-height:44px!important;height:44px!important}
+  body.immerse .hud-utility,.hud-radar{display:none!important}
+  body.immerse .world-hud{left:7px!important;right:58px!important;top:7px!important;gap:5px!important;justify-content:flex-start!important}
+  body.immerse .world-clock{padding:4px 6px!important;gap:4px!important}
+  body.immerse .world-clock small{display:none!important}
+  body.immerse .danger-readout{min-width:0!important;padding:4px 6px!important}
+  body.immerse .danger-readout small{display:none!important}
+  body.immerse .zone-whisper{left:8px!important;top:55px!important;max-width:62vw}
+  body.immerse .awareness-indicator{top:48px!important;left:50%!important;transform:translateX(-50%) scale(.8)}
+  body.immerse .sense-feed{top:92px!important;left:8px!important;width:min(190px,56vw)!important}
+  body.immerse .notify-host{left:8px!important;right:8px!important;top:100px!important;width:auto!important;max-width:none!important}
+  body.immerse .hotspot-layer,body.immerse .exit-layer{inset:0 0 184px 0!important}
+  body.immerse .float-ctrl{top:auto!important;right:8px!important;bottom:190px!important}
+  body.immerse .combat-panel{max-width:calc(100vw - 12px)!important}
+}
+@media(max-width:380px){
+  body.immerse .sim-stage{inset-bottom:194px!important}
+  body.immerse .game-hud{max-height:180px!important}
+  .mobile-board-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* ── Index terminal: fit every state into one mobile viewport ───────────── */
+@media(max-width:760px){
+  html:has(body.breach-mode),body.breach-mode{width:100%;height:100dvh;min-height:0;max-height:100dvh;overflow:hidden!important}
+  body.breach-mode .scene{position:absolute!important;inset:0!important;width:100%!important;height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))!important}
+  body.breach-mode .scene.active{display:flex!important;align-items:center!important;justify-content:center!important}
+  #scene0 .boot-core{width:100%;max-width:100%;padding:8px!important;transform:scale(.86);transform-origin:center}
+  #scene0 .core-rings{width:min(46vw,190px)!important;height:min(46vw,190px)!important}
+  #scene0 .boot-phase{width:min(78vw,360px)!important;margin-top:8px!important}
+  #scene0 .boot-event-feed{display:none!important}
+  #scene1 .breach-container{width:100%!important;height:100%!important;min-height:0!important;padding:0!important;overflow:hidden!important}
+  #scene1 .warning-frame{width:100%!important;max-width:540px!important;max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;padding:10px 11px!important;gap:5px!important;overflow:hidden!important}
+  #scene1 .warning-icon-wrap{display:none!important}
+  #scene1 .warning-title{font-size:clamp(15px,4.3vw,20px)!important}
+  #scene1 .warning-sub{font-size:10px!important;line-height:1.35!important;margin:2px auto!important}
+  #scene1 .warning-meta{font-size:7px!important;gap:3px!important}
+  #scene1 .warning-log{display:none!important}
+  #scene1 #btnProceed{position:relative!important;min-height:46px!important;margin-top:5px!important;flex:0 0 auto!important}
+  #scene2 .terminal-shell,#scene3 .login-wrap,#scene4 .auth-final.capture-interface{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 20px)!important;min-height:0!important;margin:0!important;overflow:hidden!important;padding:12px!important}
+  #scene2 .terminal-body{min-height:0!important;max-height:calc(100dvh - 125px)!important;overflow:hidden!important}
+  #scene2 .terminal-left{min-width:0!important;width:34%!important}
+  #scene2 .terminal-right{min-width:0!important;overflow:hidden!important}
+  #scene2 .terminal-log,#scene2 .hex-dump{max-height:25dvh!important;overflow:hidden!important}
+  #scene3 .login-main,#scene3 .access-sidebar{min-width:0!important}
+  #scene4 .auth-final.capture-interface{padding:10px!important}
+  body.breach-mode .hud,body.breach-mode .side-stream,body.breach-mode .hud-node{display:none!important}
+}
