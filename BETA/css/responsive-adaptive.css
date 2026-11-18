@@ -1,0 +1,149 @@
+/* LIMBO responsive adaptation — tablet, phone and touch layouts.
+   Deliberately presentation-only: no gameplay rules or desktop layout changes. */
+:root{--limbo-safe-top:env(safe-area-inset-top,0px);--limbo-safe-right:env(safe-area-inset-right,0px);--limbo-safe-bottom:env(safe-area-inset-bottom,0px);--limbo-safe-left:env(safe-area-inset-left,0px)}
+html{min-width:320px;scroll-padding-top:76px}
+body{max-width:100%;overflow-x:hidden}
+img,canvas,svg,video{max-width:100%}
+button,a,[role=button],input,select,textarea{touch-action:manipulation}
+button,a,[role=button]{-webkit-tap-highlight-color:transparent}
+@media (max-width:1100px){
+  .sys-page{width:min(100% - 40px,1000px);padding-left:0;padding-right:0}
+  .sc-topbar{padding-left:20px;padding-right:20px;gap:12px}
+  .sc-meta{gap:8px}
+  .sc-nav{gap:6px;flex-wrap:wrap}
+  .scene-page .sc-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+  .scene-page .col-brief,.scene-page .col-sim{min-width:0}
+  .employee-layout{grid-template-columns:230px minmax(0,1fr);gap:18px}
+  .employee-main{min-width:0}
+  .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .collection-grid,.medal-grid,.pass-grid,.sim-pass-grid,.charm-grid,.creature-grid,.item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .char-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .poly-hero-grid{grid-template-columns:minmax(0,1fr) minmax(220px,.7fr)}
+  .dossier-hero{gap:18px}
+}
+@media (max-width:760px){
+  html{scroll-padding-top:64px}
+  .sys-page{width:calc(100% - 28px);max-width:none}
+  .sc-topbar{position:relative;top:auto;min-height:0;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .sc-brand{min-width:0;flex:1 1 auto}
+  .sc-meta{order:2;flex:1 1 100%;justify-content:flex-start;flex-wrap:wrap}
+  .sc-nav{order:3;flex:1 1 100%;display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:6px;padding:3px 0 7px;scrollbar-width:thin;overscroll-behavior-x:contain}
+  .sc-nav>*{flex:0 0 auto;white-space:nowrap}
+  .sys-header{margin:26px auto 20px}
+  .sys-title{font-size:clamp(1.7rem,7vw,2.8rem);line-height:1.08}
+  .sys-header .desc,.desc{max-width:100%;line-height:1.65}
+  .scene-page .viewport{min-height:0;aspect-ratio:16/10}
+  .scene-page .sc-body{display:flex;flex-direction:column;gap:14px}
+  .scene-page .col-brief,.scene-page .col-sim,.scene-page .sim-main{width:100%;min-width:0}
+  .scene-page .cam-strip{overflow-x:auto;display:flex;gap:8px;scroll-snap-type:x mandatory}
+  .scene-page .cam-thumbs{flex:0 0 auto;scroll-snap-align:start}
+  .scene-page .panel{min-width:0}
+  .scene-page .next-row{position:relative;display:flex;flex-wrap:wrap;gap:10px}
+  .scene-page .btn-next{min-height:46px}
+  .employee-layout{display:flex;flex-direction:column;gap:16px}
+  .employee-sidebar{width:100%;position:relative;top:auto;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:14px}
+  .employee-sidebar .sidebar-portrait{grid-row:1 / span 2;width:76px}
+  .employee-sidebar .sidebar-nav{grid-column:1 / -1;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:7px;padding:4px 0 7px}
+  .employee-sidebar .side-link{flex:0 0 auto;min-height:42px;white-space:nowrap}
+  .employee-sidebar .sidebar-foot{display:none}
+  .employee-main{width:100%}
+  .overview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .chart-grid{grid-template-columns:1fr}
+  .overview-lore-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quick-collections{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .collection-grid,.medal-grid,.pass-grid,.sim-pass-grid,.charm-grid,.creature-grid,.item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dossier-hero{display:flex;flex-direction:column}
+  .stat-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .control-ribbon{flex-wrap:wrap;gap:10px}
+  .filter-cluster,.sort-cluster{max-width:100%;overflow-x:auto}
+  .char-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .poly-hero-grid{grid-template-columns:1fr}
+  .scene-prev-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .module-grid{grid-template-columns:1fr}
+  .roadmap{grid-template-columns:1fr}
+  .sys-footer{flex-wrap:wrap;gap:10px}
+  .modal-overlay,.confirm-overlay,.archive-modal{padding:12px;align-items:center}
+  .modal-panel,.confirm-panel,.archive-dialog{width:min(100%,560px);max-height:calc(100dvh - 24px);overflow:auto}
+  .modal-body{max-height:calc(100dvh - 190px);overflow:auto}
+  .intro-panel{width:100%;max-width:100%;padding:clamp(16px,4vw,26px)}
+  .intro-heading{font-size:clamp(26px,8vw,42px);line-height:1.08}
+  .intro-story,.intro-mission{min-width:0}
+  .intro-objective{grid-template-columns:auto minmax(0,1fr)}
+  .sim-stage{min-height:0;height:min(64dvh,620px)}
+  .game-hud{gap:8px}
+  .hud-vitals,.hud-player{min-width:0}
+  .inventory{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  .action-panel,.combat-actions,.combat-panel{max-width:100%;min-width:0}
+  .world-hud{padding-top:var(--limbo-safe-top)}
+  .float-ctrl{touch-action:none}
+  .notify-host{max-width:calc(100vw - 24px)}
+}
+@media (max-width:520px){
+  body{font-size:14px}
+  .sys-page{width:calc(100% - 22px)}
+  .sc-topbar{padding:10px 11px}
+  .sc-brand{font-size:12px}
+  .sc-nav a,.sc-nav button{min-height:40px;padding:9px 11px}
+  .sys-header{margin:20px auto 16px}
+  .sys-header .eyebrow{font-size:9px;letter-spacing:.13em}
+  .sys-title{font-size:clamp(25px,8vw,34px);letter-spacing:.06em}
+  .sys-header .desc{font-size:12px}
+  .scene-page .viewport{aspect-ratio:4/3}
+  .scene-page .vp-top,.scene-page .vp-bottom{padding:10px}
+  .scene-page .vp-title{font-size:clamp(19px,6vw,27px)}
+  .scene-page .vp-desc{font-size:11px;max-width:100%}
+  .scene-page .vp-coords,.scene-page .vp-optics{font-size:8px}
+  .scene-page .panel .ph{padding:12px}
+  .scene-page .brief-body{padding:12px}
+  .scene-page .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .employee-sidebar{grid-template-columns:58px minmax(0,1fr);padding:11px}
+  .employee-sidebar .sidebar-portrait{width:58px}
+  .overview-grid,.overview-lore-cards,.quick-collections{grid-template-columns:1fr}
+  .collection-grid,.medal-grid,.pass-grid,.sim-pass-grid,.charm-grid,.creature-grid,.item-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .char-grid,.scene-prev-grid{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .dossier-hero{gap:12px}
+  .filter-tab{min-height:40px;white-space:nowrap}
+  .search-well{width:100%;min-width:0}
+  .poly-hero{padding:15px}
+  .poly-stat-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .intro-panel{padding:16px 14px}
+  .intro-topline{flex-wrap:wrap;gap:8px}
+  .intro-heading{font-size:clamp(24px,8vw,32px)}
+  .intro-story{font-size:13px;line-height:1.65}
+  .intro-objective{padding:11px}
+  .intro-panel button,.intro-panel a{min-height:44px}
+  .sim-stage{height:58dvh;min-height:340px}
+  .game-hud{display:flex;flex-direction:column;align-items:stretch}
+  .hud-vitals,.hud-player{width:100%}
+  .inventory{display:flex;flex-wrap:nowrap;gap:7px}
+  .inventory button,.inventory .slot{flex:0 0 48px;min-width:48px;min-height:48px}
+  .action-panel button,.combat-actions button,.hud-action{min-height:44px}
+  .modal-panel,.confirm-panel,.archive-dialog{padding:16px}
+  .launch-confirm-actions{flex-direction:column-reverse}
+  .launch-confirm-actions button{width:100%;min-height:44px}
+}
+@media (max-width:380px){
+  .sc-meta{gap:5px}
+  .sc-meta>*{font-size:8px}
+  .scene-page .vp-coords{display:none}
+  .collection-grid,.medal-grid,.pass-grid,.sim-pass-grid,.charm-grid,.creature-grid,.item-grid{grid-template-columns:1fr}
+  .stat-strip{grid-template-columns:1fr 1fr}
+  .sim-stage{min-height:300px;height:54dvh}
+}
+@media (hover:none),(pointer:coarse){
+  .reveal,.reveal-d1,.reveal-d2,.reveal-d3{opacity:1!important;transform:none!important}
+  .panel:hover,.ms-card:hover,.telem-metric:hover,.spark-card:hover{transform:none}
+  .scene-card,.filter-tab,.side-link,.btn-next,.hud-action{cursor:pointer}
+  .scene-card:active,.filter-tab:active,.side-link:active,.btn-next:active,.hud-action:active{filter:brightness(1.12)}
+}
+@media (orientation:landscape) and (max-height:520px) and (pointer:coarse){
+  .sc-topbar{position:relative}
+  .scene-page .viewport{aspect-ratio:16/7}
+  .sim-stage{height:72dvh;min-height:260px}
+  .intro-panel{max-height:88dvh;overflow:auto}
+}
+@media(prefers-reduced-motion:reduce){
+  .reveal,.reveal-d1,.reveal-d2,.reveal-d3{transition:none!important}
+}
