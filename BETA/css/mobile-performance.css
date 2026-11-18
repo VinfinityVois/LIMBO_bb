@@ -686,3 +686,83 @@ button { -webkit-tap-highlight-color: transparent; }
   transform:none!important;
 }
 .employee-page .archive-tile.is-open:hover .tile-art img {transform:none!important}
+
+
+/* ── Employee archive: modest card sizing + complete artwork ── */
+.employee-page .collection-grid {
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,212px),1fr))!important;
+  gap:.62rem!important;
+}
+.employee-page .archive-tile {
+  min-height:104px!important;
+}
+.employee-page .archive-tile .tile-art {
+  height:82px!important;
+  min-height:82px!important;
+}
+.employee-page .charm-grid {
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr))!important;
+  gap:.68rem!important;
+}
+.employee-page .charm-grid .archive-tile {
+  grid-template-columns:1fr!important;
+  grid-template-rows:190px auto!important;
+  min-height:280px!important;
+  padding:.62rem!important;
+}
+.employee-page .charm-grid .tile-art {
+  height:190px!important;
+  min-height:190px!important;
+}
+.employee-page .tile-art {
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+}
+.employee-page .tile-art img {
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  box-sizing:border-box!important;
+  padding:6px!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:none!important;
+}
+.employee-page .archive-tile.is-open:hover .tile-art img {
+  transform:none!important;
+}
+.employee-page .archive-nav-icon {
+  width:24px!important;
+  height:24px!important;
+  min-width:24px!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+}
+.employee-page .archive-nav-icon img {
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
+@media (max-width:760px) {
+  .employee-page .collection-grid {
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,min(212px,46vw)),1fr))!important;
+  }
+  .employee-page .charm-grid {
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,min(160px,44vw)),1fr))!important;
+  }
+  .employee-page .charm-grid .archive-tile {
+    grid-template-rows:clamp(150px,42vw,190px) auto!important;
+  }
+  .employee-page .charm-grid .tile-art {
+    height:clamp(150px,42vw,190px)!important;
+    min-height:clamp(150px,42vw,190px)!important;
+  }
+}
