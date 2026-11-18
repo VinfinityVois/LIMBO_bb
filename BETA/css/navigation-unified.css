@@ -1,28 +1,21 @@
-/* P.R.I.N.C. page transitions — restrained luminous dissolve.
-   Navigation appearance is intentionally inherited from system.css,
-   matching employee.html's original header and button treatment. */
-#page-transition{
-  position:fixed;inset:0;z-index:99999;pointer-events:none;
-  opacity:0;background:rgba(2,7,13,.94);
-  transition:opacity .72s cubic-bezier(.22,.61,.36,1);
-  will-change:opacity;
+/* Shared top bar copied from scene-shanghai visual language */
+.sc-topbar{
+ position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;
+ flex-wrap:wrap;gap:.75rem;padding:.55rem 1.25rem;
+ background:rgba(7,10,18,.94);border-bottom:1px solid rgba(0,212,232,.15);backdrop-filter:blur(16px);
 }
-#page-transition:before{
-  content:"";position:absolute;inset:0;opacity:0;
-  background:radial-gradient(ellipse at 50% 42%,rgba(0,190,210,.075),transparent 58%);
-  transition:opacity .72s ease;
-}
-#page-transition.is-active{opacity:1}
-#page-transition.is-active:before{opacity:1}
-html.page-transition-ready body{
-  animation:princSoftReveal .9s cubic-bezier(.22,.61,.36,1) both;
-}
-html.page-transition-leave body{cursor:progress}
-@keyframes princSoftReveal{
-  from{opacity:0}
-  to{opacity:1}
-}
-@media(prefers-reduced-motion:reduce){
-  #page-transition{display:none!important}
-  html.page-transition-ready body{animation:none!important}
-}
+.sc-brand{display:flex;align-items:center;gap:.65rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.12em}
+.sc-brand .live{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:livePulse 1.4s ease infinite}
+.sc-brand b{color:var(--cyan)}
+.sc-brand .chip{font-size:.55rem;padding:.15rem .45rem;border:1px solid rgba(0,212,232,.3);color:var(--cyan);background:rgba(0,212,232,.08)}
+.sc-meta{font-family:var(--font-mono);font-size:.55rem;color:var(--text-muted);letter-spacing:.08em;display:flex;gap:.75rem;flex-wrap:wrap}
+.sc-meta b{color:var(--cyan)}
+.sc-nav{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.sc-nav a{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.08em;padding:.35rem .65rem;border:1px solid rgba(100,120,150,.25);color:var(--text-dim);text-decoration:none;transition:border-color .25s,color .25s,background .25s}
+.sc-nav a:hover{border-color:rgba(0,212,232,.4);color:var(--cyan)}
+.sc-nav a.active{border-color:rgba(0,212,232,.5);color:var(--cyan);background:rgba(0,212,232,.1)}
+.sc-nav .sec{border:1px solid rgba(30,201,154,.4);color:var(--green);background:rgba(30,201,154,.08);font-family:var(--font-mono);font-size:.55rem;padding:.35rem .65rem}
+.sc-nav #sys-clock{color:var(--text-dim);font-family:var(--font-mono);font-size:.55rem}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:900px){.sc-topbar{align-items:flex-start}.sc-nav{width:100%;order:3}.sc-meta{margin-left:auto}}
+@media(max-width:560px){.sc-topbar{padding:.5rem .7rem;gap:.55rem}.sc-nav{gap:.25rem}.sc-nav a{font-size:.5rem;padding:.32rem .45rem}.sc-meta{font-size:.5rem}}
