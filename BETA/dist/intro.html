@@ -80,6 +80,7 @@ tailwind.config = {
     opacity: 0; transition: opacity 0.6s;
   }
   #mission-intro.show { opacity: 1; }
+  #mission-intro:not(.show) { pointer-events: none; }
   #mission-intro.hide { opacity: 0; pointer-events: none; }
   .intro-panel {
     max-width: 640px; width: 92vw;
@@ -283,7 +284,7 @@ tailwind.config = {
 </div>
 
 <!-- MISSION BRIEFING -->
-<div id="mission-intro" class="show">
+<div id="mission-intro">
   <div class="intro-panel tech-corner">
     <div class="intro-topline"><span class="intro-live-dot"></span> П.Р.И.Н.Ц. / SUB-04</div>
     <div class="intro-kicker">ВХОДЯЩИЙ КАНАЛ · A-00 / ХЭ ЮЧОУ</div>
@@ -557,14 +558,8 @@ tailwind.config = {
 
 <script>
 (() => {
-  // Do not allow a direct/unconfirmed game launch. Authorization is granted
-  // by the terminal confirmation or by the completed operator-auth sequence.
-  let launchAuthorized = false;
-  try { launchAuthorized = sessionStorage.getItem('limbo_launch_authorized') === '1'; } catch (error) {}
-  if (!launchAuthorized) {
-    window.location.replace('terminal.html?launch=required');
-    return;
-  }
+  // The mission can be opened directly during development and from the terminal.
+  // Keep the authorization flag when present, but do not redirect away from the game.
 
   const LORE = {
     '0x7F': 'Фрагмент журнала Смотрящего. Сбой коллизий, Шанхай.',
@@ -1556,6 +1551,8 @@ tailwind.config = {
       boot.style.opacity = '0';
       boot.style.transition = 'opacity 0.55s';
       setTimeout(() => boot.remove(), 560);
+      const briefing = document.getElementById('mission-intro');
+      if (briefing) { briefing.classList.remove('hide'); briefing.classList.add('show'); }
       try { sfx.init(); } catch (e) {}
     }
     document.getElementById('btn-bios-enter').onclick = close;

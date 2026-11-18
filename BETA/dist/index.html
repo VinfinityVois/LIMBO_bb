@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
-<title>LIMBO</title>
+<title>P.R.I.N.C. // SIGNAL ACQUISITION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
 
@@ -397,6 +400,208 @@ body.breach-mode:after{
 }
 </style>
 
+
+<style id="breach-cyber-redesign">
+#scene1{--br-red:#ff1744;--br-coral:#ff5370;--br-cyan:#00eaff;--br-bg:#080205;position:relative;isolation:isolate;overflow:hidden;background:#070204}
+#scene1 .breach-layout{position:relative;z-index:3;width:min(1580px,100%);min-height:100%;margin:auto;padding:clamp(14px,2.2vw,34px);display:grid;grid-template-columns:minmax(0,1.18fr) minmax(300px,.82fr);gap:clamp(14px,2vw,30px);align-items:stretch}
+#scene1 .breach-terminal,#scene1 .breach-diagnostics{position:relative;min-width:0;overflow:hidden;background:linear-gradient(145deg,rgba(19,7,13,.94),rgba(7,3,7,.97));border:1px solid rgba(255,31,75,.32);box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 35px rgba(255,23,68,.09),inset 0 0 28px rgba(255,23,68,.035);backdrop-filter:blur(13px);padding:clamp(16px,2vw,28px)}
+#scene1 .breach-corners{position:absolute;inset:0;pointer-events:none;background:linear-gradient(var(--br-red),var(--br-red)) left top/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left top/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right top/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right top/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left bottom/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left bottom/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right bottom/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right bottom/2px 17px no-repeat;opacity:.75}
+#scene1 .breach-topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:13px;border-bottom:1px solid rgba(255,31,75,.22);font:10px/1.4 'Share Tech Mono',monospace;letter-spacing:.1em;color:#a99aa1}
+#scene1 .breach-live{color:#ff8b9c;font-weight:700}#scene1 .breach-live i,#scene1 .breach-console-head b i,#scene1 .breach-diagnostics-head b i{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#ff1744;box-shadow:0 0 10px #ff1744}
+#scene1 .breach-isolation b{color:#ff8b9c}#scene1 .breach-node b{padding:3px 7px;color:#ff9aaa;background:rgba(100,0,25,.35);border:1px solid rgba(255,70,100,.35)}
+#scene1 .breach-incident{text-align:center;padding:clamp(16px,2.6vh,30px) 0 18px}
+#scene1 .breach-severity{display:flex;justify-content:space-between;gap:10px;color:#ff8495;font:10px 'Share Tech Mono',monospace;letter-spacing:.12em}
+#scene1 .breach-severity b{color:#ff4966}
+#scene1 .breach-emblem{position:relative;display:grid;place-items:center;width:48px;height:48px;margin:24px auto 19px;background:linear-gradient(145deg,#ff3155,#b90030);border:1px solid #ff9aaa;transform:rotate(45deg);box-shadow:0 0 28px rgba(255,23,68,.48)}
+#scene1 .breach-emblem span{transform:rotate(-45deg);color:#160207;font:900 29px 'Orbitron',sans-serif}
+#scene1 .breach-emblem i{position:absolute;inset:-9px;border:1px solid rgba(255,83,112,.5);animation:breachHalo 3.6s ease-in-out infinite}
+@keyframes breachHalo{0%,100%{transform:scale(.92);opacity:.25}50%{transform:scale(1.12);opacity:.75}}
+#scene1 .warning-title{margin:0 auto 10px;color:#fff;font:800 clamp(23px,3vw,39px)/1.15 'Orbitron','Space Grotesk',sans-serif;letter-spacing:.035em;text-shadow:-1px 0 #00eaff,1px 0 #ff1744,0 0 18px rgba(255,23,68,.42);overflow-wrap:anywhere}
+#scene1 .warning-sub{max-width:620px;margin:auto;color:#d2c4c9;font:13px/1.7 'Space Grotesk',sans-serif;letter-spacing:.015em}
+#scene1 .warning-sub span{color:#9c8991}
+#scene1 .threat-matrix{display:none!important}
+#scene1 .breach-equalizer{padding:10px 12px;margin:0 0 17px;border:1px solid rgba(120,0,35,.65);border-radius:5px;background:rgba(0,0,0,.48)}
+#scene1 .breach-eq-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#9c858d;font:9px 'Share Tech Mono',monospace;letter-spacing:.1em}
+#scene1 .breach-eq-label b{color:#ff7288}
+#scene1 .breach-eq-bars{height:34px;display:flex;align-items:end;gap:4px;overflow:hidden}
+#scene1 .breach-eq-bars i{flex:1;min-width:2px;height:var(--bar-height,40%);transform-origin:bottom;background:linear-gradient(0deg,#a9002d,#ff1744 65%,#ff8192);border-radius:2px 2px 0 0;opacity:.85;animation:eqPulse var(--bar-speed,1.2s) ease-in-out infinite alternate}
+@keyframes eqPulse{from{transform:scaleY(.38);opacity:.52}to{transform:scaleY(1);opacity:1}}
+#scene1 .breach-threat{margin:0 0 14px}
+#scene1 .warning-meter-label{display:flex;justify-content:space-between;margin-bottom:7px;color:#ad9ca3;font:10px 'Share Tech Mono',monospace;letter-spacing:.1em}
+#scene1 .warning-meter-label b{color:#ff7187}
+#scene1 .warning-meter{height:7px;border:1px solid rgba(120,0,35,.8);border-radius:10px;background:#16070d;overflow:hidden}
+#scene1 .warning-meter i{display:block;width:12%;height:100%;background:linear-gradient(90deg,#a8002c,#ff1744,#ff9a58);box-shadow:0 0 12px #ff1744;transition:width .5s ease}
+#scene1 .breach-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:11px 12px;margin:0 0 14px;background:rgba(0,0,0,.35);border-block:1px solid rgba(120,0,35,.48);font:9px/1.5 'Share Tech Mono',monospace;color:#81727a}
+#scene1 .breach-meta span{min-width:0;overflow-wrap:anywhere}#scene1 .breach-meta b{display:block;margin-top:3px;color:#ff8b9c;font-size:10px}#scene1 .breach-meta b.red{color:#ff3458}
+#scene1 .breach-console{padding:10px 12px;margin-bottom:15px;background:rgba(0,0,0,.58);border:1px solid rgba(120,0,35,.6);border-radius:4px}
+#scene1 .breach-console-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:7px;margin-bottom:5px;border-bottom:1px solid rgba(120,0,35,.35);color:#ff8295;font:9px 'Share Tech Mono',monospace;letter-spacing:.12em}
+#scene1 .breach-console-head b{color:#b7a4ab;font-weight:400}
+#scene1 .warning-log{min-height:94px;max-height:124px;overflow:hidden;display:flex;flex-direction:column;gap:5px}
+#scene1 .warn-log-row{display:grid;grid-template-columns:22px minmax(0,1fr);gap:7px;font:10px/1.45 'Share Tech Mono',monospace;letter-spacing:.025em}
+#scene1 .warn-log-row .wl-tag{color:#ff4c6a;font-weight:700}#scene1 .warn-log-row.warn .wl-tag{color:#ffbd69}#scene1 .warn-log-row.sys .wl-tag{color:#00eaff}#scene1 .warn-log-row .wl-text{color:#c3b5bc;overflow-wrap:anywhere}
+#scene1 .breach-actions{margin-top:auto}
+#scene1 .breach-proceed{display:flex!important;align-items:center;justify-content:center;gap:14px;width:100%;min-height:52px;padding:13px 18px;border:1px solid rgba(255,62,94,.78)!important;border-radius:4px!important;background:rgba(255,23,68,.11)!important;color:#ff9bab!important;font:700 11px 'Share Tech Mono',monospace!important;letter-spacing:.12em;box-shadow:0 0 24px rgba(255,23,68,.12)!important}
+#scene1 .breach-proceed:hover{background:rgba(255,23,68,.2)!important;box-shadow:0 0 28px rgba(255,23,68,.25)!important}
+#scene1 .breach-proceed em{font-style:normal;font-size:19px}
+#scene1 .tiny-warning{margin:9px 0 0;color:#786971;text-align:center;font:9px/1.5 'Space Grotesk',sans-serif}
+#scene1 .breach-diagnostics{display:flex;flex-direction:column}
+#scene1 .breach-diagnostics-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:13px;border-bottom:1px solid rgba(255,31,75,.22);color:#e5d8dd;font:10px 'Share Tech Mono',monospace;letter-spacing:.08em}
+#scene1 .breach-diagnostics-head>span i{color:#ff5370;font-style:normal;font-size:16px;margin-right:6px}
+#scene1 .breach-diagnostics-head b{padding:4px 7px;border:1px solid rgba(255,23,68,.48);background:rgba(90,0,20,.28);color:#ff8295;font-size:9px}
+#scene1 .breach-hologram{position:relative;flex:1;min-height:340px;margin:16px 0 18px;display:grid;place-items:center;overflow:hidden;perspective:800px}
+#scene1 .holo-ring{position:absolute;border:1px dashed rgba(255,50,85,.35);border-radius:50%;aspect-ratio:1}
+#scene1 .holo-ring-a{width:min(72%,300px);animation:holoSpin 24s linear infinite}
+#scene1 .holo-ring-b{width:min(58%,240px);border-style:dotted;border-color:rgba(255,120,145,.42);animation:holoSpin 17s linear infinite reverse}
+@keyframes holoSpin{to{transform:rotate(360deg)}}
+#scene1 .holo-reticle{position:absolute;width:min(82%,350px);aspect-ratio:1;pointer-events:none}
+#scene1 .holo-reticle i{position:absolute;width:23px;height:23px;border-color:#ff4c6a;border-style:solid;opacity:.8}
+#scene1 .holo-reticle i:nth-child(1){top:0;left:0;border-width:2px 0 0 2px}#scene1 .holo-reticle i:nth-child(2){top:0;right:0;border-width:2px 2px 0 0}#scene1 .holo-reticle i:nth-child(3){bottom:0;left:0;border-width:0 0 2px 2px}#scene1 .holo-reticle i:nth-child(4){bottom:0;right:0;border-width:0 2px 2px 0}
+#scene1 .holo-sweep{position:absolute;width:min(63%,260px);aspect-ratio:1;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,23,68,.28),transparent 75deg,transparent 360deg);animation:holoSpin 5s linear infinite}
+#scene1 .holo-shield{position:relative;z-index:2;width:104px;height:104px;display:grid;place-items:center;transform:rotate(45deg);border:2px solid #ffb4c0;background:linear-gradient(140deg,#ff3158,#a9002d);box-shadow:0 0 42px rgba(255,23,68,.8),inset 0 0 22px rgba(255,255,255,.12);transition:transform .18s ease,filter .3s}
+#scene1 .holo-shield span{transform:rotate(-45deg);font:900 58px 'Orbitron',sans-serif;color:white;text-shadow:0 3px 12px #530014}
+#scene1 .holo-tag{position:absolute;z-index:4;display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid rgba(130,0,35,.7);background:rgba(0,0,0,.68);backdrop-filter:blur(8px);color:#a99ba1;font:9px/1.4 'Share Tech Mono',monospace}
+#scene1 .holo-tag b{color:#ff8295}#scene1 .holo-tag i{color:#e4d5db;font-style:normal}
+#scene1 .holo-tag-top{top:5px;left:3px}#scene1 .holo-tag-bottom{right:3px;bottom:5px;text-align:right}
+#scene1 .breach-defense{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid rgba(120,0,35,.55);background:rgba(0,0,0,.38);font:9px/1.5 'Share Tech Mono',monospace}
+#scene1 .breach-defense span{display:block;color:#9b8b92}#scene1 .breach-defense b{display:block;margin-top:3px;color:#ff879a;font-size:10px}#scene1 .breach-defense strong{color:#ff5370;font-size:16px}
+#scene1 .breach-hex{margin-top:10px;padding:10px;border:1px solid rgba(120,0,35,.45);background:rgba(0,0,0,.42);color:#8f8188;font:9px/1.6 'Share Tech Mono',monospace;overflow-wrap:anywhere}
+#scene1 .breach-hex b{color:#ff8498}
+#scene1 .breach-footnote{display:flex;flex-wrap:wrap;gap:7px 13px;margin-top:auto;padding-top:15px;color:#76656e;font:8px 'Share Tech Mono',monospace;letter-spacing:.05em}
+#scene1 .breach-footnote b{color:#bcaab1;font-weight:400}
+#scene1 .breach-particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.55}
+#scene1 .breach-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 150px rgba(0,0,0,.8),inset 0 0 60px rgba(255,0,45,.06)}
+@media(max-width:900px){#scene1 .breach-layout{grid-template-columns:minmax(0,1fr);max-width:720px}#scene1 .breach-diagnostics{min-height:420px}#scene1 .breach-hologram{min-height:310px}}
+@media(max-width:560px){#scene1 .breach-layout{padding:12px;gap:12px}#scene1 .breach-terminal,#scene1 .breach-diagnostics{padding:15px 13px}#scene1 .breach-topline{font-size:8px}#scene1 .breach-isolation{display:none}#scene1 .breach-severity{font-size:8px}#scene1 .breach-incident{padding:15px 0}#scene1 .breach-emblem{margin:18px auto 15px;width:42px;height:42px}#scene1 .warning-title{font-size:clamp(20px,6vw,28px)}#scene1 .warning-sub{font-size:12px}#scene1 .breach-meta{grid-template-columns:repeat(2,minmax(0,1fr));font-size:8px}#scene1 .warning-log{min-height:92px;max-height:112px}#scene1 .warn-log-row{font-size:9px}#scene1 .breach-proceed{font-size:10px!important;min-height:50px}#scene1 .breach-diagnostics{min-height:390px}#scene1 .breach-hologram{min-height:290px}#scene1 .holo-tag{font-size:8px;padding:6px 7px}}
+@media(prefers-reduced-motion:reduce){#scene1 .breach-emblem i,#scene1 .holo-ring,#scene1 .holo-sweep,#scene1 .breach-eq-bars i{animation:none!important}#scene1 .breach-particles{display:none}}
+</style>
+
+
+<style id="breach-reference-layout">
+#scene1{--ref-red:#ff1744;--ref-coral:#ff647e;--ref-panel:rgba(18,5,11,.88);background-color:#070204!important;background-image:radial-gradient(circle at 50% 40%,rgba(255,23,68,.10),transparent 48%),radial-gradient(circle at 80% 20%,rgba(220,20,60,.08),transparent 60%),linear-gradient(rgba(255,25,70,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,25,70,.025) 1px,transparent 1px)!important;background-size:100% 100%,100% 100%,28px 28px,28px 28px!important}
+#scene1 .breach-reference-header,#scene1 .breach-reference-footer{position:absolute;left:0;right:0;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px clamp(14px,2.2vw,34px);background:rgba(7,2,4,.86);backdrop-filter:blur(12px);font:9px/1.4 'Share Tech Mono',monospace;letter-spacing:.1em;color:#95828a}
+#scene1 .breach-reference-header{top:0;border-bottom:1px solid rgba(255,23,68,.2)}
+#scene1 .breach-reference-footer{bottom:0;border-top:1px solid rgba(255,23,68,.18)}
+#scene1 .breach-reference-brand,#scene1 .breach-reference-status{display:flex;align-items:center;gap:clamp(8px,1.5vw,22px);min-width:0}
+#scene1 .breach-reference-brand>i,#scene1 .breach-defcon i{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#ff1744;box-shadow:0 0 10px #ff1744}
+#scene1 .breach-reference-brand b{color:#ff8296;font:700 10px 'Chakra Petch',sans-serif;letter-spacing:.13em}
+#scene1 .breach-reference-brand strong,#scene1 .breach-reference-footer b{color:#e9a0ad;font-weight:600}
+#scene1 .breach-reference-status>span:first-child{white-space:nowrap}
+#scene1 .breach-reference-status>span:first-child b{padding:3px 7px;border:1px solid rgba(255,70,100,.38);background:rgba(100,0,25,.3);color:#ff9aaa}
+#scene1 .breach-defcon{display:flex;align-items:center;gap:7px;color:#ff647e;font-weight:bold}
+#scene1 .breach-layout{width:min(1680px,100%);min-height:100%;padding:clamp(62px,8vh,88px) clamp(14px,2.2vw,34px) clamp(54px,7vh,76px);grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:clamp(14px,1.8vw,28px);align-items:stretch}
+#scene1 .breach-terminal,#scene1 .breach-diagnostics{background:linear-gradient(145deg,rgba(22,6,13,.91),rgba(8,3,8,.96));border:1px solid rgba(255,31,75,.34);border-radius:10px;box-shadow:0 0 35px -5px rgba(255,23,68,.18),inset 0 0 22px rgba(255,23,68,.045);backdrop-filter:blur(14px);padding:clamp(15px,1.8vw,26px)}
+#scene1 .breach-terminal{justify-content:space-between}
+#scene1 .breach-severity{font-size:10px;letter-spacing:.13em}
+#scene1 .breach-emblem{margin:clamp(14px,2vh,24px) auto 18px}
+#scene1 .warning-title{font-family:'Chakra Petch','Orbitron',sans-serif;font-size:clamp(25px,3.2vw,48px);line-height:1.08;letter-spacing:.075em}
+#scene1 .warning-sub{max-width:620px;margin:12px auto 0;color:#d2c1c7;font-size:clamp(12px,1vw,15px);line-height:1.7}
+#scene1 .breach-equalizer{margin:16px 0 14px;padding:11px 12px;border:1px solid rgba(115,18,42,.58);border-radius:7px;background:rgba(0,0,0,.55)}
+#scene1 .breach-eq-bars{height:38px;display:flex;align-items:end;gap:4px;overflow:hidden}
+#scene1 .breach-eq-bars i{height:var(--bar-height,40%);animation:breachEq var(--bar-speed,1s) ease-in-out infinite alternate;transform-origin:bottom;background:linear-gradient(#ff7a91,#e60039);box-shadow:0 0 8px rgba(255,23,68,.25);flex:1;min-width:2px}
+@keyframes breachEq{from{transform:scaleY(.28);opacity:.52}to{transform:scaleY(1);opacity:1}}
+#scene1 .warning-meter-wrap{margin-bottom:15px}
+#scene1 .warning-meter-label{font-size:9px;letter-spacing:.13em}
+#scene1 .warning-meta{grid-template-columns:repeat(4,minmax(0,1fr));padding:11px 12px;background:rgba(0,0,0,.36);font:9px/1.5 'Share Tech Mono',monospace}
+#scene1 .breach-console{margin-top:14px}
+#scene1 .warning-log{max-height:118px;min-height:96px;padding:10px 12px;background:rgba(0,0,0,.7);font-size:9px;line-height:1.65}
+#scene1 .breach-actions{padding-top:13px}
+#scene1 #btnProceed{min-height:52px;border:1px solid rgba(255,23,68,.75);border-radius:5px;background:rgba(255,23,68,.11)!important;color:#ff8194!important;box-shadow:0 0 22px rgba(255,23,68,.2)!important;font:700 11px 'Share Tech Mono',monospace;letter-spacing:.14em}
+#scene1 #btnProceed:hover{background:rgba(255,23,68,.2)!important;box-shadow:0 0 32px rgba(255,23,68,.34)!important}
+#scene1 .breach-reference-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+#scene1 .breach-secondary{min-height:39px;padding:8px 10px;border:1px solid rgba(150,125,135,.2);border-radius:5px;background:rgba(0,0,0,.45);color:#9e9297;font:9px 'Share Tech Mono',monospace;letter-spacing:.045em;transition:border-color .2s,color .2s,background .2s}
+#scene1 .breach-secondary-danger:hover{border-color:rgba(255,23,68,.6);color:#ff8194;background:rgba(255,23,68,.07)}
+#scene1 .breach-secondary-warn:hover{border-color:rgba(221,167,77,.6);color:#e7c27e;background:rgba(221,167,77,.06)}
+#scene1 .tiny-warning{margin-top:10px;font-size:9px}
+#scene1 .breach-diagnostics{display:flex;flex-direction:column;justify-content:space-between}
+#scene1 .breach-hologram{min-height:clamp(300px,45vh,490px);margin:14px 0}
+#scene1 .breach-defense{border-radius:5px;background:rgba(0,0,0,.38);padding:12px}
+#scene1 .breach-hex{border-radius:5px;background:rgba(0,0,0,.48);padding:11px;font-size:9px}
+#scene1 .breach-command-modal{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.84);backdrop-filter:blur(12px)}
+#scene1 .breach-command-modal.is-open{display:flex}
+#scene1 .breach-command-dialog{width:min(440px,100%);padding:25px;border:1px solid rgba(255,23,68,.72);background:linear-gradient(145deg,#1a060d,#09040a);box-shadow:0 0 45px rgba(255,23,68,.25);text-align:center}
+#scene1 .breach-modal-emblem{width:38px;height:38px;margin:0 auto 17px;display:grid;place-items:center;background:#ff1744;color:#080205;font:900 25px 'Chakra Petch',sans-serif;transform:rotate(45deg)}
+#scene1 .breach-command-dialog h2{margin:0 0 10px;color:#fff;font:700 17px 'Chakra Petch',sans-serif;letter-spacing:.09em}
+#scene1 .breach-command-dialog p{margin:0 0 20px;color:#bcaab1;font:11px/1.7 'Share Tech Mono',monospace}
+#scene1 .breach-command-dialog button{width:100%;min-height:42px;border:1px solid #ff1744;background:rgba(255,23,68,.13);color:#ff8da0;font:700 10px 'Share Tech Mono',monospace;letter-spacing:.14em}
+#scene1 .breach-reference-footer{font-size:8px}
+@media(max-width:900px){#scene1 .breach-layout{grid-template-columns:1fr;max-width:760px;gap:12px;padding-top:62px;padding-bottom:58px}#scene1 .breach-diagnostics{min-height:0}#scene1 .breach-hologram{min-height:280px;max-height:340px}}
+@media(max-width:600px){#scene1 .breach-reference-header{padding:10px 12px}#scene1 .breach-reference-brand{gap:7px;flex-wrap:wrap}#scene1 .breach-reference-brand b{font-size:8px}#scene1 .breach-reference-brand>span{display:none}#scene1 .breach-reference-status{font-size:8px;gap:8px}#scene1 .breach-layout{padding:58px 10px 52px;gap:10px}#scene1 .breach-terminal,#scene1 .breach-diagnostics{padding:13px;border-radius:7px}#scene1 .warning-title{font-size:clamp(23px,7vw,31px)}#scene1 .breach-severity{font-size:8px}#scene1 .warning-meta{gap:7px;padding:9px 8px;font-size:8px}#scene1 .warning-meta span{min-width:0;overflow-wrap:anywhere}#scene1 .breach-hologram{min-height:250px;margin:10px 0}#scene1 .breach-reference-actions{grid-template-columns:1fr}#scene1 .breach-reference-footer{padding:8px 11px;font-size:7px}#scene1 .breach-reference-footer span:last-child{display:none}}
+@media(max-height:700px) and (min-width:901px){#scene1 .breach-layout{padding-top:58px;padding-bottom:48px}#scene1 .breach-incident{padding:10px 0}#scene1 .breach-hologram{min-height:250px}#scene1 .warning-log{max-height:75px;min-height:65px}}
+@media(prefers-reduced-motion:reduce){#scene1 .breach-eq-bars i{animation:none!important}#scene1 .breach-command-dialog{animation:none!important}}
+</style>
+
+<style id="breach-viewport-fit">
+/* Keep the intrusion warning and every action inside the visible viewport. */
+#scene1{
+  height:100vh!important;height:100dvh!important;min-height:0!important;
+  overflow:hidden!important;display:flex!important;flex-direction:column!important;
+}
+#scene1 .breach-reference-header{position:relative!important;flex:0 0 auto;padding:9px 18px!important}
+#scene1 .breach-layout{
+  box-sizing:border-box;width:100%;height:auto!important;min-height:0!important;flex:1 1 auto!important;
+  padding:12px clamp(12px,2vw,28px)!important;gap:clamp(10px,1.2vw,18px)!important;
+  align-items:stretch!important;overflow:hidden!important;
+}
+#scene1 .breach-terminal,#scene1 .breach-diagnostics{min-height:0!important;min-width:0!important;overflow:hidden!important}
+#scene1 .breach-terminal{padding:clamp(12px,1.35vw,20px)!important;gap:0!important}
+#scene1 .breach-incident{padding:clamp(6px,1vh,12px) 0!important}
+#scene1 .breach-emblem{width:clamp(42px,5.5vh,66px)!important;height:clamp(42px,5.5vh,66px)!important;margin:7px auto!important}
+#scene1 .warning-title{font-size:clamp(21px,2.3vw,34px)!important;line-height:1.05!important}
+#scene1 .warning-sub{margin:6px auto 0!important;font-size:clamp(10px,.9vw,13px)!important;line-height:1.4!important}
+#scene1 .breach-equalizer{margin:7px 0!important;padding:7px 9px!important}
+#scene1 .breach-eq-bars{height:clamp(16px,2.5vh,28px)!important}
+#scene1 .warning-meter-wrap{margin:5px 0 8px!important}
+#scene1 .warning-meta{padding:7px 8px!important;gap:6px!important;font-size:8px!important}
+#scene1 .breach-console{margin-top:7px!important}
+#scene1 .warning-log{min-height:32px!important;max-height:clamp(34px,6vh,58px)!important;padding:5px 8px!important}
+#scene1 .breach-actions{padding-top:8px!important;margin-top:auto!important;flex:0 0 auto!important}
+#scene1 #btnProceed{min-height:46px!important;padding:9px 14px!important}
+#scene1 .breach-reference-actions{margin-top:6px!important;gap:7px!important}
+#scene1 .breach-secondary{min-height:32px!important;padding:6px 8px!important;font-size:8px!important}
+#scene1 .tiny-warning{margin-top:5px!important;font-size:8px!important}
+#scene1 .breach-diagnostics{padding:12px!important}
+#scene1 .breach-hologram{min-height:0!important;max-height:none!important;flex:1 1 auto!important;margin:8px 0!important}
+#scene1 .breach-footnote{font-size:7px!important;gap:5px!important}
+@media(max-height:820px){
+  #scene1 .breach-reference-header{padding-top:6px!important;padding-bottom:6px!important}
+  #scene1 .breach-layout{padding-top:7px!important;padding-bottom:7px!important}
+  #scene1 .breach-console{display:none!important}
+  #scene1 .breach-incident{padding:4px 0!important}
+  #scene1 .breach-emblem{display:none!important}
+  #scene1 .breach-equalizer{margin:5px 0!important}
+  #scene1 .warning-meta{padding:5px 7px!important}
+  #scene1 .breach-diagnostics-head{padding-bottom:6px!important}
+}
+@media(max-height:680px){
+  #scene1 .breach-layout{grid-template-columns:minmax(0,1fr)!important;max-width:900px;margin:0 auto}
+  #scene1 .breach-diagnostics{display:none!important}
+  #scene1 .breach-terminal{width:100%;max-width:900px;margin:auto}
+  #scene1 .warning-sub{display:none!important}
+  #scene1 .breach-equalizer{display:none!important}
+  #scene1 .warning-meta{margin-top:5px!important}
+}
+@media(max-width:760px){
+  #scene1 .breach-reference-header{padding:7px 10px!important;min-height:0!important}
+  #scene1 .breach-layout{display:flex!important;flex-direction:column!important;justify-content:center!important;padding:8px 9px!important}
+  #scene1 .breach-diagnostics{display:none!important}
+  #scene1 .breach-terminal{width:100%!important;max-width:680px!important;margin:auto!important;padding:12px!important}
+  #scene1 .breach-emblem{display:none!important}
+  #scene1 .warning-title{font-size:clamp(20px,5.8vw,29px)!important}
+  #scene1 .warning-sub{font-size:10px!important;line-height:1.35!important}
+  #scene1 .breach-equalizer{margin:7px 0!important}
+  #scene1 .warning-meta{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #scene1 .breach-console{display:none!important}
+  #scene1 .breach-actions{padding-top:9px!important}
+  #scene1 #btnProceed{min-height:48px!important;font-size:10px!important}
+  #scene1 .breach-reference-actions{grid-template-columns:1fr 1fr!important}
+  #scene1 .breach-secondary{font-size:7px!important;min-height:36px!important}
+}
+@media(max-width:380px){
+  #scene1 .breach-reference-actions{grid-template-columns:1fr!important}
+  #scene1 .tiny-warning{font-size:7px!important}
+}
+</style>
+
   <script type="module" crossorigin src="/assets/index-xkaaGFpa.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/assets/audio-BoRzptx1.js">
@@ -454,11 +659,25 @@ body.breach-mode:after{
      ═══════════════════════════════════════════ -->
 <section class="scene active" id="scene0">
   <div class="signal-noise"></div>
-  <canvas class="boot-code-canvas" id="bootCodeCanvas" aria-hidden="true"></canvas>
-  <div class="wave-grid">
-    <div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div>
-  </div>
-  <div class="boot-core">
+<div class="signal-acq-shell" aria-label="P.R.I.N.C. signal acquisition">
+  <header class="signal-acq-header">
+    <div class="signal-acq-brand"><span class="signal-acq-live"></span><b>P.R.I.N.C.</b><i>//</i><span>SIGNAL ACQUISITION</span></div>
+    <div class="signal-acq-meta"><span>SYS_REV: <b>4.8.9-A</b></span><span>FREQ: <b>868.45 MHz [ENC]</b></span><span class="signal-acq-carrier"><i></i>CARRIER LOCK</span></div>
+  </header>
+  <main class="signal-acq-main">
+    <section class="signal-acq-console">
+      <div class="signal-acq-kicker">[NET_ID: 0xCF4936F2] <i>•</i> SECURE QUANTUM CHANNEL</div>
+      <h1>P.R.I.N.C. <em>//</em><br>SIGNAL ACQUISITION</h1>
+      <div class="signal-acq-status">
+        <small>CORE STATUS / ENCRYPTED NODE</small>
+        <strong><i></i> MASKING ORIGIN</strong>
+        <div class="signal-acq-wave" aria-hidden="true"><span style="--bar:6px;--delay:0s"></span><span style="--bar:13px;--delay:0.11s"></span><span style="--bar:20px;--delay:0.22s"></span><span style="--bar:27px;--delay:0.33s"></span><span style="--bar:34px;--delay:0.44s"></span><span style="--bar:10px;--delay:0.55s"></span><span style="--bar:17px;--delay:0.66s"></span><span style="--bar:24px;--delay:0s"></span><span style="--bar:31px;--delay:0.11s"></span><span style="--bar:7px;--delay:0.22s"></span><span style="--bar:14px;--delay:0.33s"></span><span style="--bar:21px;--delay:0.44s"></span><span style="--bar:28px;--delay:0.55s"></span><span style="--bar:35px;--delay:0.66s"></span><span style="--bar:11px;--delay:0s"></span><span style="--bar:18px;--delay:0.11s"></span></div>
+        <div class="signal-acq-readouts"><span>HANDSHAKE <b id="acqHandshake">00%</b></span><span>ENCRYPTED <b>0xCF4936F2</b></span><span>CHANNEL <b>ONLINE</b></span></div>
+      </div>
+      <div class="signal-acq-protocols"><small>ACTIVE PROTOCOLS</small><div><span>TCP/IPv6</span><span>TLS-1.3</span><span>X25519</span><span>AES-GCM</span><span>CHACHA20</span><span>SHA-3</span><span>ONION-R3</span><span>QUIC</span></div></div>
+      <div class="signal-acq-log"><small>TTY: /dev/sig0</small><p>› Signal carrier detected at 868.450 MHz [STRENGTH: -48dBm]</p><p>› Handshake negotiation with node 0xCF4936F2 accepted.</p><p>› Node origin masked through 3 onion proxy relays.</p><p>› Quantum entropy pool synchronized: 2048/2048 bits.</p></div>
+    </section>
+    <section class="signal-acq-hologram"><div class="signal-acq-hologram-core">  <div class="boot-core">
     <div class="core-rings">
       <div class="core-ring ring-a"></div>
       <div class="core-ring ring-b"></div>
@@ -497,69 +716,113 @@ body.breach-mode:after{
     </div>
     <div class="protocol-strip" id="protocolStrip"></div>
     <div class="boot-phase" id="bootPhase"><span class="boot-phase-label">CORE INITIALIZATION</span><span class="boot-phase-state" id="bootPhaseState">AWAITING SECURE HANDSHAKE</span><div class="boot-phase-track"><i id="bootPhaseBar"></i></div></div>
-  </div>
+  </div></div><div class="signal-acq-holo-label">REMOTE NODE / HEX-7E3</div><div class="signal-acq-holo-foot">SECURITY LEVEL: <b>OMEGA-7</b><span>LATENCY: <b>12ms</b></span></div></section>
+  </main>
+  <footer class="signal-acq-footer"><span><i></i> SIGNAL CARRIER DETECTED · SECURE CHANNEL ESTABLISHED</span><span>NODE: ONLINE</span></footer>
   <div class="boot-event-feed" id="bootEventFeed" aria-live="polite"></div>
   <div class="skip-hint">PRESS <b>SPACE</b> TO SKIP · <b>CLICK</b> TO CONTINUE</div>
+</div>
+  <canvas class="boot-code-canvas" id="bootCodeCanvas" aria-hidden="true"></canvas>
+  <div class="wave-grid">
+    <div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div>
+  </div>
+  
 </section>
 
 <!-- ═══════════════════════════════════════════
      SCENE 1 — INTRUSION WARNING
      ═══════════════════════════════════════════ -->
-<section class="scene" id="scene1">
-  <div class="breach-container">
-    <div class="breach-bg" id="breachBg"></div>
-    <div class="warning-frame">
-      <div class="warning-top">
-        <span class="blink-red">●</span> SYSTEM INTEGRITY EVENT · SEVERITY 5
-        <b id="warningCode">0x7F-A91</b>
+<section class="scene breach-scene" id="scene1">
+  <canvas class="breach-particles" id="breachParticles" aria-hidden="true"></canvas>
+  <div class="breach-vignette" aria-hidden="true"></div>
+  <header class="breach-reference-header">
+    <div class="breach-reference-brand"><i></i><b>GRID.WATCHDOG // BREACH PROTOCOL</b><span>ISOLATION BUFFER: <strong>ENFORCED</strong></span></div>
+    <div class="breach-reference-status"><span>NODE <b id="breachHeaderNode">0xFB-3FA</b></span><span class="breach-defcon"><i></i> DEFCON 1</span></div>
+  </header>
+  <div class="breach-layout">
+    <section class="breach-terminal" aria-label="Предупреждение системы безопасности">
+      <div class="breach-corners" aria-hidden="true"></div>
+      <div class="breach-topline">
+        <span class="breach-live"><i></i> GRID.WATCHDOG // BREACH PROTOCOL</span>
+        <span class="breach-isolation">ISOLATION BUFFER: <b>ENFORCED</b></span>
+        <span class="breach-node">NODE <b id="warningCode">0x7F-A91</b></span>
       </div>
 
-      <div class="warning-scanline"></div>
-
-      <div class="warning-icon-wrap">
-        <div class="warning-icon"><span>!</span></div>
-        <div class="warning-icon-pulse"></div>
+      <div class="breach-incident">
+        <div class="breach-severity"><i></i> SYSTEM INTEGRITY EVENT · SEVERITY 5 <b>0xFB-3FA</b></div>
+        <div class="breach-emblem" aria-hidden="true"><span>!</span><i></i></div>
+        <h1 class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</h1>
+        <p class="warning-sub" id="warningSub">Обнаружен внешний сеанс связи с защищённым узлом.<br><span>Автоматическая блокировка активирована.</span></p>
       </div>
 
-      <div class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</div>
-      <div class="warning-sub" id="warningSub">
-        Обнаружен внешний сеанс связи с защищённым узлом.<br>
-        Автоматическая блокировка активирована.
+      <div class="breach-equalizer" aria-label="Активность перехваченного сигнала">
+        <div class="breach-eq-label"><span>INTERCEPTED SIGNAL / LIVE FEED</span><b id="breachSignalState">CARRIER DETECTED</b></div>
+        <div class="breach-eq-bars" id="breachEqBars"></div>
       </div>
 
-      <div class="threat-matrix" id="threatMatrix"></div>
-
-      <div class="warning-meter-wrap">
-        <div class="warning-meter-label">
-          <span>THREAT ESCALATION</span>
-          <b id="threatPercent">0%</b>
-        </div>
+      <div class="warning-meter-wrap breach-threat">
+        <div class="warning-meter-label"><span>THREAT ESCALATION</span><b id="threatPercent">12%</b></div>
         <div class="warning-meter"><i id="warningMeter"></i></div>
       </div>
 
-      <div class="warning-meta">
+      <div class="warning-meta breach-meta">
         <span>TRACE ID: <b id="traceId">---</b></span>
-        <span>THREAT: <b class="red">CRITICAL</b></span>
+        <span>THREAT: <b class="red" id="breachThreatState">CRITICAL</b></span>
         <span>AUTH: <b>REQUIRED</b></span>
         <span>ATTEMPTS: <b id="intrusionCount">00</b></span>
       </div>
 
-      <div class="warning-log" id="warningLog"></div>
-
-      <button class="cyber-btn danger big" id="btnProceed" data-cursor>
-        <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span>
-        <em>→</em>
-        <span class="btn-glow"></span>
-      </button>
-      <div class="tiny-warning">
-        Продолжая, оператор подтверждает запуск интерактивного режима восстановления.
+      <div class="breach-console">
+        <div class="breach-console-head"><span>LIVE CONSOLE LOG</span><b><i></i> STREAMING</b></div>
+        <div class="warning-log" id="warningLog" aria-live="polite"></div>
       </div>
-    </div>
+
+      <div class="breach-actions">
+        <button class="cyber-btn danger big breach-proceed" id="btnProceed" data-cursor>
+          <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span><em>→</em><span class="btn-glow"></span>
+        </button>
+        <div class="breach-reference-actions">
+          <button type="button" id="btnSever" class="breach-secondary breach-secondary-danger">[ ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ ]</button>
+          <button type="button" id="btnLockdown" class="breach-secondary breach-secondary-warn">[ ДЕЗАКТИВАЦИЯ ШЛЮЗА ]</button>
+        </div>
+        <p class="tiny-warning">Продолжая, оператор подтверждает запуск интерактивного режима восстановления.</p>
+      </div>
+    </section>
+
+    <aside class="breach-diagnostics" aria-label="Диагностика угрозы">
+      <div class="breach-diagnostics-head">
+        <span><i>◇</i> REALTIME THREAT VISUALIZER</span><b><i></i> LIVE SCAN</b>
+      </div>
+      <div class="breach-hologram" id="breachHologram">
+        <div class="holo-ring holo-ring-a"></div><div class="holo-ring holo-ring-b"></div>
+        <div class="holo-reticle"><i></i><i></i><i></i><i></i></div>
+        <div class="holo-sweep"></div>
+        <div class="holo-shield" id="breachShield"><span>!</span></div>
+        <div class="holo-tag holo-tag-top"><b>RADAR: ACTIVE</b><span>BEAM: AZIMUTH <i id="breachAzimuth">044.1°</i></span><span>SIGNAL: <i id="breachFrequency">890 MHz</i></span></div>
+        <div class="holo-tag holo-tag-bottom"><b>NODE STATUS</b><span>INTEGRITY: <i id="breachIntegrity">74%</i></span><span>QUARANTINE: LEVEL 5</span></div>
+      </div>
+      <div class="breach-defense">
+        <div><span>DEFENSE BARRIER STATUS</span><b id="breachDefenseLabel">ANOMALY MITIGATION: ACTIVE</b></div>
+        <strong id="breachDefenseValue">74.2%</strong>
+      </div>
+      <div class="breach-hex"><b>0x002A:</b> <span id="breachHex">4E 45 53 41 4E 4B 54 53 49 4F 4E 49 52 4F 56 41</span></div>
+      <div class="breach-footnote"><span>GRID: <b>OMEGA-9</b></span><span>CLUSTER: <b>RU-NORTH-ISOLATED</b></span><span>SECURE TERMINAL REV. 4.12-b</span></div>
+    </aside>
   </div>
 </section>
 
 <!-- ═══════════════════════════════════════════
      SCENE 2 — RECOVERY TERMINAL / BREACH
+  <footer class="breach-reference-footer"><span>GRID: <b>OMEGA-9</b>　•　CLUSTER: <b>RU-NORTH-ISOLATED</b></span><span>SECURE TERMINAL REVISION 4.12-b</span></footer>
+  <div class="breach-command-modal" id="breachCommandModal" aria-hidden="true">
+    <div class="breach-command-dialog" role="dialog" aria-modal="true" aria-labelledby="breachModalTitle">
+      <div class="breach-modal-emblem">!</div>
+      <h2 id="breachModalTitle">КОМАНДА ПРИНЯТА</h2>
+      <p id="breachModalText">Команда передана изолированному шлюзу.</p>
+      <button type="button" id="breachModalClose">ПОДТВЕРДИТЬ</button>
+    </div>
+  </div>
+
      ═══════════════════════════════════════════ -->
 <section class="scene terminal-scene" id="scene2">
   <div class="terminal-shell">
@@ -1070,8 +1333,11 @@ body.breach-mode:after{
   const protocolStrip = $('#protocolStrip');
   const protocols = ['TCP/IPv6', 'TLS-1.3', 'X25519', 'AES-GCM', 'CHACHA20', 'SHA-3', 'ONION-R3', 'QUIC', 'DTLS'];
 
+  // The redesigned acquisition screen uses #signal-acq-wave instead of
+  // the legacy #signalBars node. Keep the legacy effect optional.
   function buildSignalBars() {
-    signalBars.innerHTML = '';
+    if (!signalBars) return;
+    signalBars.replaceChildren();
     for (let i = 0; i < 28; i++) {
       const b = document.createElement('i');
       b.style.height = rand(3, 26) + 'px';
@@ -1080,7 +1346,8 @@ body.breach-mode:after{
     }
   }
   buildSignalBars();
-  setInterval(() => {
+  if (signalBars) setInterval(() => {
+    if (!document.querySelector('#scene0')?.classList.contains('active')) return;
     signalBars.querySelectorAll('i').forEach(b => {
       b.style.height = rand(3, 26) + 'px';
     });
@@ -1892,6 +2159,82 @@ body.breach-mode:after{
 @media(prefers-reduced-motion:reduce){#scene4 .align-vortex:after,#scene4 .capture-instruction i,#scene4 .av-ring{animation:none!important}}
 
 </style>
+<style id="signal-acquisition-redesign">
+#scene0{display:flex;align-items:stretch;justify-content:stretch;padding:clamp(14px,2vw,34px)!important;overflow:hidden!important;background:radial-gradient(ellipse at 70% 46%,rgba(0,130,151,.13),transparent 42%),linear-gradient(145deg,#030810,#06101a 55%,#02060c)!important}
+#scene0 .signal-noise,#scene0 .wave-grid{pointer-events:none}
+#scene0 .signal-acq-shell{position:relative;z-index:4;width:min(1780px,100%);min-height:0;height:100%;margin:auto;display:flex;flex-direction:column;justify-content:space-between;color:#c5dce2;font-family:"JetBrains Mono",monospace}
+#scene0 .signal-acq-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 0 14px;border-bottom:1px solid rgba(0,220,235,.2)}
+#scene0 .signal-acq-brand{display:flex;align-items:center;gap:12px;color:#00dbea;font-size:12px;letter-spacing:.18em}
+#scene0 .signal-acq-brand b{font:700 20px "Chakra Petch",sans-serif;letter-spacing:.16em;color:#c8e6eb}
+#scene0 .signal-acq-brand i{font-style:normal;color:#587a89}
+#scene0 .signal-acq-brand span:last-child{font-size:10px}
+#scene0 .signal-acq-live,#scene0 .signal-acq-carrier i,#scene0 .signal-acq-footer i{width:7px;height:7px;border-radius:50%;background:#00dbea;box-shadow:0 0 12px rgba(0,219,234,.75)}
+#scene0 .signal-acq-meta{display:flex;align-items:center;gap:clamp(12px,2vw,32px);font-size:9px;color:#66808d;letter-spacing:.1em}
+#scene0 .signal-acq-meta b{color:#9ee9ed;font-weight:500}
+#scene0 .signal-acq-carrier{display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid rgba(0,220,235,.22);background:rgba(0,180,195,.06);color:#9ee9ed}
+#scene0 .signal-acq-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.9fr);gap:clamp(20px,4vw,70px);align-items:center;padding:clamp(18px,3vh,42px) 0}
+#scene0 .signal-acq-console{display:flex;flex-direction:column;gap:clamp(12px,2vh,22px);min-width:0}
+#scene0 .signal-acq-kicker{font-size:9px;color:#4ebbc8;letter-spacing:.16em}
+#scene0 .signal-acq-kicker i{font-style:normal;color:#e34f9c;margin:0 8px}
+#scene0 .signal-acq-console h1{margin:0;color:#e0edf1;font:700 clamp(30px,4.2vw,62px)/.98 "Chakra Petch",sans-serif;letter-spacing:.035em}
+#scene0 .signal-acq-console h1 em{color:#00dbea;font-style:normal}
+#scene0 .signal-acq-status{position:relative;padding:clamp(16px,2vw,26px);border:1px solid rgba(0,220,235,.25);background:linear-gradient(145deg,rgba(8,22,34,.92),rgba(3,9,17,.94));box-shadow:0 18px 55px rgba(0,0,0,.24),inset 0 1px rgba(180,240,245,.025)}
+#scene0 .signal-acq-status:before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:linear-gradient(transparent,#00dbea,transparent)}
+#scene0 .signal-acq-status>small,#scene0 .signal-acq-protocols>small{display:block;color:#638d9a;font-size:8px;letter-spacing:.18em}
+#scene0 .signal-acq-status>strong{display:block;margin-top:12px;color:#c9f2f3;font:600 clamp(17px,2vw,25px) "Chakra Petch",sans-serif;letter-spacing:.16em}
+#scene0 .signal-acq-status>strong i{display:inline-block;width:7px;height:7px;margin:0 9px 2px 0;border-radius:50%;background:#00d9c1;box-shadow:0 0 12px #00d9c1;animation:acqBlink 2.4s ease-in-out infinite}
+#scene0 .signal-acq-wave{height:42px;display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0 12px;border-bottom:1px solid rgba(0,220,235,.12)}
+#scene0 .signal-acq-wave span{width:4px;height:var(--bar);border-radius:4px;background:linear-gradient(#b5ffff,#00b6c8);transform-origin:bottom;animation:acqWave 1.45s ease-in-out var(--delay) infinite alternate;opacity:.76}
+#scene0 .signal-acq-readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#scene0 .signal-acq-readouts span{display:flex;flex-direction:column;gap:6px;color:#64818e;font-size:7px;letter-spacing:.12em}
+#scene0 .signal-acq-readouts b{color:#b8e7eb;font-size:10px;font-weight:500}
+#scene0 .signal-acq-protocols>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+#scene0 .signal-acq-protocols span{padding:6px 9px;border:1px solid rgba(0,220,235,.18);background:rgba(0,170,190,.045);color:#84cbd2;font-size:8px;letter-spacing:.08em}
+#scene0 .signal-acq-log{position:relative;max-height:104px;overflow:hidden;padding:11px 13px;border:1px solid rgba(104,151,169,.14);background:rgba(0,4,10,.62);color:#79939e;font-size:8px;line-height:1.65}
+#scene0 .signal-acq-log small{display:block;margin-bottom:5px;text-align:right;color:#4b8391;font-size:7px}
+#scene0 .signal-acq-log p{margin:2px 0}
+#scene0 .signal-acq-log p:first-of-type{color:#7ce4e8}
+#scene0 .signal-acq-hologram{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#scene0 .signal-acq-hologram-core{position:relative;width:min(100%,min(48vw,680px));aspect-ratio:1;display:grid;place-items:center;perspective:1000px}#scene0 .signal-acq-holo-label{position:absolute;top:4%;left:5%;color:#5f9aa8;font:8px "JetBrains Mono",monospace;letter-spacing:.18em}#scene0 .signal-acq-holo-foot{position:absolute;right:5%;bottom:3%;display:flex;gap:18px;color:#658b97;font:8px "JetBrains Mono",monospace;letter-spacing:.12em}#scene0 .signal-acq-holo-foot b{color:#9ee9ed;font-weight:500}
+#scene0 .signal-acq-hologram-core .boot-core{width:100%!important;max-width:none!important;display:flex;align-items:center;justify-content:center;transform:none!important}
+#scene0 .signal-acq-hologram-core .core-rings{width:min(68%,440px)!important;height:auto!important;aspect-ratio:1}
+#scene0 .signal-acq-hologram-core .core-mark{width:38%!important;height:38%!important}
+#scene0 .signal-acq-hologram-core .core-status{font-size:9px;letter-spacing:.2em}
+#scene0 .signal-acq-hologram-core .core-line{font-size:9px}
+#scene0 .signal-acq-hologram-core .signal-bars,#scene0 .signal-acq-hologram-core .micro-readout,#scene0 .signal-acq-hologram-core .protocol-strip{display:none!important}
+#scene0 .signal-acq-hologram-core .boot-phase{width:75%;margin-top:14px}
+#scene0 .boot-event-feed{position:absolute;left:clamp(16px,2vw,34px);bottom:42px;z-index:6}
+#scene0 .skip-hint{position:absolute;left:clamp(16px,2vw,34px);bottom:16px;z-index:7;color:#5d7c88;font-size:8px;letter-spacing:.13em}
+#scene0 .signal-acq-footer{display:flex;justify-content:space-between;gap:15px;padding:12px 0 0;border-top:1px solid rgba(0,220,235,.15);color:#63818d;font-size:8px;letter-spacing:.12em}
+#scene0 .signal-acq-footer span:first-child{display:flex;align-items:center;gap:9px}
+@keyframes acqWave{0%{transform:scaleY(.35);opacity:.42}100%{transform:scaleY(1);opacity:1}}
+@keyframes acqBlink{0%,100%{opacity:.65}50%{opacity:1}}
+@media(max-width:760px){
+ #scene0{padding:12px!important}
+ #scene0 .signal-acq-header{padding-bottom:9px}
+ #scene0 .signal-acq-brand{gap:6px;font-size:8px}
+ #scene0 .signal-acq-brand b{font-size:15px}
+ #scene0 .signal-acq-brand span:last-child{font-size:7px}
+ #scene0 .signal-acq-meta{display:none}
+ #scene0 .signal-acq-main{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:4px;padding:6px 0}
+ #scene0 .signal-acq-console{gap:7px}
+ #scene0 .signal-acq-kicker{font-size:7px}
+ #scene0 .signal-acq-console h1{font-size:clamp(23px,6vw,34px)}
+ #scene0 .signal-acq-status{padding:10px}
+ #scene0 .signal-acq-wave{height:22px;margin:4px 0}
+ #scene0 .signal-acq-wave span{width:3px}
+ #scene0 .signal-acq-protocols{display:none}
+ #scene0 .signal-acq-log{display:none}
+ #scene0 .signal-acq-hologram-core{width:min(54vw,260px)}
+ #scene0 .signal-acq-hologram-core .core-rings{width:78%!important}
+ #scene0 .signal-acq-hologram-core .boot-phase{width:90%;margin-top:5px}
+ #scene0 .signal-acq-hologram-core .core-status{font-size:7px}
+ #scene0 .signal-acq-footer{font-size:6px;padding-top:7px}
+ #scene0 .boot-event-feed{display:none}
+ #scene0 .skip-hint{bottom:38px;left:12px;font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){#scene0 .signal-acq-wave span,#scene0 .signal-acq-status>strong i{animation:none!important}}
+</style>
 <script>
 (function initTerminalTelemetry(){
   const host=document.querySelector('#scene2 .terminal-right');
@@ -1911,8 +2254,73 @@ body.breach-mode:after{
   }draw();
 })();
 </script>
+<script id="signal-acquisition-telemetry">
+(()=>{const source=document.getElementById('microReadout'),target=document.getElementById('acqHandshake');if(!source||!target)return;const sync=()=>{const t=source.textContent.match(/HANDSHAKE\s+(\d+)%/i);if(t)target.textContent=t[1]+'%'};new MutationObserver(sync).observe(source,{subtree:true,childList:true,characterData:true});sync()})();
+</script>
 <script src="js/mobile-navigation.js" defer></script>
 <script src="js/limbo-branding.js"></script>
 <script src="js/chapter-achievements.js"></script>
+
+<script id="breach-live-effects">
+(() => {
+  const root=document.getElementById('scene1');
+  if(!root || root.dataset.liveEffects==='1') return;
+  root.dataset.liveEffects='1';
+  const $=id=>document.getElementById(id);
+  const bars=$('breachEqBars');
+  if(bars){
+    const frag=document.createDocumentFragment();
+    for(let i=0;i<32;i++){const b=document.createElement('i');b.style.setProperty('--bar-height',(18+Math.random()*78)+'%');b.style.setProperty('--bar-speed',(0.65+Math.random()*1.5)+'s');b.style.animationDelay=(-Math.random()*1.8)+'s';frag.appendChild(b)}
+    bars.appendChild(frag);
+  }
+  const meter=$('warningMeter'), percent=$('threatPercent');
+  const updateThreat=()=>{
+    if(!meter)return;
+    const raw=parseFloat(meter.style.width)||12, value=Math.max(0,Math.min(100,raw));
+    if(percent)percent.textContent=Math.round(value)+'%';
+    const state=$('breachThreatState'), integrity=$('breachIntegrity'), defense=$('breachDefenseValue');
+    if(state)state.textContent=value>78?'BREACH IMMINENT':value>48?'ELEVATED':'CRITICAL';
+    if(integrity)integrity.textContent=Math.max(0,100-value)+'%';
+    if(defense)defense.textContent=Math.max(0,100-value*.72).toFixed(1)+'%';
+    const shield=$('breachShield');if(shield)shield.style.filter='drop-shadow(0 0 '+(18+value*.22)+'px rgba(255,23,68,.85))';
+  };
+  if(meter){new MutationObserver(updateThreat).observe(meter,{attributes:true,attributeFilter:['style']});updateThreat()}
+  const az=$('breachAzimuth'),freq=$('breachFrequency'),hex=$('breachHex');
+  const hexChars='0123456789ABCDEF';
+  const refresh=()=>{
+    if(!root.classList.contains('active'))return;
+    if(az)az.textContent=(Math.random()*360).toFixed(1)+'°';
+    if(freq)freq.textContent=(620+Math.random()*540|0)+' MHz';
+    if(hex)hex.textContent=Array.from({length:16},()=>hexChars[Math.random()*16|0]+hexChars[Math.random()*16|0]).join(' ');
+    const signal=$('breachSignalState');if(signal)signal.textContent=Math.random()>.22?'CARRIER DETECTED':'SIGNAL FLUCTUATION';
+    if(bars)Array.from(bars.children).forEach(b=>b.style.setProperty('--bar-height',(15+Math.random()*82)+'%'));
+  };
+  setInterval(refresh,850);
+  const holo=$('breachHologram'),shield=$('breachShield');
+  if(holo&&shield&&!matchMedia('(pointer: coarse)').matches){
+    holo.addEventListener('pointermove',e=>{const r=holo.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;shield.style.transform='rotate(45deg) perspective(700px) rotateX('+(-y*22)+'deg) rotateY('+(x*22)+'deg)'});
+    holo.addEventListener('pointerleave',()=>shield.style.transform='rotate(45deg)');
+  }
+  const canvas=$('breachParticles'),ctx=canvas&&canvas.getContext('2d');
+  if(canvas&&ctx&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    let w=0,h=0,particles=[];
+    const resize=()=>{const r=root.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,1.5);w=r.width;h=r.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);particles=Array.from({length:34},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.18,vy:-(.08+Math.random()*.25),r:.5+Math.random()*1.1,a:.12+Math.random()*.32}))};
+    resize();new ResizeObserver(resize).observe(root);
+    let frame=0;const draw=()=>{if(!root.isConnected)return;ctx.clearRect(0,0,w,h);for(const p of particles){p.x+=p.vx;p.y+=p.vy;if(p.y<0){p.y=h;p.x=Math.random()*w}if(p.x<0)p.x=w;if(p.x>w)p.x=0;ctx.fillStyle='rgba(255,55,88,'+p.a+')';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}frame=requestAnimationFrame(draw)};draw();
+  }
+})();
+</script>
+
+
+<script id="breach-command-interactions">
+(()=>{const root=document.getElementById('scene1');if(!root||root.dataset.commandUi==='1')return;root.dataset.commandUi='1';
+const modal=document.getElementById('breachCommandModal'),title=document.getElementById('breachModalTitle'),desc=document.getElementById('breachModalText'),close=document.getElementById('breachModalClose');
+const show=(t,d)=>{title.textContent=t;desc.textContent=d;modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');close.focus()};
+const hide=()=>{modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')};
+document.getElementById('btnSever')?.addEventListener('click',()=>show('ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ','Команда разрыва зарегистрирована. Внешний канал помещён в очередь принудительной изоляции. Для продолжения сценария используйте основной протокол восстановления.'));
+document.getElementById('btnLockdown')?.addEventListener('click',()=>{const b=document.getElementById('btnLockdown');b.disabled=true;b.textContent='[ ШЛЮЗ ЗАБЛОКИРОВАН ]';show('ДЕЗАКТИВАЦИЯ ШЛЮЗА','Порты узла 0xFB-3FA переведены в режим блокировки. Ручное подтверждение администратора требуется для повторного открытия.')});
+close?.addEventListener('click',hide);modal?.addEventListener('click',e=>{if(e.target===modal)hide()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('is-open'))hide()});
+})();
+</script>
 </body>
 </html>
