@@ -823,7 +823,7 @@ tailwind.config = {
       const fish = memoryFish.some(f => !f.collected && f.x === x && f.y === y);
       const terminal = terminals.some(t => t.x === x && t.y === y && !t.hacked);
       const isPlayer = p.x === x && p.y === y;
-      const isThreat = (watcher.x === x && watcher.y === y) || viruses.some(v => v.x === x && v.y === y);
+      const isThreat = tile === 7 || (watcher.x === x && watcher.y === y) || viruses.some(v => v.x === x && v.y === y);
       const isGate = tile === 2;
       cell.className = 'mobile-map-cell' + (tile === 1 || tile === 3 || tile === 4 ? ' is-wall' : '') +
         (isPlayer ? ' is-player' : '') + (fish ? ' is-data' : '') + (terminal ? ' is-terminal' : '') +
