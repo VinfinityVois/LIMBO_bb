@@ -1291,7 +1291,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 @media(max-width:900px){.sys-page{width:calc(100vw - 28px)}}
 @media(prefers-reduced-motion:reduce){.panel,.ms-card,.telem-metric,.spark-card,.sys-page .reveal{transition:none!important}.panel:hover,.ms-card:hover,.telem-metric:hover,.spark-card:hover{transform:none}}
 </style>
-</head>
+<link rel="stylesheet" href="css/navigation-unified.css">\n<script src="js/page-transitions.js" defer></script>\n</head>
 <body class="terminal-mode">
 
 <div class="noise"></div>
@@ -1333,13 +1333,7 @@ main.sys-page { display: block !important; position: relative; z-index: 2; }
 <header class="sys-topbar">
   <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
   <div class="status-pill"><span class="dot"></span> ЯДРО СИНХРОНИЗИРОВАНО</div>
-  <nav class="sys-nav">
-    <a href="terminal.html" class="active">Терминал</a>
-    <a href="dossier.html">Досье</a>
-    <a href="employee.html">Сотрудник</a>
-    <a href="scenes.html">Архив сцен</a>
-    <a href="polygon.html">Полигон</a>
-  </nav>
+  <nav class="sys-nav" aria-label="Основная навигация"><a href="terminal.html" class="active" aria-current="page">ТЕРМИНАЛ</a><a href="dossier.html">ДОСЬЕ</a><a href="scenes.html">АРХИВ СЦЕН</a><a href="employee.html">СОТРУДНИК</a><a href="polygon.html">ПОЛИГОН</a></nav>
   <div class="right-meta">
     <span class="sec-level">SEC:LVL_5</span>
     <span>ОПЕРАТОР: A-00</span>
