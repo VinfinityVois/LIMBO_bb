@@ -2,11 +2,12 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>П.Р.И.Н.Ц. // Личное дело A-00</title>
+<title>LIMBO · Личное дело A-00</title>
 <link rel="stylesheet" href="css/system.css"><link rel="stylesheet" href="css/experience-polish.css"><link rel="stylesheet" href="css/employee-profile.css">
 <link rel="stylesheet" href="css/navigation-unified.css">
   <link rel="stylesheet" href="css/responsive-adaptive.css">
 <link rel="stylesheet" href="css/mobile-performance.css">
+<link rel="stylesheet" href="css/limbo-branding.css">
 </head>
 <body class="employee-page">
 <div class="noise"></div><div class="scanlines"></div><div class="vignette"></div>
@@ -53,7 +54,7 @@
     <button data-section="items"><span class="quick-symbol">◇</span><b>ПРЕДМЕТЫ</b><small id="quickItems">0 ОБНАРУЖЕНО</small><i>→</i></button>
    </div>
   </section>
-  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>ДОСТИЖЕНИЯ</h2><p>Отметки о важных событиях и важных этапах исследования сектора.</p></div><span class="section-count" id="medalCount">0 / 6</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
+  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>ДОСТИЖЕНИЯ</h2><p>Десять глав истории. Карточка открывается после завершения соответствующей главы.</p></div><span class="section-count" id="medalCount">0 / 10</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
   <section class="collection-section" id="section-passes" hidden><div class="section-heading"><div><small>// SECURITY CLEARANCE</small><h2>КАРТЫ ДОПУСКА</h2><p>Оценки за прохождение сектора и пропуска, полученные в симуляции.</p></div><span class="section-count" id="passCount">0 / 10</span></div><div class="subsection-title">ОЦЕНКИ ПРОХОЖДЕНИЯ <span>F — S</span></div><div class="pass-grid" id="gradeGrid"></div><div class="subsection-title">ПРОПУСКИ СИМУЛЯЦИИ <span>RK / CAMPAIGN</span></div><div class="pass-grid sim-pass-grid" id="simPassGrid"></div></section>
   <section class="collection-section" id="section-characters" hidden><div class="section-heading"><div><small>// PERSONAL CHARMS</small><h2>БРЕЛОКИ И КАРТОЧКИ</h2><p>Коллекционные карточки персонажей и сотрудников. Неоткрытые позиции ждут появления в истории.</p></div><span class="section-count" id="charmCount">0 / 6</span></div><div class="charm-grid" id="charmGrid"></div></section>
   <section class="collection-section" id="section-monsters" hidden><div class="section-heading"><div><small>// ENTITY DATABASE</small><h2>БЕСТИАРИЙ</h2><p>Зафиксированные формы, поведенческие особенности и стадии контакта.</p></div><span class="section-count" id="monsterCount">0 / 4</span></div><div class="creature-grid" id="creatureGrid"></div></section>
@@ -184,4 +185,6 @@ if(pts.length){const d=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed
 })();
 </script>
 <script src="js/mobile-navigation.js" defer></script>
+<script src="js/limbo-branding.js"></script>
+<script src="js/chapter-achievements.js"></script>
 </body></html>
