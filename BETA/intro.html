@@ -220,6 +220,45 @@ tailwind.config = {
   .victory-btn:hover { box-shadow: 0 0 40px rgba(0,240,255,0.8); transform: translateY(-2px); }
 </style>
 <link rel="stylesheet" href="css/experience-polish.css">
+
+<style id="intro-redesign">
+#mission-intro{z-index:210;padding:20px;background:radial-gradient(ellipse at 50% 38%,rgba(8,45,57,.5),transparent 58%),rgba(2,5,11,.97);backdrop-filter:blur(16px);overflow-y:auto}
+.intro-panel{width:min(760px,94vw);max-height:calc(100svh - 40px);overflow-y:auto;padding:clamp(22px,3.6vw,38px);border:1px solid rgba(105,215,223,.28);border-radius:5px;background:linear-gradient(145deg,rgba(10,19,31,.98),rgba(4,8,15,.99));box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 65px rgba(0,185,205,.09),inset 0 1px rgba(255,255,255,.04);transform:translateY(18px) scale(.985);transition:transform .65s cubic-bezier(.16,1,.3,1),opacity .55s;opacity:0}
+#mission-intro.show .intro-panel{transform:none;opacity:1}
+.intro-panel:before{height:1px;background:linear-gradient(90deg,transparent,#69d7df 24%,#b7f5f0 50%,#69d7df 76%,transparent);animation:none;opacity:.85}
+.intro-topline{display:flex;align-items:center;gap:9px;color:#83a0b1;font:600 9px 'JetBrains Mono',monospace;letter-spacing:.2em}
+.intro-live-dot{width:7px;height:7px;border-radius:50%;background:#69d7df;box-shadow:0 0 12px rgba(105,215,223,.7)}
+.intro-kicker{margin-top:28px;color:#718c9e;font:9px 'JetBrains Mono',monospace;letter-spacing:.18em}
+.intro-heading{margin:9px 0 16px;color:#e5f5f6;font:700 clamp(28px,5vw,43px)/1.02 'Space Grotesk',sans-serif;letter-spacing:.055em}
+.intro-heading span{color:#69d7df;text-shadow:0 0 26px rgba(105,215,223,.2)}
+.intro-story{max-width:650px;margin:0 0 23px;padding:13px 16px;border-left:2px solid rgba(105,215,223,.65);background:linear-gradient(90deg,rgba(105,215,223,.08),rgba(105,215,223,.015));color:#c2d1d9;font-size:13px;line-height:1.75}
+.intro-section-label{margin-bottom:11px;color:#69d7df;font:700 9px 'JetBrains Mono',monospace;letter-spacing:.19em}
+.intro-mission{padding:17px 18px;border:1px solid rgba(133,170,190,.14);background:rgba(255,255,255,.018)}
+.intro-objective{display:flex;align-items:center;gap:13px;padding:8px 0}
+.intro-objective>b{display:grid;place-items:center;width:27px;height:27px;flex:0 0 27px;border:1px solid rgba(105,215,223,.32);color:#69d7df;font:600 10px 'JetBrains Mono',monospace}
+.intro-objective strong,.intro-threat b{display:block;color:#e2edf0;font-size:12px;font-weight:650}
+.intro-objective small,.intro-threat small{display:block;margin-top:3px;color:#8496a5;font-size:10px}
+.intro-optional{margin-top:10px;padding:10px 12px;border-top:1px solid rgba(133,170,190,.12);color:#9aaab5;font-size:10px;line-height:1.55}
+.intro-optional span{margin-right:8px;color:#e0b76b;font:700 8px 'JetBrains Mono',monospace;letter-spacing:.1em}
+.intro-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px}
+.intro-threat{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid rgba(133,170,190,.13);background:rgba(255,255,255,.015)}
+.threat-mark{display:grid;place-items:center;width:30px;height:30px;border:1px solid currentColor;font:700 12px 'JetBrains Mono',monospace}
+.threat-mark.amber{color:#d9ae64}.threat-mark.red{color:#d96a78}
+.intro-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:15px}
+.intro-controls>div{display:flex;flex-direction:column;gap:7px;min-width:0;padding:10px;border:1px solid rgba(133,170,190,.12);background:rgba(3,8,15,.55)}
+.intro-controls kbd{width:max-content;min-width:42px;padding:4px 6px;border:1px solid rgba(105,215,223,.32);border-radius:3px;color:#9ce4e5;font:700 9px 'JetBrains Mono',monospace;text-align:center}
+.intro-controls span{color:#8d9daa;font-size:9px;line-height:1.3}
+.intro-actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:20px;padding-top:17px;border-top:1px solid rgba(133,170,190,.13)}
+.intro-footnote{max-width:290px;color:#718494;font:9px/1.55 'JetBrains Mono',monospace}
+.intro-btn-next{display:flex;align-items:center;gap:16px;padding:13px 18px;border:1px solid rgba(105,215,223,.6);border-radius:3px;background:linear-gradient(120deg,rgba(105,215,223,.2),rgba(105,215,223,.08));color:#d9f7f6;box-shadow:0 8px 28px rgba(0,0,0,.24);font:700 10px 'JetBrains Mono',monospace;letter-spacing:.1em}
+.intro-btn-next span{font-size:16px;color:#69d7df;transition:transform .25s}
+.intro-btn-next:hover{transform:translateY(-2px);border-color:#a4f1ed;background:rgba(105,215,223,.17);box-shadow:0 12px 30px rgba(0,0,0,.32),0 0 24px rgba(105,215,223,.12)}
+.intro-btn-next:hover span{transform:translateX(4px)}
+#mission-intro.hide .intro-panel{transform:translateY(-12px) scale(.99);opacity:0}
+@media(max-width:560px){#mission-intro{padding:10px}.intro-panel{width:100%;max-height:calc(100svh - 20px);padding:20px 16px}.intro-kicker{margin-top:20px}.intro-heading{font-size:29px}.intro-controls{grid-template-columns:repeat(2,1fr)}.intro-actions{align-items:stretch;flex-direction:column}.intro-footnote{max-width:none}.intro-btn-next{justify-content:center;width:100%}.intro-bottom-grid{gap:6px}.intro-threat{padding:9px}}
+@media(prefers-reduced-motion:reduce){.intro-panel,.intro-btn-next,.intro-btn-next span{transition:none!important}}
+</style>
+
 </head>
 <body class="bg-void-base font-body text-terminal-text h-screen w-screen flex flex-col selection:bg-neon-cyan selection:text-void-base select-none">
 
@@ -239,103 +278,32 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ═══ NEW: MISSION INTRO ═══ -->
+<!-- MISSION BRIEFING -->
 <div id="mission-intro" class="show">
   <div class="intro-panel tech-corner">
-    <div class="intro-step active" data-step="0">
-      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">ВХОДЯЩАЯ ПЕРЕДАЧА · ЗАШИФРОВАННЫЙ КАНАЛ // ПРОТОКОЛ «НЕКО-4»</div>
-      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ВСТУПЛЕНИЕ</div>
-      <p class="text-sm text-terminal-text leading-relaxed mb-3">
-        Голос в наушнике хрипит, будто сквозь века:
-      </p>
-      <div class="bg-void-surface/70 border-l-2 border-neon-cyan p-4 my-4 italic text-[13px] text-terminal-text/90 leading-relaxed">
-        «Мо. Слышишь? Это Хэ. Смотрящий A-00. Мне нужен кто-то, кого система не отследит. Кто-то маленький. Кто-то быстрый. Кто-то… с четырьмя лапами.»
-      </div>
-      <p class="text-[12px] text-terminal-dim leading-relaxed">
-        Ты — МО, цифровой кот-взломщик, загруженный в SUB-04 за 4 секунды до активации триггера. У тебя ровно одна попытка.
-      </p>
+    <div class="intro-topline"><span class="intro-live-dot"></span> П.Р.И.Н.Ц. / SUB-04</div>
+    <div class="intro-kicker">ВХОДЯЩИЙ КАНАЛ · A-00 / ХЭ ЮЧОУ</div>
+    <h1 class="intro-heading">ОПЕРАЦИЯ<br><span>«ТИХИЙ КОТ»</span></h1>
+    <p class="intro-story">«МО, слышишь? Мне нужен кто-то, кого система не заметит. Маленький. Быстрый. С четырьмя лапами. Найди выход — и не дай Смотрящему тебя поймать».</p>
+    <div class="intro-mission">
+      <div class="intro-section-label">ТВОЯ ЗАДАЧА</div>
+      <div class="intro-objective"><b>01</b><span><strong>Собери 5 байт памяти</strong><small>Они разблокируют шлюз Alpha.</small></span></div>
+      <div class="intro-objective"><b>02</b><span><strong>Доберись до выхода</strong><small>Шлюз находится в нижней части сектора.</small></span></div>
+      <div class="intro-optional"><span>ДОПОЛНИТЕЛЬНО</span> Считай 3 терминала клавишей F — это улучшит итоговую оценку, но не обязательно для выхода.</div>
     </div>
-
-    <div class="intro-step" data-step="1">
-      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">ЗАДАЧА · ПРИОРИТЕТ ВЫСОКИЙ</div>
-      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ЧТО НУЖНО СДЕЛАТЬ</div>
-      <div class="space-y-3 text-[13px]">
-        <div class="flex gap-3 items-start">
-          <span class="text-neon-cyan font-bold shrink-0">01.</span>
-          <div><span class="text-terminal-text font-bold">Собрать 5 байт памяти</span><br><span class="text-terminal-dim text-[11px]">Каждый байт — фрагмент журнала. Пять байт = один ключ шлюза.</span></div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <span class="text-signal-amber font-bold shrink-0">02.</span>
-          <div><span class="text-terminal-text font-bold">Считать 3 терминала [F]</span><br><span class="text-terminal-dim text-[11px]">Дампим данные штаба в канал Смотрящего. Необязательно, но полезно.</span></div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <span class="text-neon-magenta font-bold shrink-0">03.</span>
-          <div><span class="text-terminal-text font-bold">Открыть шлюз Alpha</span><br><span class="text-terminal-dim text-[11px]">После 5 байт возвращайся к двери [1,16]. Дверь откроется.</span></div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <span class="text-corruption-red font-bold shrink-0">04.</span>
-          <div><span class="text-terminal-text font-bold">Эвакуироваться</span><br><span class="text-terminal-dim text-[11px]">Перейти к терминалу П.Р.И.Н.Ц. Живым.</span></div>
-        </div>
-      </div>
+    <div class="intro-bottom-grid">
+      <div class="intro-threat"><span class="threat-mark amber">V</span><span><b>Вирусы</b><small>Избегай контакта.</small></span></div>
+      <div class="intro-threat"><span class="threat-mark red">H</span><span><b>Смотрящий</b><small>Прячься, чтобы сбить преследование.</small></span></div>
     </div>
-
-    <div class="intro-step" data-step="2">
-      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">УГРОЗЫ · SUB-04</div>
-      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">КОГО ОПАСАТЬСЯ</div>
-      <div class="space-y-3 text-[13px]">
-        <div class="flex gap-3 items-start">
-          <span class="w-8 h-8 shrink-0 rounded border border-signal-amber/50 flex items-center justify-center text-signal-amber text-[14px] font-bold">V</span>
-          <div>
-            <span class="text-signal-amber font-bold">ВИРУСЫ · Мальварь-патрули</span><br>
-            <span class="text-terminal-dim text-[11px]">Ходят по коридорам. При виде света — переходят в агрессивный режим. Не касайся.</span>
-          </div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <span class="w-8 h-8 shrink-0 rounded border border-corruption-red/60 flex items-center justify-center text-corruption-red text-[14px] font-bold">H</span>
-          <div>
-            <span class="text-corruption-red font-bold">СИГНАТУРА ХАКЕРА · Смотрящий</span><br>
-            <span class="text-terminal-dim text-[11px]">Твой главный враг. Идёт по BFS-пути прямо за тобой. В стелсе теряет след за ~8 секунд.</span>
-          </div>
-        </div>
-        <div class="flex gap-3 items-start">
-          <span class="w-8 h-8 shrink-0 rounded border border-neon-magenta/50 flex items-center justify-center text-neon-magenta text-[14px] font-bold">!</span>
-          <div>
-            <span class="text-neon-magenta font-bold">МАСКИРОВКА = ЖИЗНЬ</span><br>
-            <span class="text-terminal-dim text-[11px]">[ПРОБЕЛ] — гасит фонарь. В темноте ты почти невидим. Сонар [E] тратит 10% энергии.</span>
-          </div>
-        </div>
-      </div>
+    <div class="intro-controls">
+      <div><kbd>W A S D</kbd><span>Движение</span></div>
+      <div><kbd>SPACE</kbd><span>Маскировка</span></div>
+      <div><kbd>E</kbd><span>Сонар · 5% энергии</span></div>
+      <div><kbd>F</kbd><span>Терминал рядом</span></div>
     </div>
-
-    <div class="intro-step" data-step="3">
-      <div class="text-[10px] text-terminal-dim tracking-widest mb-2">КАНАЛ ОТКРЫТ · СИНХРОНИЗАЦИЯ 100%</div>
-      <div class="text-neon-cyan font-headline font-bold text-2xl tracking-wider mb-4">ГОТОВ К ВНЕДРЕНИЮ</div>
-      <p class="text-sm text-terminal-text leading-relaxed mb-4">
-        Голос Хэ становится тише, будто он уже далеко:
-      </p>
-      <div class="bg-void-surface/70 border-l-2 border-neon-cyan p-4 mb-4 italic text-[13px] text-terminal-text/90 leading-relaxed">
-        «Не задерживайся. Если увидишь Смотрящего — не смотри ему в глаза. Он не человек. Он уже давно не человек.»
-      </div>
-      <div class="grid grid-cols-2 gap-3 text-[11px] font-terminal">
-        <div class="bg-void-surface/60 border border-neon-cyan/20 p-3">
-          <div class="text-terminal-dim mb-1">АВТОНОМНОСТЬ</div>
-          <div class="text-neon-cyan font-bold">4 СЕК · ПОЛНАЯ</div>
-        </div>
-        <div class="bg-void-surface/60 border border-neon-cyan/20 p-3">
-          <div class="text-terminal-dim mb-1">ВЕРОЯТНОСТЬ ОТХОДА</div>
-          <div class="text-signal-amber font-bold">47% · ПЕРЕСЧИТАТЬ</div>
-        </div>
-      </div>
-      <p class="text-[11px] text-terminal-dim mt-4 text-center">Нажми ENTER, когда будешь готов. Обратной дороги нет.</p>
-    </div>
-
-    <div class="intro-progress" id="introProgress">
-      <span class="current"></span><span></span><span></span><span></span>
-    </div>
-
     <div class="intro-actions">
-      <button class="intro-btn intro-btn-skip" id="intro-skip">Пропустить</button>
-      <button class="intro-btn intro-btn-next" id="intro-next">Далее →</button>
+      <span class="intro-footnote">ПОДСКАЗКА: сонар показывает угрозы и байты сквозь туман.</span>
+      <button class="intro-btn intro-btn-next" id="intro-next">НАЧАТЬ ВНЕДРЕНИЕ <span>→</span></button>
     </div>
   </div>
 </div>
@@ -1055,12 +1023,12 @@ tailwind.config = {
   function triggerSonar() {
     if (state.dead || state.escaped) return;
     sfx.init();
-    if (state.power < 10) { showToast('Мало энергии'); return; }
-    state.power -= 10;
+    if (state.power < 5) { showToast('Мало энергии'); return; }
+    state.power -= 5;
     missionStats.sonarsUsed++; // ═══ NEW
     $('ui-power-val').textContent = state.power + '%';
     state.player.sonarActive = 1;
-    state.player.highlightT = 180;
+    state.player.highlightT = 300;
     sfx.playSonar();
     showToast('[E] СОНАР · КАРТА И УГРОЗЫ ПОДСВЕЧЕНЫ', 'Подсветка врагов ~3 с. Туман ослаблен дольше.');
   }
@@ -1238,7 +1206,7 @@ tailwind.config = {
     viruses.forEach(v => {
       v.timer++;
       const dist = Math.hypot(p.x - v.x, p.y - v.y);
-      const alert = !p.stealth && p.flashlight && dist < 9;
+      const alert = !p.stealth && p.flashlight && dist < 7;
       if (v.timer % (alert ? 2 : 3) === 0) {
         if (alert) {
           const [sx, sy] = nextStepToward(v.x, v.y, p.x, p.y);
@@ -1267,7 +1235,7 @@ tailwind.config = {
     }
     const chaseX = watcher.lost > 5 ? (watcher.lastX || 16) : p.x;
     const chaseY = watcher.lost > 5 ? (watcher.lastY || 8) : p.y;
-    const speed = p.stealth ? 4 : (p.flashlight ? 2 : 3);
+    const speed = p.stealth ? 5 : (p.flashlight ? 3 : 4);
     if (watcher.timer % speed === 0) {
       const [sx, sy] = nextStepToward(watcher.x, watcher.y, chaseX, chaseY);
       if (sx || sy) { watcher.x += sx; watcher.y += sy; }
@@ -1279,7 +1247,7 @@ tailwind.config = {
         }
       }
     }
-    if (Math.hypot(p.x - watcher.x, p.y - watcher.y) < 1.15 && !p.stealth)
+    if (Math.hypot(p.x - watcher.x, p.y - watcher.y) < 0.9 && !p.stealth)
       triggerDeath('Хакер-сигнатура зафиксировала аватар. Канал сброшен.');
   }, 380);
 
