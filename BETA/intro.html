@@ -756,17 +756,6 @@ tailwind.config = {
       mobileBoard.querySelector('#mobile-board-sonar').addEventListener('click', () => { triggerSonar(); updateMobileBoard(); });
       mobileBoard.querySelector('#mobile-board-terminal').addEventListener('click', () => { hackTerminal(); updateMobileBoard(); });
       stage.appendChild(mobileBoard);
-      mobileBoard.addEventListener('click', event => {
-        const move = event.target.closest('[data-mobile-move]');
-        if (move && !move.disabled) {
-          const [dx, dy] = move.dataset.mobileMove.split(',').map(Number);
-          movePlayer(dx, dy);
-          updateMobileBoard();
-        }
-      });
-      mobileBoard.querySelector('#mobile-board-stealth').addEventListener('click', () => { toggleStealth(); updateMobileBoard(); });
-      mobileBoard.querySelector('#mobile-board-sonar').addEventListener('click', () => { triggerSonar(); updateMobileBoard(); });
-      mobileBoard.querySelector('#mobile-board-terminal').addEventListener('click', () => { hackTerminal(); updateMobileBoard(); });
     }
   }
   function showToast(msg, lore) {
