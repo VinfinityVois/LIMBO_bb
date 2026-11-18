@@ -1,6 +1,6 @@
 (() => {
   const links = [
-    ['index.html','Камеры рекурсии'],
+    ['terminal.html','Камеры рекурсии'],
     ['scenes.html','Архив сцен'],
     ['employee.html','Профиль сотрудника'],
     ['dossier.html','Досье субъектов'],
