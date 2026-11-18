@@ -190,4 +190,5 @@ $('runTimeline').innerHTML=chronologicalRuns.length?chronologicalRuns.slice().re
 if(pts.length){const d=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');$('chartLine').setAttribute('d',d);$('chartArea').setAttribute('d',d+' L '+pts[pts.length-1].x+' 172 L '+pts[0].x+' 172 Z');$('chartDots').innerHTML=pts.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="#07111a" stroke="#00d4e8" stroke-width="2"><title>'+p.v+'/100</title></circle>').join('');$('chartFoot').textContent=scores.length+' ЗАВЕРШЁННЫХ ПРОХОЖДЕНИЙ · ПОСЛЕДНИЙ РЕЗУЛЬТАТ '+scores[scores.length-1]+'/100';}
 })();
 </script>
+<script src="js/mobile-navigation.js" defer></script>
 </body></html>
