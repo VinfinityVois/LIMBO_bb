@@ -672,3 +672,181 @@
 @media(prefers-reduced-motion:reduce){
   .employee-page *,.employee-page *:before,.employee-page *:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* =========================================================
+   LORE RESEARCH — archive intelligence panel
+   ========================================================= */
+.employee-page .lore-panel{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;flex-direction:column;align-items:stretch;
+  gap:clamp(9px,1vw,15px);
+  min-height:100%;
+  padding:clamp(16px,1.6vw,25px);
+  border:1px solid rgba(62,188,204,.25);
+  background:
+    radial-gradient(ellipse at 50% 27%,rgba(0,181,198,.12),transparent 43%),
+    radial-gradient(ellipse at 100% 100%,rgba(23,72,91,.18),transparent 48%),
+    linear-gradient(150deg,rgba(7,23,35,.97),rgba(3,9,16,.985) 68%);
+  box-shadow:0 22px 55px rgba(0,0,0,.28),inset 0 1px rgba(174,238,244,.045);
+}
+.employee-page .lore-panel:before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.42;
+  background:
+    linear-gradient(90deg,transparent 49.8%,rgba(80,191,203,.08) 50%,transparent 50.2%),
+    linear-gradient(0deg,transparent 49.8%,rgba(80,191,203,.06) 50%,transparent 50.2%),
+    repeating-linear-gradient(0deg,transparent 0 31px,rgba(87,163,178,.035) 32px,transparent 33px 64px);
+  mask-image:radial-gradient(ellipse at 50% 30%,#000,transparent 76%);
+}
+.employee-page .lore-panel:after{
+  content:"INTELLIGENCE / MEMORY INDEX";
+  position:absolute;top:clamp(14px,1.4vw,22px);right:clamp(14px,1.4vw,22px);
+  color:rgba(117,194,204,.34);font:500 clamp(6px,.48vw,8px)/1 var(--font-mono);
+  letter-spacing:.16em;pointer-events:none;
+}
+.employee-page .lore-panel .panel-head{
+  position:relative;z-index:1;display:flex;align-items:flex-start;
+  justify-content:space-between;gap:10px;padding-bottom:12px;
+  border-bottom:1px solid rgba(88,177,190,.17);
+}
+.employee-page .lore-panel .panel-head>div>small{
+  display:inline-flex;align-items:center;gap:7px;
+  color:#63cbd4;font-size:clamp(7px,.58vw,9px);letter-spacing:.19em;
+}
+.employee-page .lore-panel .panel-head>div>small:before{
+  content:"";width:5px;height:5px;border-radius:50%;
+  background:#53c6d1;box-shadow:0 0 10px rgba(83,198,209,.7);
+}
+.employee-page .lore-panel .panel-head h3{
+  margin-top:6px;font-size:clamp(.9rem,1.1vw,1.2rem);
+  letter-spacing:.07em;color:#d9edf0;
+}
+.employee-page .lore-panel .panel-head>span{
+  margin-top:17px;padding:5px 7px;border:1px solid rgba(80,186,199,.22);
+  background:rgba(15,74,87,.18);color:#65c6d0;
+  font-size:clamp(6px,.48vw,8px);letter-spacing:.14em;
+}
+.employee-page .lore-panel .lore-meter{
+  position:relative;display:grid;place-items:center;
+  width:clamp(160px,15vw,218px);height:clamp(160px,15vw,218px);
+  margin:clamp(2px,.5vw,8px) auto 0;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(10,49,62,.28),rgba(4,14,23,.08) 62%,transparent 70%);
+}
+.employee-page .lore-panel .lore-meter:before,
+.employee-page .lore-panel .lore-meter:after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none;
+}
+.employee-page .lore-panel .lore-meter:before{
+  inset:5%;border:1px dashed rgba(85,186,198,.2);
+  animation:loreOrbit 42s linear infinite;
+}
+.employee-page .lore-panel .lore-meter:after{
+  inset:14%;border:1px solid rgba(82,183,195,.12);
+  box-shadow:0 0 35px rgba(0,172,194,.07),inset 0 0 24px rgba(0,172,194,.05);
+}
+.employee-page .lore-panel .lore-meter svg{
+  position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  transform:rotate(-90deg);filter:drop-shadow(0 0 8px rgba(0,196,211,.18));
+}
+.employee-page .lore-panel .lore-meter .meter-bg{
+  fill:none;stroke:rgba(87,155,171,.19);stroke-width:7;
+}
+.employee-page .lore-panel .lore-meter .meter-value{
+  fill:none;stroke:#43c5d1;stroke-width:7;stroke-linecap:round;
+  transition:stroke-dashoffset 1.1s cubic-bezier(.2,.8,.2,1),stroke .35s;
+}
+.employee-page .lore-panel .lore-meter>div{
+  position:relative;z-index:2;display:flex;flex-direction:column;
+  align-items:center;gap:5px;
+}
+.employee-page .lore-panel .lore-meter>div b{
+  color:#e4fbfd;font:500 clamp(2rem,3.1vw,3rem)/.95 var(--font-display);
+  letter-spacing:-.055em;text-shadow:0 0 24px rgba(0,190,207,.28);
+}
+.employee-page .lore-panel .lore-meter>div small{
+  color:#6e9ba6;font:500 clamp(7px,.55vw,9px)/1 var(--font-mono);
+  letter-spacing:.24em;
+}
+.employee-page .lore-panel .lore-breakdown{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;margin:0;padding:0;
+}
+.employee-page .lore-panel .lore-breakdown span{
+  min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:clamp(8px,.8vw,12px) 5px;
+  border:1px solid rgba(83,165,181,.16);border-radius:4px;
+  background:linear-gradient(145deg,rgba(10,34,47,.75),rgba(4,13,22,.78));
+  color:#7596a1;font-size:clamp(6px,.5vw,8px);letter-spacing:.08em;
+  text-align:center;white-space:normal;
+}
+.employee-page .lore-panel .lore-breakdown b{
+  color:#c8edf0;font:500 clamp(1rem,1.2vw,1.3rem)/1 var(--font-display);
+  letter-spacing:0;
+}
+.employee-page .lore-panel .overview-lore-head{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-top:clamp(2px,.4vw,6px);padding-top:clamp(10px,1vw,15px);
+  border-top:1px solid rgba(86,169,184,.17);
+}
+.employee-page .lore-panel .overview-lore-head span{
+  color:#b4d6dc;font:500 clamp(7px,.58vw,9px)/1.3 var(--font-mono);
+  letter-spacing:.15em;
+}
+.employee-page .lore-panel .overview-lore-head small{
+  color:#527e89;font:500 clamp(6px,.48vw,8px)/1 var(--font-mono);
+  letter-spacing:.12em;
+}
+.employee-page .lore-panel .overview-lore-cards{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(6px,.65vw,10px);min-width:0;
+}
+.employee-page .lore-panel .overview-lore-card{
+  position:relative;min-width:0;min-height:clamp(118px,10vw,150px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:7px;padding:clamp(8px,.8vw,12px) 6px;
+  overflow:hidden;border:1px solid rgba(76,155,172,.17);border-radius:4px;
+  background:linear-gradient(155deg,rgba(9,28,41,.92),rgba(3,11,19,.96));
+  transition:border-color .25s,background .25s,transform .25s,box-shadow .25s;
+}
+.employee-page .lore-panel .overview-lore-card:before{
+  content:"";position:absolute;left:12%;right:12%;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(76,207,218,.52),transparent);
+  opacity:.65;
+}
+.employee-page .lore-panel .overview-lore-card:hover{
+  transform:translateY(-3px);border-color:rgba(76,202,215,.4);
+  background:linear-gradient(155deg,rgba(12,42,55,.96),rgba(4,14,23,.98));
+  box-shadow:0 9px 24px rgba(0,0,0,.2),0 0 20px rgba(0,173,192,.07);
+}
+.employee-page .lore-panel .overview-lore-card img{
+  width:auto;max-width:82%;height:clamp(48px,4.7vw,68px);
+  object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,180,198,.12));
+}
+.employee-page .lore-panel .overview-lore-card b{
+  color:#c4e1e5;font-size:clamp(6px,.5vw,8px);line-height:1.35;
+  letter-spacing:.08em;text-align:center;overflow-wrap:anywhere;
+}
+.employee-page .lore-panel .overview-lore-card small,
+.employee-page .lore-panel .overview-lore-card i{
+  color:#64838e;font-size:clamp(5px,.44vw,7px);line-height:1.35;
+  text-align:center;font-style:normal;
+}
+@keyframes loreOrbit{to{transform:rotate(360deg)}}
+@media(max-width:900px){
+  .employee-page .lore-panel{display:flex!important}
+  .employee-page .lore-panel .lore-meter{width:clamp(160px,24vw,205px);height:clamp(160px,24vw,205px)}
+}
+@media(max-width:560px){
+  .employee-page .lore-panel{padding:13px}
+  .employee-page .lore-panel:after{display:none}
+  .employee-page .lore-panel .lore-meter{width:164px;height:164px}
+  .employee-page .lore-panel .lore-breakdown{gap:5px}
+  .employee-page .lore-panel .lore-breakdown span{font-size:6px;padding:8px 3px}
+  .employee-page .lore-panel .overview-lore-cards{gap:5px}
+  .employee-page .lore-panel .overview-lore-card{min-height:108px;padding:7px 4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .employee-page .lore-panel .lore-meter:before{animation:none}
+  .employee-page .lore-panel .overview-lore-card{transition:none}
+}
