@@ -693,10 +693,10 @@ button { -webkit-tap-highlight-color: transparent; }
   grid-template-columns:repeat(auto-fill,minmax(min(100%,212px),1fr))!important;
   gap:.62rem!important;
 }
-.employee-page .archive-tile {
+.employee-page .collection-grid:not(.pass-grid):not(.sim-pass-grid) .archive-tile {
   min-height:104px!important;
 }
-.employee-page .archive-tile .tile-art {
+.employee-page .collection-grid:not(.pass-grid):not(.sim-pass-grid) .archive-tile .tile-art {
   height:82px!important;
   min-height:82px!important;
 }
