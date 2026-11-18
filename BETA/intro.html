@@ -692,30 +692,68 @@ tailwind.config = {
       mobileBoard.setAttribute('aria-label', 'Карточное управление миссией');
       mobileBoard.innerHTML = `
         <div class="mobile-board-top">
-          <div><div class="mobile-board-kicker">LIMBO // SUB-04 · ROUTE CONTROL</div><div class="mobile-board-title">КАРТА СЕКТОРА</div></div>
+          <div><div class="mobile-board-kicker">LIMBO // SUB-04 · ROUTE CONTROL</div><div class="mobile-board-title">СЕКТОР 04</div></div>
           <div class="mobile-board-state" id="mobile-board-state">ПАТРУЛЬ</div>
         </div>
+        <section class="mobile-mission-brief">
+          <div class="mobile-board-section">ЗАДАНИЕ · ПРОТОКОЛ ЭВАКУАЦИИ</div>
+          <strong id="mobile-objective-title">Соберите 5 фрагментов памяти</strong>
+          <p id="mobile-objective-copy">Найдите голубые ◆ на карте. Двигайтесь по соседним клеткам — нажмите стрелку или клетку рядом с оператором.</p>
+          <div class="mobile-legend"><span>● вы</span><span>◆ данные</span><span>T терминал</span><span>! угроза</span><span>G шлюз</span></div>
+        </section>
         <div class="mobile-board-summary">
-          <div class="mobile-board-stat"><small>СОБРАНО БАЙТОВ</small><strong id="mobile-board-shards">1 / 5</strong></div>
+          <div class="mobile-board-stat"><small>ФРАГМЕНТЫ</small><strong id="mobile-board-shards">1 / 5</strong></div>
           <div class="mobile-board-stat"><small>ТЕРМИНАЛЫ</small><strong id="mobile-board-terms">0 / 3</strong></div>
           <div class="mobile-board-stat"><small>ЭНЕРГИЯ</small><strong id="mobile-board-power">100%</strong></div>
           <div class="mobile-board-stat"><small>УГРОЗА</small><strong id="mobile-board-threat">НЕ ОБНАРУЖЕНА</strong></div>
         </div>
-        <div class="mobile-board-section">ВЫБЕРИТЕ МАРШРУТ · ОДНА КАРТОЧКА = ОДИН ШАГ</div>
+        <div class="mobile-board-section">СХЕМА СЕКТОРА · НАЖМИТЕ НА СОСЕДНЮЮ КЛЕТКУ</div>
+        <div class="mobile-map-wrap"><div class="mobile-sector-map" id="mobile-sector-map" role="group" aria-label="Карта сектора"></div></div>
+        <div class="mobile-board-section">ИЛИ ВЫБЕРИТЕ НАПРАВЛЕНИЕ</div>
         <div class="mobile-route-grid">
-          <button class="mobile-route-card" data-mobile-move="0,-1"><span class="route-dir">↑ СЕВЕР</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
-          <button class="mobile-route-card" data-mobile-move="1,0"><span class="route-dir">→ ВОСТОК</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
-          <button class="mobile-route-card" data-mobile-move="-1,0"><span class="route-dir">← ЗАПАД</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↗</span></button>
-          <button class="mobile-route-card" data-mobile-move="0,1"><span class="route-dir">↓ ЮГ</span><span class="route-hint">Проверить сектор</span><span class="route-arrow">↘</span></button>
+          <button class="mobile-route-card" data-mobile-move="0,-1"><span class="route-dir">↑ СЕВЕР</span><span class="route-hint">Шаг вперёд</span></button>
+          <button class="mobile-route-card" data-mobile-move="1,0"><span class="route-dir">→ ВОСТОК</span><span class="route-hint">Шаг вперёд</span></button>
+          <button class="mobile-route-card" data-mobile-move="-1,0"><span class="route-dir">← ЗАПАД</span><span class="route-hint">Шаг вперёд</span></button>
+          <button class="mobile-route-card" data-mobile-move="0,1"><span class="route-dir">↓ ЮГ</span><span class="route-hint">Шаг вперёд</span></button>
         </div>
-        <div class="mobile-board-section">ИНСТРУМЕНТЫ ОПЕРАТОРА</div>
+        <div class="mobile-board-section">ДЕЙСТВИЯ</div>
         <div class="mobile-board-actions">
           <button class="mobile-board-action" id="mobile-board-stealth">◌ МАСКИРОВКА</button>
           <button class="mobile-board-action" id="mobile-board-sonar">⌁ СОНАР · 5%</button>
-          <button class="mobile-board-action" id="mobile-board-terminal" disabled>▣ ТЕРМИНАЛ</button>
+          <button class="mobile-board-action" id="mobile-board-terminal" disabled>▣ СЧИТАТЬ T</button>
         </div>
-        <div class="mobile-board-footer" id="mobile-board-hint">Собирайте фрагменты памяти и считывайте терминалы. Избегайте сигнатур — используйте маскировку.</div>
+        <div class="mobile-board-footer" id="mobile-board-hint">Цель: собрать 5 ◆, затем пройти через G в нижней части карты. Терминалы дают бонус к результату, но не обязательны для выхода.</div>
       `;
+      const mobileMap = mobileBoard.querySelector('#mobile-sector-map');
+      const mobileMapCells = [];
+      for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'mobile-map-cell';
+        cell.dataset.x = String(x);
+        cell.dataset.y = String(y);
+        cell.setAttribute('aria-label', 'Сектор ' + x + ', ' + y);
+        mobileMap.appendChild(cell);
+        mobileMapCells.push(cell);
+      }
+      mobileBoard.addEventListener('click', event => {
+        const cell = event.target.closest('.mobile-map-cell');
+        if (cell && !cell.disabled) {
+          const dx = Number(cell.dataset.x) - state.player.x;
+          const dy = Number(cell.dataset.y) - state.player.y;
+          if (Math.abs(dx) + Math.abs(dy) === 1) { movePlayer(dx, dy); updateMobileBoard(); }
+          return;
+        }
+        const move = event.target.closest('[data-mobile-move]');
+        if (move && !move.disabled) {
+          const [dx, dy] = move.dataset.mobileMove.split(',').map(Number);
+          movePlayer(dx, dy);
+          updateMobileBoard();
+        }
+      });
+      mobileBoard.querySelector('#mobile-board-stealth').addEventListener('click', () => { toggleStealth(); updateMobileBoard(); });
+      mobileBoard.querySelector('#mobile-board-sonar').addEventListener('click', () => { triggerSonar(); updateMobileBoard(); });
+      mobileBoard.querySelector('#mobile-board-terminal').addEventListener('click', () => { hackTerminal(); updateMobileBoard(); });
       stage.appendChild(mobileBoard);
       mobileBoard.addEventListener('click', event => {
         const move = event.target.closest('[data-mobile-move]');
@@ -769,27 +807,47 @@ tailwind.config = {
       button.disabled = blocked || state.dead || state.escaped;
       const tile = nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS ? MAP[ny][nx] : 1;
       const hint = button.querySelector('.route-hint');
-      if (hint) hint.textContent = blocked ? (tile === 2 ? 'Шлюз заблокирован' : 'Проход перекрыт') :
-        tile === 5 ? 'Сигнал терминала' : tile === 7 ? 'Опасный участок' : 'Исследовать сектор';
+      if (hint) hint.textContent = blocked ? (tile === 2 ? 'Шлюз закрыт' : 'Проход закрыт') :
+        memoryFish.some(f => !f.collected && f.x === nx && f.y === ny) ? 'Фрагмент данных ◆' :
+        terminals.some(t => !t.hacked && Math.abs(t.x-nx)<=1 && Math.abs(t.y-ny)<=1) ? 'Сигнал терминала T' : 'Свободный проход';
     });
-    const nearest = Math.min(Math.hypot(p.x - watcher.x, p.y - watcher.y), ...viruses.map(v => Math.hypot(p.x-v.x,p.y-v.y)));
-    const threat = mobileBoard.querySelector('#mobile-board-threat');
-    if (threat) threat.textContent = nearest < 3 ? 'КРИТИЧЕСКАЯ' : nearest < 6 ? 'ПОБЛИЗОСТИ' : 'НЕ ОБНАРУЖЕНА';
-    const stateLabel = mobileBoard.querySelector('#mobile-board-state');
-    if (stateLabel) stateLabel.textContent = p.stealth ? 'МАСКИРОВКА' : state.dead ? 'КАНАЛ ПОТЕРЯН' : state.escaped ? 'ЭВАКУАЦИЯ' : 'ПАТРУЛЬ';
+    const nearbyTerminal = terminals.some(t => Math.abs(t.x-p.x)<=1 && Math.abs(t.y-p.y)<=1);
+    const nearest = Math.min(Math.hypot(p.x - watcher.x, p.y - watcher.y), ...viruses.map(v => Math.hypot(p.x-v.x, p.y-v.y)));
+    mobileBoard.querySelector('#mobile-board-threat').textContent = nearest < 3 ? 'КРИТИЧЕСКАЯ' : nearest < 6 ? 'ПОБЛИЗОСТИ' : 'НЕ ОБНАРУЖЕНА';
+    mobileBoard.querySelector('#mobile-board-state').textContent = p.stealth ? 'МАСКИРОВКА' : state.dead ? 'КАНАЛ ПОТЕРЯН' : state.escaped ? 'ЭВАКУАЦИЯ' : 'ПАТРУЛЬ';
     mobileBoard.querySelector('#mobile-board-shards').textContent = state.collectedFish + ' / 5';
     mobileBoard.querySelector('#mobile-board-terms').textContent = state.hackedTerms + ' / 3';
     mobileBoard.querySelector('#mobile-board-power').textContent = state.power + '%';
-    const nearbyTerminal = terminals.some(t => Math.abs(t.x-p.x)<=1 && Math.abs(t.y-p.y)<=1);
     const terminalButton = mobileBoard.querySelector('#mobile-board-terminal');
     terminalButton.disabled = !nearbyTerminal || terminals.every(t => t.hacked || Math.abs(t.x-p.x)>1 || Math.abs(t.y-p.y)>1) || state.dead || state.escaped;
     mobileBoard.querySelector('#mobile-board-sonar').disabled = state.power < 5 || state.dead || state.escaped;
     mobileBoard.querySelector('#mobile-board-stealth').disabled = state.dead || state.escaped;
+    mobileBoard.querySelector('#mobile-objective-title').textContent = state.gateUnlocked ? 'Шлюз открыт — найдите выход G' : 'Соберите ' + (5-state.collectedFish) + ' фрагм. памяти';
+    mobileBoard.querySelector('#mobile-objective-copy').textContent = state.gateUnlocked
+      ? 'Все 5 фрагментов найдены. Двигайтесь к G в нижнем левом углу схемы и войдите в шлюз.'
+      : 'Найдите голубые ◆ на схеме. Нажимайте на соседнюю клетку или используйте стрелки. Избегайте ! — включайте маскировку.';
+    mobileMapCells.forEach(cell => {
+      const x = Number(cell.dataset.x), y = Number(cell.dataset.y);
+      const tile = MAP[y][x], dx = Math.abs(x-p.x), dy = Math.abs(y-p.y);
+      const adjacent = dx + dy === 1;
+      const fish = memoryFish.some(f => !f.collected && f.x === x && f.y === y);
+      const terminal = terminals.some(t => t.x === x && t.y === y && !t.hacked);
+      const isPlayer = p.x === x && p.y === y;
+      const isThreat = (watcher.x === x && watcher.y === y) || viruses.some(v => v.x === x && v.y === y);
+      const isGate = tile === 2;
+      cell.className = 'mobile-map-cell' + (tile === 1 || tile === 3 || tile === 4 ? ' is-wall' : '') +
+        (isPlayer ? ' is-player' : '') + (fish ? ' is-data' : '') + (terminal ? ' is-terminal' : '') +
+        (isThreat ? ' is-threat' : '') + (isGate ? (state.gateUnlocked ? ' is-gate-open' : ' is-gate') : '') +
+        (adjacent && !isSolid(x,y) ? ' is-reachable' : '');
+      cell.textContent = isPlayer ? '●' : isThreat ? '!' : fish ? '◆' : terminal ? 'T' : isGate ? (state.gateUnlocked ? '↧' : 'G') : (tile === 1 || tile === 3 || tile === 4 ? '' : '·');
+      cell.disabled = !adjacent || isSolid(x,y) || state.dead || state.escaped;
+    });
     const hint = mobileBoard.querySelector('#mobile-board-hint');
-    if (hint) hint.textContent = nearest < 4 && !p.stealth ? 'ОПАСНО: включите маскировку и меняйте маршрут. Не задерживайтесь на открытом участке.' :
-      nearbyTerminal ? 'РЯДОМ ТЕРМИНАЛ: выберите «ТЕРМИНАЛ», чтобы считать данные.' :
-      state.gateUnlocked ? 'ШЛЮЗ ALPHA ОТКРЫТ. Найдите выход в южной части сектора.' :
-      'Собирайте фрагменты памяти и считывайте терминалы. Карточка направления делает один шаг.';
+    if (hint) hint.textContent = state.dead ? 'СИГНАЛ ПОТЕРЯН. Перезапустите миссию.' :
+      nearbyTerminal ? 'РЯДОМ ТЕРМИНАЛ T: нажмите «СЧИТАТЬ T». Это дополнительная цель для лучшего ранга.' :
+      nearest < 4 && !p.stealth ? 'ОПАСНО: угроза рядом. Включите маскировку, чтобы снизить заметность.' :
+      state.gateUnlocked ? 'ШЛЮЗ ОТКРЫТ. Идите к G в нижнем левом углу.' :
+      'Собирайте ◆. После 5 фрагментов откроется G. Терминалы T необязательны, но улучшают результат.';
   }
 
   function drawWorld() {
