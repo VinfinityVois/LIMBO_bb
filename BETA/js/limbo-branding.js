@@ -11,7 +11,7 @@ if(brand&&!brand.querySelector('.limbo-brand-logo')){
  if(header&&!header.querySelector('.limbo-page-logo')){
   const img=document.createElement('img');img.src=logo;img.alt='LIMBO';img.width=34;img.height=34;
   const first=header.firstElementChild;
-  if(first&&/(^|\\s)flex(\\s|$)/.test(first.className.baseVal||first.className||'')){
+  if(first&&(first.classList.contains('flex')||String(first.className||'').includes('flex'))){
    img.className='limbo-page-logo';first.insertAdjacentElement('afterbegin',img);
   }else{
    img.className='limbo-fixed-logo';document.body.appendChild(img);
