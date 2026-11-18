@@ -238,6 +238,13 @@ input, textarea { cursor:text !important; }
   #scene1 .warning-title, #scene1 .blink-red { animation:none !important; }
 }
 
+
+#scene0{background:radial-gradient(ellipse at 50% 43%,#0a1b29 0%,#050b14 44%,#02050b 100%)}#scene0 .signal-noise{opacity:.12}#scene0 .wave-grid{opacity:.28;transform:perspective(800px) rotateX(58deg) scale(1.6)}#scene0 .core-rings{filter:drop-shadow(0 0 36px rgba(0,176,202,.14))}#scene0 .core-ring{border-color:rgba(70,180,198,.13)}#scene0 .ring-a{border-left-color:#57dce9}#scene0 .ring-b{border-top-color:rgba(199,73,167,.5)}#scene0 .core-status{color:#9bbcc7;letter-spacing:.28em;text-shadow:0 0 18px rgba(0,190,210,.2)}
+#scene0 .boot-phase{width:min(420px,78vw);margin:18px auto 0;text-align:left}#scene0 .boot-phase-label{color:#537b88;font:8px var(--font-mono,monospace);letter-spacing:.2em}#scene0 .boot-phase-state{float:right;color:#a8dce2;font:8px var(--font-mono,monospace);letter-spacing:.1em}#scene0 .boot-phase-track{height:2px;margin-top:8px;background:rgba(115,180,195,.13);overflow:hidden}#scene0 .boot-phase-track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#147e9b,#67eff5,#d84ab4);box-shadow:0 0 12px rgba(0,218,235,.6);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+#scene0 .boot-event-feed{position:absolute;right:clamp(18px,5vw,76px);top:50%;transform:translateY(-50%);width:min(310px,28vw);display:grid;gap:8px;pointer-events:none}.boot-event{display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:center;padding:10px 12px;border:1px solid rgba(116,178,193,.16);border-left:2px solid rgba(81,206,219,.55);background:linear-gradient(110deg,rgba(8,19,30,.88),rgba(5,10,18,.6));box-shadow:0 12px 36px rgba(0,0,0,.28);backdrop-filter:blur(12px);animation:bootEventIn .48s cubic-bezier(.16,1,.3,1) both}.boot-event[data-level=critical]{border-color:rgba(227,52,91,.38);border-left-color:#f04c70;background:linear-gradient(110deg,rgba(38,8,20,.88),rgba(8,10,18,.72))}.boot-event-code{color:#65dce8;font:700 9px var(--font-mono,monospace)}.boot-event[data-level=critical] .boot-event-code{color:#ff7088}.boot-event-text{color:#9eb4bf;font:8px/1.5 var(--font-mono,monospace);letter-spacing:.07em}.boot-event-time{display:block;color:#536e7a;font-size:7px;margin-top:3px}@keyframes bootEventIn{from{opacity:0;transform:translateX(24px);filter:blur(5px)}to{opacity:1;transform:none;filter:blur(0)}}
+#scene1 .warning-frame{border-radius:2px!important;clip-path:polygon(0 12px,12px 0,calc(100% - 22px) 0,100% 22px,100% calc(100% - 12px),calc(100% - 12px) 100%,22px 100%,0 calc(100% - 22px))}#scene1 .warning-title{letter-spacing:.12em;text-transform:uppercase}#scene1 .warning-log{min-height:104px}#scene1 .warn-log-row{animation:warningLogIn .28s ease both}@keyframes warningLogIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+#scene2 .terminal-shell,#scene3 .login-wrap{border-radius:3px!important;border-color:rgba(76,174,194,.22)!important;background:linear-gradient(145deg,rgba(7,15,25,.97),rgba(3,7,13,.985))!important;box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 50px rgba(0,155,185,.07),inset 0 1px rgba(255,255,255,.035)!important}#scene2 .terminal-top,#scene3 .access-header,#scene3 .access-footer{border-color:rgba(99,177,194,.15)!important;background:rgba(255,255,255,.018)!important}#scene2 .terminal-left,#scene3 .access-sidebar{background:linear-gradient(180deg,rgba(10,25,38,.82),rgba(4,10,18,.82))!important}#scene2 .terminal-right,#scene3 .login-main{background:rgba(2,7,13,.35)!important}#scene3 .input-shell{border-radius:2px!important;background:rgba(2,10,18,.78)!important;border-color:rgba(99,177,194,.2)!important}#scene3 .input-shell:focus-within{border-color:rgba(90,226,238,.72)!important;box-shadow:0 0 0 2px rgba(40,185,205,.1),0 0 25px rgba(0,180,210,.08)!important}
+@media(max-width:900px){#scene0 .boot-event-feed{top:auto;bottom:10%;left:50%;right:auto;transform:translateX(-50%);width:min(420px,86vw)}}@media(prefers-reduced-motion:reduce){.boot-event{animation:none!important}}
 </style>
 
 </head>
@@ -331,7 +338,9 @@ input, textarea { cursor:text !important; }
       <span>· <b id="microHash">0x00000000</b></span>
     </div>
     <div class="protocol-strip" id="protocolStrip"></div>
+    <div class="boot-phase" id="bootPhase"><span class="boot-phase-label">CORE INITIALIZATION</span><span class="boot-phase-state" id="bootPhaseState">AWAITING SECURE HANDSHAKE</span><div class="boot-phase-track"><i id="bootPhaseBar"></i></div></div>
   </div>
+  <div class="boot-event-feed" id="bootEventFeed" aria-live="polite"></div>
   <div class="skip-hint">PRESS <b>SPACE</b> TO SKIP · <b>CLICK</b> TO CONTINUE</div>
 </section>
 
@@ -548,26 +557,14 @@ input, textarea { cursor:text !important; }
      ═══════════════════════════════════════════ -->
 <section class="scene" id="scene4">
   
-<!-- ALIGN RULES GATE -->
-<div id="alignRules" class="align-rules" hidden>
-  <div class="align-rules-panel">
-    <div class="ar-tag">// ПРОТОКОЛ ЗАХВАТА ЦЕЛИ</div>
-    <h2>КАК ПРОЙТИ</h2>
-    <ol>
-      <li>Наведите <b>прицел</b> в центр круга (ядро).</li>
-      <li>Удерживайте его в центре — шкала заполняется.</li>
-      <li>Если уйдёте — прогресс медленно падает.</li>
-      <li>Доведите шкалу до 100% — канал откроется.</li>
-    </ol>
-    <p class="ar-note">Прицел следует за курсором. Держите мышь у центра экрана.</p>
-    <button type="button" class="cyber-btn" id="btnStartAlign" data-cursor>
-      <span class="btn-label">НАЧАТЬ ЗАХВАТ</span>
-      <em>→</em>
-    </button>
-  </div>
-</div>
-
-  <div class="auth-final" id="alignStage" hidden>
+  <div class="auth-final capture-interface" id="alignStage">
+    <header class="capture-heading"><div class="capture-kicker">P.R.I.N.C. // REMOTE AUTHORITY</div><div class="capture-title">ПРОТОКОЛ ЗАХВАТА ЦЕЛИ</div><div class="capture-subtitle">СОВМЕСТИТЕ ПРИЦЕЛ С ЯДРОМ И УДЕРЖИВАЙТЕ КАНАЛ</div></header>
+    <div class="capture-status-grid">
+      <div class="capture-readout"><span>TRACK ID</span><b id="captureTrack">--:--:--</b></div>
+      <div class="capture-readout"><span>LOCK STATUS</span><b id="captureLock">SEARCHING</b></div>
+      <div class="capture-readout"><span>SYNC ERROR</span><b id="captureError">HIGH</b></div>
+    </div>
+    <div class="capture-instruction"><i></i><span id="captureInstruction">Переместите указатель в центральное ядро</span></div>
     <div class="align-vortex" id="alignVortex">
       <div class="av-ring r1"></div>
       <div class="av-ring r2"></div>
@@ -582,104 +579,26 @@ input, textarea { cursor:text !important; }
     <div class="checkpoint-list" id="checkpointList"></div>
     <div class="final-bar"><i id="finalBar"></i></div>
     <div class="final-percent" id="finalPercent">00%</div>
-    <div class="align-hint" id="alignHint">УДЕРЖИВАЙТЕ ПРИЦЕЛ В ЦЕНТРЕ · КАК ПИЛОТ НА ЗАХВАТЕ ЦЕЛИ</div>
+    <div class="align-hint" id="alignHint">TARGET ACQUISITION · WAITING FOR RETICLE CONVERGENCE</div>
   </div>
 </section>
 <style>
-.align-rules {
-  position: fixed; inset: 0; z-index: 80;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(2,4,10,0.88); backdrop-filter: blur(8px);
-}
-.align-rules[hidden] { display: none !important; }
-.align-rules-panel {
-  width: min(420px, 92vw);
-  padding: 1.6rem 1.5rem 1.4rem;
-  background: linear-gradient(160deg, rgba(10,16,28,0.98), rgba(4,6,12,0.98));
-  border: 1px solid rgba(0,212,232,0.35);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,232,0.08);
-  font-family: var(--font-mono, monospace);
-}
-.align-rules-panel .ar-tag {
-  font-size: 0.58rem; letter-spacing: 0.14em; color: rgba(0,212,232,0.55); margin-bottom: 0.6rem;
-}
-.align-rules-panel h2 {
-  font-family: Orbitron, sans-serif; font-size: 1.1rem; letter-spacing: 0.12em;
-  color: #00d4e8; margin: 0 0 1rem;
-}
-.align-rules-panel ol {
-  margin: 0 0 1rem 1.1rem; padding: 0;
-  color: #9aa8bc; font-size: 0.78rem; line-height: 1.65; letter-spacing: 0.03em;
-}
-.align-rules-panel ol b { color: #00d4e8; }
-.align-rules-panel .ar-note {
-  font-size: 0.65rem; color: #5a6a80; margin-bottom: 1.1rem; letter-spacing: 0.06em;
-}
-.align-rules-panel .cyber-btn {
-  width: 100%; justify-content: center;
-  display: inline-flex; align-items: center;
-  padding: 0.9rem 1rem;
-  background: rgba(0,212,232,0.12);
-  border: 1px solid rgba(0,212,232,0.45);
-  color: #00d4e8; cursor: pointer;
-  font: 600 0.7rem var(--font-mono, monospace); letter-spacing: 0.12em;
-}
-.align-rules-panel .cyber-btn:hover { background: rgba(0,212,232,0.22); }
-
-.align-vortex {
-  position: relative; width: min(320px, 70vw); height: min(320px, 70vw); margin: 0 auto 24px;
-  touch-action: none;
-}
-.auth-final[hidden] { display: none !important; }
-
-.av-ring {
-  position: absolute; left: 50%; top: 50%; border-radius: 50%;
-  border: 1px solid rgba(0,232,255,0.25);
-  transform: translate(-50%,-50%);
-  pointer-events: none;
-}
-.av-ring.r1 { width: 90px; height: 90px; border-color: rgba(0,232,255,0.5); animation: spin 3s linear infinite; }
-.av-ring.r2 { width: 150px; height: 150px; border-top-color: transparent; animation: spinReverse 5s linear infinite; }
-.av-ring.r3 { width: 210px; height: 210px; border-style: dashed; border-color: rgba(0,232,255,0.15); animation: spin 12s linear infinite; }
-.av-ring.r4 { width: 270px; height: 270px; border-color: rgba(0,232,255,0.08); }
-.av-core {
-  position: absolute; left: 50%; top: 50%;
-  width: 48px; height: 48px; border-radius: 50%;
-  transform: translate(-50%,-50%);
-  background: radial-gradient(circle at 35% 35%, #1a3040, #000 60%, #000);
-  box-shadow: 0 0 40px rgba(0,232,255,0.35), inset 0 0 20px #000;
-  border: 1px solid rgba(0,232,255,0.4);
-}
-.av-core.locked {
-  box-shadow: 0 0 60px rgba(0,232,255,0.7), 0 0 120px rgba(0,232,255,0.3);
-  border-color: #00e8ff;
-}
-.av-reticle {
-  position: absolute; width: 36px; height: 36px;
-  left: 50%; top: 50%;
-  transform: translate(-50%,-50%);
-  border: 1px solid rgba(0,232,255,0.7);
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow: 0 0 12px rgba(0,232,255,0.3);
-  transition: border-color .15s, box-shadow .15s;
-}
-.av-reticle::before, .av-reticle::after {
-  content: ''; position: absolute; background: rgba(0,232,255,0.7);
-}
-.av-reticle::before { left: 50%; top: -8px; bottom: -8px; width: 1px; transform: translateX(-50%); }
-.av-reticle::after { top: 50%; left: -8px; right: -8px; height: 1px; transform: translateY(-50%); }
-.av-reticle.aligned {
-  border-color: #1ec99a;
-  box-shadow: 0 0 20px rgba(30,201,154,0.55);
-}
-.align-hint {
-  margin-top: 14px; font: 9px var(--font-mono, monospace);
-  color: rgba(0,232,255,0.45); letter-spacing: 0.14em;
-}
-@keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-@keyframes spinReverse { to { transform: translate(-50%,-50%) rotate(-360deg); } }
-</style>
+.auth-final[hidden]{display:none!important}
+.auth-final.capture-interface{position:relative;width:min(920px,94vw);min-height:min(760px,94vh);margin:auto;padding:clamp(20px,4vw,44px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#dceaf0;isolation:isolate}
+.auth-final.capture-interface:before{content:"";position:absolute;inset:4% 0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 50% 43%,rgba(0,198,220,.105),transparent 42%),linear-gradient(145deg,rgba(8,15,25,.92),rgba(3,7,14,.84));border:1px solid rgba(95,190,207,.18);clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%);box-shadow:0 30px 100px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.04)}
+.auth-final.capture-interface:after{content:"";position:absolute;inset:4% 0;z-index:-1;pointer-events:none;opacity:.28;background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(110,210,225,.06) 6px,transparent 7px 12px);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+.capture-heading{text-align:center;margin-bottom:18px}.capture-kicker{color:#648c9b;font:600 9px/1.5 var(--font-mono,monospace);letter-spacing:.24em}.capture-title{margin-top:8px;color:#d9f8fa;font:600 clamp(19px,3vw,30px)/1.2 Orbitron,var(--font-mono,monospace);letter-spacing:.13em;text-shadow:0 0 24px rgba(0,205,225,.22)}.capture-subtitle{margin-top:9px;color:#7795a5;font:10px/1.6 var(--font-mono,monospace);letter-spacing:.1em}
+.capture-status-grid{width:min(560px,100%);display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}.capture-readout{padding:10px 12px;min-width:0;border:1px solid rgba(105,185,203,.16);background:linear-gradient(145deg,rgba(12,27,40,.72),rgba(4,11,20,.7));box-shadow:inset 0 1px rgba(255,255,255,.035)}.capture-readout span{display:block;color:#63818e;font:8px/1.4 var(--font-mono,monospace);letter-spacing:.15em}.capture-readout b{display:block;margin-top:5px;color:#b8d6df;font:600 11px/1.2 var(--font-mono,monospace);letter-spacing:.08em;overflow-wrap:anywhere}.capture-readout b.is-locked{color:#83e7c5;text-shadow:0 0 12px rgba(75,220,175,.3)}
+.capture-instruction{display:flex;align-items:center;gap:9px;margin:0 0 4px;color:#9bb8c4;font:9px/1.5 var(--font-mono,monospace);letter-spacing:.08em}.capture-instruction i{width:6px;height:6px;border-radius:50%;background:#56dbe7;box-shadow:0 0 12px #35d9e8;animation:capturePing 1.8s ease-in-out infinite}
+.align-vortex{position:relative;width:min(340px,64vw);height:min(340px,64vw);margin:8px auto 14px;touch-action:none;border-radius:50%;background:radial-gradient(circle,rgba(4,25,38,.82) 0 23%,rgba(2,11,21,.25) 24% 60%,transparent 61%);filter:drop-shadow(0 0 28px rgba(0,185,215,.12))}
+.align-vortex:before,.align-vortex:after{content:"";position:absolute;inset:7%;border-radius:50%;pointer-events:none}.align-vortex:before{border:1px solid rgba(75,215,230,.18);box-shadow:inset 0 0 34px rgba(0,180,210,.07),0 0 28px rgba(0,180,210,.06)}.align-vortex:after{inset:0;background:conic-gradient(from 0deg,transparent 0 72%,rgba(66,224,240,.22) 82%,transparent 88%);animation:captureSweep 6s linear infinite}
+.av-ring{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%);border:1px solid rgba(0,232,255,.25);pointer-events:none}.av-ring.r1{width:94px;height:94px;border-color:rgba(0,232,255,.65);animation:spin 4s linear infinite}.av-ring.r2{width:164px;height:164px;border-top-color:transparent;border-bottom-color:rgba(0,232,255,.52);animation:spinReverse 7s linear infinite}.av-ring.r3{width:236px;height:236px;border-style:dashed;border-color:rgba(0,232,255,.18);animation:spin 18s linear infinite}.av-ring.r4{width:300px;height:300px;border-color:rgba(0,232,255,.12)}
+.av-core{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 38% 34%,#bfffff 0 4%,#1b9eaf 12%,#071723 48%,#02070d 70%);border:1px solid rgba(94,244,255,.75);box-shadow:0 0 28px rgba(0,232,255,.35),inset 0 0 22px #000;transition:box-shadow .25s,border-color .25s,transform .25s}.av-core:after{content:"";position:absolute;inset:-11px;border:1px solid rgba(91,231,245,.25);border-radius:50%}.av-core.locked{transform:translate(-50%,-50%) scale(1.13);box-shadow:0 0 48px rgba(0,232,255,.75),0 0 110px rgba(0,232,255,.28);border-color:#c5ffff}
+.av-reticle{position:absolute;width:42px;height:42px;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(0,232,255,.88);border-radius:50%;pointer-events:none;box-shadow:0 0 14px rgba(0,232,255,.34);transition:border-color .14s,box-shadow .14s}.av-reticle:before,.av-reticle:after{content:"";position:absolute;background:rgba(0,232,255,.8)}.av-reticle:before{left:50%;top:-12px;bottom:-12px;width:1px;transform:translateX(-50%)}.av-reticle:after{top:50%;left:-12px;right:-12px;height:1px;transform:translateY(-50%)}.av-reticle.aligned{border-color:#8fffd6;box-shadow:0 0 24px rgba(30,220,170,.65)}.av-reticle.aligned:before,.av-reticle.aligned:after{background:#8fffd6}
+.final-code{color:#5f95a4;font:10px var(--font-mono,monospace);letter-spacing:.2em}.final-title{margin-top:7px;color:#c8f5f8;font:600 18px Orbitron,var(--font-mono,monospace);letter-spacing:.16em}.final-sub{margin-top:6px;color:#7995a2;font:9px var(--font-mono,monospace);letter-spacing:.1em;text-align:center}.checkpoint-list{width:min(560px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:18px 0 12px}.chk-row{min-width:0;padding:8px 5px;border:1px solid rgba(105,185,203,.14);background:rgba(7,17,27,.68);text-align:center}.chk-mark{display:block;color:#7198a4;font-size:13px}.chk-name{display:block;margin-top:4px;color:#809ba5;font:7px/1.35 var(--font-mono,monospace);letter-spacing:.04em}.chk-state{display:block;margin-top:5px;color:#607985;font:7px var(--font-mono,monospace);letter-spacing:.1em}.final-bar{width:min(560px,100%);height:4px;background:rgba(125,180,195,.12);overflow:hidden}.final-bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,#147f9a,#69eff4);box-shadow:0 0 14px rgba(0,220,240,.5);transition:width .12s linear}.final-percent{margin-top:7px;color:#a8eaf0;font:600 12px var(--font-mono,monospace);letter-spacing:.12em}.align-hint{margin-top:10px;color:#678b98;font:8px var(--font-mono,monospace);letter-spacing:.12em;text-align:center}
+@keyframes capturePing{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}@keyframes captureSweep{to{transform:rotate(360deg)}}@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spinReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+@media(max-width:650px){.auth-final.capture-interface{padding:18px 12px}.capture-status-grid{gap:5px}.capture-readout{padding:8px 7px}.capture-readout span{font-size:7px}.capture-readout b{font-size:9px}.checkpoint-list{grid-template-columns:repeat(5,minmax(0,1fr))}.chk-name,.chk-state{font-size:6px}.av-ring.r4{width:270px;height:270px}}
+@media(prefers-reduced-motion:reduce){.align-vortex:after,.capture-instruction i,.av-ring{animation:none!important}}</style>
 
 <script>
 (() => {
@@ -1066,19 +985,59 @@ input, textarea { cursor:text !important; }
       const pct = String((i + 1) * 16).padStart(2, '0');
       microReadout.querySelector('span').textContent = `HANDSHAKE ${pct}%`;
       microHash.textContent = '0x' + hex(8);
+      const bootBar = $('#bootPhaseBar'), bootState = $('#bootPhaseState');
+      if (bootBar) bootBar.style.width = ((i + 1) / messages.length * 100) + '%';
+      if (bootState) bootState.textContent = messages[i];
       tone(160 + i * 90, 0.05, 'square', 0.018);
       scanSweep();
       await sleep(280);
     }
 
-    glitchBurst(1);
-    await sleep(340);
-    scene('#scene1');
+    await beginIntrusionSequence();
     $('#hudNode').textContent = 'NODE: FED-LIMBO-07';
     $('#hudGeo').textContent = 'GEO: 55.75/37.61';
     $('#trace').textContent = 'ACTIVE';
     tone(110, 0.28, 'sawtooth', 0.04);
     initWarning();
+  }
+
+  // ─── PRE-ALERT / INTRUSION TRACE ───
+  let intrusionSequencePromise = null;
+  function pushBootEvent(code, message, level = 'normal') {
+    const feed = $('#bootEventFeed'); if (!feed) return;
+    const card = document.createElement('div'); card.className = 'boot-event'; card.dataset.level = level;
+    card.innerHTML = '<b class="boot-event-code"></b><span class="boot-event-text"></span>';
+    card.querySelector('.boot-event-code').textContent = code;
+    const copy = card.querySelector('.boot-event-text'); copy.append(document.createTextNode(message));
+    const time = document.createElement('small'); time.className = 'boot-event-time';
+    time.textContent = new Date().toLocaleTimeString('ru-RU',{hour12:false})+' · '+(level==='critical'?'SEVERITY 5':'TRACE EVENT'); copy.appendChild(time);
+    feed.appendChild(card); while(feed.children.length>4)feed.removeChild(feed.firstElementChild);
+  }
+  function beginIntrusionSequence() {
+    if(intrusionSequencePromise)return intrusionSequencePromise;
+    intrusionSequencePromise=(async()=>{
+      const phase=$('#bootPhaseState'),bar=$('#bootPhaseBar'),signal=$('#signalText');
+      const events=[
+        ['SCAN','UNKNOWN PEER DISCOVERED ON SHADOW PORT','normal'],
+        ['DENY','AUTH TOKEN REPLAY BLOCKED · ATTEMPT 01','normal'],
+        ['WARN','FIREWALL SIGNATURE HAS BEEN MODIFIED','normal'],
+        ['BREACH','PRIVILEGE ESCALATION VECTOR DETECTED','critical'],
+        ['LOCK','REMOTE PROCESS IS TOUCHING CORE MEMORY','critical'],
+        ['FAIL','ISOLATION FAILED · OPERATOR CHANNEL EXPOSED','critical']
+      ];
+      if(phase)phase.textContent='ANALYZING UNTRUSTED TRAFFIC';if(signal)signal.textContent='VERIFYING INTEGRITY';if(bar)bar.style.width='100%';
+      for(let i=0;i<events.length;i++){
+        const [code,message,level]=events[i];pushBootEvent(code,message,level);
+        if(phase)phase.textContent=level==='critical'?'CONTAINMENT FAILURE':'FILTERING EXTERNAL REQUESTS';
+        if(i===1||i===3||i===5){glitchBurst(i===5?4:2);tone(i===5?54:82,i===5?.22:.1,'sawtooth',i===5?.055:.03)}
+        else tone(220+i*55,.035,'square',.012);
+        await sleep(i===5?760:540);
+      }
+      await sleep(360);document.body.classList.add('scene-red');scene('#scene1');
+      $('#hudNode').textContent='NODE: FED-LIMBO-07';$('#hudGeo').textContent='GEO: 55.75/37.61';$('#trace').textContent='ACTIVE';
+      tone(58,.42,'sawtooth',.06);glitchBurst(5);await sleep(140);initWarning();
+    })();
+    return intrusionSequencePromise;
   }
 
   // ─── SCENE 1 — WARNING ───
@@ -1495,23 +1454,13 @@ input, textarea { cursor:text !important; }
       cl.appendChild(row);
     });
 
-    // Rules gate first — game does not run until player confirms
-    const rules = document.getElementById('alignRules');
+    // Capture begins immediately; no tutorial screen or extra confirmation.
     const stage = document.getElementById('alignStage');
-    if (rules) rules.hidden = false;
-    if (stage) stage.hidden = true;
-
-    await new Promise((resolve) => {
-      const btn = document.getElementById('btnStartAlign');
-      const go = () => {
-        if (rules) rules.hidden = true;
-        if (stage) stage.hidden = false;
-        btn && btn.removeEventListener('click', go);
-        resolve();
-      };
-      if (btn) btn.addEventListener('click', go);
-      else go();
-    });
+    if (stage) stage.hidden = false;
+    $('#captureTrack').textContent = 'TRK-' + hex(6);
+    $('#captureLock').textContent = 'SEARCHING';
+    $('#captureError').textContent = 'HIGH';
+    $('#captureInstruction').textContent = 'Переместите указатель к центральному ядру';
 
     // ALIGN: reticle = cursor position inside vortex (1:1, no lag)
     const vortex = document.getElementById('alignVortex');
@@ -1534,8 +1483,14 @@ input, textarea { cursor:text !important; }
       aligned = dist < 0.18;
       reticle.classList.toggle('aligned', aligned);
       if (core) core.classList.toggle('locked', aligned);
+      const lock = document.getElementById('captureLock'), error = document.getElementById('captureError');
+      const instruction = document.getElementById('captureInstruction');
+      if (lock) { lock.textContent = aligned ? 'CONVERGING' : 'SEARCHING'; lock.classList.toggle('is-locked', aligned); }
+      if (error) error.textContent = Math.round(dist * 100) + '%';
+      if (instruction) instruction.textContent = aligned ? 'СИГНАЛ СОВМЕЩЁН · УДЕРЖИВАЙТЕ ПОЗИЦИЮ' : 'Переместите указатель к центральному ядру';
     };
     placeReticle(0.5, 0.5);
+    aligned = false;
 
     const onMove = (e) => {
       if (!vortex) return;
@@ -1559,14 +1514,16 @@ input, textarea { cursor:text !important; }
     // easier: fill fast, drain slow, large zone
     while (lockProgress < 100) {
       if (aligned) {
-        lockProgress = Math.min(100, lockProgress + 3.2);
+        lockProgress = Math.min(100, lockProgress + 1.35);
         if (Math.random() > 0.9) tone(rand(700, 1100), 0.012, 'sine', 0.007);
       } else {
-        lockProgress = Math.max(0, lockProgress - 0.25);
+        lockProgress = Math.max(0, lockProgress - 0.42);
       }
       const i = Math.floor(lockProgress);
       $('#finalBar').style.width = i + '%';
       $('#finalPercent').textContent = String(i).padStart(2, '0') + '%';
+      const instruction = document.getElementById('captureInstruction');
+      if (instruction && i > 0 && aligned) instruction.textContent = 'УДЕРЖАНИЕ КАНАЛА · ' + String(i).padStart(2,'0') + '%';
       if (i % 8 === 0) $('#finalCode').textContent = 'TRACK::' + hex(6);
       if (i >= 10 && i < 28) markChk(0, 'CHECK');
       else if (i >= 28 && i < 48) markChk(1, 'CHECK');
@@ -1644,17 +1601,11 @@ input, textarea { cursor:text !important; }
   addEventListener('keydown', e => {
     if (e.code === 'Space' && $('#scene0').classList.contains('active')) {
       e.preventDefault();
-      document.body.classList.remove('scene-red');
-      scene('#scene1');
-      initWarning();
+      beginIntrusionSequence();
     }
   });
   $('#scene0').addEventListener('click', () => {
-    if ($('#scene0').classList.contains('active')) {
-      document.body.classList.remove('scene-red');
-      scene('#scene1');
-      initWarning();
-    }
+    if ($('#scene0').classList.contains('active')) beginIntrusionSequence();
   });
 })();
 </script>
