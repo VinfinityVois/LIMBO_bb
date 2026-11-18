@@ -1607,25 +1607,20 @@
     .wc-slide.active .dossier-frame { min-height: 220px !important; }
   }
 </style>
-<link rel="stylesheet" href="css/navigation-unified.css">\n<script src="js/page-transitions.js" defer></script>\n</head>
+<link rel="stylesheet" href="css/navigation-unified.css">
+<script src="js/page-transitions.js" defer></script>
+</head>
 <body class="scene-page">
 <div class="noise"></div>
 <div class="scanlines"></div>
 <div class="vignette"></div>
 
-<header class="sc-topbar">
-  <div class="sc-brand">
-    <span class="live"></span>
-    <b>П.Р.И.Н.Ц.</b>
-    <span class="chip">ЛИМБО // СЦЕНА 01</span>
-  </div>
-  <div class="sc-meta">
-    <span>СЕКТОР: <b>#251-JP</b></span>
-    <span>ОПЕРАТОР: <b style="color:#c77dff">А-55 · Хэ Ючоу</b></span>
-  </div>
-  <nav class="sc-nav" aria-label="Основная навигация"><a href="terminal.html">ТЕРМИНАЛ</a><a href="dossier.html">ДОСЬЕ</a><a href="scenes.html" class="active" aria-current="page">АРХИВ СЦЕН</a><a href="employee.html">СОТРУДНИК</a><a href="polygon.html">ПОЛИГОН</a><span class="sec">SEC:LVL_5</span><span id="sys-clock">--:--:--</span></nav>
+<header class="sys-topbar">
+  <a href="terminal.html" class="brand">П.Р.И.Н.Ц.<span> // ЛИМБО</span></a>
+  <div class="status-pill"><span class="dot"></span> СЕКТОР RK-01 · СИНХРОНИЗИРОВАН</div>
+  <nav class="sys-nav" aria-label="Основная навигация"><a href="terminal.html">Терминал</a><a href="dossier.html">Досье</a><a href="scenes.html" class="active" aria-current="page">Архив сцен</a><a href="employee.html">Сотрудник</a><a href="polygon.html">Полигон</a></nav>
+  <div class="right-meta"><span class="sec-level">SEC:LVL_5</span><span>ОПЕРАТОР: A-55</span></div>
 </header>
-
 <section class="viewport" id="viewport">
   <img class="vp-img" id="mainCam" src="img/hram/h1.png" alt="" onerror="this.style.opacity='0.3'">
   <div class="vp-grad"></div>
