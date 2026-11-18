@@ -2,10 +2,10 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>П.Р.И.Н.Ц. // Личное дело A-00</title>
+<title>LIMBO</title>
   <link rel="stylesheet" crossorigin href="/assets/employee-CmXN7ADL.css">
   <link rel="stylesheet" crossorigin href="/assets/system-CWksBXI5.css">
-  <link rel="stylesheet" crossorigin href="/assets/mobile-performance-C9ugAoYG.css">
+  <link rel="stylesheet" crossorigin href="/assets/limbo-branding-CSSaIB86.css">
   <link rel="stylesheet" crossorigin href="/assets/navigation-unified-BtunpebB.css">
   <link rel="stylesheet" crossorigin href="/assets/responsive-adaptive-DGN5yxla.css">
 </head>
@@ -48,13 +48,13 @@
     <section class="data-panel lore-panel"><div class="panel-head"><div><small>// ИССЛЕДОВАНИЕ</small><h3>ИЗУЧЕНИЕ ЛОРА</h3></div><span>ARCHIVE</span></div><div class="lore-meter"><svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="68" class="meter-bg"/><circle cx="90" cy="90" r="68" id="loreDonut" class="meter-value"/></svg><div><b id="donutPercent">0%</b><small>ОТКРЫТО</small></div></div><div class="lore-breakdown"><span>Предметы <b id="breakItems">0</b></span><span>Подсказки <b id="breakClues">0</b></span><span>Сюжетные следы <b id="breakSecrets">0</b></span></div><div class="overview-lore-head"><span>КЛЮЧЕВЫЕ ОТКРЫТИЯ</span><small>RK-01 / ЛОР</small></div><div class="overview-lore-cards" id="overviewLoreCards"></div></section>
    </div>
    <div class="quick-collections">
-    <button data-section="medals"><span class="quick-symbol">✧</span><b>ДОСТИЖЕНИЯ</b><small id="quickMedals">0 ИЗ 6</small><i>→</i></button>
+    <button data-section="medals"><span class="quick-symbol">✧</span><b>ДОСТИЖЕНИЯ</b><small id="quickMedals">0 ИЗ 10</small><i>→</i></button>
     <button data-section="passes"><span class="quick-symbol">▤</span><b>ДОПУСКИ</b><small id="quickPasses">0 ИЗ 7</small><i>→</i></button>
     <button data-section="monsters"><span class="quick-symbol">♜</span><b>БЕСТИАРИЙ</b><small id="quickMonsters">0 ИЗ 4</small><i>→</i></button>
     <button data-section="items"><span class="quick-symbol">◇</span><b>ПРЕДМЕТЫ</b><small id="quickItems">0 ОБНАРУЖЕНО</small><i>→</i></button>
    </div>
   </section>
-  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>ДОСТИЖЕНИЯ</h2><p>Отметки о важных событиях и важных этапах исследования сектора.</p></div><span class="section-count" id="medalCount">0 / 6</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
+  <section class="collection-section" id="section-medals" hidden><div class="section-heading"><div><small>// ACHIEVEMENT REGISTER</small><h2>ДОСТИЖЕНИЯ</h2><p>Десять глав истории. Карточка открывается после завершения соответствующей главы.</p></div><span class="section-count" id="medalCount">0 / 10</span></div><div class="collection-grid medal-grid" id="medalGrid"></div></section>
   <section class="collection-section" id="section-passes" hidden><div class="section-heading"><div><small>// SECURITY CLEARANCE</small><h2>КАРТЫ ДОПУСКА</h2><p>Оценки за прохождение сектора и пропуска, полученные в симуляции.</p></div><span class="section-count" id="passCount">0 / 10</span></div><div class="subsection-title">ОЦЕНКИ ПРОХОЖДЕНИЯ <span>F — S</span></div><div class="pass-grid" id="gradeGrid"></div><div class="subsection-title">ПРОПУСКИ СИМУЛЯЦИИ <span>RK / CAMPAIGN</span></div><div class="pass-grid sim-pass-grid" id="simPassGrid"></div></section>
   <section class="collection-section" id="section-characters" hidden><div class="section-heading"><div><small>// PERSONAL CHARMS</small><h2>БРЕЛОКИ И КАРТОЧКИ</h2><p>Коллекционные карточки персонажей и сотрудников. Неоткрытые позиции ждут появления в истории.</p></div><span class="section-count" id="charmCount">0 / 6</span></div><div class="charm-grid" id="charmGrid"></div></section>
   <section class="collection-section" id="section-monsters" hidden><div class="section-heading"><div><small>// ENTITY DATABASE</small><h2>БЕСТИАРИЙ</h2><p>Зафиксированные формы, поведенческие особенности и стадии контакта.</p></div><span class="section-count" id="monsterCount">0 / 4</span></div><div class="creature-grid" id="creatureGrid"></div></section>
@@ -72,14 +72,8 @@ const flags=state.flags||{},inventory=Array.isArray(state.inventory)?state.inven
 const latestResults=archive.results&&typeof archive.results==='object'?Object.entries(archive.results):[],runs=Array.isArray(archive.runs)?archive.runs:latestResults.map(([sectorId,r])=>({...r,sectorId,legacy:true})),sectorDone=runs.length,sectorCount=Array.isArray(archive.completedSectors)?archive.completedSectors.length:latestResults.length;
 const historicalItems=new Set(runs.flatMap(r=>r.items||[])),historicalStudied=new Set(runs.flatMap(r=>r.studiedItems||[])),historicalClues=new Set([...runs.flatMap(r=>r.clueNames||[]),...(Array.isArray(personalNotes)?personalNotes.map(n=>n.flag):[])]),personalNoteMap=new Map((Array.isArray(personalNotes)?personalNotes:[]).map(n=>[n.flag,n])),historicalSecrets=new Set(runs.flatMap(r=>r.secretNames||[])),historicalEncounters=new Set(runs.flatMap(r=>r.encounters||[]));
 const collected=(...ids)=>ids.some(id=>!!(flags['collected_'+id]||flags['took_'+id]||flags['crafted_'+id]||inventory.includes(id)||dropped.some(x=>x&&x.id===id)||historicalItems.has(id)));
-const medals=[
-{name:'ПЕРВЫЙ ПОРОГ',sub:'Вход в симуляцию',desc:'Зафиксировано первое посещение территории рёкана.',open:visited.length>0,icon:'⌂',condition:'Посетить первую локацию'},
-{name:'ОСКОЛКИ ПАМЯТИ',sub:'Собрать отражение',desc:'Собрать зеркальные фрагменты и восстановить линзу.',open:collected('mirror_lens')||flags.crafted_mirror_lens,icon:'◇',condition:'Создать зеркальную линзу'},
-{name:'СОБРАННЫЙ КЛЮЧ',sub:'Доступ к генкану',desc:'Соединить две половины ключа в единый предмет.',open:collected('ryokan_key','key')||flags.door_genkan_open,icon:'⚿',condition:'Собрать ключ рёкана'},
-{name:'СЛЕД ДЗЁРОГУМО',sub:'Ёкай-паук · 絡新婦',desc:'Встретить Дзёрогумо, узнать её историю и повлиять на исход контакта.',open:!!(flags.spider_story_heard||flags.spider_released||flags.spider_defeated),icon:'✳',condition:'Завершить сюжетную встречу'},
-{name:'СЛЕД НАБЛЮДАТЕЛЯ',sub:'Услышать присутствие',desc:'Зафиксировать шаги над потолком.',open:!!flags.heard_steps,icon:'◉',condition:'Услышать шаги'},
-{name:'ВОЗВРАЩЕНИЕ',sub:'Завершить сектор',desc:'Получить итоговый отчёт по сектору RK-01.',open:sectorDone>0,icon:'↗',condition:'Завершить сектор'}
-];
+const isChapterDone=i=>localStorage.getItem('limbo_chapter_done_'+i)==='1'||(i>=1&&i<=3&&(localStorage.getItem('limbo_scene_progress_done_'+i)==='1'||Number(localStorage.getItem('limbo_scene_progress')||0)>=i));
+const chapters=Array.from({length:10},(_,i)=>({name:'ГЛАВА '+String(i).padStart(2,'0'),sub:'CHAPTER RECORD / CH-'+String(i).padStart(2,'0'),desc:'Архивная отметка о завершении главы '+String(i).padStart(2,'0')+'. Изображение и запись становятся доступными после завершения соответствующей главы.',open:isChapterDone(i),image:'assets/game/items/achivment/ch'+i+(isChapterDone(i)?'':'(b)')+'.png',condition:'Завершить главу '+String(i).padStart(2,'0')}));
 const grades=[['F','assets/game/items/F.png'],['E','assets/game/items/Е.png'],['D','assets/game/items/D.png'],['C','assets/game/items/С.png'],['B','assets/game/items/В.png'],['A','assets/game/items/А.png'],['S','assets/game/items/S.png']];
 const bestScore=runs.reduce((best,r)=>Math.max(best,Number(r.score)||0),0),gradeThresholds=[0,40,52,68,82,92,98],gradeOpen=i=>runs.some(r=>r.grade===grades[i][0]||(!r.grade&&Number(r.score)>=gradeThresholds[i]&&(i===6?Number(r.score)<=100:Number(r.score)<gradeThresholds[i+1])));
 const passTier=Math.max(0,Math.min(3,Number(archive.passTier)||0)),cardTier=sectorDone?Math.max(0,Math.min(6,Number(archive.bestCardTier)||0)):0,hasRunCharmLedger=runs.length>0&&runs.every(r=>Array.isArray(r.charms)),ownedCharms=new Set(hasRunCharmLedger?runs.flatMap(r=>r.charms||[]):(Array.isArray(archive.charms)?archive.charms:[]));
@@ -164,8 +158,8 @@ function renderModalEntry(x,kind,list,index,direction=0){
 function openModal(x,kind,list,index){modal.classList.add('open');modal.setAttribute('aria-hidden','false');renderModalEntry(x,kind,list,index);}
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(!modal.classList.contains('open'))return;if(e.key==='ArrowRight')modal.querySelector('.entry-next:not(:disabled)')?.click();if(e.key==='ArrowLeft')modal.querySelector('.entry-prev:not(:disabled)')?.click();});
-document.addEventListener('click',e=>{const h=e.target.closest('[data-overview-kind]');if(h){const kind=h.dataset.overviewKind,id=h.dataset.overviewId;if(kind==='creature'){const list=creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind})),index=list.findIndex(x=>x.id===id);if(index>=0)openModal(list[index],kind,list,index);}else if(kind==='item'){const index=items.findIndex(x=>x.id===id);if(index>=0)openModal(items[index],kind,items,index);}return;}const b=e.target.closest('.archive-tile');if(!b)return;const lists={medal:medals,grade:grades.map(([g,image],i)=>({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE',desc:'Оценка за результат прохождения сектора '+g+'.',image,open:gradeOpen(i),condition:['0–39 баллов','40–51 балл','52–67 баллов','68–81 балл','82–91 балл','92–97 баллов','98–100 баллов'][i],outcome:'Награда открывается после завершения сектора с результатом в соответствующем диапазоне. Оценка S — высший результат.'})),sim:simPasses,charm:charms,creature:creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind})),item:items,lore};const kind=b.dataset.kind,index=Number(b.dataset.index),list=lists[kind],x=list?.[index];if(x)openModal(x,kind,list,index);});
-renderGrid('medalGrid',medals,'medal');
+document.addEventListener('click',e=>{const h=e.target.closest('[data-overview-kind]');if(h){const kind=h.dataset.overviewKind,id=h.dataset.overviewId;if(kind==='creature'){const list=creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind})),index=list.findIndex(x=>x.id===id);if(index>=0)openModal(list[index],kind,list,index);}else if(kind==='item'){const index=items.findIndex(x=>x.id===id);if(index>=0)openModal(items[index],kind,items,index);}return;}const b=e.target.closest('.archive-tile');if(!b)return;const lists={medal:chapters,grade:grades.map(([g,image],i)=>({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE',desc:'Оценка за результат прохождения сектора '+g+'.',image,open:gradeOpen(i),condition:['0–39 баллов','40–51 балл','52–67 баллов','68–81 балл','82–91 балл','92–97 баллов','98–100 баллов'][i],outcome:'Награда открывается после завершения сектора с результатом в соответствующем диапазоне. Оценка S — высший результат.'})),sim:simPasses,charm:charms,creature:creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind})),item:items,lore};const kind=b.dataset.kind,index=Number(b.dataset.index),list=lists[kind],x=list?.[index];if(x)openModal(x,kind,list,index);});
+renderGrid('medalGrid',chapters,'medal');
 $('gradeGrid').innerHTML=grades.map(([g,image],i)=>tile({name:'ОЦЕНКА '+g,sub:'SECTOR GRADE / '+g,open:gradeOpen(i),image,desc:'Оценка за результат прохождения сектора.',condition:['0–39 баллов','40–51 балл','52–67 баллов','68–81 балл','82–91 балл','92–97 баллов','98–100 баллов'][i]},'grade',i)).join('');
 renderGrid('simPassGrid',simPasses,'sim');renderGrid('charmGrid',charms,'charm');renderGrid('creatureGrid',creatures.map(x=>({...x,image:'assets/game/creatures/'+x.image,sub:x.kind,desc:x.desc} )),'creature');renderGrid('itemGrid',items,'item');renderGrid('loreGrid',lore,'lore');
  const overviewLoreEntries=[
@@ -175,7 +169,7 @@ renderGrid('simPassGrid',simPasses,'sim');renderGrid('charmGrid',charms,'charm')
  ];
  $('overviewLoreCards').innerHTML=overviewLoreEntries.map(x=>'<button type="button" class="overview-lore-card '+(x.open?'is-open':'is-locked')+'" data-overview-kind="'+x.kind+'" data-overview-id="'+x.id+'" aria-label="Открыть запись: '+x.name+'">'+img(x.image,x.name)+'<b>'+x.name+'</b><small>'+x.sub+'</small><i>'+(x.open?'ЗАПИСЬ ДОСТУПНА':'НЕ ИЗУЧЕНО')+'</i></button>').join('');
 // unlock conditions for grade images and medals are read-only; a first archive result can unlock F.
-const unlockedMedals=medals.filter(x=>x.open).length,unlockedMonsters=creatures.filter(x=>x.open).length,unlockedItems=items.filter(x=>x.open).length;
+const unlockedMedals=chapters.filter(x=>x.open).length,unlockedMonsters=creatures.filter(x=>x.open).length,unlockedItems=items.filter(x=>x.open).length;
 const openGrades=grades.filter((_,i)=>gradeOpen(i)).length,openPasses=simPasses.filter(x=>x.open).length,openCharms=charms.filter(x=>x.open).length;
 $('statSectors').textContent=String(sectorCount).padStart(2,'0');$('statLore').textContent=lorePct+'%';$('statCharms').textContent=openCharms+'/6';$('statMonsters').textContent=unlockedMonsters+'/4';
 const rank=Math.min(6,1+Math.floor((sectorDone*2+unlockedMedals+unlockedMonsters)/3));$('levelValue').textContent=String(rank).padStart(2,'0');$('levelRing').style.setProperty('--progress',(rank/6*100)+'%');$('rankName').textContent=['','НОВЫЙ ДОПУСК','СТАЖЁР','ОПЕРАТОР','ПОЛЕВОЙ АГЕНТ','СТАРШИЙ ОПЕРАТОР','ВЕТЕРАН СЕКТОРОВ'][rank];$('rankSub').textContent='ПРОГРЕСС СОХРАНЯЕТСЯ';
@@ -183,8 +177,8 @@ $('breakItems').textContent=unlockedItems;$('breakClues').textContent=cluesCount
 function cluesCount(){return clues.filter(([k])=>flags[k]||historicalClues.has(k)).length}
 $('donutPercent').textContent=lorePct+'%';$('loreDonut').style.strokeDasharray=(427*lorePct/100)+' 427';
 $('averageScore').innerHTML=(sectorDone?Math.round(Number(archive.averageScore)||0):'—')+'<small>/100</small>';
-$('quickMedals').textContent=unlockedMedals+' ИЗ 6';$('quickPasses').textContent=(openGrades+openPasses)+' ИЗ 10';$('quickMonsters').textContent=unlockedMonsters+' ИЗ 4';$('quickItems').textContent=unlockedItems+' ОБНАРУЖЕНО';
-$('medalCount').textContent=unlockedMedals+' / 6';$('passCount').textContent=(openGrades+openPasses)+' / 10';$('charmCount').textContent=openCharms+' / 6';$('monsterCount').textContent=unlockedMonsters+' / 4';$('itemCount').textContent=unlockedItems+' / '+items.length;$('loreCount').textContent=lore.filter(x=>x.open).length+' / '+lore.length;
+$('quickMedals').textContent=unlockedMedals+' ИЗ 10';$('quickPasses').textContent=(openGrades+openPasses)+' ИЗ 10';$('quickMonsters').textContent=unlockedMonsters+' ИЗ 4';$('quickItems').textContent=unlockedItems+' ОБНАРУЖЕНО';
+$('medalCount').textContent=unlockedMedals+' / 10';$('passCount').textContent=(openGrades+openPasses)+' / 10';$('charmCount').textContent=openCharms+' / 6';$('monsterCount').textContent=unlockedMonsters+' / 4';$('itemCount').textContent=unlockedItems+' / '+items.length;$('loreCount').textContent=lore.filter(x=>x.open).length+' / '+lore.length;
 const chronologicalRuns=runs.slice().sort((a,b)=>new Date(a.completedAt||0).getTime()-new Date(b.completedAt||0).getTime());
 const scores=chronologicalRuns.map(r=>Math.max(0,Math.min(100,Number(r.score)||0))),pts=scores.map((v,i)=>({x:scores.length===1?330:38+i*587/(scores.length-1),y:172-v*1.52,v}));
 $('runTimeline').innerHTML=chronologicalRuns.length?chronologicalRuns.slice().reverse().map((r,i)=>{const d=r.completedAt?new Date(r.completedAt):null;const date=d&&!Number.isNaN(d.getTime())?d.toLocaleString('ru-RU',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'ДАТА НЕ СОХРАНЕНА';return '<article class="run-entry"><span class="run-index">#'+String(chronologicalRuns.length-i).padStart(2,'0')+'</span><div class="run-main"><b>'+date+'</b><small>'+({clear:'КАНАЛ ОЧИЩЕН',bind:'СВЯЗЬ ПРИНЯТА',break:'ПЕРЕХОД ПРЕРВАН'}[r.ending]||'ИСХОД НЕ УКАЗАН')+' · '+(Number(r.collected)||0)+' ПРЕДМ. · '+(Number(r.clues)||0)+' ЗАПИСЕЙ</small></div><strong class="run-grade">'+(r.grade||'—')+'</strong><b class="run-score">'+(Number(r.score)||0)+'<small>/100</small></b></article>';}).join(''):'<div class="timeline-empty">АРХИВ ПРОХОЖДЕНИЙ ПОКА ПУСТ</div>';
@@ -192,4 +186,6 @@ if(pts.length){const d=pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed
 })();
 </script>
 <script src="js/mobile-navigation.js" defer></script>
+<script src="js/limbo-branding.js"></script>
+<script src="js/chapter-achievements.js"></script>
 </body></html>

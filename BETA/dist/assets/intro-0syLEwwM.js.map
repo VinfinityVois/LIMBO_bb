@@ -1,0 +1,1 @@
+{"version":3,"file":"intro-0syLEwwM.js","sources":["../../src/main-intro.ts"],"sourcesContent":["import { bootPage } from './core/boot';\r\nimport { bindAudioUnlock } from './core/audio';\r\n\r\nbootPage('intro');\r\nbindAudioUnlock();"],"names":["bootPage","bindAudioUnlock"],"mappings":"2KAGAA,EAAS,OAAO,EAChBC,EAAA"}

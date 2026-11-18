@@ -1,0 +1,2 @@
+import"./modulepreload-polyfill-B5Qt9EMX.js";/* empty css               *//* empty css                       *//* empty css                            */import{b as s,a as n,s as o}from"./audio-BoRzptx1.js";import{s as t,i}from"./progress-1CtWE_Jz.js";s("quiet");n();const e=3;window.LIMBO={sceneId:e,isDone:()=>i(e),markDone:()=>{t(e),o.init(),o.success()}};i(e)&&window.dispatchEvent(new CustomEvent("limbo:scene-already-done",{detail:e}));
+//# sourceMappingURL=quiet-Dd8BmYbY.js.map

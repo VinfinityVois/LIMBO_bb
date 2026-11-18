@@ -1,0 +1,2 @@
+import"./modulepreload-polyfill-B5Qt9EMX.js";/* empty css               *//* empty css                       *//* empty css                           *//* empty css                            */import{b as n,a as s,s as e}from"./audio-BoRzptx1.js";import{s as t,i}from"./progress-1CtWE_Jz.js";n("ryokan");s();const o=1;window.LIMBO={sceneId:o,isDone:()=>i(o),markDone:()=>{t(o),e.init(),e.success()}};i(o)&&window.dispatchEvent(new CustomEvent("limbo:scene-already-done",{detail:o}));
+//# sourceMappingURL=ryokan-CLCrFJRM.js.map

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>П.Р.И.Н.Ц. // ЛИМБО — ТАКТИЧЕСКИЙ ТЕРМИНАЛ</title>
+<title>LIMBO</title>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=JetBrains+Mono:wght@100..900&family=Space+Grotesk:wght@300..900&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -257,11 +257,11 @@ tailwind.config = {
 @media(max-width:560px){#mission-intro{padding:10px}.intro-panel{width:100%;max-height:calc(100svh - 20px);padding:20px 16px}.intro-kicker{margin-top:20px}.intro-heading{font-size:29px}.intro-controls{grid-template-columns:repeat(2,1fr)}.intro-actions{align-items:stretch;flex-direction:column}.intro-footnote{max-width:none}.intro-btn-next{justify-content:center;width:100%}.intro-bottom-grid{gap:6px}.intro-threat{padding:9px}}
 @media(prefers-reduced-motion:reduce){.intro-panel,.intro-btn-next,.intro-btn-next span{transition:none!important}}
 </style>
-
-  <script type="module" crossorigin src="/assets/intro-CWspDXcQ.js"></script>
+
+  <script type="module" crossorigin src="/assets/intro-0syLEwwM.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/assets/audio-BoRzptx1.js">
-  <link rel="stylesheet" crossorigin href="/assets/mobile-performance-C9ugAoYG.css">
+  <link rel="stylesheet" crossorigin href="/assets/limbo-branding-CSSaIB86.css">
   <link rel="stylesheet" crossorigin href="/assets/responsive-adaptive-DGN5yxla.css">
 </head>
 <body class="bg-void-base font-body text-terminal-text h-screen w-screen flex flex-col selection:bg-neon-cyan selection:text-void-base select-none">
@@ -1222,6 +1222,7 @@ tailwind.config = {
   function triggerVictory() {
     if (state.escaped) return;
     state.escaped = true;
+    try { localStorage.setItem('limbo_chapter_done_0', '1'); } catch (error) {}
     sfx.playVictory();
 
     // Calculate stats
@@ -1574,5 +1575,7 @@ tailwind.config = {
 })();
 </script>
 <script src="js/mobile-navigation.js" defer></script>
+<script src="js/limbo-branding.js"></script>
+<script src="js/chapter-achievements.js"></script>
 </body>
 </html>
