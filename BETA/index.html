@@ -999,13 +999,22 @@ body.breach-mode:after{
       <div class="capture-readout"><span>SYNC ERROR</span><b id="captureError">HIGH</b></div>
     </div>
     <div class="capture-instruction"><i></i><span id="captureInstruction">Переместите указатель в центральное ядро</span></div>
-    <div class="align-vortex" id="alignVortex">
+    <div class="align-vortex" id="alignVortex" aria-label="Радар захвата цели">
       <div class="av-ring r1"></div>
       <div class="av-ring r2"></div>
       <div class="av-ring r3"></div>
       <div class="av-ring r4"></div>
       <div class="av-core" id="alignCore"></div>
       <div class="av-reticle" id="alignReticle"></div>
+      <div class="capture-bearing capture-bearing-top">000°</div>
+      <div class="capture-bearing capture-bearing-right">090°</div>
+      <div class="capture-bearing capture-bearing-bottom">180°</div>
+      <div class="capture-bearing capture-bearing-left">270°</div>
+    </div>
+    <div class="capture-coordinates">
+      <span>AZ: <b id="captureAzimuth">184.22°</b></span>
+      <span>EL: <b id="captureElevation">32.80°</b></span>
+      <span>TC: <b id="captureTimecode">00:00:00:00</b></span>
     </div>
     <div class="final-code" id="finalCode">TRACK::------</div>
     <div class="final-title" id="finalTitle">ALIGN TARGET</div>
@@ -1014,6 +1023,10 @@ body.breach-mode:after{
     <div class="final-bar"><i id="finalBar"></i></div>
     <div class="final-percent" id="finalPercent">00%</div>
     <div class="align-hint" id="alignHint">TARGET ACQUISITION · WAITING FOR RETICLE CONVERGENCE</div>
+    <div class="capture-actions">
+      <button type="button" id="btn-lock-target" disabled>[ ЗАВЕРШИТЬ ЗАХВАТ ЦЕЛИ ]</button>
+      <button type="button" id="btn-reset-lock">[ АВАРИЙНЫЙ СБРОС КАНАЛА ]</button>
+    </div>
   </div>
 </section>
 <style>
@@ -1913,7 +1926,7 @@ body.breach-mode:after{
     await completeAuth();
   }
 
-  // ─── SCENE 4 — FINAL AUTH ───
+  // ─── SCENE 4 — TARGET ACQUISITION PROTOCOL ───
   const checkpoints = [
     'ENCRYPTION HANDSHAKE',
     'OPERATOR SIGNATURE',
@@ -1922,128 +1935,248 @@ body.breach-mode:after{
     'NODE AUTHORIZATION'
   ];
 
+  let captureRun = 0;
+  let captureLocked = false;
+  let captureProgress = 0;
+  let captureTargetProgress = 0;
+  let captureLockTimer = null;
+  let captureFrame = 0;
+  let captureStartedAt = 0;
+  let capturePointerActive = false;
+
   async function completeAuth() {
+    const run = ++captureRun;
+    captureLocked = false;
+    captureProgress = 0;
+    captureTargetProgress = 0;
+    captureStartedAt = performance.now();
+
     scene('#scene4');
-    $('#hudSec').textContent = 'TARGET ACQUISITION';
+    const hudSec = $('#hudSec');
+    if (hudSec) { hudSec.textContent = 'TARGET ACQUISITION'; hudSec.style.color = ''; }
     $('#finalTitle').textContent = 'ALIGN TARGET';
     $('#finalSub').textContent = 'RETICLE SEARCHING FOR CONVERGENCE';
     $('#finalBar').style.width = '0%';
+    $('#finalPercent').textContent = '00%';
     $('#finalCode').textContent = 'TRACK::' + hex(6);
 
     const cl = $('#checkpointList');
-    cl.innerHTML = '';
+    if (!cl) return;
+    cl.replaceChildren();
     checkpoints.forEach((name, i) => {
       const row = document.createElement('div');
       row.className = 'chk-row';
-      row.innerHTML = `<span class="chk-mark">◇</span><span class="chk-name">${name}</span><span class="chk-state">PENDING</span>`;
+      const mark = document.createElement('span');
+      mark.className = 'chk-mark'; mark.textContent = '◇';
+      const label = document.createElement('span');
+      label.className = 'chk-name'; label.textContent = name;
+      const state = document.createElement('span');
+      state.className = 'chk-state'; state.textContent = 'PENDING';
       row.id = 'chk' + i;
+      row.append(mark, label, state);
       cl.appendChild(row);
     });
 
-    // Capture begins immediately; no tutorial screen or extra confirmation.
     const stage = document.getElementById('alignStage');
-    if (stage) stage.hidden = false;
-    $('#captureTrack').textContent = 'TRK-' + hex(6);
-    $('#captureLock').textContent = 'SEARCHING';
-    $('#captureError').textContent = 'HIGH';
-    $('#captureInstruction').textContent = 'Переместите указатель к центральному ядру';
-
-    // ALIGN: reticle = cursor position inside vortex (1:1, no lag)
     const vortex = document.getElementById('alignVortex');
     const reticle = document.getElementById('alignReticle');
     const core = document.getElementById('alignCore');
-    let lockProgress = 0;
-    let aligned = false;
-    let lastX = 0.5, lastY = 0.5;
+    const lockButton = document.getElementById('btn-lock-target');
+    const resetButton = document.getElementById('btn-reset-lock');
+    if (stage) stage.hidden = false;
+    if (!vortex || !reticle || !lockButton || !resetButton) return;
 
-    const placeReticle = (nx, ny) => {
-      // nx,ny in 0..1 relative to vortex
-      if (!reticle || !vortex) return;
-      const x = nx * 100;
-      const y = ny * 100;
-      reticle.style.left = x + '%';
-      reticle.style.top = y + '%';
+    $('#captureTrack').textContent = 'TRK-' + hex(6);
+    $('#captureLock').textContent = 'SEARCHING';
+    $('#captureError').textContent = '100%';
+    $('#captureInstruction').textContent = 'Переместите прицел к центральному ядру и удерживайте';
+    $('#captureAzimuth').textContent = '184.22°';
+    $('#captureElevation').textContent = '32.80°';
+    $('#captureTimecode').textContent = '00:00:00:00';
+    $('#alignHint').textContent = 'TARGET ACQUISITION · ALIGN WITH CENTER';
+    lockButton.disabled = false;
+    lockButton.textContent = '[ ЗАВЕРШИТЬ ЗАХВАТ ЦЕЛИ ]';
+    resetButton.disabled = false;
+
+    const centerReticle = () => {
+      reticle.style.left = '50%';
+      reticle.style.top = '50%';
       reticle.style.transform = 'translate(-50%,-50%)';
-      const dist = Math.hypot(nx - 0.5, ny - 0.5);
-      // generous hit zone (~28% of radius)
-      aligned = dist < 0.18;
-      reticle.classList.toggle('aligned', aligned);
-      if (core) core.classList.toggle('locked', aligned);
-      const lock = document.getElementById('captureLock'), error = document.getElementById('captureError');
-      const instruction = document.getElementById('captureInstruction');
-      if (lock) { lock.textContent = aligned ? 'CONVERGING' : 'SEARCHING'; lock.classList.toggle('is-locked', aligned); }
-      if (error) error.textContent = Math.round(dist * 100) + '%';
-      if (instruction) instruction.textContent = aligned ? 'СИГНАЛ СОВМЕЩЁН · УДЕРЖИВАЙТЕ ПОЗИЦИЮ' : 'Переместите указатель к центральному ядру';
     };
-    placeReticle(0.5, 0.5);
-    aligned = false;
+    centerReticle();
 
-    const onMove = (e) => {
-      if (!vortex) return;
+    const getMetrics = () => {
       const r = vortex.getBoundingClientRect();
-      const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
-      const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
-      lastX = nx; lastY = ny;
-      placeReticle(nx, ny);
+      const side = Math.min(r.width, r.height);
+      return { rect:r, cx:r.left+r.width/2, cy:r.top+r.height/2, radius:side/2 };
     };
-    const onTouch = (e) => {
-      if (!e.touches || !e.touches[0] || !vortex) return;
-      const t = e.touches[0];
-      const r = vortex.getBoundingClientRect();
-      const nx = clamp((t.clientX - r.left) / r.width, 0, 1);
-      const ny = clamp((t.clientY - r.top) / r.height, 0, 1);
-      placeReticle(nx, ny);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onTouch, { passive: true });
 
-    // easier: fill fast, drain slow, large zone
-    while (lockProgress < 100) {
-      if (aligned) {
-        lockProgress = Math.min(100, lockProgress + 1.35);
-        if (Math.random() > 0.9) tone(rand(700, 1100), 0.012, 'sine', 0.007);
-      } else {
-        lockProgress = Math.max(0, lockProgress - 0.42);
+    const setStatus = (progress, az, el, error) => {
+      const p = Math.round(progress);
+      $('#captureError').textContent = Math.round(error) + '%';
+      $('#captureAzimuth').textContent = az.toFixed(2) + '°';
+      $('#captureElevation').textContent = el.toFixed(2) + '°';
+      $('#finalPercent').textContent = String(p).padStart(2,'0') + '%';
+      $('#finalBar').style.width = p + '%';
+      $('#captureLock').textContent = captureLocked ? 'LOCKED' : (p >= 96 ? 'CONVERGING' : 'SEARCHING');
+      $('#captureLock').classList.toggle('is-locked', captureLocked || p >= 96);
+      $('#captureInstruction').textContent = captureLocked
+        ? 'ЦЕЛЬ ЗАФИКСИРОВАНА · КАНАЛ УДЕРЖИВАЕТСЯ'
+        : p >= 96 ? 'СИГНАЛ СОВМЕЩЁН · УДЕРЖИВАЙТЕ ПОЗИЦИЮ'
+        : 'СОВМЕСТИТЕ ПРИЦЕЛ С ЯДРОМ · ОШИБКА СИНХРОНИЗАЦИИ ' + Math.round(error) + '%';
+      $('#alignHint').textContent = captureLocked
+        ? 'LOCK CONFIRMED · SECURE CHANNEL ESTABLISHED'
+        : 'TARGET ACQUISITION · ' + (p >= 96 ? 'HOLD POSITION' : 'ALIGN WITH CENTER');
+      lockButton.disabled = captureLocked || p < 85;
+    };
+
+    const placeFromPointer = (clientX, clientY) => {
+      if (captureLocked || run !== captureRun) return;
+      const m = getMetrics();
+      const dx = clientX - m.cx;
+      const dy = clientY - m.cy;
+      const maxDist = Math.max(1, m.radius - 23);
+      const distance = Math.hypot(dx,dy);
+      const scale = distance > maxDist ? maxDist / distance : 1;
+      const x = dx * scale;
+      const y = dy * scale;
+      reticle.style.left = (m.rect.width/2 + x) + 'px';
+      reticle.style.top = (m.rect.height/2 + y) + 'px';
+
+      const normalizedDistance = Math.min(1, distance / maxDist);
+      const proximity = Math.max(0, 1 - normalizedDistance / .72);
+      captureTargetProgress = Math.round(proximity * 100);
+      const az = (Math.atan2(dy,dx) * 180 / Math.PI + 360) % 360;
+      const el = 90 - normalizedDistance * 90;
+      const syncError = 100 - captureTargetProgress;
+      reticle.classList.toggle('aligned', captureTargetProgress >= 96);
+      if (core) core.classList.toggle('locked', captureTargetProgress >= 96);
+      setStatus(captureTargetProgress, az, el, syncError);
+
+      if (captureTargetProgress >= 96) {
+        if (!captureLockTimer) {
+          captureLockTimer = window.setTimeout(() => {
+            captureLockTimer = null;
+            if (captureTargetProgress >= 96 && !captureLocked) finishTargetLock(run);
+          }, 650);
+        }
+      } else if (captureLockTimer) {
+        clearTimeout(captureLockTimer);
+        captureLockTimer = null;
       }
-      const i = Math.floor(lockProgress);
-      $('#finalBar').style.width = i + '%';
-      $('#finalPercent').textContent = String(i).padStart(2, '0') + '%';
-      const instruction = document.getElementById('captureInstruction');
-      if (instruction && i > 0 && aligned) instruction.textContent = 'УДЕРЖАНИЕ КАНАЛА · ' + String(i).padStart(2,'0') + '%';
-      if (i % 8 === 0) $('#finalCode').textContent = 'TRACK::' + hex(6);
-      if (i >= 10 && i < 28) markChk(0, 'CHECK');
-      else if (i >= 28 && i < 48) markChk(1, 'CHECK');
-      else if (i >= 48 && i < 68) markChk(2, 'CHECK');
-      else if (i >= 68 && i < 85) markChk(3, 'CHECK');
-      else if (i >= 85) markChk(4, 'CHECK');
-      await sleep(32);
+    };
+
+    const onPointerMove = e => {
+      if (e.pointerType === 'mouse' || capturePointerActive) placeFromPointer(e.clientX,e.clientY);
+    };
+    const onPointerDown = e => {
+      if (captureLocked) return;
+      capturePointerActive = true;
+      try { vortex.setPointerCapture(e.pointerId); } catch (_) {}
+      placeFromPointer(e.clientX,e.clientY);
+    };
+    const onPointerUp = e => {
+      capturePointerActive = false;
+      try { if (vortex.hasPointerCapture(e.pointerId)) vortex.releasePointerCapture(e.pointerId); } catch (_) {}
+    };
+    vortex.addEventListener('pointermove',onPointerMove);
+    vortex.addEventListener('pointerdown',onPointerDown);
+    vortex.addEventListener('pointerup',onPointerUp);
+    vortex.addEventListener('pointercancel',onPointerUp);
+
+    const tick = () => {
+      if (run !== captureRun || captureLocked) return;
+      captureProgress += (captureTargetProgress - captureProgress) * .16;
+      const p = Math.round(captureProgress);
+      $('#finalPercent').textContent = String(p).padStart(2,'0') + '%';
+      $('#finalBar').style.width = p + '%';
+      const elapsed = Math.max(0,performance.now()-captureStartedAt);
+      const hh = String(Math.floor(elapsed/3600000)).padStart(2,'0');
+      const mm = String(Math.floor(elapsed/60000)%60).padStart(2,'0');
+      const ss = String(Math.floor(elapsed/1000)%60).padStart(2,'0');
+      const cs = String(Math.floor(elapsed/10)%100).padStart(2,'0');
+      $('#captureTimecode').textContent = hh+':'+mm+':'+ss+':'+cs;
+      if (p >= 12) markChk(0,'CHECK');
+      if (p >= 32) markChk(1,'CHECK');
+      if (p >= 52) markChk(2,'CHECK');
+      if (p >= 72) markChk(3,'CHECK');
+      if (p >= 90) markChk(4,'CHECK');
+      captureFrame = requestAnimationFrame(tick);
+    };
+    if (captureFrame) cancelAnimationFrame(captureFrame);
+    captureFrame = requestAnimationFrame(tick);
+
+    lockButton.onclick = () => {
+      if (captureLocked || captureTargetProgress < 85) return;
+      finishTargetLock(run);
+    };
+    resetButton.onclick = () => {
+      if (captureLockTimer) clearTimeout(captureLockTimer);
+      captureLockTimer = null;
+      captureTargetProgress = 0;
+      captureProgress = 0;
+      capturePointerActive = false;
+      centerReticle();
+      reticle.classList.remove('aligned');
+      if (core) core.classList.remove('locked');
+      $('#captureLock').textContent = 'SEARCHING';
+      $('#captureLock').classList.remove('is-locked');
+      $('#captureError').textContent = '100%';
+      $('#captureAzimuth').textContent = '184.22°';
+      $('#captureElevation').textContent = '32.80°';
+      $('#captureInstruction').textContent = 'КАНАЛ СБРОШЕН · ПОВТОРИТЕ СОВМЕЩЕНИЕ';
+      $('#finalTitle').textContent = 'ALIGN TARGET';
+      $('#finalSub').textContent = 'RETICLE SEARCHING FOR CONVERGENCE';
+      $('#finalPercent').textContent = '00%';
+      $('#finalBar').style.width = '0%';
+      $('#alignHint').textContent = 'CHANNEL RESET · ALIGN WITH CENTER';
+      lockButton.disabled = true;
+      lockButton.textContent = '[ ЗАВЕРШИТЬ ЗАХВАТ ЦЕЛИ ]';
+      checkpoints.forEach((_,i) => {
+        const row = document.getElementById('chk'+i);
+        if (row) { row.querySelector('.chk-mark').textContent='◇'; row.querySelector('.chk-state').textContent='PENDING'; }
+      });
+    };
+
+    function finishTargetLock(expectedRun) {
+      if (captureLocked || expectedRun !== captureRun) return;
+      captureLocked = true;
+      if (captureLockTimer) clearTimeout(captureLockTimer);
+      captureLockTimer = null;
+      if (captureFrame) cancelAnimationFrame(captureFrame);
+      captureProgress = 100;
+      captureTargetProgress = 100;
+      reticle.style.left = '50%'; reticle.style.top = '50%';
+      reticle.classList.add('aligned');
+      if (core) core.classList.add('locked');
+      $('#captureLock').textContent = 'LOCKED';
+      $('#captureLock').classList.add('is-locked');
+      $('#captureError').textContent = '0%';
+      $('#captureInstruction').textContent = 'ЦЕЛЬ ЗАФИКСИРОВАНА · ДВУСТОРОННИЙ КАНАЛ УСТАНОВЛЕН';
+      $('#finalBar').style.width = '100%';
+      $('#finalPercent').textContent = '100%';
+      $('#finalCode').textContent = 'TRACK::LOCKED';
+      $('#finalTitle').textContent = 'ЦЕЛЬ ЗАХВАЧЕНА';
+      $('#finalSub').textContent = 'SECURE BI-DIRECTIONAL LINK ESTABLISHED';
+      $('#alignHint').textContent = 'КАНАЛ ОТКРЫТ · АВТОРИЗАЦИЯ УСПЕШНА';
+      $('#hudSec').textContent = 'GRANTED';
+      $('#hudSec').style.color = 'var(--green)';
+      checkpoints.forEach((_,i) => markChk(i,'OK'));
+      lockButton.disabled = true;
+      lockButton.textContent = '✓ ЗАХВАТ ПОДТВЕРЖДЁН';
+      resetButton.disabled = true;
+      lockBeep();
+      scanSweep();
+      glitchBurst(1);
+      tone(523,.14,'sine',.045);
+      setTimeout(() => tone(659,.14,'sine',.045),130);
+      setTimeout(() => tone(784,.24,'sine',.05),260);
+      setTimeout(() => {
+        if (expectedRun !== captureRun) return;
+        try { sessionStorage.setItem('limbo_launch_authorized','1'); } catch (_) {}
+        window.location.href = 'intro.html';
+      },2200);
     }
-    window.removeEventListener('mousemove', onMove);
-    window.removeEventListener('touchmove', onTouch);
-    checkpoints.forEach((_, i) => markChk(i, 'OK'));
-
-    lockBeep();
-    $('#finalCode').textContent = 'TRACK::LOCKED';
-    $('#finalTitle').textContent = 'ЦЕЛЬ ЗАХВАЧЕНА';
-    $('#finalSub').textContent = 'ВНЕДРЕНИЕ ВИРУСА МО · ПЕРЕХОД В ПЕРИМЕТР';
-    $('#hudSec').textContent = 'GRANTED';
-    $('#hudSec').style.color = 'var(--green)';
-    if (core) core.classList.add('locked');
-    if (document.getElementById('alignHint'))
-      document.getElementById('alignHint').textContent = 'КАНАЛ ОТКРЫТ · ЗАГРУЗКА ПРОСТРАНСТВА…';
-
-    scanSweep();
-    glitchBurst(2);
-    tone(523, 0.14, 'sine', 0.05);
-    setTimeout(() => tone(659, 0.14, 'sine', 0.05), 130);
-    setTimeout(() => tone(784, 0.28, 'sine', 0.055), 260);
-
-    // immersion threat words + eyes feel via glitch
-    await sleep(1600);
-    // Successful operator authorization is required before entering the game.
-    try { sessionStorage.setItem('limbo_launch_authorized', '1'); } catch (error) {}
-    try { window.location.href = 'intro.html'; }
-    catch { /* preview */ }
   }
 
   function markChk(i, state) {
@@ -2646,6 +2779,26 @@ close?.addEventListener('click',hide);modal?.addEventListener('click',e=>{if(e.t
  #scene3 .form-foot{font-size:6px!important}
 }
 @media(prefers-reduced-motion:reduce){#scene3 .input-shell,#scene3 .cyber-btn.enter-btn{transition:none!important}}
+</style>
+
+
+<style id="capture-protocol-controls">
+#scene4 .align-vortex{touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+#scene4 .capture-bearing{position:absolute;z-index:4;color:rgba(115,198,211,.58);font:8px 'Share Tech Mono',monospace;pointer-events:none}
+#scene4 .capture-bearing-top{top:2%;left:50%;transform:translateX(-50%)}
+#scene4 .capture-bearing-right{right:2%;top:50%;transform:translateY(-50%)}
+#scene4 .capture-bearing-bottom{bottom:2%;left:50%;transform:translateX(-50%)}
+#scene4 .capture-bearing-left{left:2%;top:50%;transform:translateY(-50%)}
+#scene4 .capture-coordinates{width:min(320px,88vw);display:flex;justify-content:space-between;gap:8px;margin:-2px auto 10px;padding:7px 10px;border:1px solid rgba(90,174,190,.16);background:rgba(0,5,12,.5);color:#668d99;font:8px 'Share Tech Mono',monospace;letter-spacing:.08em}
+#scene4 .capture-coordinates b{color:#b3e8ed;font-weight:600}
+#scene4 .capture-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:14px}
+#scene4 .capture-actions button{min-height:42px;padding:10px 16px;border:1px solid rgba(72,207,220,.62);border-radius:3px;background:rgba(0,181,204,.09);color:#a6edf1;font:700 9px 'Share Tech Mono',monospace;letter-spacing:.1em;transition:background .18s,border-color .18s,color .18s}
+#scene4 .capture-actions button:hover:not(:disabled){background:rgba(0,181,204,.2);border-color:#8cf5f6;color:#fff}
+#scene4 .capture-actions button:disabled{opacity:.38;cursor:not-allowed}
+#scene4 #btn-reset-lock{border-color:rgba(202,91,106,.42);background:rgba(100,20,35,.09);color:#cf8994}
+#scene4 #btn-reset-lock:hover:not(:disabled){border-color:#e28a98;background:rgba(120,24,42,.2);color:#ffd6dc}
+@media(max-width:700px){#scene4 .capture-coordinates{width:min(290px,90vw);font-size:7px}#scene4 .capture-actions{width:100%;gap:7px}#scene4 .capture-actions button{width:100%;min-height:44px;font-size:8px}}
+@media(prefers-reduced-motion:reduce){#scene4 .capture-actions button{transition:none}}
 </style>
 
 </body>
