@@ -34,7 +34,10 @@
     if (href === current) a.setAttribute('aria-current','page');
     menu.appendChild(a);
   });
-  document.body.append(button,menu);
+  const header = document.querySelector('header');
+  if (header) header.appendChild(button);
+  else document.body.appendChild(button);
+  document.body.appendChild(menu);
   const close = () => {
     button.setAttribute('aria-expanded','false');
     menu.classList.remove('is-open');
