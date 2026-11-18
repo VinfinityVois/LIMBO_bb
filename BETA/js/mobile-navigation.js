@@ -1,16 +1,10 @@
 (() => {
   const links = [
-    ['index.html','П.Р.И.Н.Ц. · Вход'],
-    ['intro.html','Погружение · SUB-04'],
-    ['sim.html','Погружение в сектор'],
+    ['index.html','Камеры рекурсии'],
     ['scenes.html','Архив сцен'],
-    ['terminal.html','Камеры рекурсии'],
-    ['dossier.html','Досье субъектов'],
     ['employee.html','Профиль сотрудника'],
-    ['polygon.html','Полигон'],
-    ['scene-ryokan.html','Сцена · Рёкан'],
-    ['scene-shanghai.html','Сцена · Шанхай'],
-    ['scene-quiet.html','Сцена · Тишина']
+    ['dossier.html','Досье субъектов'],
+    ['polygon.html','Полигон']
   ];
   const current = location.pathname.split('/').pop() || 'index.html';
   if (document.querySelector('.limbo-mobile-menu-button')) return;
