@@ -556,14 +556,8 @@ tailwind.config = {
 
 <script>
 (() => {
-  // Do not allow a direct/unconfirmed game launch. Authorization is granted
-  // by the terminal confirmation or by the completed operator-auth sequence.
-  let launchAuthorized = false;
-  try { launchAuthorized = sessionStorage.getItem('limbo_launch_authorized') === '1'; } catch (error) {}
-  if (!launchAuthorized) {
-    window.location.replace('terminal.html?launch=required');
-    return;
-  }
+  // The mission can be opened directly during development and from the terminal.
+  // Keep the authorization flag when present, but do not redirect away from the game.
 
   const LORE = {
     '0x7F': 'Фрагмент журнала Смотрящего. Сбой коллизий, Шанхай.',
