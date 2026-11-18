@@ -1308,51 +1308,23 @@ tailwind.config = {
     requestAnimationFrame(loop);
   }
 
-  // ═══ MISSION INTRO ═══
-  let introStepIdx = 0;
-  const introSteps = document.querySelectorAll('.intro-step');
-  const introProgress = document.querySelectorAll('#introProgress span');
-
-  function updateIntroUI() {
-    introSteps.forEach((s, i) => s.classList.toggle('active', i === introStepIdx));
-    introProgress.forEach((p, i) => {
-      p.classList.remove('done', 'current');
-      if (i < introStepIdx) p.classList.add('done');
-      else if (i === introStepIdx) p.classList.add('current');
-    });
-    const nextBtn = $('intro-next');
-    if (introStepIdx === introSteps.length - 1) {
-      nextBtn.textContent = 'Начать внедрение ✓';
-    } else {
-      nextBtn.textContent = 'Далее →';
-    }
-  }
-
-  function nextIntroStep() {
-    if (introStepIdx >= introSteps.length - 1) {
-      closeIntro();
-      return;
-    }
-    introStepIdx++;
-    updateIntroUI();
-  }
-
+  // ═══ SINGLE-SCREEN MISSION BRIEFING ═══
   function closeIntro() {
     const intro = $('mission-intro');
-    if (!intro) return;
+    if (!intro || intro.dataset.closing === '1') return;
+    intro.dataset.closing = '1';
     intro.classList.add('hide');
     intro.classList.remove('show');
     setTimeout(() => {
       intro.style.display = 'none';
       state.introDone = true;
-      missionStats.startTime = Date.now(); // Start timer
-    }, 650);
+      missionStats.startTime = Date.now();
+    }, 560);
   }
-
-  $('intro-next').onclick = nextIntroStep;
-  $('intro-skip').onclick = closeIntro;
-  updateIntroUI();
-
+  const introStart = $('intro-next');
+  if (introStart) introStart.addEventListener('click', closeIntro);
+  const introSkip = $('intro-skip');
+  if (introSkip) introSkip.addEventListener('click', closeIntro);
   // BIOS boot sequence
   (function bootBios() {
     const boot = document.getElementById('bios-boot');
