@@ -405,6 +405,81 @@ body.breach-mode:after{
   <link rel="stylesheet" href="css/responsive-adaptive.css">
 <link rel="stylesheet" href="css/mobile-performance.css">
 <link rel="stylesheet" href="css/limbo-branding.css">
+
+<style id="breach-cyber-redesign">
+#scene1{--br-red:#ff1744;--br-coral:#ff5370;--br-cyan:#00eaff;--br-bg:#080205;position:relative;isolation:isolate;overflow:hidden;background:#070204}
+#scene1 .breach-layout{position:relative;z-index:3;width:min(1580px,100%);min-height:100%;margin:auto;padding:clamp(14px,2.2vw,34px);display:grid;grid-template-columns:minmax(0,1.18fr) minmax(300px,.82fr);gap:clamp(14px,2vw,30px);align-items:stretch}
+#scene1 .breach-terminal,#scene1 .breach-diagnostics{position:relative;min-width:0;overflow:hidden;background:linear-gradient(145deg,rgba(19,7,13,.94),rgba(7,3,7,.97));border:1px solid rgba(255,31,75,.32);box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 35px rgba(255,23,68,.09),inset 0 0 28px rgba(255,23,68,.035);backdrop-filter:blur(13px);padding:clamp(16px,2vw,28px)}
+#scene1 .breach-corners{position:absolute;inset:0;pointer-events:none;background:linear-gradient(var(--br-red),var(--br-red)) left top/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left top/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right top/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right top/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left bottom/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) left bottom/2px 17px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right bottom/17px 2px no-repeat,linear-gradient(var(--br-red),var(--br-red)) right bottom/2px 17px no-repeat;opacity:.75}
+#scene1 .breach-topline{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-bottom:13px;border-bottom:1px solid rgba(255,31,75,.22);font:10px/1.4 'Share Tech Mono',monospace;letter-spacing:.1em;color:#a99aa1}
+#scene1 .breach-live{color:#ff8b9c;font-weight:700}#scene1 .breach-live i,#scene1 .breach-console-head b i,#scene1 .breach-diagnostics-head b i{display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#ff1744;box-shadow:0 0 10px #ff1744}
+#scene1 .breach-isolation b{color:#ff8b9c}#scene1 .breach-node b{padding:3px 7px;color:#ff9aaa;background:rgba(100,0,25,.35);border:1px solid rgba(255,70,100,.35)}
+#scene1 .breach-incident{text-align:center;padding:clamp(16px,2.6vh,30px) 0 18px}
+#scene1 .breach-severity{display:flex;justify-content:space-between;gap:10px;color:#ff8495;font:10px 'Share Tech Mono',monospace;letter-spacing:.12em}
+#scene1 .breach-severity b{color:#ff4966}
+#scene1 .breach-emblem{position:relative;display:grid;place-items:center;width:48px;height:48px;margin:24px auto 19px;background:linear-gradient(145deg,#ff3155,#b90030);border:1px solid #ff9aaa;transform:rotate(45deg);box-shadow:0 0 28px rgba(255,23,68,.48)}
+#scene1 .breach-emblem span{transform:rotate(-45deg);color:#160207;font:900 29px 'Orbitron',sans-serif}
+#scene1 .breach-emblem i{position:absolute;inset:-9px;border:1px solid rgba(255,83,112,.5);animation:breachHalo 3.6s ease-in-out infinite}
+@keyframes breachHalo{0%,100%{transform:scale(.92);opacity:.25}50%{transform:scale(1.12);opacity:.75}}
+#scene1 .warning-title{margin:0 auto 10px;color:#fff;font:800 clamp(23px,3vw,39px)/1.15 'Orbitron','Space Grotesk',sans-serif;letter-spacing:.035em;text-shadow:-1px 0 #00eaff,1px 0 #ff1744,0 0 18px rgba(255,23,68,.42);overflow-wrap:anywhere}
+#scene1 .warning-sub{max-width:620px;margin:auto;color:#d2c4c9;font:13px/1.7 'Space Grotesk',sans-serif;letter-spacing:.015em}
+#scene1 .warning-sub span{color:#9c8991}
+#scene1 .threat-matrix{display:none!important}
+#scene1 .breach-equalizer{padding:10px 12px;margin:0 0 17px;border:1px solid rgba(120,0,35,.65);border-radius:5px;background:rgba(0,0,0,.48)}
+#scene1 .breach-eq-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#9c858d;font:9px 'Share Tech Mono',monospace;letter-spacing:.1em}
+#scene1 .breach-eq-label b{color:#ff7288}
+#scene1 .breach-eq-bars{height:34px;display:flex;align-items:end;gap:4px;overflow:hidden}
+#scene1 .breach-eq-bars i{flex:1;min-width:2px;height:var(--bar-height,40%);transform-origin:bottom;background:linear-gradient(0deg,#a9002d,#ff1744 65%,#ff8192);border-radius:2px 2px 0 0;opacity:.85;animation:eqPulse var(--bar-speed,1.2s) ease-in-out infinite alternate}
+@keyframes eqPulse{from{transform:scaleY(.38);opacity:.52}to{transform:scaleY(1);opacity:1}}
+#scene1 .breach-threat{margin:0 0 14px}
+#scene1 .warning-meter-label{display:flex;justify-content:space-between;margin-bottom:7px;color:#ad9ca3;font:10px 'Share Tech Mono',monospace;letter-spacing:.1em}
+#scene1 .warning-meter-label b{color:#ff7187}
+#scene1 .warning-meter{height:7px;border:1px solid rgba(120,0,35,.8);border-radius:10px;background:#16070d;overflow:hidden}
+#scene1 .warning-meter i{display:block;width:12%;height:100%;background:linear-gradient(90deg,#a8002c,#ff1744,#ff9a58);box-shadow:0 0 12px #ff1744;transition:width .5s ease}
+#scene1 .breach-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:11px 12px;margin:0 0 14px;background:rgba(0,0,0,.35);border-block:1px solid rgba(120,0,35,.48);font:9px/1.5 'Share Tech Mono',monospace;color:#81727a}
+#scene1 .breach-meta span{min-width:0;overflow-wrap:anywhere}#scene1 .breach-meta b{display:block;margin-top:3px;color:#ff8b9c;font-size:10px}#scene1 .breach-meta b.red{color:#ff3458}
+#scene1 .breach-console{padding:10px 12px;margin-bottom:15px;background:rgba(0,0,0,.58);border:1px solid rgba(120,0,35,.6);border-radius:4px}
+#scene1 .breach-console-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:7px;margin-bottom:5px;border-bottom:1px solid rgba(120,0,35,.35);color:#ff8295;font:9px 'Share Tech Mono',monospace;letter-spacing:.12em}
+#scene1 .breach-console-head b{color:#b7a4ab;font-weight:400}
+#scene1 .warning-log{min-height:94px;max-height:124px;overflow:hidden;display:flex;flex-direction:column;gap:5px}
+#scene1 .warn-log-row{display:grid;grid-template-columns:22px minmax(0,1fr);gap:7px;font:10px/1.45 'Share Tech Mono',monospace;letter-spacing:.025em}
+#scene1 .warn-log-row .wl-tag{color:#ff4c6a;font-weight:700}#scene1 .warn-log-row.warn .wl-tag{color:#ffbd69}#scene1 .warn-log-row.sys .wl-tag{color:#00eaff}#scene1 .warn-log-row .wl-text{color:#c3b5bc;overflow-wrap:anywhere}
+#scene1 .breach-actions{margin-top:auto}
+#scene1 .breach-proceed{display:flex!important;align-items:center;justify-content:center;gap:14px;width:100%;min-height:52px;padding:13px 18px;border:1px solid rgba(255,62,94,.78)!important;border-radius:4px!important;background:rgba(255,23,68,.11)!important;color:#ff9bab!important;font:700 11px 'Share Tech Mono',monospace!important;letter-spacing:.12em;box-shadow:0 0 24px rgba(255,23,68,.12)!important}
+#scene1 .breach-proceed:hover{background:rgba(255,23,68,.2)!important;box-shadow:0 0 28px rgba(255,23,68,.25)!important}
+#scene1 .breach-proceed em{font-style:normal;font-size:19px}
+#scene1 .tiny-warning{margin:9px 0 0;color:#786971;text-align:center;font:9px/1.5 'Space Grotesk',sans-serif}
+#scene1 .breach-diagnostics{display:flex;flex-direction:column}
+#scene1 .breach-diagnostics-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:13px;border-bottom:1px solid rgba(255,31,75,.22);color:#e5d8dd;font:10px 'Share Tech Mono',monospace;letter-spacing:.08em}
+#scene1 .breach-diagnostics-head>span i{color:#ff5370;font-style:normal;font-size:16px;margin-right:6px}
+#scene1 .breach-diagnostics-head b{padding:4px 7px;border:1px solid rgba(255,23,68,.48);background:rgba(90,0,20,.28);color:#ff8295;font-size:9px}
+#scene1 .breach-hologram{position:relative;flex:1;min-height:340px;margin:16px 0 18px;display:grid;place-items:center;overflow:hidden;perspective:800px}
+#scene1 .holo-ring{position:absolute;border:1px dashed rgba(255,50,85,.35);border-radius:50%;aspect-ratio:1}
+#scene1 .holo-ring-a{width:min(72%,300px);animation:holoSpin 24s linear infinite}
+#scene1 .holo-ring-b{width:min(58%,240px);border-style:dotted;border-color:rgba(255,120,145,.42);animation:holoSpin 17s linear infinite reverse}
+@keyframes holoSpin{to{transform:rotate(360deg)}}
+#scene1 .holo-reticle{position:absolute;width:min(82%,350px);aspect-ratio:1;pointer-events:none}
+#scene1 .holo-reticle i{position:absolute;width:23px;height:23px;border-color:#ff4c6a;border-style:solid;opacity:.8}
+#scene1 .holo-reticle i:nth-child(1){top:0;left:0;border-width:2px 0 0 2px}#scene1 .holo-reticle i:nth-child(2){top:0;right:0;border-width:2px 2px 0 0}#scene1 .holo-reticle i:nth-child(3){bottom:0;left:0;border-width:0 0 2px 2px}#scene1 .holo-reticle i:nth-child(4){bottom:0;right:0;border-width:0 2px 2px 0}
+#scene1 .holo-sweep{position:absolute;width:min(63%,260px);aspect-ratio:1;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,23,68,.28),transparent 75deg,transparent 360deg);animation:holoSpin 5s linear infinite}
+#scene1 .holo-shield{position:relative;z-index:2;width:104px;height:104px;display:grid;place-items:center;transform:rotate(45deg);border:2px solid #ffb4c0;background:linear-gradient(140deg,#ff3158,#a9002d);box-shadow:0 0 42px rgba(255,23,68,.8),inset 0 0 22px rgba(255,255,255,.12);transition:transform .18s ease,filter .3s}
+#scene1 .holo-shield span{transform:rotate(-45deg);font:900 58px 'Orbitron',sans-serif;color:white;text-shadow:0 3px 12px #530014}
+#scene1 .holo-tag{position:absolute;z-index:4;display:flex;flex-direction:column;gap:4px;padding:8px 10px;border:1px solid rgba(130,0,35,.7);background:rgba(0,0,0,.68);backdrop-filter:blur(8px);color:#a99ba1;font:9px/1.4 'Share Tech Mono',monospace}
+#scene1 .holo-tag b{color:#ff8295}#scene1 .holo-tag i{color:#e4d5db;font-style:normal}
+#scene1 .holo-tag-top{top:5px;left:3px}#scene1 .holo-tag-bottom{right:3px;bottom:5px;text-align:right}
+#scene1 .breach-defense{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border:1px solid rgba(120,0,35,.55);background:rgba(0,0,0,.38);font:9px/1.5 'Share Tech Mono',monospace}
+#scene1 .breach-defense span{display:block;color:#9b8b92}#scene1 .breach-defense b{display:block;margin-top:3px;color:#ff879a;font-size:10px}#scene1 .breach-defense strong{color:#ff5370;font-size:16px}
+#scene1 .breach-hex{margin-top:10px;padding:10px;border:1px solid rgba(120,0,35,.45);background:rgba(0,0,0,.42);color:#8f8188;font:9px/1.6 'Share Tech Mono',monospace;overflow-wrap:anywhere}
+#scene1 .breach-hex b{color:#ff8498}
+#scene1 .breach-footnote{display:flex;flex-wrap:wrap;gap:7px 13px;margin-top:auto;padding-top:15px;color:#76656e;font:8px 'Share Tech Mono',monospace;letter-spacing:.05em}
+#scene1 .breach-footnote b{color:#bcaab1;font-weight:400}
+#scene1 .breach-particles{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.55}
+#scene1 .breach-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 150px rgba(0,0,0,.8),inset 0 0 60px rgba(255,0,45,.06)}
+@media(max-width:900px){#scene1 .breach-layout{grid-template-columns:minmax(0,1fr);max-width:720px}#scene1 .breach-diagnostics{min-height:420px}#scene1 .breach-hologram{min-height:310px}}
+@media(max-width:560px){#scene1 .breach-layout{padding:12px;gap:12px}#scene1 .breach-terminal,#scene1 .breach-diagnostics{padding:15px 13px}#scene1 .breach-topline{font-size:8px}#scene1 .breach-isolation{display:none}#scene1 .breach-severity{font-size:8px}#scene1 .breach-incident{padding:15px 0}#scene1 .breach-emblem{margin:18px auto 15px;width:42px;height:42px}#scene1 .warning-title{font-size:clamp(20px,6vw,28px)}#scene1 .warning-sub{font-size:12px}#scene1 .breach-meta{grid-template-columns:repeat(2,minmax(0,1fr));font-size:8px}#scene1 .warning-log{min-height:92px;max-height:112px}#scene1 .warn-log-row{font-size:9px}#scene1 .breach-proceed{font-size:10px!important;min-height:50px}#scene1 .breach-diagnostics{min-height:390px}#scene1 .breach-hologram{min-height:290px}#scene1 .holo-tag{font-size:8px;padding:6px 7px}}
+@media(prefers-reduced-motion:reduce){#scene1 .breach-emblem i,#scene1 .holo-ring,#scene1 .holo-sweep,#scene1 .breach-eq-bars i{animation:none!important}#scene1 .breach-particles{display:none}}
+</style>
+
 </head>
 <body class="breach-mode">
 <!-- ═══ OVERLAYS ═══ -->
@@ -528,56 +603,74 @@ body.breach-mode:after{
 <!-- ═══════════════════════════════════════════
      SCENE 1 — INTRUSION WARNING
      ═══════════════════════════════════════════ -->
-<section class="scene" id="scene1">
-  <div class="breach-container">
-    <div class="breach-bg" id="breachBg"></div>
-    <div class="warning-frame">
-      <div class="warning-top">
-        <span class="blink-red">●</span> SYSTEM INTEGRITY EVENT · SEVERITY 5
-        <b id="warningCode">0x7F-A91</b>
+<section class="scene breach-scene" id="scene1">
+  <canvas class="breach-particles" id="breachParticles" aria-hidden="true"></canvas>
+  <div class="breach-vignette" aria-hidden="true"></div>
+  <div class="breach-layout">
+    <section class="breach-terminal" aria-label="Предупреждение системы безопасности">
+      <div class="breach-corners" aria-hidden="true"></div>
+      <div class="breach-topline">
+        <span class="breach-live"><i></i> GRID.WATCHDOG // BREACH PROTOCOL</span>
+        <span class="breach-isolation">ISOLATION BUFFER: <b>ENFORCED</b></span>
+        <span class="breach-node">NODE <b id="warningCode">0x7F-A91</b></span>
       </div>
 
-      <div class="warning-scanline"></div>
-
-      <div class="warning-icon-wrap">
-        <div class="warning-icon"><span>!</span></div>
-        <div class="warning-icon-pulse"></div>
+      <div class="breach-incident">
+        <div class="breach-severity"><i></i> SYSTEM INTEGRITY EVENT · SEVERITY 5 <b>0xFB-3FA</b></div>
+        <div class="breach-emblem" aria-hidden="true"><span>!</span><i></i></div>
+        <h1 class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</h1>
+        <p class="warning-sub" id="warningSub">Обнаружен внешний сеанс связи с защищённым узлом.<br><span>Автоматическая блокировка активирована.</span></p>
       </div>
 
-      <div class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</div>
-      <div class="warning-sub" id="warningSub">
-        Обнаружен внешний сеанс связи с защищённым узлом.<br>
-        Автоматическая блокировка активирована.
+      <div class="breach-equalizer" aria-label="Активность перехваченного сигнала">
+        <div class="breach-eq-label"><span>INTERCEPTED SIGNAL / LIVE FEED</span><b id="breachSignalState">CARRIER DETECTED</b></div>
+        <div class="breach-eq-bars" id="breachEqBars"></div>
       </div>
 
-      <div class="threat-matrix" id="threatMatrix"></div>
-
-      <div class="warning-meter-wrap">
-        <div class="warning-meter-label">
-          <span>THREAT ESCALATION</span>
-          <b id="threatPercent">0%</b>
-        </div>
+      <div class="warning-meter-wrap breach-threat">
+        <div class="warning-meter-label"><span>THREAT ESCALATION</span><b id="threatPercent">12%</b></div>
         <div class="warning-meter"><i id="warningMeter"></i></div>
       </div>
 
-      <div class="warning-meta">
+      <div class="warning-meta breach-meta">
         <span>TRACE ID: <b id="traceId">---</b></span>
-        <span>THREAT: <b class="red">CRITICAL</b></span>
+        <span>THREAT: <b class="red" id="breachThreatState">CRITICAL</b></span>
         <span>AUTH: <b>REQUIRED</b></span>
         <span>ATTEMPTS: <b id="intrusionCount">00</b></span>
       </div>
 
-      <div class="warning-log" id="warningLog"></div>
-
-      <button class="cyber-btn danger big" id="btnProceed" data-cursor>
-        <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span>
-        <em>→</em>
-        <span class="btn-glow"></span>
-      </button>
-      <div class="tiny-warning">
-        Продолжая, оператор подтверждает запуск интерактивного режима восстановления.
+      <div class="breach-console">
+        <div class="breach-console-head"><span>LIVE CONSOLE LOG</span><b><i></i> STREAMING</b></div>
+        <div class="warning-log" id="warningLog" aria-live="polite"></div>
       </div>
-    </div>
+
+      <div class="breach-actions">
+        <button class="cyber-btn danger big breach-proceed" id="btnProceed" data-cursor>
+          <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span><em>→</em><span class="btn-glow"></span>
+        </button>
+        <p class="tiny-warning">Продолжая, оператор подтверждает запуск интерактивного режима восстановления.</p>
+      </div>
+    </section>
+
+    <aside class="breach-diagnostics" aria-label="Диагностика угрозы">
+      <div class="breach-diagnostics-head">
+        <span><i>◇</i> REALTIME THREAT VISUALIZER</span><b><i></i> LIVE SCAN</b>
+      </div>
+      <div class="breach-hologram" id="breachHologram">
+        <div class="holo-ring holo-ring-a"></div><div class="holo-ring holo-ring-b"></div>
+        <div class="holo-reticle"><i></i><i></i><i></i><i></i></div>
+        <div class="holo-sweep"></div>
+        <div class="holo-shield" id="breachShield"><span>!</span></div>
+        <div class="holo-tag holo-tag-top"><b>RADAR: ACTIVE</b><span>BEAM: AZIMUTH <i id="breachAzimuth">044.1°</i></span><span>SIGNAL: <i id="breachFrequency">890 MHz</i></span></div>
+        <div class="holo-tag holo-tag-bottom"><b>NODE STATUS</b><span>INTEGRITY: <i id="breachIntegrity">74%</i></span><span>QUARANTINE: LEVEL 5</span></div>
+      </div>
+      <div class="breach-defense">
+        <div><span>DEFENSE BARRIER STATUS</span><b id="breachDefenseLabel">ANOMALY MITIGATION: ACTIVE</b></div>
+        <strong id="breachDefenseValue">74.2%</strong>
+      </div>
+      <div class="breach-hex"><b>0x002A:</b> <span id="breachHex">4E 45 53 41 4E 4B 54 53 49 4F 4E 49 52 4F 56 41</span></div>
+      <div class="breach-footnote"><span>GRID: <b>OMEGA-9</b></span><span>CLUSTER: <b>RU-NORTH-ISOLATED</b></span><span>SECURE TERMINAL REV. 4.12-b</span></div>
+    </aside>
   </div>
 </section>
 
@@ -2017,5 +2110,56 @@ body.breach-mode:after{
 <script src="js/mobile-navigation.js" defer></script>
 <script src="js/limbo-branding.js"></script>
 <script src="js/chapter-achievements.js"></script>
+
+<script id="breach-live-effects">
+(() => {
+  const root=document.getElementById('scene1');
+  if(!root || root.dataset.liveEffects==='1') return;
+  root.dataset.liveEffects='1';
+  const $=id=>document.getElementById(id);
+  const bars=$('breachEqBars');
+  if(bars){
+    const frag=document.createDocumentFragment();
+    for(let i=0;i<32;i++){const b=document.createElement('i');b.style.setProperty('--bar-height',(18+Math.random()*78)+'%');b.style.setProperty('--bar-speed',(0.65+Math.random()*1.5)+'s');b.style.animationDelay=(-Math.random()*1.8)+'s';frag.appendChild(b)}
+    bars.appendChild(frag);
+  }
+  const meter=$('warningMeter'), percent=$('threatPercent');
+  const updateThreat=()=>{
+    if(!meter)return;
+    const raw=parseFloat(meter.style.width)||12, value=Math.max(0,Math.min(100,raw));
+    if(percent)percent.textContent=Math.round(value)+'%';
+    const state=$('breachThreatState'), integrity=$('breachIntegrity'), defense=$('breachDefenseValue');
+    if(state)state.textContent=value>78?'BREACH IMMINENT':value>48?'ELEVATED':'CRITICAL';
+    if(integrity)integrity.textContent=Math.max(0,100-value)+'%';
+    if(defense)defense.textContent=Math.max(0,100-value*.72).toFixed(1)+'%';
+    const shield=$('breachShield');if(shield)shield.style.filter='drop-shadow(0 0 '+(18+value*.22)+'px rgba(255,23,68,.85))';
+  };
+  if(meter){new MutationObserver(updateThreat).observe(meter,{attributes:true,attributeFilter:['style']});updateThreat()}
+  const az=$('breachAzimuth'),freq=$('breachFrequency'),hex=$('breachHex');
+  const hexChars='0123456789ABCDEF';
+  const refresh=()=>{
+    if(!root.classList.contains('active'))return;
+    if(az)az.textContent=(Math.random()*360).toFixed(1)+'°';
+    if(freq)freq.textContent=(620+Math.random()*540|0)+' MHz';
+    if(hex)hex.textContent=Array.from({length:16},()=>hexChars[Math.random()*16|0]+hexChars[Math.random()*16|0]).join(' ');
+    const signal=$('breachSignalState');if(signal)signal.textContent=Math.random()>.22?'CARRIER DETECTED':'SIGNAL FLUCTUATION';
+    if(bars)Array.from(bars.children).forEach(b=>b.style.setProperty('--bar-height',(15+Math.random()*82)+'%'));
+  };
+  setInterval(refresh,850);
+  const holo=$('breachHologram'),shield=$('breachShield');
+  if(holo&&shield&&!matchMedia('(pointer: coarse)').matches){
+    holo.addEventListener('pointermove',e=>{const r=holo.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;shield.style.transform='rotate(45deg) perspective(700px) rotateX('+(-y*22)+'deg) rotateY('+(x*22)+'deg)'});
+    holo.addEventListener('pointerleave',()=>shield.style.transform='rotate(45deg)');
+  }
+  const canvas=$('breachParticles'),ctx=canvas&&canvas.getContext('2d');
+  if(canvas&&ctx&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+    let w=0,h=0,particles=[];
+    const resize=()=>{const r=root.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,1.5);w=r.width;h=r.height;canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);particles=Array.from({length:34},()=>({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.18,vy:-(.08+Math.random()*.25),r:.5+Math.random()*1.1,a:.12+Math.random()*.32}))};
+    resize();new ResizeObserver(resize).observe(root);
+    let frame=0;const draw=()=>{if(!root.isConnected)return;ctx.clearRect(0,0,w,h);for(const p of particles){p.x+=p.vx;p.y+=p.vy;if(p.y<0){p.y=h;p.x=Math.random()*w}if(p.x<0)p.x=w;if(p.x>w)p.x=0;ctx.fillStyle='rgba(255,55,88,'+p.a+')';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill()}frame=requestAnimationFrame(draw)};draw();
+  }
+})();
+</script>
+
 </body>
 </html>
