@@ -134,209 +134,108 @@ input { cursor: text !important; }
 }
 
 
-/* ── P.R.I.N.C. / GLASS REFINEMENT ─────────────────────────────
-   Preserve the existing pointer artwork and interaction handlers.
-   This layer refines surfaces, identity and form controls only. */
-:root {
-  --glass-0: rgba(4, 10, 18, .78);
-  --glass-1: rgba(10, 20, 32, .72);
-  --glass-2: rgba(16, 31, 46, .58);
-  --glass-line: rgba(148, 213, 226, .18);
-  --glass-cyan: #70edf5;
-  --glass-muted: #8fa6b5;
+
+/* P.R.I.N.C. emblem alignment + cinematic boot animation */
+#scene0 .boot-core { position:relative; }
+#scene0 .core-rings { position:relative; display:block; }
+#scene0 .core-mark {
+  position:absolute !important; left:50% !important; top:46% !important;
+  width:168px !important; height:168px !important;
+  margin:0 !important; padding:0 !important;
+  transform:translate(-50%,-50%) !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  background:transparent !important; border:0 !important; box-shadow:none !important;
+  line-height:0 !important; font-size:0 !important;
 }
-body.breach-mode {
-  background:
-    radial-gradient(ellipse at 50% 42%, rgba(0, 153, 174, .10), transparent 34%),
-    radial-gradient(ellipse at 82% 78%, rgba(164, 45, 135, .075), transparent 28%),
-    linear-gradient(145deg, #030811 0%, #07111c 48%, #050914 100%) !important;
+#scene0 .core-mark .princ-emblem {
+  display:block; width:100%; height:100%; max-width:none;
+  transform-origin:50% 50%;
+  animation:princLogoBoot 2.35s cubic-bezier(.18,.78,.2,1) both,
+            princLogoIdle 7s ease-in-out 2.35s infinite;
+  filter:drop-shadow(0 0 10px rgba(0,220,238,.28));
 }
-.scene { transition: opacity .34s ease, visibility .34s ease !important; }
-.scene::before {
-  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
-  background: linear-gradient(135deg, rgba(255,255,255,.018), transparent 38%, rgba(72,220,235,.018));
+@keyframes princLogoBoot {
+  0% { opacity:0; transform:scale(.12) rotate(-48deg); filter:blur(12px) drop-shadow(0 0 28px #00d8ed); }
+  28% { opacity:.42; transform:scale(.72) rotate(14deg); filter:blur(3px) drop-shadow(0 0 24px #00d8ed); }
+  43% { opacity:.18; transform:translateX(-5px) scale(.96) skewX(-8deg); clip-path:inset(0 45% 0 0); }
+  50% { opacity:.9; transform:translateX(4px) scale(1.03) skewX(5deg); clip-path:inset(0 0 0 40%); }
+  57% { opacity:.55; transform:translateX(-2px) scale(.99); clip-path:inset(0); }
+  72% { opacity:1; transform:scale(1.035) rotate(0); filter:blur(0) drop-shadow(0 0 22px rgba(0,220,238,.42)); }
+  100% { opacity:1; transform:scale(1) rotate(0); filter:blur(0) drop-shadow(0 0 10px rgba(0,220,238,.24)); }
 }
-.boot-core { z-index:2; }
-.core-rings { height: 360px; }
-.core-ring { border-color: rgba(97, 220, 232, .14); }
-.ring-a { border-left-color: rgba(112,237,245,.72); }
-.ring-b { border-top-color: rgba(213,91,185,.36); }
-.ring-pulse { animation-duration: 3.2s !important; opacity:.62; }
-.core-mark {
-  width: 150px !important; height: 150px !important;
-  left:50%; top:46%; transform:translate(-50%,-50%);
-  display:grid !important; place-items:center;
-  border:0 !important; background:transparent !important;
-  box-shadow:none !important; font-size:0 !important;
+@keyframes princLogoIdle {
+  0%,100% { transform:translateY(0) scale(1); filter:drop-shadow(0 0 10px rgba(0,220,238,.22)); }
+  50% { transform:translateY(-3px) scale(1.012); filter:drop-shadow(0 0 18px rgba(0,220,238,.34)); }
 }
-.princ-emblem {
-  display:block; width:100%; height:100%; overflow:visible;
-  filter: drop-shadow(0 0 12px rgba(0,211,231,.2));
+.terminal-logo { display:inline-flex; align-items:center; gap:10px; }
+.terminal-logo .princ-emblem { width:36px; height:36px; flex:0 0 36px; }
+
+/* No custom cursor: use the operating system pointer everywhere. */
+#cursor, #cursorDot, .cursor, .cursor-dot { display:none !important; }
+html, body, button, a, input, [data-cursor] { cursor:auto; }
+input, textarea { cursor:text !important; }
+
+/* Intrusion warning: restore the severe signal corruption treatment. */
+#scene1 .warning-frame {
+  position:relative; overflow:hidden;
+  background:linear-gradient(145deg, rgba(20,5,13,.985), rgba(5,7,16,.99)) !important;
+  border-color:rgba(231,54,91,.62) !important;
+  box-shadow:0 0 0 1px rgba(232,38,83,.14), 0 0 38px rgba(230,25,74,.18),
+    0 28px 100px rgba(0,0,0,.72) !important;
+  animation:warningPressure 5.4s ease-in-out infinite, warningJitter 7.2s steps(1,end) infinite !important;
 }
-.core-mark .princ-emblem { animation: emblemSettle .85s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes emblemSettle {
-  from { opacity:0; transform:scale(.82) rotate(-8deg); filter:blur(5px) drop-shadow(0 0 0 transparent); }
-  to { opacity:1; transform:scale(1) rotate(0); filter:blur(0) drop-shadow(0 0 12px rgba(0,211,231,.2)); }
+#scene1 .warning-frame::before {
+  content:""; position:absolute; inset:0; z-index:4; pointer-events:none;
+  opacity:.22; mix-blend-mode:screen;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,42,86,.18) 4px,transparent 5px 7px);
+  animation:warningRaster .16s steps(2,end) infinite;
 }
-.core-status { margin-top: 2px; letter-spacing:.2em; color:#9fbac5; }
-.core-line, .micro-readout { color:#7795a4; }
-.warning-frame, .terminal-shell, .login-wrap, .align-rules-panel {
-  background: linear-gradient(145deg, rgba(13,25,39,.78), rgba(5,11,20,.82)) !important;
-  border:1px solid var(--glass-line) !important;
-  border-radius:18px !important;
-  box-shadow: 0 28px 90px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.055),
-    0 0 46px rgba(0,193,213,.045) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(125%);
-  backdrop-filter: blur(24px) saturate(125%);
+#scene1 .warning-frame::after {
+  content:""; position:absolute; left:-15%; right:-15%; top:-30%; height:20%;
+  z-index:5; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(244,38,86,.22),rgba(255,255,255,.09),transparent);
+  animation:warningSweep 2.7s linear infinite;
 }
-.warning-frame::before, .terminal-shell::before, .login-wrap::before {
-  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-  background: linear-gradient(125deg, rgba(255,255,255,.055), transparent 24%, transparent 70%, rgba(66,213,226,.025));
+#scene1 .warning-scanline {
+  display:block !important; opacity:.75 !important; pointer-events:none !important;
+  animation:warningScan 2.2s linear infinite !important;
 }
-.warning-frame { padding: clamp(26px, 4vw, 46px) !important; }
-.warning-top, .terminal-top, .access-header, .access-footer {
-  background:rgba(255,255,255,.025) !important;
-  border-color:rgba(145,195,211,.13) !important;
+#scene1 .warning-icon-pulse {
+  display:block !important; opacity:.65 !important; pointer-events:none !important;
+  animation:warningPulse 1.35s ease-out infinite !important;
 }
-.warning-title { letter-spacing:.075em; }
-.warning-sub { color:#a4b4c2; line-height:1.75; }
-.warning-meter { background:rgba(255,255,255,.06) !important; border-radius:99px; overflow:hidden; }
-.warning-meter i { border-radius:99px; }
-.cyber-btn {
-  min-height:50px; border-radius:9px !important;
-  border:1px solid rgba(104,224,235,.3) !important;
-  background:linear-gradient(135deg, rgba(26,75,88,.42), rgba(9,27,39,.62)) !important;
-  color:#c7faff !important; letter-spacing:.11em;
-  box-shadow:inset 0 1px rgba(255,255,255,.06), 0 8px 28px rgba(0,0,0,.2) !important;
-  backdrop-filter:blur(12px);
+#scene1 .warning-icon { filter:drop-shadow(0 0 16px rgba(255,28,74,.55)); animation:warningIconThreat 2.4s steps(1,end) infinite; }
+#scene1 .warning-title { color:#ff647e !important; text-shadow:2px 0 #ff174f,-2px 0 #00d9e8,0 0 22px rgba(255,25,75,.42); animation:warningTitleGlitch 4.6s steps(1,end) infinite; }
+#scene1 .warning-top, #scene1 .warning-meta, #scene1 .warning-log { border-color:rgba(226,48,84,.3) !important; }
+#scene1 .warning-meter i { background:linear-gradient(90deg,#9b123f,#ff315c,#ff9b75) !important; box-shadow:0 0 16px rgba(255,30,80,.48); }
+#scene1 .blink-red { animation:warningBlink .72s steps(2,end) infinite !important; }
+#scene1 .threat-matrix { pointer-events:none !important; opacity:.7; }
+@keyframes warningPressure {
+  0%,100% { box-shadow:0 0 0 1px rgba(232,38,83,.12),0 0 30px rgba(230,25,74,.13),0 28px 100px rgba(0,0,0,.72); }
+  50% { box-shadow:0 0 0 2px rgba(255,36,83,.25),0 0 58px rgba(230,25,74,.25),0 28px 100px rgba(0,0,0,.78); }
 }
-.cyber-btn:hover:not(:disabled) {
-  border-color:rgba(112,237,245,.62) !important;
-  background:linear-gradient(135deg, rgba(27,104,116,.46), rgba(12,36,49,.72)) !important;
-  box-shadow:inset 0 1px rgba(255,255,255,.1), 0 10px 30px rgba(0,180,205,.12) !important;
+@keyframes warningJitter {
+  0%,91%,94%,100% { transform:translate(0,0); }
+  92% { transform:translate(-3px,1px) skewX(-.35deg); }
+  93% { transform:translate(4px,-1px) skewX(.45deg); }
 }
-.cyber-btn.danger { border-color:rgba(212,112,125,.4) !important; color:#f0b5bb !important; }
-.terminal-shell { width:min(1120px, calc(100vw - 48px)); }
-.terminal-top { min-height:48px; padding:0 20px !important; }
-.terminal-body { gap:0 !important; }
-.terminal-left {
-  background:linear-gradient(160deg, rgba(19,39,54,.42), rgba(7,16,27,.28)) !important;
-  border-right:1px solid rgba(145,195,211,.13) !important;
+@keyframes warningRaster { 0%,100% { opacity:.12; } 50% { opacity:.3; } }
+@keyframes warningSweep { from { transform:translateY(0); } to { transform:translateY(760%); } }
+@keyframes warningScan { from { transform:translateY(-110%); } to { transform:translateY(520%); } }
+@keyframes warningPulse { 0% { transform:scale(.82); opacity:.62; } 85%,100% { transform:scale(1.75); opacity:0; } }
+@keyframes warningIconThreat { 0%,89%,93%,100% { transform:translate(0); } 90% { transform:translate(-2px,1px); } 92% { transform:translate(2px,-1px); } }
+@keyframes warningTitleGlitch {
+  0%,88%,91%,100% { transform:translateX(0); clip-path:inset(0); }
+  89% { transform:translateX(-3px); clip-path:inset(20% 0 55%); }
+  90% { transform:translateX(3px); clip-path:inset(62% 0 12%); }
 }
-.terminal-logo {
-  display:flex !important; align-items:center; gap:10px;
-  color:#d8faff !important; letter-spacing:.12em;
-}
-.terminal-logo .princ-emblem { width:44px; height:44px; flex:0 0 44px; }
-.terminal-logo span { display:inline-block; }
-.terminal-right { background:rgba(2,8,15,.24) !important; }
-.terminal-log { scrollbar-color:rgba(92,174,190,.35) transparent; }
-.term-row { padding-block:3px !important; }
-.terminal-prompt {
-  background:rgba(3,11,19,.58) !important;
-  border-top:1px solid rgba(145,195,211,.13) !important;
-}
-.login-wrap { width:min(1080px, calc(100vw - 48px)); }
-.access-header { padding:24px 30px !important; }
-.access-header h1 { letter-spacing:.14em; text-shadow:0 0 26px rgba(72,220,235,.14); }
-.access-body { gap:0 !important; }
-.access-sidebar {
-  background:linear-gradient(160deg, rgba(19,37,53,.45), rgba(7,14,24,.24)) !important;
-  border-right:1px solid rgba(145,195,211,.13) !important;
-}
-.login-main { padding:clamp(22px,3vw,38px) !important; }
-.decrypt-line { color:#a9bdc9 !important; letter-spacing:.12em; }
-.decrypt-bar { background:rgba(255,255,255,.07) !important; border-radius:99px; overflow:hidden; }
-.decrypt-bar i { border-radius:99px; }
-.login-form {
-  display:grid; gap:17px;
-  padding:clamp(18px,2.6vw,30px);
-  margin-top:20px;
-  border:1px solid rgba(142,197,211,.16);
-  border-radius:14px;
-  background:linear-gradient(145deg, rgba(17,34,49,.58), rgba(6,14,24,.58));
-  box-shadow:inset 0 1px rgba(255,255,255,.045), 0 16px 44px rgba(0,0,0,.2);
-  -webkit-backdrop-filter:blur(18px);
-  backdrop-filter:blur(18px);
-}
-.field-block { min-width:0; }
-.field-block label {
-  display:flex; align-items:center; gap:10px;
-  margin:0 0 9px !important; color:#9fb5c2 !important;
-  font:600 10px/1.4 var(--font-mono,monospace) !important;
-  letter-spacing:.13em;
-}
-.field-block label span {
-  display:grid; place-items:center; width:23px; height:23px;
-  border:1px solid rgba(105,220,232,.25); border-radius:6px;
-  color:#70dce8; background:rgba(55,180,196,.08);
-}
-.input-shell {
-  min-height:58px !important; display:flex !important; align-items:center;
-  gap:12px; padding:0 15px !important;
-  border:1px solid rgba(132,179,196,.2) !important;
-  border-radius:10px !important;
-  background:linear-gradient(110deg, rgba(5,14,24,.78), rgba(15,30,43,.56)) !important;
-  box-shadow:inset 0 1px rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.12);
-  transition:border-color .22s ease, background .22s ease, box-shadow .22s ease;
-}
-.field-block.unlocked .input-shell {
-  border-color:rgba(92,211,224,.36) !important;
-  background:linear-gradient(110deg, rgba(6,21,32,.9), rgba(12,31,44,.72)) !important;
-}
-.input-shell:focus-within {
-  border-color:rgba(112,237,245,.76) !important;
-  box-shadow:0 0 0 3px rgba(49,200,215,.09), 0 0 28px rgba(0,190,210,.09),
-    inset 0 1px rgba(255,255,255,.06) !important;
-}
-.input-shell .prefix {
-  flex:0 0 auto; color:#65cbd8 !important; opacity:.8;
-  font:600 11px/1 var(--font-mono,monospace) !important;
-  letter-spacing:.08em;
-}
-.input-shell input {
-  min-width:0; width:100%; height:54px !important; flex:1 1 auto;
-  border:0 !important; outline:0 !important; border-radius:0 !important;
-  background:transparent !important; box-shadow:none !important;
-  color:#e2f7fa !important; caret-color:#80f3f8;
-  font:500 14px/1.4 var(--font-mono,monospace) !important;
-  letter-spacing:.045em; padding:0 !important;
-}
-.input-shell input::placeholder { color:#6e8795 !important; opacity:.78; font-size:11px; letter-spacing:.08em; }
-.input-shell input:focus { outline:0 !important; box-shadow:none !important; }
-.input-shell input:disabled { opacity:.48; -webkit-text-fill-color:#8ca0ad; }
-.field-state {
-  flex:0 0 auto; padding:5px 8px; border-radius:5px;
-  border:1px solid rgba(145,174,190,.16);
-  background:rgba(255,255,255,.025);
-  color:#8296a5 !important; font:600 9px/1 var(--font-mono,monospace) !important;
-  letter-spacing:.1em;
-}
-.field-block.unlocked .field-state {
-  color:#8ce9d2 !important; border-color:rgba(90,208,174,.24);
-  background:rgba(47,160,132,.08);
-}
-.auth-console {
-  padding:12px 14px !important; border:1px solid rgba(135,185,200,.13);
-  border-radius:8px; background:rgba(2,9,16,.44) !important;
-  color:#91aab8 !important;
-}
-.enter-btn { width:100%; margin-top:2px; }
-.enter-btn:disabled { opacity:.38 !important; filter:saturate(.45); }
-.form-foot { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; color:#758b99 !important; font-size:9px !important; letter-spacing:.07em; }
-.access-footer { color:#78909e !important; }
-#systemNoticeHost { -webkit-backdrop-filter:none; backdrop-filter:none; }
-@media (max-width: 760px) {
-  .core-rings { height:290px; }
-  .core-mark { width:124px !important; height:124px !important; }
-  .terminal-shell, .login-wrap { width:calc(100vw - 22px); max-height:calc(100dvh - 22px); overflow:auto; }
-  .terminal-logo .princ-emblem { width:36px; height:36px; flex-basis:36px; }
-  .login-form { padding:16px; }
-  .input-shell { min-height:54px !important; }
-  .input-shell input { height:50px !important; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .core-mark .princ-emblem { animation:none !important; }
+@keyframes warningBlink { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+@media (max-width:760px) { #scene0 .core-mark { width:138px !important; height:138px !important; } }
+@media (prefers-reduced-motion:reduce) {
+  #scene0 .core-mark .princ-emblem { animation:none !important; }
+  #scene1 .warning-frame, #scene1 .warning-frame::before, #scene1 .warning-frame::after,
+  #scene1 .warning-scanline, #scene1 .warning-icon-pulse, #scene1 .warning-icon,
+  #scene1 .warning-title, #scene1 .blink-red { animation:none !important; }
 }
 
 </style>
@@ -1003,22 +902,23 @@ body.breach-mode {
   // ─── GLITCH FX ───
   const glitchFlash = $('#glitchFlash'), rgbSplit = $('#rgbSplit'), glitchOverlay = $('#glitchOverlay'), scanBeam = $('#scanBeam'), chroma = $('#chroma'), breachFlash = $('#breachFlash');
 
-  function glitchBurst(intensity = 1) {
-    // Glitch is a restrained transition accent, never a full-screen white/red flash.
+  function glitchBurst(intensity = 3) {
     let i = 0;
+    const colors = ['#00fff9', '#ff00aa', '#e02848', '#9b00d4', '#e8a020', '#fff'];
     const go = () => {
-      glitchFlash.style.background = 'rgba(24, 145, 158, .22)';
-      glitchFlash.style.opacity = '.025';
+      glitchFlash.style.background = pick(colors);
+      glitchFlash.style.opacity = String(0.08 + Math.random() * 0.08);
       rgbSplit.classList.add('on');
-      glitchOverlay.style.opacity = '.035';
-      chroma.style.opacity = '.02';
+      glitchOverlay.style.opacity = String(0.12 + Math.random() * 0.1);
+      chroma.style.opacity = String(0.06 + Math.random() * 0.06);
+      noiseBurst(0.04, 0.04);
       setTimeout(() => {
         glitchFlash.style.opacity = '0';
         rgbSplit.classList.remove('on');
         glitchOverlay.style.opacity = '0';
         chroma.style.opacity = '0';
-        if (++i < Math.min(1, intensity)) setTimeout(go, 220);
-      }, 90);
+        if (++i < intensity) setTimeout(go, rand(30, 90));
+      }, rand(25, 55));
     };
     go();
   }
@@ -1372,7 +1272,7 @@ body.breach-mode {
       row.innerHTML = `<span class="term-time">[${String((i * 0.317).toFixed(3)).padStart(7, '0')}]</span><span class="term-type">${type}</span><span class="term-text"></span>`;
       log.appendChild(row);
       const txt = row.querySelector('.term-text');
-      await typeInto(txt, text, 0.8);
+      await typeInto(txt, text, 3);
       log.scrollTop = log.scrollHeight;
 
       const pct = Math.round((i + 1) / terminalLines.length * 100);
@@ -1393,7 +1293,7 @@ body.breach-mode {
       if (type === 'ERR') { /* keep error output readable */ }
       if (type === 'WARN') scanSweep();
 
-      await sleep(type === 'ERR' ? 48 : 24);
+      await sleep(type === 'ERR' ? 190 : 75);
     }
 
     for (let i = 0; i < subsystems.length; i++) {
@@ -1409,9 +1309,10 @@ body.breach-mode {
 
     $('#termStatus').textContent = 'STATUS: READY';
     await typeInto($('#promptText'), 'auth --interactive --secure', 22);
-    await sleep(150);
+    await sleep(450);
+    glitchBurst(1);
     scanSweep();
-    await sleep(110);
+    await sleep(380);
     scene('#scene3');
     initLogin();
   }
