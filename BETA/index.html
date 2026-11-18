@@ -133,6 +133,212 @@ input { cursor: text !important; }
   .system-notice { animation:none !important; }
 }
 
+
+/* ── P.R.I.N.C. / GLASS REFINEMENT ─────────────────────────────
+   Preserve the existing pointer artwork and interaction handlers.
+   This layer refines surfaces, identity and form controls only. */
+:root {
+  --glass-0: rgba(4, 10, 18, .78);
+  --glass-1: rgba(10, 20, 32, .72);
+  --glass-2: rgba(16, 31, 46, .58);
+  --glass-line: rgba(148, 213, 226, .18);
+  --glass-cyan: #70edf5;
+  --glass-muted: #8fa6b5;
+}
+body.breach-mode {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(0, 153, 174, .10), transparent 34%),
+    radial-gradient(ellipse at 82% 78%, rgba(164, 45, 135, .075), transparent 28%),
+    linear-gradient(145deg, #030811 0%, #07111c 48%, #050914 100%) !important;
+}
+.scene { transition: opacity .34s ease, visibility .34s ease !important; }
+.scene::before {
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background: linear-gradient(135deg, rgba(255,255,255,.018), transparent 38%, rgba(72,220,235,.018));
+}
+.boot-core { z-index:2; }
+.core-rings { height: 360px; }
+.core-ring { border-color: rgba(97, 220, 232, .14); }
+.ring-a { border-left-color: rgba(112,237,245,.72); }
+.ring-b { border-top-color: rgba(213,91,185,.36); }
+.ring-pulse { animation-duration: 3.2s !important; opacity:.62; }
+.core-mark {
+  width: 150px !important; height: 150px !important;
+  left:50%; top:46%; transform:translate(-50%,-50%);
+  display:grid !important; place-items:center;
+  border:0 !important; background:transparent !important;
+  box-shadow:none !important; font-size:0 !important;
+}
+.princ-emblem {
+  display:block; width:100%; height:100%; overflow:visible;
+  filter: drop-shadow(0 0 12px rgba(0,211,231,.2));
+}
+.core-mark .princ-emblem { animation: emblemSettle .85s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes emblemSettle {
+  from { opacity:0; transform:scale(.82) rotate(-8deg); filter:blur(5px) drop-shadow(0 0 0 transparent); }
+  to { opacity:1; transform:scale(1) rotate(0); filter:blur(0) drop-shadow(0 0 12px rgba(0,211,231,.2)); }
+}
+.core-status { margin-top: 2px; letter-spacing:.2em; color:#9fbac5; }
+.core-line, .micro-readout { color:#7795a4; }
+.warning-frame, .terminal-shell, .login-wrap, .align-rules-panel {
+  background: linear-gradient(145deg, rgba(13,25,39,.78), rgba(5,11,20,.82)) !important;
+  border:1px solid var(--glass-line) !important;
+  border-radius:18px !important;
+  box-shadow: 0 28px 90px rgba(0,0,0,.5), inset 0 1px rgba(255,255,255,.055),
+    0 0 46px rgba(0,193,213,.045) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(125%);
+  backdrop-filter: blur(24px) saturate(125%);
+}
+.warning-frame::before, .terminal-shell::before, .login-wrap::before {
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background: linear-gradient(125deg, rgba(255,255,255,.055), transparent 24%, transparent 70%, rgba(66,213,226,.025));
+}
+.warning-frame { padding: clamp(26px, 4vw, 46px) !important; }
+.warning-top, .terminal-top, .access-header, .access-footer {
+  background:rgba(255,255,255,.025) !important;
+  border-color:rgba(145,195,211,.13) !important;
+}
+.warning-title { letter-spacing:.075em; }
+.warning-sub { color:#a4b4c2; line-height:1.75; }
+.warning-meter { background:rgba(255,255,255,.06) !important; border-radius:99px; overflow:hidden; }
+.warning-meter i { border-radius:99px; }
+.cyber-btn {
+  min-height:50px; border-radius:9px !important;
+  border:1px solid rgba(104,224,235,.3) !important;
+  background:linear-gradient(135deg, rgba(26,75,88,.42), rgba(9,27,39,.62)) !important;
+  color:#c7faff !important; letter-spacing:.11em;
+  box-shadow:inset 0 1px rgba(255,255,255,.06), 0 8px 28px rgba(0,0,0,.2) !important;
+  backdrop-filter:blur(12px);
+}
+.cyber-btn:hover:not(:disabled) {
+  border-color:rgba(112,237,245,.62) !important;
+  background:linear-gradient(135deg, rgba(27,104,116,.46), rgba(12,36,49,.72)) !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.1), 0 10px 30px rgba(0,180,205,.12) !important;
+}
+.cyber-btn.danger { border-color:rgba(212,112,125,.4) !important; color:#f0b5bb !important; }
+.terminal-shell { width:min(1120px, calc(100vw - 48px)); }
+.terminal-top { min-height:48px; padding:0 20px !important; }
+.terminal-body { gap:0 !important; }
+.terminal-left {
+  background:linear-gradient(160deg, rgba(19,39,54,.42), rgba(7,16,27,.28)) !important;
+  border-right:1px solid rgba(145,195,211,.13) !important;
+}
+.terminal-logo {
+  display:flex !important; align-items:center; gap:10px;
+  color:#d8faff !important; letter-spacing:.12em;
+}
+.terminal-logo .princ-emblem { width:44px; height:44px; flex:0 0 44px; }
+.terminal-logo span { display:inline-block; }
+.terminal-right { background:rgba(2,8,15,.24) !important; }
+.terminal-log { scrollbar-color:rgba(92,174,190,.35) transparent; }
+.term-row { padding-block:3px !important; }
+.terminal-prompt {
+  background:rgba(3,11,19,.58) !important;
+  border-top:1px solid rgba(145,195,211,.13) !important;
+}
+.login-wrap { width:min(1080px, calc(100vw - 48px)); }
+.access-header { padding:24px 30px !important; }
+.access-header h1 { letter-spacing:.14em; text-shadow:0 0 26px rgba(72,220,235,.14); }
+.access-body { gap:0 !important; }
+.access-sidebar {
+  background:linear-gradient(160deg, rgba(19,37,53,.45), rgba(7,14,24,.24)) !important;
+  border-right:1px solid rgba(145,195,211,.13) !important;
+}
+.login-main { padding:clamp(22px,3vw,38px) !important; }
+.decrypt-line { color:#a9bdc9 !important; letter-spacing:.12em; }
+.decrypt-bar { background:rgba(255,255,255,.07) !important; border-radius:99px; overflow:hidden; }
+.decrypt-bar i { border-radius:99px; }
+.login-form {
+  display:grid; gap:17px;
+  padding:clamp(18px,2.6vw,30px);
+  margin-top:20px;
+  border:1px solid rgba(142,197,211,.16);
+  border-radius:14px;
+  background:linear-gradient(145deg, rgba(17,34,49,.58), rgba(6,14,24,.58));
+  box-shadow:inset 0 1px rgba(255,255,255,.045), 0 16px 44px rgba(0,0,0,.2);
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
+}
+.field-block { min-width:0; }
+.field-block label {
+  display:flex; align-items:center; gap:10px;
+  margin:0 0 9px !important; color:#9fb5c2 !important;
+  font:600 10px/1.4 var(--font-mono,monospace) !important;
+  letter-spacing:.13em;
+}
+.field-block label span {
+  display:grid; place-items:center; width:23px; height:23px;
+  border:1px solid rgba(105,220,232,.25); border-radius:6px;
+  color:#70dce8; background:rgba(55,180,196,.08);
+}
+.input-shell {
+  min-height:58px !important; display:flex !important; align-items:center;
+  gap:12px; padding:0 15px !important;
+  border:1px solid rgba(132,179,196,.2) !important;
+  border-radius:10px !important;
+  background:linear-gradient(110deg, rgba(5,14,24,.78), rgba(15,30,43,.56)) !important;
+  box-shadow:inset 0 1px rgba(255,255,255,.035), 0 8px 22px rgba(0,0,0,.12);
+  transition:border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+.field-block.unlocked .input-shell {
+  border-color:rgba(92,211,224,.36) !important;
+  background:linear-gradient(110deg, rgba(6,21,32,.9), rgba(12,31,44,.72)) !important;
+}
+.input-shell:focus-within {
+  border-color:rgba(112,237,245,.76) !important;
+  box-shadow:0 0 0 3px rgba(49,200,215,.09), 0 0 28px rgba(0,190,210,.09),
+    inset 0 1px rgba(255,255,255,.06) !important;
+}
+.input-shell .prefix {
+  flex:0 0 auto; color:#65cbd8 !important; opacity:.8;
+  font:600 11px/1 var(--font-mono,monospace) !important;
+  letter-spacing:.08em;
+}
+.input-shell input {
+  min-width:0; width:100%; height:54px !important; flex:1 1 auto;
+  border:0 !important; outline:0 !important; border-radius:0 !important;
+  background:transparent !important; box-shadow:none !important;
+  color:#e2f7fa !important; caret-color:#80f3f8;
+  font:500 14px/1.4 var(--font-mono,monospace) !important;
+  letter-spacing:.045em; padding:0 !important;
+}
+.input-shell input::placeholder { color:#6e8795 !important; opacity:.78; font-size:11px; letter-spacing:.08em; }
+.input-shell input:focus { outline:0 !important; box-shadow:none !important; }
+.input-shell input:disabled { opacity:.48; -webkit-text-fill-color:#8ca0ad; }
+.field-state {
+  flex:0 0 auto; padding:5px 8px; border-radius:5px;
+  border:1px solid rgba(145,174,190,.16);
+  background:rgba(255,255,255,.025);
+  color:#8296a5 !important; font:600 9px/1 var(--font-mono,monospace) !important;
+  letter-spacing:.1em;
+}
+.field-block.unlocked .field-state {
+  color:#8ce9d2 !important; border-color:rgba(90,208,174,.24);
+  background:rgba(47,160,132,.08);
+}
+.auth-console {
+  padding:12px 14px !important; border:1px solid rgba(135,185,200,.13);
+  border-radius:8px; background:rgba(2,9,16,.44) !important;
+  color:#91aab8 !important;
+}
+.enter-btn { width:100%; margin-top:2px; }
+.enter-btn:disabled { opacity:.38 !important; filter:saturate(.45); }
+.form-foot { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; color:#758b99 !important; font-size:9px !important; letter-spacing:.07em; }
+.access-footer { color:#78909e !important; }
+#systemNoticeHost { -webkit-backdrop-filter:none; backdrop-filter:none; }
+@media (max-width: 760px) {
+  .core-rings { height:290px; }
+  .core-mark { width:124px !important; height:124px !important; }
+  .terminal-shell, .login-wrap { width:calc(100vw - 22px); max-height:calc(100dvh - 22px); overflow:auto; }
+  .terminal-logo .princ-emblem { width:36px; height:36px; flex-basis:36px; }
+  .login-form { padding:16px; }
+  .input-shell { min-height:54px !important; }
+  .input-shell input { height:50px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .core-mark .princ-emblem { animation:none !important; }
+}
+
 </style>
 
 </head>
@@ -195,7 +401,25 @@ input { cursor: text !important; }
       <div class="core-ring ring-c"></div>
       <div class="core-ring ring-d"></div>
       <div class="ring-pulse"></div>
-      <div class="core-mark" id="coreMark">П</div>
+      <div class="core-mark" id="coreMark"><svg class="princ-emblem" viewBox="0 0 240 240" role="img" aria-label="Эмблема П.Р.И.Н.Ц." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="princMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163744"/><stop offset=".52" stop-color="#091722"/><stop offset="1" stop-color="#172033"/></linearGradient>
+    <linearGradient id="princEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68f5ff"/><stop offset=".68" stop-color="#00b9d1"/><stop offset="1" stop-color="#e84bb9"/></linearGradient>
+    <radialGradient id="princLens"><stop stop-color="#d8ffff"/><stop offset=".13" stop-color="#24eaff"/><stop offset=".5" stop-color="#087e9b"/><stop offset="1" stop-color="#07151f"/></radialGradient>
+    <filter id="princGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M120 8 218 65 218 175 120 232 22 175 22 65Z" fill="url(#princMetal)" stroke="url(#princEdge)" stroke-width="3"/>
+  <path d="M120 22 205 72 205 168 120 218 35 168 35 72Z" fill="none" stroke="#4cefff" stroke-opacity=".48" stroke-width="1.5"/>
+  <path d="M120 22V75M35 72l42 25M205 72l-42 25M35 168l42-25M205 168l-42-25M120 218v-53" stroke="#37ddec" stroke-opacity=".48" stroke-width="1.4"/>
+  <path d="M43 120Q120 37 197 120Q120 203 43 120Z" fill="#071a27" stroke="#43f2ff" stroke-width="3" filter="url(#princGlow)"/>
+  <path d="M57 120Q120 55 183 120Q120 185 57 120Z" fill="none" stroke="#20bfd4" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="39" fill="none" stroke="#25dff0" stroke-width="2" stroke-dasharray="4 5"/>
+  <circle cx="120" cy="120" r="27" fill="url(#princLens)" stroke="#6df8ff" stroke-width="2.4"/>
+  <circle cx="120" cy="120" r="10" fill="#bfffff" filter="url(#princGlow)"/>
+  <path d="M120 76V93M120 147v17M76 120h17M147 120h17" stroke="#6efaff" stroke-width="2" stroke-linecap="round"/>
+  <path d="m22 120 15-10v20ZM218 120l-15-10v20Z" fill="#ee59c7" opacity=".85"/>
+  <path d="M120 8v14M22 65l13 7M218 65l-13 7" stroke="#b9ffff" stroke-width="2"/>
+</svg></div>
     </div>
     <div class="core-status">P.R.I.N.C. // SIGNAL ACQUISITION</div>
     <div class="core-line">
@@ -280,7 +504,25 @@ input { cursor: text !important; }
     </div>
     <div class="terminal-body">
       <aside class="terminal-left">
-        <div class="terminal-logo">P.R.I.N.C.</div>
+        <div class="terminal-logo"><svg class="princ-emblem" viewBox="0 0 240 240" role="img" aria-label="Эмблема П.Р.И.Н.Ц." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="princMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163744"/><stop offset=".52" stop-color="#091722"/><stop offset="1" stop-color="#172033"/></linearGradient>
+    <linearGradient id="princEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68f5ff"/><stop offset=".68" stop-color="#00b9d1"/><stop offset="1" stop-color="#e84bb9"/></linearGradient>
+    <radialGradient id="princLens"><stop stop-color="#d8ffff"/><stop offset=".13" stop-color="#24eaff"/><stop offset=".5" stop-color="#087e9b"/><stop offset="1" stop-color="#07151f"/></radialGradient>
+    <filter id="princGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M120 8 218 65 218 175 120 232 22 175 22 65Z" fill="url(#princMetal)" stroke="url(#princEdge)" stroke-width="3"/>
+  <path d="M120 22 205 72 205 168 120 218 35 168 35 72Z" fill="none" stroke="#4cefff" stroke-opacity=".48" stroke-width="1.5"/>
+  <path d="M120 22V75M35 72l42 25M205 72l-42 25M35 168l42-25M205 168l-42-25M120 218v-53" stroke="#37ddec" stroke-opacity=".48" stroke-width="1.4"/>
+  <path d="M43 120Q120 37 197 120Q120 203 43 120Z" fill="#071a27" stroke="#43f2ff" stroke-width="3" filter="url(#princGlow)"/>
+  <path d="M57 120Q120 55 183 120Q120 185 57 120Z" fill="none" stroke="#20bfd4" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="39" fill="none" stroke="#25dff0" stroke-width="2" stroke-dasharray="4 5"/>
+  <circle cx="120" cy="120" r="27" fill="url(#princLens)" stroke="#6df8ff" stroke-width="2.4"/>
+  <circle cx="120" cy="120" r="10" fill="#bfffff" filter="url(#princGlow)"/>
+  <path d="M120 76V93M120 147v17M76 120h17M147 120h17" stroke="#6efaff" stroke-width="2" stroke-linecap="round"/>
+  <path d="m22 120 15-10v20ZM218 120l-15-10v20Z" fill="#ee59c7" opacity=".85"/>
+  <path d="M120 8v14M22 65l13 7M218 65l-13 7" stroke="#b9ffff" stroke-width="2"/>
+</svg><span>P.R.I.N.C.</span></div>
         <div class="terminal-sub">PRIVILEGED RESTRICTED<br>INTERFACE NODE CORE</div>
 
         <div class="ascii-block">
@@ -1130,7 +1372,7 @@ input { cursor: text !important; }
       row.innerHTML = `<span class="term-time">[${String((i * 0.317).toFixed(3)).padStart(7, '0')}]</span><span class="term-type">${type}</span><span class="term-text"></span>`;
       log.appendChild(row);
       const txt = row.querySelector('.term-text');
-      await typeInto(txt, text, 3);
+      await typeInto(txt, text, 0.8);
       log.scrollTop = log.scrollHeight;
 
       const pct = Math.round((i + 1) / terminalLines.length * 100);
@@ -1151,7 +1393,7 @@ input { cursor: text !important; }
       if (type === 'ERR') { /* keep error output readable */ }
       if (type === 'WARN') scanSweep();
 
-      await sleep(type === 'ERR' ? 190 : 75);
+      await sleep(type === 'ERR' ? 48 : 24);
     }
 
     for (let i = 0; i < subsystems.length; i++) {
@@ -1167,10 +1409,9 @@ input { cursor: text !important; }
 
     $('#termStatus').textContent = 'STATUS: READY';
     await typeInto($('#promptText'), 'auth --interactive --secure', 22);
-    await sleep(450);
-    glitchBurst(1);
+    await sleep(150);
     scanSweep();
-    await sleep(380);
+    await sleep(110);
     scene('#scene3');
     initLogin();
   }
