@@ -394,3 +394,12 @@ button { -webkit-tap-highlight-color: transparent; }
   #scene1 .warning-frame{padding:8px!important}
   #scene2 .terminal-shell,#scene3 .login-wrap,#scene4 .auth-final.capture-interface{padding:8px!important}
 }
+
+@media(max-width:760px){
+  header .limbo-mobile-menu-button,.sc-topbar .limbo-mobile-menu-button{
+    position:relative;inset:auto;z-index:2147483100;flex:0 0 44px;margin-left:auto;
+  }
+  .sc-topbar{align-items:center!important;flex-wrap:nowrap!important}
+  .sc-topbar .sc-brand{flex:1 1 auto;min-width:0}
+  .sc-topbar .sc-meta{display:none!important}
+}
