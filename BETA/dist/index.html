@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>П.Р.И.Н.Ц. // BREACH PROTOCOL</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+
+<style id="breach-fix">
+#scene1, #scene1 * { pointer-events: auto; }
+#scene1 .breach-bg, #scene1 .warning-scanline, #scene1 .warning-icon-pulse { pointer-events: none !important; }
+#btnProceed {
+  position: relative !important;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+.core-mark {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+.av-reticle {
+  pointer-events: none;
+  z-index: 5;
+}
+.av-core { z-index: 2; }
+.noise, .scanlines, .vignette, .ambient-grid, #matrixCanvas,
+.rgb-split, .glitch-overlay, .glitch-flash, .scan-beam, .chroma, .breach-flash {
+  pointer-events: none !important;
+}
+.cursor, .cursor-dot { pointer-events: none !important; }
+
+/* ── Interaction + visual pass: calm signal, reliable hit-testing ── */
+html, body { cursor: auto !important; }
+body.breach-mode { background: #030811; }
+.scene { isolation: isolate; }
+.scene.active { z-index: 30; }
+.scene:not(.active) { pointer-events: none !important; }
+.scene > .signal-noise, .scene > .wave-grid, .scene > .breach-bg,
+.scene > .login-environment, .scene .warning-scanline,
+.scene .warning-icon-pulse, .scene .threat-matrix,
+.scene .align-vortex .av-ring, .scene .align-vortex .av-reticle {
+  pointer-events: none !important;
+}
+.signal-noise { animation: none !important; opacity: .18 !important; }
+.wave { animation-duration: 7s !important; opacity: .48; }
+#matrixCanvas { opacity: .075 !important; }
+.noise { opacity: .008 !important; }
+.scanlines { opacity: .075 !important; }
+.hud, .side-stream { pointer-events: none !important; }
+#cursor {
+  width: 22px !important; height: 22px !important;
+  border: 1.5px solid #8df5ff !important;
+  background: rgba(4, 20, 29, .24) !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 232, .12), 0 0 14px rgba(0, 212, 232, .38) !important;
+  mix-blend-mode: normal !important;
+  z-index: 10020 !important;
+}
+#cursor::before, #cursor::after {
+  content: ""; position: absolute; background: #b9fbff;
+  box-shadow: 0 0 5px rgba(0,212,232,.55);
+}
+#cursor::before { width: 1px; height: 30px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+#cursor::after { height: 1px; width: 30px; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+#cursor.hover {
+  width: 34px !important; height: 34px !important;
+  border-color: #d5ffff !important; background: rgba(0,212,232,.12) !important;
+}
+#cursorDot { width: 4px !important; height: 4px !important; background: #fff !important; box-shadow: 0 0 8px #00d4e8; z-index: 10021 !important; }
+button, a, input, [role="button"], [data-cursor] { cursor: pointer !important; }
+input { cursor: text !important; }
+.cyber-btn, #btnProceed, #btnLogin {
+  position: relative; z-index: 60 !important; pointer-events: auto !important;
+  min-height: 48px; touch-action: manipulation;
+}
+.warning-frame, .login-wrap, .terminal-shell {
+  border-radius: 12px !important;
+  border-color: rgba(119, 178, 195, .22) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.48), 0 0 34px rgba(0,190,210,.055) !important;
+}
+.warning-frame {
+  background: linear-gradient(145deg, rgba(12,18,29,.98), rgba(5,9,17,.98)) !important;
+}
+.warning-top { border-color: rgba(224,80,92,.2) !important; }
+.warning-icon-wrap { filter: saturate(.72); }
+.warning-icon-pulse, .warning-scanline, .blink-red { animation: none !important; }
+.warning-icon-pulse { opacity: .18 !important; }
+.warning-meter i { transition: width .65s ease !important; }
+.cyber-btn {
+  border-radius: 7px !important;
+  background: rgba(0, 212, 232, .055) !important;
+  box-shadow: none !important;
+}
+.cyber-btn:hover { background: rgba(0,212,232,.11) !important; box-shadow: 0 8px 24px rgba(0,0,0,.22) !important; }
+.cyber-btn.danger { border-color: rgba(220,105,112,.58) !important; color: #e99ba1 !important; }
+.cyber-btn:focus-visible { outline: 2px solid #8df5ff !important; outline-offset: 4px; }
+#systemNoticeHost {
+  position: fixed; right: clamp(14px, 2vw, 30px); top: clamp(64px, 8vh, 92px);
+  z-index: 11000; width: min(390px, calc(100vw - 28px));
+  display: grid; gap: 10px; pointer-events: none;
+}
+.system-notice {
+  display: grid; grid-template-columns: 4px 1fr auto; gap: 12px;
+  align-items: start; padding: 14px 14px 13px;
+  color: #dbe7ed; background: linear-gradient(145deg, rgba(13,22,34,.98), rgba(5,10,18,.98));
+  border: 1px solid rgba(125,170,190,.24); border-radius: 9px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.48); backdrop-filter: blur(14px);
+  font: 12px/1.5 var(--font-ui, system-ui); pointer-events: auto;
+  animation: noticeIn .24s ease both;
+}
+.system-notice::before { content:""; width:3px; height:100%; min-height:38px; grid-column:1; grid-row:1; background:#6ccbd1; border-radius:3px; }
+.system-notice[data-kind="error"]::before { background:#d97880; }
+.system-notice[data-kind="warning"]::before { background:#c9a66a; }
+.system-notice-copy { grid-column:2; min-width:0; }
+.system-notice-title { display:block; margin-bottom:3px; color:#d9f4f5; font:600 10px/1.4 var(--font-mono,monospace); letter-spacing:.12em; text-transform:uppercase; }
+.system-notice-message { color:#aab9c6; overflow-wrap:anywhere; }
+.system-notice-close { grid-column:3; border:0; padding:0 3px; color:#8295a5; background:transparent; font-size:18px; line-height:1; cursor:pointer; }
+@keyframes noticeIn { from { opacity:0; transform:translateY(-7px); } to { opacity:1; transform:none; } }
+@media (max-width: 760px) {
+  .hud { opacity:.45; transform:scale(.82); transform-origin:top left; }
+  .hud-tr, .hud-br { transform-origin:top right; }
+  .warning-frame { width:min(94vw,760px) !important; padding:26px 22px !important; max-height:88vh; overflow:auto; }
+  #systemNoticeHost { top:12px; right:12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wave, .signal-noise, .warning-icon-pulse, .warning-scanline { animation:none !important; }
+  .system-notice { animation:none !important; }
+}
+
+
+
+/* P.R.I.N.C. emblem alignment + cinematic boot animation */
+#scene0 .boot-core { position:relative; }
+#scene0 .core-rings { position:relative; display:block; }
+#scene0 .core-mark {
+  position:absolute !important; left:50% !important; top:46% !important;
+  width:168px !important; height:168px !important;
+  margin:0 !important; padding:0 !important;
+  transform:translate(-50%,-50%) !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  background:transparent !important; border:0 !important; box-shadow:none !important;
+  line-height:0 !important; font-size:0 !important;
+}
+#scene0 .core-mark .princ-emblem {
+  display:block; width:100%; height:100%; max-width:none;
+  transform-origin:50% 50%;
+  animation:princLogoBoot 2.35s cubic-bezier(.18,.78,.2,1) both,
+            princLogoIdle 7s ease-in-out 2.35s infinite;
+  filter:drop-shadow(0 0 10px rgba(0,220,238,.28));
+}
+@keyframes princLogoBoot {
+  0% { opacity:0; transform:scale(.12) rotate(-48deg); filter:blur(12px) drop-shadow(0 0 28px #00d8ed); }
+  28% { opacity:.42; transform:scale(.72) rotate(14deg); filter:blur(3px) drop-shadow(0 0 24px #00d8ed); }
+  43% { opacity:.18; transform:translateX(-5px) scale(.96) skewX(-8deg); clip-path:inset(0 45% 0 0); }
+  50% { opacity:.9; transform:translateX(4px) scale(1.03) skewX(5deg); clip-path:inset(0 0 0 40%); }
+  57% { opacity:.55; transform:translateX(-2px) scale(.99); clip-path:inset(0); }
+  72% { opacity:1; transform:scale(1.035) rotate(0); filter:blur(0) drop-shadow(0 0 22px rgba(0,220,238,.42)); }
+  100% { opacity:1; transform:scale(1) rotate(0); filter:blur(0) drop-shadow(0 0 10px rgba(0,220,238,.24)); }
+}
+@keyframes princLogoIdle {
+  0%,100% { transform:translateY(0) scale(1); filter:drop-shadow(0 0 10px rgba(0,220,238,.22)); }
+  50% { transform:translateY(-3px) scale(1.012); filter:drop-shadow(0 0 18px rgba(0,220,238,.34)); }
+}
+.terminal-logo { display:inline-flex; align-items:center; gap:10px; }
+.terminal-logo .princ-emblem { width:36px; height:36px; flex:0 0 36px; }
+
+/* No custom cursor: use the operating system pointer everywhere. */
+#cursor, #cursorDot, .cursor, .cursor-dot { display:none !important; }
+html, body, button, a, input, [data-cursor] { cursor:auto; }
+input, textarea { cursor:text !important; }
+
+/* Intrusion warning: restore the severe signal corruption treatment. */
+#scene1 .warning-frame {
+  position:relative; overflow:hidden;
+  background:linear-gradient(145deg, rgba(20,5,13,.985), rgba(5,7,16,.99)) !important;
+  border-color:rgba(231,54,91,.62) !important;
+  box-shadow:0 0 0 1px rgba(232,38,83,.14), 0 0 38px rgba(230,25,74,.18),
+    0 28px 100px rgba(0,0,0,.72) !important;
+  animation:warningPressure 5.4s ease-in-out infinite, warningJitter 7.2s steps(1,end) infinite !important;
+}
+#scene1 .warning-frame::before {
+  content:""; position:absolute; inset:0; z-index:4; pointer-events:none;
+  opacity:.22; mix-blend-mode:screen;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,42,86,.18) 4px,transparent 5px 7px);
+  animation:warningRaster .16s steps(2,end) infinite;
+}
+#scene1 .warning-frame::after {
+  content:""; position:absolute; left:-15%; right:-15%; top:-30%; height:20%;
+  z-index:5; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(244,38,86,.22),rgba(255,255,255,.09),transparent);
+  animation:warningSweep 2.7s linear infinite;
+}
+#scene1 .warning-scanline {
+  display:block !important; opacity:.75 !important; pointer-events:none !important;
+  animation:warningScan 2.2s linear infinite !important;
+}
+#scene1 .warning-icon-pulse {
+  display:block !important; opacity:.65 !important; pointer-events:none !important;
+  animation:warningPulse 1.35s ease-out infinite !important;
+}
+#scene1 .warning-icon { filter:drop-shadow(0 0 16px rgba(255,28,74,.55)); animation:warningIconThreat 2.4s steps(1,end) infinite; }
+#scene1 .warning-title { color:#ff647e !important; text-shadow:2px 0 #ff174f,-2px 0 #00d9e8,0 0 22px rgba(255,25,75,.42); animation:warningTitleGlitch 4.6s steps(1,end) infinite; }
+#scene1 .warning-top, #scene1 .warning-meta, #scene1 .warning-log { border-color:rgba(226,48,84,.3) !important; }
+#scene1 .warning-meter i { background:linear-gradient(90deg,#9b123f,#ff315c,#ff9b75) !important; box-shadow:0 0 16px rgba(255,30,80,.48); }
+#scene1 .blink-red { animation:warningBlink .72s steps(2,end) infinite !important; }
+#scene1 .threat-matrix { pointer-events:none !important; opacity:.7; }
+@keyframes warningPressure {
+  0%,100% { box-shadow:0 0 0 1px rgba(232,38,83,.12),0 0 30px rgba(230,25,74,.13),0 28px 100px rgba(0,0,0,.72); }
+  50% { box-shadow:0 0 0 2px rgba(255,36,83,.25),0 0 58px rgba(230,25,74,.25),0 28px 100px rgba(0,0,0,.78); }
+}
+@keyframes warningJitter {
+  0%,91%,94%,100% { transform:translate(0,0); }
+  92% { transform:translate(-3px,1px) skewX(-.35deg); }
+  93% { transform:translate(4px,-1px) skewX(.45deg); }
+}
+@keyframes warningRaster { 0%,100% { opacity:.12; } 50% { opacity:.3; } }
+@keyframes warningSweep { from { transform:translateY(0); } to { transform:translateY(760%); } }
+@keyframes warningScan { from { transform:translateY(-110%); } to { transform:translateY(520%); } }
+@keyframes warningPulse { 0% { transform:scale(.82); opacity:.62; } 85%,100% { transform:scale(1.75); opacity:0; } }
+@keyframes warningIconThreat { 0%,89%,93%,100% { transform:translate(0); } 90% { transform:translate(-2px,1px); } 92% { transform:translate(2px,-1px); } }
+@keyframes warningTitleGlitch {
+  0%,88%,91%,100% { transform:translateX(0); clip-path:inset(0); }
+  89% { transform:translateX(-3px); clip-path:inset(20% 0 55%); }
+  90% { transform:translateX(3px); clip-path:inset(62% 0 12%); }
+}
+@keyframes warningBlink { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+@media (max-width:760px) { #scene0 .core-mark { width:138px !important; height:138px !important; } }
+@media (prefers-reduced-motion:reduce) {
+  #scene0 .core-mark .princ-emblem { animation:none !important; }
+  #scene1 .warning-frame, #scene1 .warning-frame::before, #scene1 .warning-frame::after,
+  #scene1 .warning-scanline, #scene1 .warning-icon-pulse, #scene1 .warning-icon,
+  #scene1 .warning-title, #scene1 .blink-red { animation:none !important; }
+}
+
+
+#scene0{background:radial-gradient(ellipse at 50% 43%,#06101a 0%,#030811 48%,#010308 100%)}
+#scene0 .signal-noise{opacity:.055!important}#scene0 .wave-grid{opacity:.1!important}#scene0 .boot-core{filter:drop-shadow(0 20px 70px rgba(0,0,0,.85))}#scene0 .core-rings{opacity:.76}#scene0 .core-status{color:#7796a4;text-shadow:none}#scene0 .boot-phase-label{color:#405c6a}#scene0 .boot-phase-state{color:#7da4b0}#scene0 .boot-phase-track{background:rgba(100,145,160,.09)}#scene0 .boot-phase-track i{background:linear-gradient(90deg,#315e70,#6aaab2);box-shadow:0 0 8px rgba(80,180,195,.24)}#scene0 .signal-noise{opacity:.12}#scene0 .wave-grid{opacity:.28;transform:perspective(800px) rotateX(58deg) scale(1.6)}#scene0 .core-rings{filter:drop-shadow(0 0 36px rgba(0,176,202,.14))}#scene0 .core-ring{border-color:rgba(70,180,198,.13)}#scene0 .ring-a{border-left-color:#57dce9}#scene0 .ring-b{border-top-color:rgba(199,73,167,.5)}#scene0 .core-status{color:#9bbcc7;letter-spacing:.28em;text-shadow:0 0 18px rgba(0,190,210,.2)}
+#scene0 .core-mark .princ-emblem circle:nth-of-type(1){transform-origin:120px 120px;animation:eyeDial 18s linear infinite}
+#scene0 .core-mark .princ-emblem circle:nth-of-type(2){transform-origin:120px 120px;animation:eyeFocus 4.8s ease-in-out infinite}
+#scene0 .core-mark .princ-emblem circle:nth-of-type(3){transform-origin:120px 120px;animation:eyePulse 2.8s ease-in-out infinite}
+@keyframes eyeDial{to{transform:rotate(360deg)}}@keyframes eyeFocus{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(.88);opacity:.62}}@keyframes eyePulse{0%,100%{opacity:.8;filter:drop-shadow(0 0 2px #8fffff)}50%{opacity:1;filter:drop-shadow(0 0 9px #00eaff)}}
+#scene0 .boot-phase{width:min(420px,78vw);margin:18px auto 0;text-align:left}#scene0 .boot-phase-label{color:#537b88;font:8px var(--font-mono,monospace);letter-spacing:.2em}#scene0 .boot-phase-state{float:right;color:#a8dce2;font:8px var(--font-mono,monospace);letter-spacing:.1em}#scene0 .boot-phase-track{height:2px;margin-top:8px;background:rgba(115,180,195,.13);overflow:hidden}#scene0 .boot-phase-track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#147e9b,#67eff5,#d84ab4);box-shadow:0 0 12px rgba(0,218,235,.6);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+#scene0 .boot-event-feed{position:absolute;inset:0;z-index:12;overflow:hidden;pointer-events:none}.boot-event{position:absolute;width:min(360px,34vw);display:grid;grid-template-columns:28px 1fr;gap:9px;align-items:center;padding:11px 13px;border:1px solid rgba(116,178,193,.2);border-left:2px solid rgba(81,206,219,.7);background:linear-gradient(110deg,rgba(5,13,22,.94),rgba(4,8,15,.84));box-shadow:0 18px 55px rgba(0,0,0,.5),0 0 24px rgba(0,170,195,.07);backdrop-filter:blur(15px);animation:bootEventIn .48s cubic-bezier(.16,1,.3,1) both;pointer-events:none}.boot-event[data-level=critical]{border-color:rgba(227,52,91,.48);border-left-color:#f04c70;background:linear-gradient(110deg,rgba(30,6,16,.96),rgba(8,7,14,.92));box-shadow:0 20px 65px rgba(0,0,0,.58),0 0 28px rgba(230,45,86,.12)}.boot-event-code{color:#65dce8;font:700 9px var(--font-mono,monospace)}.boot-event[data-level=critical] .boot-event-code{color:#ff7088}.boot-event-text{color:#b0c4ce;font:8px/1.5 var(--font-mono,monospace);letter-spacing:.07em}.boot-event-time{display:block;color:#647d88;font-size:7px;margin-top:3px}@keyframes bootEventIn{from{opacity:0;transform:translate3d(0,12px,0) scale(.97);filter:blur(5px)}to{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+#scene1 .warning-frame{border-radius:2px!important;clip-path:polygon(0 12px,12px 0,calc(100% - 22px) 0,100% 22px,100% calc(100% - 12px),calc(100% - 12px) 100%,22px 100%,0 calc(100% - 22px))}#scene1 .warning-title{letter-spacing:.12em;text-transform:uppercase}#scene1 .warning-log{min-height:104px}#scene1 .warn-log-row{animation:warningLogIn .28s ease both}@keyframes warningLogIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+#scene2 .terminal-shell,#scene3 .login-wrap{border-radius:3px!important;border-color:rgba(76,174,194,.22)!important;background:linear-gradient(145deg,rgba(7,15,25,.97),rgba(3,7,13,.985))!important;box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 50px rgba(0,155,185,.07),inset 0 1px rgba(255,255,255,.035)!important}#scene2 .terminal-top,#scene3 .access-header,#scene3 .access-footer{border-color:rgba(99,177,194,.15)!important;background:rgba(255,255,255,.018)!important}#scene2 .terminal-left,#scene3 .access-sidebar{background:linear-gradient(180deg,rgba(10,25,38,.82),rgba(4,10,18,.82))!important}#scene2 .terminal-right,#scene3 .login-main{background:rgba(2,7,13,.35)!important}#scene3 .input-shell{border-radius:2px!important;background:rgba(2,10,18,.78)!important;border-color:rgba(99,177,194,.2)!important}#scene3 .input-shell:focus-within{border-color:rgba(90,226,238,.72)!important;box-shadow:0 0 0 2px rgba(40,185,205,.1),0 0 25px rgba(0,180,210,.08)!important}
+#scene0 .boot-code-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.62;mix-blend-mode:screen}#scene0 .boot-core{z-index:2}#scene0 .boot-phase,#scene0 .skip-hint{position:relative;z-index:3}
+@media(max-width:650px){.boot-event{width:min(300px,76vw);padding:9px 10px}.boot-event-text{font-size:7px}}
+#scene1{z-index:40!important;min-height:100vh}#scene1.active{opacity:1!important;visibility:visible!important;pointer-events:auto!important}#scene1 .breach-container{position:relative;z-index:2;width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px}#scene1 .warning-frame{position:relative;z-index:4;visibility:visible!important;opacity:1!important;pointer-events:auto!important}#scene1 #btnProceed{position:relative;z-index:80!important;display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;min-height:54px}
+@media(prefers-reduced-motion:reduce){.boot-event{animation:none!important}#scene0 .boot-code-canvas{opacity:.18}}@media(prefers-reduced-motion:reduce){.boot-event{animation:none!important}}
+</style>
+
+
+<style id="limbo-shanghai-centering">
+/* LIMBO / Shanghai visual pass — centered cinematic interface */
+:root{color-scheme:dark}
+html{background:#03050a;scroll-behavior:smooth}
+body.breach-mode{
+  min-height:100svh;overflow-x:hidden;
+  background:
+    radial-gradient(ellipse at 50% 46%,rgba(9,37,51,.34),transparent 42%),
+    radial-gradient(ellipse at 50% 110%,rgba(0,167,190,.09),transparent 48%),
+    #03050a;
+}
+body.breach-mode:before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.22;
+  background-image:linear-gradient(rgba(73,177,196,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(73,177,196,.045) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at center,#000 12%,transparent 82%);
+}
+body.breach-mode:after{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.55) 100%);
+}
+.hud,.side-stream{z-index:8}
+.scene{
+  position:fixed;inset:0;z-index:20;width:100%;min-height:100svh;
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(26px,5vh,58px) clamp(16px,3vw,42px);
+  isolation:isolate;overflow:hidden;
+}
+#scene0{
+  background:radial-gradient(ellipse at 50% 44%,rgba(8,31,44,.42),rgba(3,8,16,.94) 54%,#020409 100%);
+}
+#scene0 .boot-core{
+  position:relative;z-index:3;width:min(620px,92vw);
+  margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:clamp(22px,4vh,42px) 20px;
+  animation:shanghaiCoreIn 1.25s cubic-bezier(.16,1,.3,1) both;
+}
+#scene0 .core-rings{width:clamp(220px,34vw,340px);height:clamp(220px,34vw,340px);margin:0 auto 20px}
+#scene0 .core-status{font-size:clamp(10px,1vw,12px);letter-spacing:.32em}
+#scene0 .core-line{margin-top:13px}
+#scene0 .signal-bars{width:min(390px,78vw);margin:18px auto 12px}
+#scene0 .micro-readout,#scene0 .protocol-strip{justify-content:center;flex-wrap:wrap}
+#scene0 .boot-phase{width:min(420px,78vw);margin:24px auto 0}
+#scene0 .skip-hint{position:absolute;bottom:clamp(18px,4vh,38px);left:0;right:0;text-align:center;z-index:4}
+#scene0 .boot-event-feed{z-index:1;opacity:.78}
+#scene0 .boot-event{max-width:calc(100vw - 28px)}
+#scene1{background:radial-gradient(ellipse at 50% 45%,rgba(65,8,25,.2),transparent 54%),#03050a}
+#scene1 .breach-container{
+  width:100%;min-height:calc(100svh - 40px);padding:30px 16px;
+  display:flex;align-items:center;justify-content:center;
+}
+#scene1 .warning-frame{
+  width:min(760px,94vw);margin:auto;padding:clamp(22px,3.5vw,38px);
+  background:linear-gradient(150deg,rgba(13,17,29,.97),rgba(5,8,16,.985))!important;
+  border:1px solid rgba(103,188,203,.23)!important;
+  box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 55px rgba(0,183,205,.07)!important;
+  clip-path:none;border-radius:4px!important;
+  animation:shanghaiPanelIn .85s cubic-bezier(.16,1,.3,1) both;
+}
+#scene1 .warning-top{padding-bottom:14px}
+#scene1 .warning-icon-wrap{margin:20px auto}
+#scene1 .warning-title{font-size:clamp(18px,2.4vw,27px);text-align:center}
+#scene1 .warning-sub{text-align:center;max-width:560px;margin:10px auto 20px;line-height:1.75}
+#scene1 .warning-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#scene1 .warning-log{max-height:150px;overflow:hidden}
+#scene1 #btnProceed{width:100%;justify-content:center;margin-top:18px}
+#scene2{background:radial-gradient(ellipse at 50% 48%,rgba(0,116,139,.12),transparent 60%),#03050a}
+#scene2 .terminal-shell{
+  width:min(1120px,94vw);max-height:min(820px,90svh);margin:auto;overflow:hidden;
+  border:1px solid rgba(84,185,203,.25)!important;border-radius:4px!important;
+  background:linear-gradient(145deg,rgba(8,17,28,.97),rgba(3,7,14,.985))!important;
+  box-shadow:0 40px 120px rgba(0,0,0,.72),0 0 60px rgba(0,174,197,.09),inset 0 1px rgba(255,255,255,.035)!important;
+  animation:shanghaiPanelIn .9s cubic-bezier(.16,1,.3,1) both;
+}
+#scene2 .terminal-body{min-height:clamp(360px,54vh,570px)}
+#scene2 .terminal-left{width:34%;min-width:240px}
+#scene2 .terminal-right{min-width:0}
+#scene2 .terminal-top,#scene2 .terminal-prompt{background:rgba(255,255,255,.018)}
+#scene3{background:radial-gradient(ellipse at 50% 45%,rgba(0,119,144,.16),transparent 56%),#03050a}
+#scene3 .login-wrap{
+  width:min(1060px,94vw);max-height:90svh;overflow:auto;margin:auto;
+  border:1px solid rgba(84,185,203,.25)!important;border-radius:4px!important;
+  background:linear-gradient(145deg,rgba(8,17,28,.97),rgba(3,7,14,.985))!important;
+  box-shadow:0 40px 120px rgba(0,0,0,.72),0 0 60px rgba(0,174,197,.08)!important;
+  animation:shanghaiPanelIn .9s cubic-bezier(.16,1,.3,1) both;
+}
+#scene3 .access-header,#scene3 .access-footer{background:rgba(255,255,255,.018)}
+#scene3 .access-sidebar{background:linear-gradient(180deg,rgba(10,25,38,.82),rgba(4,10,18,.82))}
+#scene3 .login-main{background:rgba(2,7,13,.35)}
+#scene3 .input-shell{border-radius:2px}
+#scene4{background:radial-gradient(ellipse at 50% 45%,rgba(0,137,157,.16),transparent 60%),#03050a}
+#scene4 .auth-final.capture-interface{
+  width:min(920px,94vw);min-height:min(760px,90svh);margin:auto;
+  animation:shanghaiPanelIn .95s cubic-bezier(.16,1,.3,1) both;
+}
+#scene4 .auth-final.capture-interface:before{
+  background:linear-gradient(145deg,rgba(8,17,28,.94),rgba(3,7,14,.92));
+  border-color:rgba(95,190,207,.24);
+  box-shadow:0 40px 120px rgba(0,0,0,.7),0 0 55px rgba(0,174,197,.08),inset 0 1px rgba(255,255,255,.035);
+}
+.cyber-btn{
+  min-height:52px;border-radius:2px!important;letter-spacing:.1em;
+  background:linear-gradient(110deg,rgba(0,212,232,.12),rgba(0,212,232,.035))!important;
+  border:1px solid rgba(0,212,232,.42)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.04),0 8px 28px rgba(0,0,0,.22)!important;
+  transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .3s,background .3s,box-shadow .3s!important;
+}
+.cyber-btn:hover:not(:disabled){
+  transform:translateY(-2px);border-color:rgba(115,242,250,.8)!important;
+  background:linear-gradient(110deg,rgba(0,212,232,.2),rgba(0,212,232,.07))!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.3),0 0 26px rgba(0,212,232,.12)!important;
+}
+.cyber-btn:active:not(:disabled){transform:translateY(0) scale(.99)}
+.input-shell{transition:border-color .3s,box-shadow .3s,background .3s}
+.warning-meter i,.decrypt-bar i,.final-bar i{transition:width .8s cubic-bezier(.22,1,.36,1)}
+.system-notice{border-radius:3px;backdrop-filter:blur(20px);border-color:rgba(100,190,205,.3)}
+@keyframes shanghaiCoreIn{from{opacity:0;transform:translateY(24px) scale(.97);filter:blur(8px)}to{opacity:1;transform:none;filter:blur(0)}}
+@keyframes shanghaiPanelIn{from{opacity:0;transform:translateY(22px) scale(.985);filter:blur(7px)}to{opacity:1;transform:none;filter:blur(0)}}
+@media(max-width:760px){
+  .scene{padding:18px 10px}
+  #scene0 .boot-core{padding:16px 10px}
+  #scene0 .core-rings{width:220px;height:220px}
+  #scene2 .terminal-shell,#scene3 .login-wrap{width:96vw;max-height:94svh}
+  #scene2 .terminal-body{min-height:0}
+  #scene2 .terminal-left{width:100%;min-width:0}
+  #scene2 .terminal-body{flex-direction:column}
+  #scene2 .terminal-right{min-height:220px}
+  #scene1 .warning-frame{width:96vw;max-height:92svh;overflow:auto}
+  #scene4 .auth-final.capture-interface{width:96vw;min-height:0;padding:22px 12px}
+  .hud{display:none}
+}
+@media(max-height:720px) and (min-width:761px){
+  #scene0 .core-rings{width:220px;height:220px}
+  #scene0 .boot-core{padding:8px}
+  #scene2 .terminal-shell,#scene3 .login-wrap{max-height:94svh}
+  #scene4 .auth-final.capture-interface{min-height:0;padding:22px}
+}
+@media(prefers-reduced-motion:reduce){
+  #scene0 .boot-core,#scene1 .warning-frame,#scene2 .terminal-shell,#scene3 .login-wrap,#scene4 .auth-final.capture-interface{animation:none!important}
+  .cyber-btn,.input-shell{transition:none!important}
+}
+</style>
+
+  <script type="module" crossorigin src="/assets/index-t_7bGSsN.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/audio-BoRzptx1.js">
+  <link rel="modulepreload" crossorigin href="/assets/reveal-C-T3zGph.js">
+  <link rel="stylesheet" crossorigin href="/assets/system-CWksBXI5.css">
+  <link rel="stylesheet" crossorigin href="/assets/mobile-performance-C9ugAoYG.css">
+  <link rel="stylesheet" crossorigin href="/assets/responsive-adaptive-DGN5yxla.css">
+</head>
+<body class="breach-mode">
+<!-- ═══ OVERLAYS ═══ -->
+<div class="noise"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="ambient-grid"></div>
+<canvas id="matrixCanvas"></canvas>
+<div class="rgb-split" id="rgbSplit"></div>
+<div class="glitch-overlay" id="glitchOverlay"></div>
+<div class="glitch-flash" id="glitchFlash"></div>
+<div class="scan-beam" id="scanBeam"></div>
+<div class="chroma" id="chroma"></div>
+<div class="breach-flash" id="breachFlash"></div>
+
+<!-- ═══ CURSOR ═══ -->
+<div class="cursor" id="cursor"><div class="cursor-cross c1"></div><div class="cursor-cross c2"></div></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div id="systemNoticeHost" aria-live="polite" aria-relevant="additions"></div>
+
+<!-- ═══ HUD ═══ -->
+<div class="hud hud-tl">
+  <span class="hud-line">P.R.I.N.C. // CORE NODE</span>
+  <span class="hud-line dim" id="hudNode">NODE: UNKNOWN</span>
+  <span class="hud-line dim" id="hudGeo">GEO: --.--/--.--</span>
+</div>
+<div class="hud hud-tr">
+  <span class="hud-line">SECURITY: <b id="hudSec">LOCKED</b></span>
+  <span class="hud-line dim">TRACE: <span id="trace">STANDBY</span></span>
+  <span class="hud-line dim">INTRUSION: <span id="hudIntrusion">0%</span></span>
+</div>
+<div class="hud hud-bl">
+  <span class="hud-line">LATENCY <span id="latency">--</span> ms</span>
+  <span class="hud-line dim">PACKETS <span id="packets">0000</span></span>
+  <span class="hud-line dim">THROUGHPUT <span id="throughput">0.0</span> Gb/s</span>
+</div>
+<div class="hud hud-br">
+  <span class="hud-line">BUILD 3.0.0 // LIMBO</span>
+  <span class="hud-line dim" id="hudClock">T+00:00:00</span>
+</div>
+
+<!-- ═══ SIDE DATA STREAMS ═══ -->
+<div class="side-stream left" id="sideStreamLeft"></div>
+<div class="side-stream right" id="sideStreamRight"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 0 — SIGNAL ACQUISITION
+     ═══════════════════════════════════════════ -->
+<section class="scene active" id="scene0">
+  <div class="signal-noise"></div>
+  <canvas class="boot-code-canvas" id="bootCodeCanvas" aria-hidden="true"></canvas>
+  <div class="wave-grid">
+    <div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div>
+  </div>
+  <div class="boot-core">
+    <div class="core-rings">
+      <div class="core-ring ring-a"></div>
+      <div class="core-ring ring-b"></div>
+      <div class="core-ring ring-c"></div>
+      <div class="core-ring ring-d"></div>
+      <div class="ring-pulse"></div>
+      <div class="core-mark" id="coreMark"><svg class="princ-emblem" viewBox="0 0 240 240" role="img" aria-label="Эмблема П.Р.И.Н.Ц." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="princMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163744"/><stop offset=".52" stop-color="#091722"/><stop offset="1" stop-color="#172033"/></linearGradient>
+    <linearGradient id="princEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68f5ff"/><stop offset=".68" stop-color="#00b9d1"/><stop offset="1" stop-color="#e84bb9"/></linearGradient>
+    <radialGradient id="princLens"><stop stop-color="#d8ffff"/><stop offset=".13" stop-color="#24eaff"/><stop offset=".5" stop-color="#087e9b"/><stop offset="1" stop-color="#07151f"/></radialGradient>
+    <filter id="princGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M120 8 218 65 218 175 120 232 22 175 22 65Z" fill="url(#princMetal)" stroke="url(#princEdge)" stroke-width="3"/>
+  <path d="M120 22 205 72 205 168 120 218 35 168 35 72Z" fill="none" stroke="#4cefff" stroke-opacity=".48" stroke-width="1.5"/>
+  <path d="M120 22V75M35 72l42 25M205 72l-42 25M35 168l42-25M205 168l-42-25M120 218v-53" stroke="#37ddec" stroke-opacity=".48" stroke-width="1.4"/>
+  <path d="M43 120Q120 37 197 120Q120 203 43 120Z" fill="#071a27" stroke="#43f2ff" stroke-width="3" filter="url(#princGlow)"/>
+  <path d="M57 120Q120 55 183 120Q120 185 57 120Z" fill="none" stroke="#20bfd4" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="39" fill="none" stroke="#25dff0" stroke-width="2" stroke-dasharray="4 5"/>
+  <circle cx="120" cy="120" r="27" fill="url(#princLens)" stroke="#6df8ff" stroke-width="2.4"/>
+  <circle cx="120" cy="120" r="10" fill="#bfffff" filter="url(#princGlow)"/>
+  <path d="M120 76V93M120 147v17M76 120h17M147 120h17" stroke="#6efaff" stroke-width="2" stroke-linecap="round"/>
+  <path d="m22 120 15-10v20ZM218 120l-15-10v20Z" fill="#ee59c7" opacity=".85"/>
+  <path d="M120 8v14M22 65l13 7M218 65l-13 7" stroke="#b9ffff" stroke-width="2"/>
+</svg></div>
+    </div>
+    <div class="core-status">P.R.I.N.C. // SIGNAL ACQUISITION</div>
+    <div class="core-line">
+      <span id="signalText">INITIALIZING UPLINK</span><i class="caret"></i>
+    </div>
+    <div class="signal-bars" id="signalBars"></div>
+    <div class="micro-readout" id="microReadout">
+      <span>HANDSHAKE 00%</span>
+      <span>· ENCRYPTED</span>
+      <span>· <b id="microHash">0x00000000</b></span>
+    </div>
+    <div class="protocol-strip" id="protocolStrip"></div>
+    <div class="boot-phase" id="bootPhase"><span class="boot-phase-label">CORE INITIALIZATION</span><span class="boot-phase-state" id="bootPhaseState">AWAITING SECURE HANDSHAKE</span><div class="boot-phase-track"><i id="bootPhaseBar"></i></div></div>
+  </div>
+  <div class="boot-event-feed" id="bootEventFeed" aria-live="polite"></div>
+  <div class="skip-hint">PRESS <b>SPACE</b> TO SKIP · <b>CLICK</b> TO CONTINUE</div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 1 — INTRUSION WARNING
+     ═══════════════════════════════════════════ -->
+<section class="scene" id="scene1">
+  <div class="breach-container">
+    <div class="breach-bg" id="breachBg"></div>
+    <div class="warning-frame">
+      <div class="warning-top">
+        <span class="blink-red">●</span> SYSTEM INTEGRITY EVENT · SEVERITY 5
+        <b id="warningCode">0x7F-A91</b>
+      </div>
+
+      <div class="warning-scanline"></div>
+
+      <div class="warning-icon-wrap">
+        <div class="warning-icon"><span>!</span></div>
+        <div class="warning-icon-pulse"></div>
+      </div>
+
+      <div class="warning-title" id="warningTitle">НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ</div>
+      <div class="warning-sub" id="warningSub">
+        Обнаружен внешний сеанс связи с защищённым узлом.<br>
+        Автоматическая блокировка активирована.
+      </div>
+
+      <div class="threat-matrix" id="threatMatrix"></div>
+
+      <div class="warning-meter-wrap">
+        <div class="warning-meter-label">
+          <span>THREAT ESCALATION</span>
+          <b id="threatPercent">0%</b>
+        </div>
+        <div class="warning-meter"><i id="warningMeter"></i></div>
+      </div>
+
+      <div class="warning-meta">
+        <span>TRACE ID: <b id="traceId">---</b></span>
+        <span>THREAT: <b class="red">CRITICAL</b></span>
+        <span>AUTH: <b>REQUIRED</b></span>
+        <span>ATTEMPTS: <b id="intrusionCount">00</b></span>
+      </div>
+
+      <div class="warning-log" id="warningLog"></div>
+
+      <button class="cyber-btn danger big" id="btnProceed" data-cursor>
+        <span class="btn-label">ПРОДОЛЖИТЬ ПОДКЛЮЧЕНИЕ</span>
+        <em>→</em>
+        <span class="btn-glow"></span>
+      </button>
+      <div class="tiny-warning">
+        Продолжая, оператор подтверждает запуск интерактивного режима восстановления.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 2 — RECOVERY TERMINAL / BREACH
+     ═══════════════════════════════════════════ -->
+<section class="scene terminal-scene" id="scene2">
+  <div class="terminal-shell">
+    <div class="terminal-top">
+      <span><i class="led"></i> SECURE TERMINAL / RECOVERY MODE</span>
+      <span class="term-top-mid" id="termStatus">STATUS: BOOTING</span>
+      <span id="termClock">00:00:00</span>
+    </div>
+    <div class="terminal-body">
+      <aside class="terminal-left">
+        <div class="terminal-logo"><svg class="princ-emblem" viewBox="0 0 240 240" role="img" aria-label="Эмблема П.Р.И.Н.Ц." xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="princMetal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163744"/><stop offset=".52" stop-color="#091722"/><stop offset="1" stop-color="#172033"/></linearGradient>
+    <linearGradient id="princEdge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68f5ff"/><stop offset=".68" stop-color="#00b9d1"/><stop offset="1" stop-color="#e84bb9"/></linearGradient>
+    <radialGradient id="princLens"><stop stop-color="#d8ffff"/><stop offset=".13" stop-color="#24eaff"/><stop offset=".5" stop-color="#087e9b"/><stop offset="1" stop-color="#07151f"/></radialGradient>
+    <filter id="princGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M120 8 218 65 218 175 120 232 22 175 22 65Z" fill="url(#princMetal)" stroke="url(#princEdge)" stroke-width="3"/>
+  <path d="M120 22 205 72 205 168 120 218 35 168 35 72Z" fill="none" stroke="#4cefff" stroke-opacity=".48" stroke-width="1.5"/>
+  <path d="M120 22V75M35 72l42 25M205 72l-42 25M35 168l42-25M205 168l-42-25M120 218v-53" stroke="#37ddec" stroke-opacity=".48" stroke-width="1.4"/>
+  <path d="M43 120Q120 37 197 120Q120 203 43 120Z" fill="#071a27" stroke="#43f2ff" stroke-width="3" filter="url(#princGlow)"/>
+  <path d="M57 120Q120 55 183 120Q120 185 57 120Z" fill="none" stroke="#20bfd4" stroke-width="1.4"/>
+  <circle cx="120" cy="120" r="39" fill="none" stroke="#25dff0" stroke-width="2" stroke-dasharray="4 5"/>
+  <circle cx="120" cy="120" r="27" fill="url(#princLens)" stroke="#6df8ff" stroke-width="2.4"/>
+  <circle cx="120" cy="120" r="10" fill="#bfffff" filter="url(#princGlow)"/>
+  <path d="M120 76V93M120 147v17M76 120h17M147 120h17" stroke="#6efaff" stroke-width="2" stroke-linecap="round"/>
+  <path d="m22 120 15-10v20ZM218 120l-15-10v20Z" fill="#ee59c7" opacity=".85"/>
+  <path d="M120 8v14M22 65l13 7M218 65l-13 7" stroke="#b9ffff" stroke-width="2"/>
+</svg><span>P.R.I.N.C.</span></div>
+        <div class="terminal-sub">PRIVILEGED RESTRICTED<br>INTERFACE NODE CORE</div>
+
+        <div class="ascii-block">
+          <pre class="ascii" id="asciiArt"></pre>
+          <div class="ascii-glow"></div>
+        </div>
+
+        <div class="subsystem-list" id="subsystemList"></div>
+
+        <div class="progress-big"><i id="bootProgress"></i></div>
+        <div class="boot-percent"><span id="bootPercent">00</span><small>%</small></div>
+      </aside>
+      <main class="terminal-right">
+        <div class="terminal-log" id="terminalLog"></div>
+        <div class="hex-dump" id="hexDump"></div>
+      </main>
+    </div>
+    <div class="terminal-prompt">
+      <span class="prompt-user">root@limbo:~$</span>
+      <b id="promptText"></b><i class="caret"></i>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 3 — LOGIN
+     ═══════════════════════════════════════════ -->
+<section class="scene login-scene" id="scene3">
+  <div class="login-environment">
+    <div class="radar radar-1"></div>
+    <div class="radar radar-2"></div>
+    <div class="radar radar-3"></div>
+    <div class="radar-sweep"></div>
+    <div class="data-column left" id="dataLeft"></div>
+    <div class="data-column right" id="dataRight"></div>
+    <div class="login-grid"></div>
+    <div class="login-vignette"></div>
+  </div>
+
+  <div class="login-wrap" id="loginWrap">
+    <div class="access-header">
+      <div class="header-left">
+        <span class="mini-label">◤ SECURE ACCESS PROTOCOL · LVL 5</span>
+        <h1 class="glitch-hover" data-text="П.Р.И.Н.Ц.">П.Р.И.Н.Ц.</h1>
+        <p>ПЕРИМЕТР РЕГУЛИРУЕМОГО ИНТЕРАКТИВНОГО НЕЙРОННОГО ЦЕНТРА</p>
+      </div>
+      <div class="access-status">
+        <i></i>
+        <div class="status-text">
+          <span class="status-top" id="accessStatus">CHANNEL OPEN</span>
+          <span class="status-sub" id="accessSub">ENCRYPTED · AES-256</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="access-body">
+      <aside class="access-sidebar">
+        <div class="side-title">SESSION <span>/ 07</span></div>
+        <div class="session-id" id="sessionId">--------</div>
+
+        <div class="side-item"><span>ENCRYPTION</span><b>AES-256</b></div>
+        <div class="side-item"><span>HANDSHAKE</span><b id="handshake">PENDING</b></div>
+        <div class="side-item"><span>TRACE MASK</span><b id="traceMask">OFFLINE</b></div>
+        <div class="side-item"><span>ACCESS LEVEL</span><b class="cyan">LVL-5</b></div>
+        <div class="side-item"><span>NODE ROUTE</span><b id="nodeRoute">---.---.---.---</b></div>
+
+        <div class="side-log" id="sideLog"></div>
+      </aside>
+
+      <main class="login-main">
+        <div class="decrypt-line">
+          <span id="decryptLabel">DECODING AUTHENTICATION MATRIX</span>
+          <b id="decryptPercent">00%</b>
+        </div>
+        <div class="decrypt-bar"><i id="decryptBar"></i></div>
+        <div class="decrypt-ticker" id="decryptTicker"></div>
+
+        <div class="login-form" id="loginForm">
+          <div class="field-block locked-field" id="userBlock">
+            <label><span>01</span> OPERATOR IDENTIFIER</label>
+            <div class="input-shell">
+              <span class="prefix">ID://</span>
+              <input id="username" autocomplete="username" spellcheck="false" placeholder="DECRYPTING..." disabled>
+              <span class="field-state" id="userState">LOCKED</span>
+            </div>
+          </div>
+          <div class="field-block locked-field" id="passBlock">
+            <label><span>02</span> AUTHENTICATION VECTOR</label>
+            <div class="input-shell">
+              <span class="prefix">KEY://</span>
+              <input id="password" type="password" autocomplete="current-password" placeholder="WAITING FOR CHANNEL" disabled>
+              <span class="field-state" id="passState">LOCKED</span>
+            </div>
+          </div>
+
+          <div class="auth-console" id="authConsole">
+            <span>&gt;</span> <b id="authConsoleText">waiting for decrypted input...</b><i class="caret"></i>
+          </div>
+
+          <button class="cyber-btn enter-btn" id="btnLogin" disabled data-cursor>
+            <span class="btn-label">INITIATE AUTHENTICATION</span>
+            <em>↯</em>
+            <span class="btn-glow"></span>
+          </button>
+
+          <div class="form-foot">
+            <span>SESSION WILL BE TERMINATED AFTER 03 FAILED ATTEMPTS</span>
+            <span id="attempts">ATTEMPTS: 00/03</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="access-footer">
+      <span>/// P.R.I.N.C. CORE AUTHORITY</span>
+      <span id="footerMessage">AWAITING OPERATOR CREDENTIALS</span>
+      <span id="footerRight">NO EXTERNAL CONNECTION</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCENE 4 — FINAL AUTH
+     ═══════════════════════════════════════════ -->
+<section class="scene" id="scene4">
+  
+  <div class="auth-final capture-interface" id="alignStage">
+    <header class="capture-heading"><div class="capture-kicker">P.R.I.N.C. // REMOTE AUTHORITY</div><div class="capture-title">ПРОТОКОЛ ЗАХВАТА ЦЕЛИ</div><div class="capture-subtitle">СОВМЕСТИТЕ ПРИЦЕЛ С ЯДРОМ И УДЕРЖИВАЙТЕ КАНАЛ</div></header>
+    <div class="capture-status-grid">
+      <div class="capture-readout"><span>TRACK ID</span><b id="captureTrack">--:--:--</b></div>
+      <div class="capture-readout"><span>LOCK STATUS</span><b id="captureLock">SEARCHING</b></div>
+      <div class="capture-readout"><span>SYNC ERROR</span><b id="captureError">HIGH</b></div>
+    </div>
+    <div class="capture-instruction"><i></i><span id="captureInstruction">Переместите указатель в центральное ядро</span></div>
+    <div class="align-vortex" id="alignVortex">
+      <div class="av-ring r1"></div>
+      <div class="av-ring r2"></div>
+      <div class="av-ring r3"></div>
+      <div class="av-ring r4"></div>
+      <div class="av-core" id="alignCore"></div>
+      <div class="av-reticle" id="alignReticle"></div>
+    </div>
+    <div class="final-code" id="finalCode">TRACK::------</div>
+    <div class="final-title" id="finalTitle">ALIGN TARGET</div>
+    <div class="final-sub" id="finalSub">RETICLE SEARCHING FOR CONVERGENCE</div>
+    <div class="checkpoint-list" id="checkpointList"></div>
+    <div class="final-bar"><i id="finalBar"></i></div>
+    <div class="final-percent" id="finalPercent">00%</div>
+    <div class="align-hint" id="alignHint">TARGET ACQUISITION · WAITING FOR RETICLE CONVERGENCE</div>
+  </div>
+</section>
+<style>
+.auth-final[hidden]{display:none!important}
+.auth-final.capture-interface{position:relative;width:min(920px,94vw);min-height:min(760px,94vh);margin:auto;padding:clamp(20px,4vw,44px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#dceaf0;isolation:isolate}
+.auth-final.capture-interface:before{content:"";position:absolute;inset:4% 0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 50% 43%,rgba(0,198,220,.105),transparent 42%),linear-gradient(145deg,rgba(8,15,25,.92),rgba(3,7,14,.84));border:1px solid rgba(95,190,207,.18);clip-path:polygon(3% 0,97% 0,100% 4%,100% 96%,97% 100%,3% 100%,0 96%,0 4%);box-shadow:0 30px 100px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.04)}
+.auth-final.capture-interface:after{content:"";position:absolute;inset:4% 0;z-index:-1;pointer-events:none;opacity:.28;background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(110,210,225,.06) 6px,transparent 7px 12px);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+.capture-heading{text-align:center;margin-bottom:18px}.capture-kicker{color:#648c9b;font:600 9px/1.5 var(--font-mono,monospace);letter-spacing:.24em}.capture-title{margin-top:8px;color:#d9f8fa;font:600 clamp(19px,3vw,30px)/1.2 Orbitron,var(--font-mono,monospace);letter-spacing:.13em;text-shadow:0 0 24px rgba(0,205,225,.22)}.capture-subtitle{margin-top:9px;color:#7795a5;font:10px/1.6 var(--font-mono,monospace);letter-spacing:.1em}
+.capture-status-grid{width:min(560px,100%);display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}.capture-readout{padding:10px 12px;min-width:0;border:1px solid rgba(105,185,203,.16);background:linear-gradient(145deg,rgba(12,27,40,.72),rgba(4,11,20,.7));box-shadow:inset 0 1px rgba(255,255,255,.035)}.capture-readout span{display:block;color:#63818e;font:8px/1.4 var(--font-mono,monospace);letter-spacing:.15em}.capture-readout b{display:block;margin-top:5px;color:#b8d6df;font:600 11px/1.2 var(--font-mono,monospace);letter-spacing:.08em;overflow-wrap:anywhere}.capture-readout b.is-locked{color:#83e7c5;text-shadow:0 0 12px rgba(75,220,175,.3)}
+.capture-instruction{display:flex;align-items:center;gap:9px;margin:0 0 4px;color:#9bb8c4;font:9px/1.5 var(--font-mono,monospace);letter-spacing:.08em}.capture-instruction i{width:6px;height:6px;border-radius:50%;background:#56dbe7;box-shadow:0 0 12px #35d9e8;animation:capturePing 1.8s ease-in-out infinite}
+.align-vortex{position:relative;width:min(340px,64vw);height:min(340px,64vw);margin:8px auto 14px;touch-action:none;border-radius:50%;background:radial-gradient(circle,rgba(4,25,38,.82) 0 23%,rgba(2,11,21,.25) 24% 60%,transparent 61%);filter:drop-shadow(0 0 28px rgba(0,185,215,.12))}
+.align-vortex:before,.align-vortex:after{content:"";position:absolute;inset:7%;border-radius:50%;pointer-events:none}.align-vortex:before{border:1px solid rgba(75,215,230,.18);box-shadow:inset 0 0 34px rgba(0,180,210,.07),0 0 28px rgba(0,180,210,.06)}.align-vortex:after{inset:0;z-index:0;background:conic-gradient(from 0deg,transparent 0 72%,rgba(66,224,240,.22) 82%,transparent 88%);animation:captureSweep 6s linear infinite}.av-core{z-index:2}.av-reticle{z-index:3}
+.av-ring{position:absolute;left:50%;top:50%;z-index:1;border-radius:50%;transform:translate(-50%,-50%);border:1px solid rgba(0,232,255,.25);pointer-events:none}.av-ring.r1{width:94px;height:94px;border-color:rgba(0,232,255,.65);animation:spin 4s linear infinite}.av-ring.r2{width:164px;height:164px;border-top-color:transparent;border-bottom-color:rgba(0,232,255,.52);animation:spinReverse 7s linear infinite}.av-ring.r3{width:236px;height:236px;border-style:dashed;border-color:rgba(0,232,255,.18);animation:spin 18s linear infinite}.av-ring.r4{width:300px;height:300px;border-color:rgba(0,232,255,.12)}
+.av-core{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 38% 34%,#bfffff 0 4%,#1b9eaf 12%,#071723 48%,#02070d 70%);border:1px solid rgba(94,244,255,.75);box-shadow:0 0 28px rgba(0,232,255,.35),inset 0 0 22px #000;transition:box-shadow .25s,border-color .25s,transform .25s}.av-core:after{content:"";position:absolute;inset:-11px;border:1px solid rgba(91,231,245,.25);border-radius:50%}.av-core.locked{transform:translate(-50%,-50%) scale(1.13);box-shadow:0 0 48px rgba(0,232,255,.75),0 0 110px rgba(0,232,255,.28);border-color:#c5ffff}
+.av-reticle{position:absolute;width:42px;height:42px;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(0,232,255,.88);border-radius:50%;pointer-events:none;box-shadow:0 0 14px rgba(0,232,255,.34);transition:border-color .14s,box-shadow .14s}.av-reticle:before,.av-reticle:after{content:"";position:absolute;background:rgba(0,232,255,.8)}.av-reticle:before{left:50%;top:-12px;bottom:-12px;width:1px;transform:translateX(-50%)}.av-reticle:after{top:50%;left:-12px;right:-12px;height:1px;transform:translateY(-50%)}.av-reticle.aligned{border-color:#8fffd6;box-shadow:0 0 24px rgba(30,220,170,.65)}.av-reticle.aligned:before,.av-reticle.aligned:after{background:#8fffd6}
+.final-code{color:#5f95a4;font:10px var(--font-mono,monospace);letter-spacing:.2em}.final-title{margin-top:7px;color:#c8f5f8;font:600 18px Orbitron,var(--font-mono,monospace);letter-spacing:.16em}.final-sub{margin-top:6px;color:#7995a2;font:9px var(--font-mono,monospace);letter-spacing:.1em;text-align:center}.checkpoint-list{width:min(560px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:18px 0 12px}.chk-row{min-width:0;padding:8px 5px;border:1px solid rgba(105,185,203,.14);background:rgba(7,17,27,.68);text-align:center}.chk-mark{display:block;color:#7198a4;font-size:13px}.chk-name{display:block;margin-top:4px;color:#809ba5;font:7px/1.35 var(--font-mono,monospace);letter-spacing:.04em}.chk-state{display:block;margin-top:5px;color:#607985;font:7px var(--font-mono,monospace);letter-spacing:.1em}.final-bar{width:min(560px,100%);height:4px;background:rgba(125,180,195,.12);overflow:hidden}.final-bar i{display:block;width:0;height:100%;background:linear-gradient(90deg,#147f9a,#69eff4);box-shadow:0 0 14px rgba(0,220,240,.5);transition:width .12s linear}.final-percent{margin-top:7px;color:#a8eaf0;font:600 12px var(--font-mono,monospace);letter-spacing:.12em}.align-hint{margin-top:10px;color:#678b98;font:8px var(--font-mono,monospace);letter-spacing:.12em;text-align:center}
+@keyframes capturePing{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}@keyframes captureSweep{to{transform:rotate(360deg)}}@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spinReverse{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+@media(max-width:650px){.auth-final.capture-interface{padding:18px 12px}.capture-status-grid{gap:5px}.capture-readout{padding:8px 7px}.capture-readout span{font-size:7px}.capture-readout b{font-size:9px}.checkpoint-list{grid-template-columns:repeat(5,minmax(0,1fr))}.chk-name,.chk-state{font-size:6px}.av-ring.r4{width:270px;height:270px}}
+@media(prefers-reduced-motion:reduce){.align-vortex:after,.capture-instruction i,.av-ring{animation:none!important}}</style>
+
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const rand = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+  const pick = arr => arr[rand(0, arr.length - 1)];
+  const hex = n => Array.from({length: n}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+  const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+
+  const scene = id => {
+    const target = $(id);
+    if (!target) return;
+    $$('.scene').forEach(x => {
+      const active = x === target;
+      x.classList.toggle('active', active);
+      x.setAttribute('aria-hidden', active ? 'false' : 'true');
+      x.inert = !active;
+    });
+    document.body.dataset.activeScene = target.id;
+  };
+
+  // A single, non-blocking notification layer for runtime errors and system notices.
+  const noticeHost = document.getElementById('systemNoticeHost');
+  function showSystemNotice(kind, title, message) {
+    if (!noticeHost) return;
+    const card = document.createElement('section');
+    card.className = 'system-notice';
+    card.dataset.kind = kind;
+    card.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    const copy = document.createElement('div');
+    copy.className = 'system-notice-copy';
+    const heading = document.createElement('strong');
+    heading.className = 'system-notice-title';
+    heading.textContent = title;
+    const detail = document.createElement('div');
+    detail.className = 'system-notice-message';
+    detail.textContent = String(message || 'Операция не выполнена.');
+    copy.append(heading, detail);
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'system-notice-close';
+    close.setAttribute('aria-label', 'Закрыть уведомление'); close.textContent = '×';
+    close.addEventListener('click', () => card.remove());
+    card.append(copy, close);
+    noticeHost.appendChild(card);
+    while (noticeHost.children.length > 3) noticeHost.firstElementChild.remove();
+    window.setTimeout(() => card.remove(), kind === 'error' ? 9000 : 5200);
+  }
+  window.addEventListener('error', event => {
+    const message = event.message || 'Неизвестная ошибка интерфейса';
+    showSystemNotice('error', 'ОШИБКА СИСТЕМЫ', message);
+  });
+  window.addEventListener('unhandledrejection', event => {
+    const reason = event.reason;
+    showSystemNotice('error', 'СБОЙ ОПЕРАЦИИ', reason && reason.message ? reason.message : String(reason || 'Необработанная ошибка'));
+  });
+
+  // ─── CURSOR ───
+  const cursor = $('#cursor'), dot = $('#cursorDot');
+  let mx = innerWidth/2, my = innerHeight/2, cx = mx, cy = my;
+  addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  });
+  (function move() {
+    cx += (mx - cx) * 0.18;
+    cy += (my - cy) * 0.18;
+    cursor.style.left = cx + 'px';
+    cursor.style.top = cy + 'px';
+    requestAnimationFrame(move);
+  })();
+  document.addEventListener('mouseover', e => {
+    if (e.target.closest('button,input,[data-cursor],a')) cursor.classList.add('hover');
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('button,input,[data-cursor],a')) cursor.classList.remove('hover');
+  });
+  // Keep the native pointer available; the reticle is only an additional visual guide.
+  document.body.style.cursor = 'auto';
+
+  // ─── MATRIX ───
+  const canvas = $('#matrixCanvas'), ctx = canvas.getContext('2d');
+  let W, H, cols, drops = [];
+  const lowPowerMode = window.matchMedia('(pointer: coarse)').matches;
+  const GLYPHS = '01ABCDEF<>[]{}#$%&*/\\|+=-_ЖДЫЛФЦЩЭЮЯ';
+  function resizeCanvas() {
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+    cols = Math.ceil(W / (lowPowerMode ? 28 : 16));
+    drops = Array.from({length: cols}, () => Math.random() * -50);
+  }
+  resizeCanvas();
+  addEventListener('resize', resizeCanvas);
+  let matrixLastFrame = 0;
+  function matrix(now = 0) {
+    requestAnimationFrame(matrix);
+    if (document.hidden || now - matrixLastFrame < (lowPowerMode ? 150 : 72)) return;
+    matrixLastFrame = now;
+    ctx.fillStyle = 'rgba(3, 5, 10, 0.12)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = lowPowerMode ? '10px JetBrains Mono, monospace' : '12px JetBrains Mono, monospace';
+    for (let i = 0; i < cols; i++) {
+      const ch = GLYPHS.charAt(rand(0, GLYPHS.length - 1));
+      const y = drops[i] * 16;
+      if (y > 0 && y < H) {
+        if (Math.random() > 0.9) {
+          ctx.fillStyle = 'rgba(180, 255, 250, 0.55)';
+          ctx.shadowColor = 'rgba(0,212,232,0.8)';
+          ctx.shadowBlur = 8;
+        } else if (Math.random() > 0.75) {
+          ctx.fillStyle = 'rgba(0, 212, 232, 0.42)';
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillStyle = 'rgba(0, 212, 232, 0.11)';
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillText(ch, i * (lowPowerMode ? 28 : 16), y);
+      }
+      drops[i] += Math.random() * 0.7 + 0.25;
+      if (y > H && Math.random() > 0.975) drops[i] = Math.random() * -30;
+    }
+  }
+  requestAnimationFrame(matrix);
+
+  // ─── AUDIO (mechanical keys + tension drone) ───
+  let audio = null, masterGain = null, droneNodes = null;
+  function ensureAudio() {
+    try {
+      if (!audio) {
+        audio = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audio.createGain();
+        masterGain.gain.value = 0.75;
+        masterGain.connect(audio.destination);
+      }
+      if (audio.state === 'suspended') audio.resume();
+    } catch {}
+  }
+  function tone(freq = 440, dur = 0.05, type = 'square', vol = 0.02) {
+    try {
+      ensureAudio();
+      if (!audio) return;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.value = vol;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      const t = audio.currentTime;
+      o.start(t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.stop(t + dur + 0.02);
+    } catch {}
+  }
+  function noiseBurst(dur = 0.08, vol = 0.05) {
+    try {
+      ensureAudio();
+      if (!audio) return;
+      const len = Math.floor(audio.sampleRate * dur);
+      const buffer = audio.createBuffer(1, len, audio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.4));
+      const src = audio.createBufferSource(), g = audio.createGain();
+      g.gain.value = vol;
+      src.buffer = buffer;
+      src.connect(g); g.connect(masterGain || audio.destination);
+      src.start();
+    } catch {}
+  }
+  function keyClick() {
+    // dull mechanical keyboard — body + click + noise
+    try {
+      ensureAudio();
+      const t = audio.currentTime;
+      const o1 = audio.createOscillator(), g1 = audio.createGain();
+      o1.type = 'triangle'; o1.frequency.value = 90 + Math.random() * 30;
+      g1.gain.value = 0.055;
+      o1.connect(g1); g1.connect(masterGain || audio.destination);
+      o1.start(t); g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); o1.stop(t + 0.07);
+      const o2 = audio.createOscillator(), g2 = audio.createGain();
+      o2.type = 'square'; o2.frequency.value = 380 + Math.random() * 200;
+      g2.gain.value = 0.016;
+      o2.connect(g2); g2.connect(masterGain || audio.destination);
+      o2.start(t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.022); o2.stop(t + 0.025);
+      noiseBurst(0.012, 0.035);
+    } catch {}
+  }
+  function alertSiren() {
+    try {
+      ensureAudio();
+      const t = audio.currentTime;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(260, t);
+      o.frequency.linearRampToValueAtTime(480, t + 0.18);
+      o.frequency.linearRampToValueAtTime(200, t + 0.4);
+      g.gain.value = 0.038;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      o.start(t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.stop(t + 0.47);
+    } catch {}
+  }
+  function startDrone() {
+    try {
+      ensureAudio();
+      if (droneNodes) return;
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'sine'; o.frequency.value = 36;
+      g.gain.value = 0.012;
+      o.connect(g); g.connect(masterGain || audio.destination);
+      o.start();
+      const lfo = audio.createOscillator(), lg = audio.createGain();
+      lfo.frequency.value = 0.07; lg.gain.value = 3.5;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start();
+      droneNodes = { o, g, lfo };
+    } catch {}
+  }
+  function lockBeep() {
+    tone(880, 0.07, 'sine', 0.035);
+    setTimeout(() => tone(1174, 0.12, 'sine', 0.04), 85);
+  }
+
+  // ─── GLITCH FX ───
+  const glitchFlash = $('#glitchFlash'), rgbSplit = $('#rgbSplit'), glitchOverlay = $('#glitchOverlay'), scanBeam = $('#scanBeam'), chroma = $('#chroma'), breachFlash = $('#breachFlash');
+
+  function glitchBurst(intensity = 3) {
+    let i = 0;
+    const colors = ['#00fff9', '#ff00aa', '#e02848', '#9b00d4', '#e8a020', '#fff'];
+    const go = () => {
+      glitchFlash.style.background = pick(colors);
+      glitchFlash.style.opacity = String(0.08 + Math.random() * 0.08);
+      rgbSplit.classList.add('on');
+      glitchOverlay.style.opacity = String(0.12 + Math.random() * 0.1);
+      chroma.style.opacity = String(0.06 + Math.random() * 0.06);
+      noiseBurst(0.04, 0.04);
+      setTimeout(() => {
+        glitchFlash.style.opacity = '0';
+        rgbSplit.classList.remove('on');
+        glitchOverlay.style.opacity = '0';
+        chroma.style.opacity = '0';
+        if (++i < intensity) setTimeout(go, rand(30, 90));
+      }, rand(25, 55));
+    };
+    go();
+  }
+  function scanSweep() {
+    scanBeam.style.opacity = '1';
+    scanBeam.style.top = '-4%';
+    const anim = scanBeam.animate(
+      [{ top: '-4%' }, { top: '104%' }],
+      { duration: 780, easing: 'cubic-bezier(.22,1,.36,1)' }
+    );
+    anim.onfinish = () => scanBeam.style.opacity = '0';
+    tone(1400, 0.16, 'sine', 0.014);
+  }
+  function breachPulse() {
+    breachFlash.style.opacity = '0.12';
+    setTimeout(() => breachFlash.style.opacity = '0', 110);
+  }
+
+  // ─── TEXT SCRAMBLE UTILITIES ───
+  const SCRAMBLE_CHARS = '!@#$%^&*()_+-=[]{}|;:,.<>?/\\ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function scrambleInto(el, targetText, duration = 700, opts = {}) {
+    const tickRate = opts.tickRate || 28;
+    const start = performance.now();
+    const len = targetText.length;
+    return new Promise(resolve => {
+      const id = setInterval(() => {
+        const t = (performance.now() - start) / duration;
+        const revealed = Math.floor(t * len);
+        let out = '';
+        for (let i = 0; i < len; i++) {
+          if (i < revealed) out += targetText[i];
+          else if (targetText[i] === ' ') out += ' ';
+          else out += SCRAMBLE_CHARS[rand(0, SCRAMBLE_CHARS.length - 1)];
+        }
+        el.textContent = out;
+        if (t >= 1) {
+          el.textContent = targetText;
+          clearInterval(id);
+          resolve();
+        }
+      }, tickRate);
+    });
+  }
+  async function typeInto(el, text, speed = 14, opts = {}) {
+    el.textContent = '';
+    for (const ch of text) {
+      el.textContent += ch;
+      if (Math.random() > 0.72) keyClick();
+      await sleep(speed + (Math.random() > 0.9 ? 30 : 0));
+    }
+  }
+
+  // ─── HUD ANIMATION ───
+  let tZero = Date.now();
+  setInterval(() => {
+    $('#latency').textContent = rand(8, 47);
+    $('#packets').textContent = String(rand(1400, 9999));
+    $('#throughput').textContent = (Math.random() * 9 + 1).toFixed(1);
+    $('#termClock').textContent = new Date().toLocaleTimeString('ru-RU');
+    const d = new Date(Date.now() - tZero);
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    const ss = String(d.getUTCSeconds()).padStart(2, '0');
+    $('#hudClock').textContent = `T+${hh}:${mm}:${ss}`;
+  }, 500);
+
+  // Ambient corruption is event-driven; no random full-screen flicker loop.
+
+  // ─── SCENE 0 — SIGNAL ACQUISITION ───
+  const signalBars = $('#signalBars');
+  const protocolStrip = $('#protocolStrip');
+  const protocols = ['TCP/IPv6', 'TLS-1.3', 'X25519', 'AES-GCM', 'CHACHA20', 'SHA-3', 'ONION-R3', 'QUIC', 'DTLS'];
+
+  function buildSignalBars() {
+    signalBars.innerHTML = '';
+    for (let i = 0; i < 28; i++) {
+      const b = document.createElement('i');
+      b.style.height = rand(3, 26) + 'px';
+      b.style.animationDelay = (i * 0.04) + 's';
+      signalBars.appendChild(b);
+    }
+  }
+  buildSignalBars();
+  setInterval(() => {
+    signalBars.querySelectorAll('i').forEach(b => {
+      b.style.height = rand(3, 26) + 'px';
+    });
+  }, 620);
+
+  async function bootSignal() {
+    ensureAudio();
+    startDrone();
+    const messages = [
+      'INITIALIZING UPLINK',
+      'LOCATING SECURE NODE',
+      'NEGOTIATING HANDSHAKE',
+      'MASKING ORIGIN',
+      'BYPASSING EDGE FILTER',
+      'CHANNEL ACQUIRED'
+    ];
+    const signalText = $('#signalText');
+    const microReadout = $('#microReadout');
+    const microHash = $('#microHash');
+    const signalBars = $('#signalBars');
+
+    // animated equalizer bars
+    if (signalBars) {
+      signalBars.innerHTML = '';
+      for (let i = 0; i < 24; i++) {
+        const bar = document.createElement('span');
+        bar.style.height = (20 + Math.random() * 80) + '%';
+        bar.style.animationDelay = (i * 0.05) + 's';
+        bar.style.animationDuration = (0.35 + Math.random() * 0.45) + 's';
+        signalBars.appendChild(bar);
+      }
+      setInterval(() => {
+        if (!$('#scene0') || !$('#scene0').classList.contains('active')) return;
+        signalBars.querySelectorAll('span').forEach(b => {
+          b.style.height = (15 + Math.random() * 85) + '%';
+        });
+      }, 180);
+    }
+
+    if (protocolStrip) {
+      protocolStrip.innerHTML = '';
+      protocols.forEach((p, i) => {
+        const s = document.createElement('span');
+        s.textContent = p;
+        s.style.animationDelay = (i * 0.1) + 's';
+        protocolStrip.appendChild(s);
+      });
+    }
+
+    // GSAP entrance if available
+    if (window.gsap) {
+      gsap.from('.core-rings', { scale: 0.6, opacity: 0, duration: 1.4, ease: 'power3.out' });
+      // SVG emblem controls its own multi-stage boot animation.
+      gsap.from('.core-status, .core-line, .signal-bars, .micro-readout, .protocol-strip', {
+        y: 16, opacity: 0, duration: 0.7, stagger: 0.08, delay: 0.6, ease: 'power2.out'
+      });
+    }
+
+    for (let i = 0; i < messages.length; i++) {
+      await scrambleInto(signalText, messages[i], 420);
+      const pct = String((i + 1) * 16).padStart(2, '0');
+      microReadout.querySelector('span').textContent = `HANDSHAKE ${pct}%`;
+      microHash.textContent = '0x' + hex(8);
+      const bootBar = $('#bootPhaseBar'), bootState = $('#bootPhaseState');
+      if (bootBar) bootBar.style.width = ((i + 1) / messages.length * 100) + '%';
+      if (bootState) bootState.textContent = messages[i];
+      tone(160 + i * 90, 0.05, 'square', 0.018);
+      scanSweep();
+      await sleep(280);
+    }
+
+    await beginIntrusionSequence();
+    $('#hudNode').textContent = 'NODE: FED-LIMBO-07';
+    $('#hudGeo').textContent = 'GEO: 55.75/37.61';
+    $('#trace').textContent = 'ACTIVE';
+    tone(110, 0.28, 'sawtooth', 0.04);
+  }
+
+  // ─── PRE-ALERT / INTRUSION TRACE ───
+  let intrusionSequencePromise = null;
+  function pushBootEvent(code, message, level = 'normal') {
+    const feed = $('#bootEventFeed'); if (!feed) return;
+    const card = document.createElement('div'); card.className = 'boot-event'; card.dataset.level = level;
+    const cardWidth = Math.min(360, window.innerWidth * .34);
+    const cardHeight = 64;
+    const maxX = Math.max(12, window.innerWidth - cardWidth - 18);
+    const maxY = Math.max(12, window.innerHeight - cardHeight - 18);
+    let x = 12, y = 12, candidate = null;
+    for (let attempt = 0; attempt < 16; attempt++) {
+      x = Math.round(12 + Math.random() * Math.max(0, maxX - 12));
+      y = Math.round(12 + Math.random() * Math.max(0, maxY - 12));
+      const overlaps = [...feed.children].some(node => {
+        const r = node.getBoundingClientRect();
+        return x < r.right + 18 && x + cardWidth > r.left - 18 && y < r.bottom + 14 && y + cardHeight > r.top - 14;
+      });
+      if (!overlaps) break;
+      candidate = {x,y};
+    }
+    if (candidate && feed.children.length > 7) { x = candidate.x; y = candidate.y; }
+    card.style.left = x + 'px'; card.style.top = y + 'px';
+    card.style.transform = 'translateY(8px)';
+    card.innerHTML = '<b class="boot-event-code"></b><span class="boot-event-text"></span>';
+    card.querySelector('.boot-event-code').textContent = code;
+    const copy = card.querySelector('.boot-event-text'); copy.append(document.createTextNode(message));
+    const time = document.createElement('small'); time.className = 'boot-event-time';
+    time.textContent = new Date().toLocaleTimeString('ru-RU',{hour12:false})+' · '+(level==='critical'?'SEVERITY 5':'TRACE EVENT'); copy.appendChild(time);
+    feed.appendChild(card);
+    while(feed.children.length>12)feed.removeChild(feed.firstElementChild);
+    window.setTimeout(()=>{if(card.isConnected){card.style.transition='opacity .55s,filter .55s,transform .55s';card.style.opacity='0';card.style.filter='blur(7px)';card.style.transform+=' translateY(-8px)';window.setTimeout(()=>card.remove(),580);}},level==='critical'?8200:6800);
+  }
+  function beginIntrusionSequence() {
+    if(intrusionSequencePromise)return intrusionSequencePromise;
+    intrusionSequencePromise=(async()=>{
+      const phase=$('#bootPhaseState'),bar=$('#bootPhaseBar'),signal=$('#signalText');
+      const events=[
+        ['SCAN','UNKNOWN PEER DISCOVERED ON SHADOW PORT','normal'],
+        ['TRACE','UNREGISTERED ROUTE PING · 01/09','normal'],
+        ['DENY','AUTH TOKEN REPLAY BLOCKED · ATTEMPT 01','normal'],
+        ['WARN','FIREWALL SIGNATURE HAS BEEN MODIFIED','normal'],
+        ['TRACE','SECONDARY HANDSHAKE FROM UNKNOWN NODE','normal'],
+        ['DENY','ACCESS VECTOR REJECTED · PORT 0x1F3A','normal'],
+        ['WARN','MEMORY LATENCY ABOVE ACCEPTED THRESHOLD','normal'],
+        ['BREACH','PRIVILEGE ESCALATION VECTOR DETECTED','critical'],
+        ['LOCK','REMOTE PROCESS IS TOUCHING CORE MEMORY','critical'],
+        ['FLOOD','INBOUND REQUEST RATE × 4.8','critical'],
+        ['FLOOD','MULTIPLE SOURCE NODES DETECTED · 17 ACTIVE','critical'],
+        ['FAIL','ISOLATION FAILED · OPERATOR CHANNEL EXPOSED','critical'],
+        ['KERNEL','UNTRUSTED PROCESS REACHED KERNEL SPACE','critical'],
+        ['OVERRIDE','LOCAL COUNTERMEASURES OVERRIDDEN','critical'],
+        ['ROOT','ROOT AUTHORITY REQUESTED FROM REMOTE HOST','critical'],
+        ['FATAL','CORE PERIMETER COLLAPSE IMMINENT','critical']
+      ];
+      if(phase)phase.textContent='ANALYZING UNTRUSTED TRAFFIC';if(signal)signal.textContent='VERIFYING INTEGRITY';if(bar)bar.style.width='100%';
+      for(let i=0;i<events.length;i++){
+        const [code,message,level]=events[i];pushBootEvent(code,message,level);
+        if(phase)phase.textContent=level==='critical'?'CONTAINMENT FAILURE':'FILTERING EXTERNAL REQUESTS';
+        if(i===1||i===3||i===5){glitchBurst(i===5?4:2);tone(i===5?54:82,i===5?.22:.1,'sawtooth',i===5?.055:.03)}
+        else tone(220+i*55,.035,'square',.012);
+        const delay = [1120,980,850,760,650,560,470,390,330,280,235,205,180,160,145,130][i] || 130;
+        await sleep(delay);
+      }
+      await sleep(360);document.body.classList.add('scene-red');scene('#scene1');
+      $('#hudNode').textContent='NODE: FED-LIMBO-07';$('#hudGeo').textContent='GEO: 55.75/37.61';$('#trace').textContent='ACTIVE';
+      tone(58,.42,'sawtooth',.06);glitchBurst(5);await sleep(140);initWarning();
+    })();
+    return intrusionSequencePromise;
+  }
+
+  // ─── SCENE 1 — WARNING ───
+  const warningLogMessages = [
+    ['!!', 'INTRUSION DETECTED ON PORT 0x1F3A'],
+    ['>>', 'SOURCE SPOOFING ATTEMPT BLOCKED'],
+    ['!!', 'KERNEL INTEGRITY: COMPROMISED'],
+    ['::', 'COUNTERMEASURE DAEMON: ENGAGED'],
+    ['!!', 'FIREWALL RULE 07-F: VIOLATED'],
+    ['>>', 'TRACE ROUTE: UNSTABLE'],
+    ['!!', 'MEMORY REGION 0xAF31: TAMPERED'],
+    ['::', 'AUTO-RESPONSE: QUARANTINE PENDING'],
+    ['!!', 'PRIVILEGE ESCALATION VECTOR: OPEN'],
+    ['>>', 'OPERATOR OVERRIDE REQUIRED']
+  ];
+
+  let warningInitialized = false;
+  let warningThreatTimer = 0, warningTitleTimer = 0, warningIntrusionTimer = 0;
+  function initWarning() {
+    if (warningInitialized) return;
+    warningInitialized = true;
+    document.body.classList.add('scene-red');
+    ensureAudio();
+    alertSiren();
+    setTimeout(alertSiren, 500);
+    if (window.gsap) {
+      gsap.from('.warning-frame', { scale: 0.92, opacity: 0, duration: 0.55, ease: 'power3.out' });
+      gsap.from('.warning-icon-wrap', { scale: 0, rotation: 0.2, duration: 0.6, ease: 'back.out(2)' });
+      gsap.from('.warning-title', { y: 20, opacity: 0, duration: 0.5, delay: 0.15 });
+    }
+
+    $('#traceId').textContent = 'TR-' + hex(10);
+    const warningTitle = $('#warningTitle');
+    const titles = [
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ',
+      'НEСAНКЦI0НИР0ВAННЫЙ КAНAЛ',
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНАЛ',
+      'НЕСАНКЦИОНИРОВАННЫЙ КАНΛΛ'
+    ];
+    let ti = 0;
+    warningTitleTimer = setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      ti = (ti + 1) % titles.length;
+      warningTitle.textContent = titles[ti];
+    }, 4200);
+
+    const tm = $('#threatMatrix');
+    tm.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('i');
+      c.style.animationDelay = (i * 0.035) + 's';
+      if (Math.random() > 0.7) c.classList.add('hot');
+      tm.appendChild(c);
+    }
+
+    let threat = 12;
+    const meter = $('#warningMeter');
+    const threatPercent = $('#threatPercent');
+    warningThreatTimer = setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      threat = clamp(threat + rand(-3, 6), 8, 96);
+      meter.style.width = threat + '%';
+      threatPercent.textContent = threat + '%';
+      $('#hudIntrusion').textContent = threat + '%';
+      if (threat > 70) $('#hudSec').textContent = 'BREACHED';
+      else if (threat > 40) $('#hudSec').textContent = 'AT RISK';
+    }, 420);
+
+    const log = $('#warningLog');
+    let li = 0;
+    function pushLog() {
+      if (!$('#scene1').classList.contains('active')) return;
+      if (li < warningLogMessages.length) {
+        const [tag, text] = warningLogMessages[li++];
+        const row = document.createElement('div');
+        row.className = 'warn-log-row ' + (tag === '!!' ? 'err' : tag === '::' ? 'sys' : 'warn');
+        row.innerHTML = `<span class="wl-tag">${tag}</span><span class="wl-text"></span>`;
+        log.appendChild(row);
+        typeInto(row.querySelector('.wl-text'), text, 10);
+        if (log.children.length > 6) log.removeChild(log.children[0]);
+        tone(tag === '!!' ? 70 : 240, 0.03, tag === '!!' ? 'sawtooth' : 'square', 0.014);
+      }
+      setTimeout(pushLog, rand(600, 1200));
+    }
+    pushLog();
+
+    let intr = 0;
+    warningIntrusionTimer = setInterval(() => {
+      if (!$('#scene1').classList.contains('active')) return;
+      intr = rand(1, 47);
+      $('#intrusionCount').textContent = String(intr).padStart(2, '0');
+      $('#warningCode').textContent = '0x' + hex(2) + '-' + hex(3).slice(0, 3);
+    }, 800);
+  }
+
+  let breachProceeding = false;
+  async function proceedBreach() {
+    if (breachProceeding) return;
+    breachProceeding = true;
+    const proceedButton = $('#btnProceed');
+    if (proceedButton) { proceedButton.disabled = true; const label=proceedButton.querySelector('.btn-label'); if(label)label.textContent='ПОДГОТОВКА КАНАЛА...'; }
+    ensureAudio();
+    tone(70, 0.18, 'sawtooth', 0.05);
+    glitchBurst(1);
+    const meter = $('#warningMeter');
+    if (meter) {
+      meter.style.width = '100%';
+      meter.style.background = 'linear-gradient(90deg, var(--red), #fff)';
+    }
+    await sleep(200);
+    scene('#scene2');
+    runTerminal();
+  }
+  const btnProceed = $('#btnProceed');
+  if (btnProceed) {
+    btnProceed.style.pointerEvents = 'auto';
+    btnProceed.style.zIndex = '100';
+    btnProceed.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); void proceedBreach(); });
+    btnProceed.addEventListener('pointerdown', (e) => { e.stopPropagation(); });
+    btnProceed.addEventListener('keydown', (e) => { if(e.key==='Enter'||e.key===' '){e.preventDefault();void proceedBreach();} });
+  }
+
+  // ─── SCENE 2 — TERMINAL ───
+  const terminalLines = [
+    ['SYS',  'P.R.I.N.C. CORE / RECOVERY KERNEL 3.0.0',              'ok'],
+    ['OK',   'Memory lattice ................. ONLINE',              'ok'],
+    ['OK',   'Neural routing ................. ONLINE',              'ok'],
+    ['OK',   'Quantum bus ................... STABLE',               'ok'],
+    ['WARN', 'External handshake ............. DETECTED',            'warn'],
+    ['ERR',  'Firewall policy ................ DENIED [01/03]',      'err'],
+    ['SYS',  'Reconstructing operator channel ...',                  'sys'],
+    ['OK',   'Trace mask ..................... ENABLED',             'ok'],
+    ['OK',   'Proxy chain (7 hops) ........... ESTABLISHED',         'ok'],
+    ['ERR',  'Firewall policy ................ DENIED [02/03]',      'err'],
+    ['WARN', 'Countermeasure daemon .......... ACTIVE',              'warn'],
+    ['SYS',  'Injecting recovery shell .......',                     'sys'],
+    ['OK',   'Kernel panic handler ........... SUPPRESSED',          'ok'],
+    ['ERR',  'Credential layer ............... LOCKED',              'err'],
+    ['OK',   'Fallback route ................. AVAILABLE',           'ok'],
+    ['ERR',  'Firewall policy ................ DENIED [03/03]',      'err'],
+    ['WARN', 'LOCKOUT OVERRIDE REQUESTED',                           'warn'],
+    ['SYS',  'Engaging brute-force mitigator ..',                    'sys'],
+    ['OK',   'Entropy pool ................... RE-CHARGED',          'ok'],
+    ['OK',   'Interactive authentication ..... READY',               'ok']
+  ];
+
+  const subsystems = [
+    'NEURAL BUS', 'KERNEL CORE', 'MEMORY LATTICE',
+    'TRACE MASKER', 'FIREWALL BYPASS', 'CREDENTIAL VAULT',
+    'SESSION MANAGER', 'AUDIO DRIVER', 'GPU LATTICE'
+  ];
+
+  async function runTerminal() {
+    const log = $('#terminalLog');
+    log.innerHTML = '';
+    $('#asciiArt').textContent =
+      '   ┌───────────────────┐\n' +
+      '   │   P.R.I.N.C.      │\n' +
+      '   │     SECURE        │\n' +
+      '   │       CORE        │\n' +
+      '   │         NODE      │\n' +
+      '   └─────────┬─────────┘\n' +
+      '             │\n' +
+      '      ═══════╪═══════\n' +
+      '             │';
+
+    const sl = $('#subsystemList');
+    sl.innerHTML = '';
+    subsystems.forEach((name, i) => {
+      const row = document.createElement('div');
+      row.className = 'sub-row';
+      row.innerHTML = `<span class="sub-name">${name}</span><span class="sub-state" id="sub${i}">IDLE</span>`;
+      sl.appendChild(row);
+    });
+
+    const makeData = (el) => {
+      el.innerHTML = Array.from({length: 40}, () =>
+        `<div>${hex(rand(5, 10))} :: ${scrambled(rand(9, 15))}</div>`
+      ).join('');
+    };
+    makeData($('#dataLeft'));
+    makeData($('#dataRight'));
+    setInterval(() => {
+      if (!$('#scene3').classList.contains('active')) return;
+      $('#dataLeft').querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.85) d.textContent = `${hex(rand(5,10))} :: ${scrambled(rand(9,15))}`;
+      });
+      $('#dataRight').querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.85) d.textContent = `${hex(rand(5,10))} :: ${scrambled(rand(9,15))}`;
+      });
+    }, 120);
+
+    $('#promptText').textContent = '';
+    $('#termStatus').textContent = 'STATUS: BOOTING';
+
+    for (let i = 0; i < terminalLines.length; i++) {
+      const [type, text] = terminalLines[i];
+      const row = document.createElement('div');
+      row.className = 'term-row ' + type.toLowerCase();
+      row.innerHTML = `<span class="term-time">[${String((i * 0.317).toFixed(3)).padStart(7, '0')}]</span><span class="term-type">${type}</span><span class="term-text"></span>`;
+      log.appendChild(row);
+      const txt = row.querySelector('.term-text');
+      await typeInto(txt, text, 3);
+      log.scrollTop = log.scrollHeight;
+
+      const pct = Math.round((i + 1) / terminalLines.length * 100);
+      $('#bootProgress').style.width = pct + '%';
+      $('#bootPercent').textContent = String(pct).padStart(2, '0');
+
+      if (i % 2 === 0 && i / 2 < subsystems.length) {
+        const idx = Math.floor(i / 2);
+        const el = document.getElementById('sub' + idx);
+        if (el) {
+          el.textContent = type === 'ERR' ? 'RETRY' : 'OK';
+          el.className = 'sub-state ' + (type === 'ERR' ? 'err' : 'ok');
+        }
+      }
+
+      tone(type === 'ERR' ? 82 : type === 'WARN' ? 240 : 520, 0.03,
+           type === 'ERR' ? 'sawtooth' : 'square', 0.012);
+      if (type === 'ERR') { /* keep error output readable */ }
+      if (type === 'WARN') scanSweep();
+
+      await sleep(type === 'ERR' ? 190 : 75);
+    }
+
+    for (let i = 0; i < subsystems.length; i++) {
+      const el = document.getElementById('sub' + i);
+      if (el && el.textContent === 'IDLE') {
+        setTimeout(() => {
+          el.textContent = 'OK';
+          el.className = 'sub-state ok';
+          tone(700, 0.02, 'sine', 0.006);
+        }, i * 80);
+      }
+    }
+
+    $('#termStatus').textContent = 'STATUS: READY';
+    await typeInto($('#promptText'), 'auth --interactive --secure', 22);
+    await sleep(450);
+    glitchBurst(1);
+    scanSweep();
+    await sleep(380);
+    scene('#scene3');
+    initLogin();
+  }
+
+  function scrambled(len) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$%';
+    return Array.from({length: len}, () => chars[rand(0, chars.length - 1)]).join('');
+  }
+
+  // ─── SCENE 3 — LOGIN ───
+  let session = '';
+  async function initLogin() {
+    session = 'PX-' + hex(4) + '-' + hex(4);
+    $('#sessionId').textContent = session;
+    $('#accessStatus').textContent = 'CHANNEL OPEN';
+    $('#accessSub').textContent = 'ENCRYPTED · AES-256';
+    $('#handshake').textContent = 'NEGOTIATING';
+    $('#traceMask').textContent = 'SYNC';
+    $('#nodeRoute').textContent = [rand(10, 250), rand(0, 250), rand(0, 250), rand(1, 250)].join('.');
+
+    $('#username').disabled = true;
+    $('#password').disabled = true;
+    $('#btnLogin').disabled = true;
+    $('#username').value = '';
+    $('#password').value = '';
+    $('#sideLog').innerHTML = '';
+
+    addSide('> opening credential vault...', 'cyan');
+    await sleep(380);
+    addSide('> decrypting matrix blocks', '');
+
+    let p = 0;
+    const ticker = $('#decryptTicker');
+    ticker.textContent = '';
+    while (p < 100) {
+      p += rand(3, 9);
+      p = Math.min(p, 100);
+      $('#decryptPercent').textContent = String(p).padStart(2, '0') + '%';
+      $('#decryptBar').style.width = p + '%';
+      $('#decryptLabel').textContent =
+        p < 45 ? 'DECODING AUTHENTICATION MATRIX' :
+        p < 78 ? 'REASSEMBLING OPERATOR VECTOR' :
+                 'AUTHENTICATION MATRIX READY';
+      if (Math.random() > 0.7) {
+        $('#sessionId').textContent = scrambled(11);
+        ticker.textContent = hex(16);
+      }
+      tone(rand(1400, 1800), 0.008, 'square', 0.005);
+      await sleep(55);
+    }
+    $('#sessionId').textContent = session;
+    ticker.textContent = 'READY · ' + hex(20);
+    $('#handshake').textContent = 'VERIFIED';
+    $('#traceMask').textContent = 'ONLINE';
+    $('#accessStatus').textContent = 'AUTHENTICATION READY';
+    addSide('> handshake verified', 'ok');
+    addSide('> trace masked', 'ok');
+    addSide('> route established · ' + $('#nodeRoute').textContent, 'cyan');
+
+    await sleep(300);
+    unlockField($('#userBlock'), $('#username'), 'OP-');
+    await typeField($('#username'), 'OP-A55-ХЭЮ');
+    unlockField($('#passBlock'), $('#password'), '');
+    $('#password').placeholder = 'ENTER AUTH VECTOR';
+    $('#btnLogin').disabled = false;
+    $('#authConsoleText').textContent = 'credential channel ready — input required';
+    $('#footerMessage').textContent = 'AWAITING OPERATOR CREDENTIALS';
+    scanSweep();
+  }
+
+  function unlockField(block, input, prefix) {
+    block.classList.remove('locked-field');
+    block.classList.add('unlocked');
+    input.disabled = false;
+    input.focus();
+    const stateEl = $('#' + (input.id === 'username' ? 'userState' : 'passState'));
+    stateEl.textContent = 'READY';
+    stateEl.style.color = 'var(--green)';
+    tone(680, 0.05, 'sine', 0.02);
+  }
+  async function typeField(input, text) {
+    for (const ch of text) {
+      input.value += ch;
+      keyClick();
+      await sleep(35);
+    }
+    input.setSelectionRange(input.value.length, input.value.length);
+  }
+  function addSide(text, cls = '') {
+    const d = document.createElement('div');
+    d.className = cls;
+    d.textContent = text;
+    $('#sideLog').appendChild(d);
+    if ($('#sideLog').children.length > 12) {
+      $('#sideLog').removeChild($('#sideLog').children[0]);
+    }
+  }
+
+  // ─── AUTH FLOW ───
+  let attempts = 0, authBusy = false;
+  $('#btnLogin').addEventListener('click', authenticate);
+  $('#password').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !$('#btnLogin').disabled) authenticate();
+  });
+  $('#username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('#password').focus();
+  });
+
+  async function authenticate() {
+    if (authBusy) return;
+    authBusy = true;
+    $('#btnLogin').disabled = true;
+    $('#username').disabled = true;
+    $('#password').disabled = true;
+    $('#footerMessage').textContent = 'VERIFYING OPERATOR VECTOR...';
+    $('#accessStatus').textContent = 'VERIFYING';
+
+    attempts++;
+    $('#attempts').textContent = `ATTEMPTS: ${String(attempts).padStart(2, '0')}/03`;
+
+    const consoleText = $('#authConsoleText');
+    const lines = [
+      '> reading operator signature',
+      '> comparing session fingerprint',
+      '> validating credential vector',
+      '> checking privilege envelope',
+      '> resolving access route',
+      '> requesting cryptographic challenge',
+      '> response accepted'
+    ];
+    for (const line of lines) {
+      await scrambleInto(consoleText, line, 300);
+      addSide(line, 'cyan');
+      tone(rand(300, 900), 0.02, 'square', 0.008);
+      await sleep(260);
+    }
+
+    if (!$('#username').value.trim() || !$('#password').value.trim()) {
+      addSide('> ERROR: EMPTY CREDENTIAL VECTOR', 'err');
+      consoleText.textContent = 'ACCESS DENIED — DATA REQUIRED';
+      $('#footerMessage').textContent = 'AUTHENTICATION FAILED';
+      $('#accessStatus').textContent = 'DENIED';
+      $('#loginWrap').classList.add('shake');
+      setTimeout(() => $('#loginWrap').classList.remove('shake'), 500);
+      glitchBurst(1);
+      tone(65, 0.22, 'sawtooth', 0.05);
+      $('#username').disabled = false;
+      $('#password').disabled = false;
+      $('#btnLogin').disabled = false;
+      authBusy = false;
+      return;
+    }
+    await completeAuth();
+  }
+
+  // ─── SCENE 4 — FINAL AUTH ───
+  const checkpoints = [
+    'ENCRYPTION HANDSHAKE',
+    'OPERATOR SIGNATURE',
+    'PRIVILEGE ENVELOPE',
+    'SESSION TOKEN',
+    'NODE AUTHORIZATION'
+  ];
+
+  async function completeAuth() {
+    scene('#scene4');
+    $('#hudSec').textContent = 'TARGET ACQUISITION';
+    $('#finalTitle').textContent = 'ALIGN TARGET';
+    $('#finalSub').textContent = 'RETICLE SEARCHING FOR CONVERGENCE';
+    $('#finalBar').style.width = '0%';
+    $('#finalCode').textContent = 'TRACK::' + hex(6);
+
+    const cl = $('#checkpointList');
+    cl.innerHTML = '';
+    checkpoints.forEach((name, i) => {
+      const row = document.createElement('div');
+      row.className = 'chk-row';
+      row.innerHTML = `<span class="chk-mark">◇</span><span class="chk-name">${name}</span><span class="chk-state">PENDING</span>`;
+      row.id = 'chk' + i;
+      cl.appendChild(row);
+    });
+
+    // Capture begins immediately; no tutorial screen or extra confirmation.
+    const stage = document.getElementById('alignStage');
+    if (stage) stage.hidden = false;
+    $('#captureTrack').textContent = 'TRK-' + hex(6);
+    $('#captureLock').textContent = 'SEARCHING';
+    $('#captureError').textContent = 'HIGH';
+    $('#captureInstruction').textContent = 'Переместите указатель к центральному ядру';
+
+    // ALIGN: reticle = cursor position inside vortex (1:1, no lag)
+    const vortex = document.getElementById('alignVortex');
+    const reticle = document.getElementById('alignReticle');
+    const core = document.getElementById('alignCore');
+    let lockProgress = 0;
+    let aligned = false;
+    let lastX = 0.5, lastY = 0.5;
+
+    const placeReticle = (nx, ny) => {
+      // nx,ny in 0..1 relative to vortex
+      if (!reticle || !vortex) return;
+      const x = nx * 100;
+      const y = ny * 100;
+      reticle.style.left = x + '%';
+      reticle.style.top = y + '%';
+      reticle.style.transform = 'translate(-50%,-50%)';
+      const dist = Math.hypot(nx - 0.5, ny - 0.5);
+      // generous hit zone (~28% of radius)
+      aligned = dist < 0.18;
+      reticle.classList.toggle('aligned', aligned);
+      if (core) core.classList.toggle('locked', aligned);
+      const lock = document.getElementById('captureLock'), error = document.getElementById('captureError');
+      const instruction = document.getElementById('captureInstruction');
+      if (lock) { lock.textContent = aligned ? 'CONVERGING' : 'SEARCHING'; lock.classList.toggle('is-locked', aligned); }
+      if (error) error.textContent = Math.round(dist * 100) + '%';
+      if (instruction) instruction.textContent = aligned ? 'СИГНАЛ СОВМЕЩЁН · УДЕРЖИВАЙТЕ ПОЗИЦИЮ' : 'Переместите указатель к центральному ядру';
+    };
+    placeReticle(0.5, 0.5);
+    aligned = false;
+
+    const onMove = (e) => {
+      if (!vortex) return;
+      const r = vortex.getBoundingClientRect();
+      const nx = clamp((e.clientX - r.left) / r.width, 0, 1);
+      const ny = clamp((e.clientY - r.top) / r.height, 0, 1);
+      lastX = nx; lastY = ny;
+      placeReticle(nx, ny);
+    };
+    const onTouch = (e) => {
+      if (!e.touches || !e.touches[0] || !vortex) return;
+      const t = e.touches[0];
+      const r = vortex.getBoundingClientRect();
+      const nx = clamp((t.clientX - r.left) / r.width, 0, 1);
+      const ny = clamp((t.clientY - r.top) / r.height, 0, 1);
+      placeReticle(nx, ny);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onTouch, { passive: true });
+
+    // easier: fill fast, drain slow, large zone
+    while (lockProgress < 100) {
+      if (aligned) {
+        lockProgress = Math.min(100, lockProgress + 1.35);
+        if (Math.random() > 0.9) tone(rand(700, 1100), 0.012, 'sine', 0.007);
+      } else {
+        lockProgress = Math.max(0, lockProgress - 0.42);
+      }
+      const i = Math.floor(lockProgress);
+      $('#finalBar').style.width = i + '%';
+      $('#finalPercent').textContent = String(i).padStart(2, '0') + '%';
+      const instruction = document.getElementById('captureInstruction');
+      if (instruction && i > 0 && aligned) instruction.textContent = 'УДЕРЖАНИЕ КАНАЛА · ' + String(i).padStart(2,'0') + '%';
+      if (i % 8 === 0) $('#finalCode').textContent = 'TRACK::' + hex(6);
+      if (i >= 10 && i < 28) markChk(0, 'CHECK');
+      else if (i >= 28 && i < 48) markChk(1, 'CHECK');
+      else if (i >= 48 && i < 68) markChk(2, 'CHECK');
+      else if (i >= 68 && i < 85) markChk(3, 'CHECK');
+      else if (i >= 85) markChk(4, 'CHECK');
+      await sleep(32);
+    }
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('touchmove', onTouch);
+    checkpoints.forEach((_, i) => markChk(i, 'OK'));
+
+    lockBeep();
+    $('#finalCode').textContent = 'TRACK::LOCKED';
+    $('#finalTitle').textContent = 'ЦЕЛЬ ЗАХВАЧЕНА';
+    $('#finalSub').textContent = 'ВНЕДРЕНИЕ ВИРУСА МО · ПЕРЕХОД В ПЕРИМЕТР';
+    $('#hudSec').textContent = 'GRANTED';
+    $('#hudSec').style.color = 'var(--green)';
+    if (core) core.classList.add('locked');
+    if (document.getElementById('alignHint'))
+      document.getElementById('alignHint').textContent = 'КАНАЛ ОТКРЫТ · ЗАГРУЗКА ПРОСТРАНСТВА…';
+
+    scanSweep();
+    glitchBurst(2);
+    tone(523, 0.14, 'sine', 0.05);
+    setTimeout(() => tone(659, 0.14, 'sine', 0.05), 130);
+    setTimeout(() => tone(784, 0.28, 'sine', 0.055), 260);
+
+    // immersion threat words + eyes feel via glitch
+    await sleep(1600);
+    // Successful operator authorization is required before entering the game.
+    try { sessionStorage.setItem('limbo_launch_authorized', '1'); } catch (error) {}
+    try { window.location.href = 'intro.html'; }
+    catch { /* preview */ }
+  }
+
+  function markChk(i, state) {
+    const row = document.getElementById('chk' + i);
+    if (!row) return;
+    const mark = row.querySelector('.chk-mark');
+    const st = row.querySelector('.chk-state');
+    if (state === 'CHECK') {
+      mark.textContent = '◈';
+      mark.style.color = 'var(--amber)';
+      st.textContent = 'CHECKING';
+      st.style.color = 'var(--amber)';
+      tone(rand(600, 1200), 0.02, 'sine', 0.01);
+    } else {
+      mark.textContent = '◆';
+      mark.style.color = 'var(--green)';
+      st.textContent = 'PASS';
+      st.style.color = 'var(--green)';
+    }
+  }
+
+  // ─── SIDE STREAMS ───
+  function fillStream(el, count = 24) {
+    el.innerHTML = Array.from({length: count}, () => {
+      const s = document.createElement('div');
+      s.textContent = hex(rand(4, 10)) + ' ' + scrambled(rand(6, 16));
+      return s.outerHTML;
+    }).join('');
+  }
+  fillStream($('#sideStreamLeft'), 22);
+  fillStream($('#sideStreamRight'), 22);
+  setInterval(() => {
+    [ $('#sideStreamLeft'), $('#sideStreamRight') ].forEach(el => {
+      el.querySelectorAll('div').forEach(d => {
+        if (Math.random() > 0.92) d.textContent = hex(rand(4, 10)) + ' ' + scrambled(rand(6, 16));
+      });
+    });
+  }, 90);
+
+  // ─── BOOT CODE FIELD: glyphs brighten around the pointer ───
+  (function initBootCodeField() {
+    const canvas=$('#bootCodeCanvas'); if(!canvas)return;
+    const context=canvas.getContext('2d',{alpha:true}); if(!context)return;
+    const glyphs='01ABCDEF<>[]{}#$%&*/\\|+=-_ЖДЫЛФЦЩЭЮЯ',fontSize=12;
+    let width=0,height=0,columns=0,rows=0,matrix=[],pointerX=-1000,pointerY=-1000,frame=0,raf=0;
+    const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;const touchMode=window.matchMedia&&window.matchMedia('(pointer: coarse)').matches;
+    function resize(){const rect=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,touchMode?1:1.5);width=Math.max(1,rect.width);height=Math.max(1,rect.height);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);context.setTransform(dpr,0,0,dpr,0,0);columns=Math.ceil(width/fontSize);rows=Math.ceil(height/fontSize);matrix=Array.from({length:columns},()=>Array.from({length:rows},()=>glyphs[Math.floor(Math.random()*glyphs.length)]));}
+    function onPointer(e){const rect=canvas.getBoundingClientRect();pointerX=e.clientX-rect.left;pointerY=e.clientY-rect.top;}
+    window.addEventListener('resize',resize,{passive:true});if(!touchMode)window.addEventListener('pointermove',onPointer,{passive:true});resize();
+    function draw(){raf=requestAnimationFrame(draw);if(document.hidden||!$('#scene0').classList.contains('active'))return;if(!reduced&&++frame%(touchMode?6:3)!==0)return;context.clearRect(0,0,width,height);context.font=fontSize+'px monospace';
+      for(let x=0;x<columns;x++)for(let y=0;y<rows;y++){if(!reduced&&Math.random()<.002)matrix[x][y]=glyphs[Math.floor(Math.random()*glyphs.length)];const px=x*fontSize+6,py=y*fontSize+14,dx=px-pointerX,dy=py-pointerY,dist=Math.sqrt(dx*dx+dy*dy),reveal=reduced ? 0.05 : Math.max(0,1-dist/210),alpha=.025+reveal*.22;context.fillStyle='rgba(91,177,190,'+alpha.toFixed(3)+')';context.fillText(matrix[x][y],px,py);if(reveal>.12&&(x+y+frame)%5===0){context.fillStyle='rgba(105,226,224,'+(reveal*.52).toFixed(3)+')';context.fillText(matrix[x][y],px,py);}}
+    }
+    draw();window.addEventListener('pagehide',()=>cancelAnimationFrame(raf),{once:true});
+  })();
+
+  // ─── KICKOFF ───
+  bootSignal();
+
+  addEventListener('keydown', e => {
+    if (e.code === 'Space' && $('#scene0').classList.contains('active')) {
+      e.preventDefault();
+      beginIntrusionSequence();
+    }
+  });
+  $('#scene0').addEventListener('click', () => {
+    if ($('#scene0').classList.contains('active')) beginIntrusionSequence();
+  });
+})();
+</script>
+<style>
+
+/* ── P.R.I.N.C. terminal composition / centered recovery console ── */
+#scene2.terminal-scene{align-items:center!important;justify-content:center!important;padding:clamp(16px,2.5vh,30px) clamp(16px,2.4vw,38px)!important;background:radial-gradient(ellipse at 50% 48%,rgba(7,26,38,.32),transparent 62%),rgba(0,2,6,.94)!important;overflow:auto}
+#scene2 .terminal-shell{width:min(1480px,calc(100vw - 56px))!important;height:min(900px,calc(100svh - 48px))!important;min-height:620px;max-width:none!important;margin:auto!important;display:flex!important;flex-direction:column;border:1px solid rgba(79,176,193,.22)!important;border-radius:8px!important;background:linear-gradient(145deg,rgba(4,12,21,.985),rgba(2,6,12,.99))!important;box-shadow:0 38px 120px rgba(0,0,0,.72),0 0 70px rgba(0,145,175,.055),inset 0 1px rgba(190,245,255,.035)!important;overflow:hidden}
+#scene2 .terminal-top{flex:0 0 46px;height:46px!important;padding:0 clamp(18px,2.4vw,36px)!important;background:linear-gradient(90deg,rgba(8,24,35,.9),rgba(4,11,19,.95));}
+#scene2 .terminal-body{display:grid!important;grid-template-columns:minmax(360px,36%) minmax(0,1fr)!important;flex:1;min-height:0;background:linear-gradient(90deg,rgba(8,20,31,.28),rgba(2,7,13,.25))}
+#scene2 .terminal-left{padding:clamp(26px,3.2vw,52px)!important;display:flex;flex-direction:column;min-width:0;border-right:1px solid rgba(92,178,194,.16)!important;background:linear-gradient(180deg,rgba(9,25,37,.76),rgba(3,10,18,.72))!important}
+#scene2 .terminal-logo{display:flex;align-items:center;gap:clamp(12px,1.6vw,22px);font-size:clamp(40px,4.4vw,68px)!important;line-height:1;letter-spacing:.075em;text-shadow:0 0 26px rgba(0,212,232,.26)!important;white-space:nowrap}
+#scene2 .terminal-logo .princ-emblem{width:clamp(94px,10vw,148px)!important;height:auto;flex:0 0 auto;filter:drop-shadow(0 0 16px rgba(0,202,220,.16))}
+#scene2 .terminal-sub{margin:12px 0 0 4px!important;font-size:8px!important;letter-spacing:.16em!important;color:#607c89!important}
+#scene2 .ascii-block{margin-top:clamp(24px,3vh,42px)!important;padding:12px 14px;border:1px solid rgba(83,173,190,.12);background:linear-gradient(130deg,rgba(2,14,23,.62),rgba(3,9,17,.2));min-height:92px}
+#scene2 .ascii{font-size:10px!important;line-height:1.32!important;color:rgba(82,197,210,.52)!important}
+#scene2 .subsystem-list{margin-top:22px!important;padding-top:14px!important;border-color:rgba(95,176,193,.15)!important}
+#scene2 .sub-row{font-size:8px!important;line-height:1.9!important;color:#617987!important}
+#scene2 .sub-state.ok{color:#53d5b3!important}
+#scene2 .progress-big{left:clamp(26px,3.2vw,52px)!important;right:clamp(26px,3.2vw,52px)!important;bottom:52px!important;height:3px!important;background:rgba(90,165,180,.12)!important}
+#scene2 .progress-big i{background:linear-gradient(90deg,#177f98,#63dce4)!important;box-shadow:0 0 12px rgba(49,192,208,.35)!important}
+#scene2 .boot-percent{right:clamp(26px,3.2vw,52px)!important;bottom:22px!important;color:#79dbe2!important}
+#scene2 .terminal-right{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:radial-gradient(ellipse at 42% 18%,rgba(10,43,57,.12),transparent 58%),rgba(1,6,12,.45)!important}
+#scene2 .terminal-log{flex:1 1 auto;min-height:150px;padding:clamp(22px,2.5vw,38px)!important;font-size:clamp(10px,.78vw,12px)!important;line-height:1.85!important;overflow:auto!important}
+#scene2 .term-row{letter-spacing:.015em}
+#scene2 .terminal-telemetry{flex:0 0 150px;min-height:130px;margin:0 clamp(18px,2.5vw,36px) 12px;padding:12px 16px;border:1px solid rgba(81,166,183,.13);background:linear-gradient(120deg,rgba(3,15,24,.76),rgba(3,9,17,.45));position:relative;overflow:hidden}
+#scene2 .terminal-telemetry:before{content:"LIVE KERNEL TELEMETRY  /  LOAD · MEMORY · HANDSHAKE";display:block;color:#577d8b;font:8px var(--font-mono,monospace);letter-spacing:.16em;margin-bottom:8px}
+#scene2 #terminalGraph{width:100%;height:96px;display:block;opacity:.92}
+#scene2 .hex-dump{flex:0 0 42px;height:42px!important;padding:8px clamp(22px,2.5vw,38px)!important;border-top:1px solid rgba(91,171,187,.12)!important;font-size:8px!important;color:rgba(78,182,199,.34)!important}
+#scene2 .terminal-prompt{flex:0 0 46px;height:46px!important;padding:14px clamp(18px,2.4vw,36px)!important;background:rgba(2,8,14,.88);border-top:1px solid rgba(87,174,190,.15)!important}
+#scene2 .terminal-logo .princ-emblem path,#scene2 .terminal-logo .princ-emblem circle{vector-effect:non-scaling-stroke}
+@media(max-width:900px){#scene2.terminal-scene{padding:10px!important}#scene2 .terminal-shell{width:calc(100vw - 20px)!important;height:calc(100svh - 20px)!important;min-height:560px}#scene2 .terminal-body{grid-template-columns:minmax(240px,34%) minmax(0,1fr)!important}#scene2 .terminal-left{padding:22px!important}#scene2 .terminal-logo{font-size:clamp(28px,4vw,42px)!important;gap:8px}#scene2 .terminal-logo .princ-emblem{width:76px!important}}
+@media(max-width:620px){#scene2 .terminal-body{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important}#scene2 .terminal-left{padding:14px 18px!important;max-height:38vh;overflow:auto;border-right:0!important;border-bottom:1px solid rgba(92,178,194,.16)}#scene2 .terminal-logo{font-size:30px!important}#scene2 .terminal-logo .princ-emblem{width:54px!important}#scene2 .ascii-block{display:none}#scene2 .subsystem-list{margin-top:10px!important;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}#scene2 .progress-big{position:relative;left:auto!important;right:auto!important;bottom:auto!important;margin-top:12px}#scene2 .boot-percent{position:static!important;align-self:flex-end;margin-top:5px}#scene2 .terminal-telemetry{flex-basis:112px;min-height:100px}#scene2 #terminalGraph{height:64px}}
+/* ── Unified capture scene: no floating geometric layers ── */
+#scene4{background:radial-gradient(ellipse at 50% 42%,rgba(7,30,43,.28),transparent 56%),linear-gradient(145deg,#030810,#02060d 58%,#010409)!important;overflow:auto}
+#scene4:before,#scene4:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:0}
+#scene4:before{background:radial-gradient(ellipse at 50% 50%,rgba(0,163,190,.055),transparent 52%)}
+#scene4:after{background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(108,173,188,.012) 6px,transparent 7px 12px);opacity:.28}
+#scene4 .auth-final.capture-interface{z-index:1;width:min(1040px,calc(100vw - 48px));min-height:0;height:auto;margin:auto;padding:clamp(20px,3vh,34px) clamp(22px,4vw,52px);justify-content:flex-start;gap:0;border:1px solid rgba(83,163,181,.18);border-radius:12px;background:linear-gradient(150deg,rgba(6,17,27,.96),rgba(2,7,14,.97));box-shadow:0 35px 110px rgba(0,0,0,.64),inset 0 1px rgba(225,250,255,.035)}
+#scene4 .auth-final.capture-interface:before{inset:0;clip-path:none;border:0;border-radius:inherit;background:radial-gradient(ellipse at 50% 30%,rgba(0,175,200,.07),transparent 54%);box-shadow:none}
+#scene4 .auth-final.capture-interface:after{inset:0;border-radius:inherit;opacity:.16;background:repeating-linear-gradient(0deg,transparent 0 7px,rgba(110,210,225,.035) 8px,transparent 9px 15px);mask-image:none}
+#scene4 .capture-heading,#scene4 .capture-status-grid,#scene4 .capture-instruction,#scene4 .align-vortex,#scene4 .final-code,#scene4 .final-title,#scene4 .final-sub,#scene4 .checkpoint-list,#scene4 .final-bar,#scene4 .final-percent,#scene4 .align-hint{position:relative;z-index:2}
+#scene4 .capture-heading{margin-bottom:14px}
+#scene4 .capture-status-grid{width:min(660px,100%);gap:10px;margin-bottom:12px}
+#scene4 .capture-readout{min-height:64px;padding:12px 16px;border-radius:6px;background:linear-gradient(145deg,rgba(8,22,33,.94),rgba(3,10,18,.94));border-color:rgba(88,166,183,.18)}
+#scene4 .capture-instruction{margin:0 0 2px;color:#7899a6}
+#scene4 .align-vortex{width:min(320px,54vw);height:min(320px,54vw);margin:4px auto 10px;background:radial-gradient(circle,rgba(5,25,37,.86) 0 22%,rgba(3,11,19,.36) 23% 60%,transparent 61%);filter:none;isolation:isolate;overflow:visible}
+#scene4 .align-vortex:before{inset:4%;border:1px solid rgba(81,171,188,.15);box-shadow:inset 0 0 35px rgba(0,126,150,.045)}
+#scene4 .align-vortex:after{inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 82%,rgba(65,184,198,.12) 90%,transparent 96%);opacity:.6}
+#scene4 .av-ring{border-radius:50%!important;box-shadow:none!important}
+#scene4 .av-ring.r1{width:90px;height:90px;border-color:rgba(76,201,214,.44)}
+#scene4 .av-ring.r2{width:154px;height:154px;border-color:rgba(68,170,188,.25)}
+#scene4 .av-ring.r3{width:228px;height:228px;border-color:rgba(68,170,188,.18)}
+#scene4 .av-ring.r4{width:296px;height:296px;border-style:solid;border-color:rgba(68,170,188,.12)}
+#scene4 .av-core{width:50px;height:50px;box-shadow:0 0 24px rgba(0,192,210,.22),inset 0 0 18px #000}
+#scene4 .av-reticle{border-radius:50%;box-shadow:0 0 10px rgba(0,190,210,.18)}
+#scene4 .capture-checkpoint-list,#scene4 .checkpoint-list{width:min(660px,100%);grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:12px 0 14px}
+#scene4 .chk-row{min-height:82px;padding:13px 9px;border-radius:6px;background:linear-gradient(145deg,rgba(8,20,31,.94),rgba(3,9,17,.96));border-color:rgba(89,164,181,.19);box-shadow:inset 0 1px rgba(220,245,255,.025)}
+#scene4 .chk-mark{font-size:17px;color:#7bb4be}
+#scene4 .chk-name{margin-top:7px;font-size:8px;color:#88a3ad;line-height:1.45}
+#scene4 .chk-state{margin-top:7px;font-size:8px;color:#5e8793}
+#scene4 .final-bar{width:min(660px,100%);height:5px;border-radius:8px;overflow:hidden;background:rgba(111,163,177,.13)}
+#scene4 .final-bar i{background:linear-gradient(90deg,#176e83,#54c2cb);box-shadow:0 0 10px rgba(56,190,202,.28)}
+#scene4 .final-percent{font-size:13px;color:#8edbe0}
+#scene4 .align-hint{margin-top:10px;color:#678792}
+@media(max-height:780px){#scene4 .auth-final.capture-interface{padding:14px 24px}#scene4 .capture-heading{margin-bottom:8px}#scene4 .capture-title{font-size:22px}#scene4 .align-vortex{width:250px;height:250px}#scene4 .av-ring.r4{width:232px;height:232px}#scene4 .checkpoint-list{margin:7px 0 8px}#scene4 .chk-row{min-height:62px;padding:8px 6px}}
+@media(max-width:700px){#scene4 .auth-final.capture-interface{width:calc(100vw - 20px);padding:18px 14px}#scene4 .capture-status-grid{grid-template-columns:1fr;gap:6px}#scene4 .capture-readout{min-height:0}#scene4 .align-vortex{width:240px;height:240px}#scene4 .av-ring.r4{width:222px;height:222px}#scene4 .checkpoint-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){#scene4 .align-vortex:after,#scene4 .capture-instruction i,#scene4 .av-ring{animation:none!important}}
+
+</style>
+<script>
+(function initTerminalTelemetry(){
+  const host=document.querySelector('#scene2 .terminal-right');
+  if(!host||document.getElementById('terminalGraph'))return;
+  const panel=document.createElement('section');panel.className='terminal-telemetry';
+  const canvas=document.createElement('canvas');canvas.id='terminalGraph';canvas.setAttribute('aria-label','График загрузки ядра');panel.appendChild(canvas);
+  const dump=host.querySelector('.hex-dump');host.insertBefore(panel,dump||null);
+  const ctx=canvas.getContext('2d');if(!ctx)return;
+  let w=0,h=0,dpr=1,t=0,values=Array.from({length:100},()=>.28+Math.random()*.28);
+  const resize=()=>{const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,1.5);w=Math.max(1,r.width);h=Math.max(1,r.height);canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)};
+  new ResizeObserver(resize).observe(canvas);resize();
+  let lastDraw=0;function draw(now=0){requestAnimationFrame(draw);if(document.hidden||!document.querySelector('#scene2')?.classList.contains('active')||now-lastDraw<110)return;lastDraw=now;t++;if(t%5===0){values.push(Math.max(.08,Math.min(.94,values[values.length-1]+(Math.random()-.46)*.13)));values.shift()}
+    ctx.clearRect(0,0,w,h);ctx.strokeStyle='rgba(87,153,169,.13)';ctx.lineWidth=1;for(let y=12;y<h;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+    const colors=['rgba(70,202,211,.85)','rgba(105,151,185,.55)','rgba(190,112,143,.4)'];
+    values.forEach((v,i)=>{const x=i/(values.length-1)*w,bh=v*(h-12);ctx.fillStyle=colors[i%3];ctx.globalAlpha=.32+v*.45;ctx.fillRect(x,h-bh,Math.max(1,w/values.length-1),bh)});ctx.globalAlpha=1;
+    ctx.beginPath();values.forEach((v,i)=>{const x=i/(values.length-1)*w,y=h-v*(h-12);if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y)});ctx.strokeStyle='rgba(95,226,229,.8)';ctx.lineWidth=1.4;ctx.stroke();
+  }draw();
+})();
+</script>
+<script src="js/mobile-navigation.js" defer></script>
+</body>
+</html>
