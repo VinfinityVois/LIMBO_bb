@@ -231,9 +231,9 @@ body.immerse{background:#02070c}
 }
 @media(max-width:900px){
   :root{--hud-h:220px}
-  .game-hud{grid-template-columns:minmax(180px,.75fr) minmax(0,1.25fr);grid-template-rows:1fr 1fr;gap:7px;padding:7px 10px 16px}
+  .game-hud{grid-template-columns:minmax(180px,.75fr) minmax(0,1.25fr);grid-template-rows:1fr auto;gap:7px;padding:7px 10px 16px}
   .game-hud>*{padding:8px 10px}
-  .hud-utility{grid-template-columns:62px minmax(0,1fr)}
+  .hud-utility{grid-column:1/-1;grid-template-columns:62px minmax(0,1fr)}
   .selected-art{width:62px;height:65px}
   .inv{gap:5px;margin-top:7px}
   .inv>*{height:42px}
