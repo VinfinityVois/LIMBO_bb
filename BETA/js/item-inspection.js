@@ -49,10 +49,13 @@
     const actions = modal.querySelector('#modalActions');
     if (!panel || !titleNode || !body || !visual || !actions) return;
     const title = titleNode.textContent || 'ОБЪЕКТ';
-    const image = visual.querySelector('img');
-    const id = itemId(title, image);
-    if (!id) return;
-    const description = body.textContent.replace(new RegExp('^' + title.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*'), '').trim();
+    const image = visual.querySelector('img.inspection-item-art, img.item-art-image');
+    if (!image) return; // Only transform a discovered item, never area/puzzle/report screens.
+    const id = itemId(title, image) || 'unknown_item';
+    const description = body.querySelector('.inspection-description')?.textContent?.trim() ||
+      body.querySelector('.item-detail')?.textContent?.trim() ||
+      'В архиве нет дополнительного описания объекта.';
+    const preservedControls = Array.from(body.querySelectorAll('button'));
     modal.classList.add('item-inspection-mode');
     const row = modal.querySelector('.smp-body-row');
     row?.classList.add('item-inspection-layout');
