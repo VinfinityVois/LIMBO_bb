@@ -20,7 +20,7 @@
   const effects = {
     herbal_poultice:'Восстанавливает 25 HP; после применения расходуется.',
     warding_charm:'Восстанавливает 20 единиц рассудка; после применения расходуется.',
-    ember_lantern:'Переключает источник света; при использовании может привлечь существо. Также восстанавливает 12 единиц рассудка при применении как предмет.',
+    ember_lantern:'Переключает источник света; включённый фонарь может привлечь существо.',
     stitched_mask:'Надеть / снять. Ношение влияет на восприятие и постепенно расходует рассудок.',
     black_seed:'Опасная находка: снижает рассудок при поднятии и продолжает оказывать давление, пока находится при тебе.',
     kokeshi_note:'Прочитанная записка сохраняется в личном деле и открывает подсказки о ключах.',
@@ -102,8 +102,29 @@
         const small = document.createElement('small'); small.textContent = names[id] + ' + ' + names[other];
         copy.append(strong,small);
         const status = document.createElement('b');
-        status.textContent = 'РЕЦЕПТ';
+        const partnerSlot = Array.from(document.querySelectorAll('.inv-slot')).find(slot => (slot.title || '').startsWith(names[other]));
+        status.textContent = partnerSlot ? 'ГОТОВО' : 'НУЖЕН ПРЕДМЕТ';
         card.append(copy,status);
+        if (partnerSlot) {
+          const synth = document.createElement('button');
+          synth.type = 'button';
+          synth.className = 'item-dossier-synthesize';
+          synth.textContent = 'СИНТЕЗИРОВАТЬ';
+          synth.addEventListener('click', () => {
+            const slots = Array.from(document.querySelectorAll('.inv-slot')).filter(slot => slot.title);
+            const currentSlot = slots.find(slot => (slot.title || '').startsWith(names[id]));
+            const otherSlot = slots.find(slot => (slot.title || '').startsWith(names[other]));
+            if (!currentSlot || !otherSlot) return;
+            const selectedSlot = document.querySelector('.inv-slot.selected');
+            if (selectedSlot) (selectedSlot).click();
+            currentSlot.click();
+            otherSlot.click();
+            modal.classList.remove('item-inspection-mode','open');
+            modal.hidden = true;
+            document.body.classList.remove('inspection-open');
+          });
+          card.appendChild(synth);
+        }
         section.appendChild(card);
       });
     } else {
