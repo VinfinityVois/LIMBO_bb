@@ -676,6 +676,8 @@ tailwind.config = {
     gateUnlocked: false, escaped: false, dead: false, hudCollapsed: false,
     introDone: false
   };
+  // The cat simulation is paused until the explicit START button is clicked.
+  let gameStarted = false;
 
   const $ = id => document.getElementById(id);
   const phoneCardMode = window.matchMedia('(pointer: coarse) and (max-width: 600px)').matches;
@@ -1368,7 +1370,7 @@ tailwind.config = {
   }
 
   setInterval(() => {
-    if (state.dead || state.escaped) return;
+    if (!gameStarted || state.dead || state.escaped) return;
     const p = state.player;
 
     viruses.forEach(v => {
@@ -1420,12 +1422,9 @@ tailwind.config = {
   }, 380);
 
   window.addEventListener('keydown', e => {
-    // Skip mission intro
-    if ($('mission-intro') && $('mission-intro').classList.contains('show')) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        closeIntro();
-      }
+    // Keyboard input cannot confirm the briefing. Only the visible START button can.
+    if (!gameStarted) {
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD','KeyE','KeyF'].includes(e.code)) e.preventDefault();
       return;
     }
     // Victory screen handling
@@ -1484,7 +1483,7 @@ tailwind.config = {
   const frameInterval = phoneCardMode ? Infinity : 1000 / (window.matchMedia('(pointer: coarse)').matches ? 30 : 40);
   function loop(now = 0) {
     requestAnimationFrame(loop);
-    if (phoneCardMode || document.hidden) return;
+    if (!gameStarted || phoneCardMode || document.hidden) return;
     if (now - lastFrameTime < frameInterval) return;
     lastFrameTime = now;
     drawWorld();
@@ -1495,7 +1494,8 @@ tailwind.config = {
   // ═══ SINGLE-SCREEN MISSION BRIEFING ═══
   function closeIntro() {
     const intro = $('mission-intro');
-    if (!intro || intro.dataset.closing === '1') return;
+    if (!intro || gameStarted || intro.dataset.closing === '1') return;
+    gameStarted = true;
     intro.dataset.closing = '1';
     intro.classList.add('hide');
     intro.classList.remove('show');
@@ -1507,8 +1507,6 @@ tailwind.config = {
   }
   const introStart = $('intro-next');
   if (introStart) introStart.addEventListener('click', closeIntro);
-  const introSkip = $('intro-skip');
-  if (introSkip) introSkip.addEventListener('click', closeIntro);
   // BIOS boot sequence
   (function bootBios() {
     const boot = document.getElementById('bios-boot');
