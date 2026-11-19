@@ -1,0 +1,52 @@
+/* LIMBO · tactical item inspection dossier */
+#simModal.item-inspection-mode{z-index:1200!important;align-items:center!important;justify-content:center!important;padding:2vh 2vw!important}
+#simModal.item-inspection-mode .sim-modal-backdrop{background:radial-gradient(ellipse at center,rgba(2,9,16,.78),rgba(0,0,0,.94))!important;backdrop-filter:blur(7px)!important;pointer-events:auto!important}
+#simModal.item-inspection-mode .sim-modal-panel{position:relative!important;inset:auto!important;right:auto!important;top:auto!important;width:min(1180px,96vw)!important;max-width:1180px!important;height:min(840px,92vh)!important;max-height:92vh!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;padding:0!important;margin:auto!important;transform:none!important;border:1px solid rgba(0,231,245,.42)!important;border-radius:2px!important;background:linear-gradient(145deg,rgba(15,12,27,.985),rgba(7,8,17,.99))!important;box-shadow:0 28px 90px #000e,0 0 34px rgba(0,231,245,.12),inset 0 0 0 1px #ffffff08!important}
+#simModal.item-inspection-mode .sim-modal-panel:before,#simModal.item-inspection-mode .sim-modal-panel:after{content:"";position:absolute;width:14px;height:14px;z-index:20;pointer-events:none}
+#simModal.item-inspection-mode .sim-modal-panel:before{top:-1px;left:-1px;border-top:2px solid #00e7f5;border-left:2px solid #00e7f5}
+#simModal.item-inspection-mode .sim-modal-panel:after{right:-1px;bottom:-1px;border-right:2px solid #00e7f5;border-bottom:2px solid #00e7f5}
+#simModal.item-inspection-mode .smp-h{position:relative!important;z-index:3!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;min-height:54px!important;padding:0 22px!important;border:0!important;border-bottom:1px solid rgba(0,231,245,.24)!important;background:#141120!important}
+#simModal.item-inspection-mode #modalTitle{font:600 11px/1.3 var(--mono)!important;letter-spacing:.14em!important;color:#8beaf1!important;text-transform:uppercase!important}
+#simModal.item-inspection-mode #modalClose{position:relative!important;inset:auto!important;display:grid!important;place-items:center!important;width:32px!important;height:32px!important;border:1px solid rgba(0,231,245,.4)!important;background:rgba(0,55,66,.35)!important;color:#a5f5fa!important;font:22px/1 var(--sans)!important;cursor:pointer!important}
+#simModal.item-inspection-mode .smp-body-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;grid-template-areas:"visual body" "visual actions"!important;gap:0 0!important;min-height:0!important;flex:1!important;overflow:hidden!important;padding:0!important;align-items:stretch!important}
+#simModal.item-inspection-mode .smp-visual{grid-area:visual!important;position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;min-height:0!important;height:auto!important;overflow:hidden!important;margin:0!important;border:0!important;border-right:1px solid rgba(0,231,245,.2)!important;background:radial-gradient(ellipse at 50% 66%,rgba(0,210,225,.14),rgba(16,13,29,.2) 48%,rgba(5,7,15,.96) 100%)!important;box-shadow:none!important}
+#simModal.item-inspection-mode .smp-visual:before{content:"";position:absolute;inset:7%;border:1px solid rgba(0,231,245,.12);background-image:linear-gradient(rgba(0,231,245,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,231,245,.035) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+#simModal.item-inspection-mode .smp-visual:after{content:"";position:absolute;width:min(68%,390px);aspect-ratio:1;border:1px dashed rgba(0,231,245,.22);border-radius:50%;box-shadow:0 0 0 26px rgba(0,231,245,.025),0 0 0 52px rgba(0,231,245,.018);pointer-events:none}
+#simModal.item-inspection-mode .smp-visual img{position:relative;z-index:2;width:min(72%,390px)!important;height:min(72%,390px)!important;max-width:82%!important;max-height:82%!important;object-fit:contain!important;filter:drop-shadow(0 0 26px rgba(0,231,245,.28)) drop-shadow(0 18px 24px #000b)!important;transition:transform .18s ease-out!important;will-change:transform}
+#simModal.item-inspection-mode .smp-b{grid-area:body!important;min-width:0!important;overflow-y:auto!important;margin:0!important;padding:24px clamp(18px,2.5vw,34px) 16px!important;color:#c5cddc!important;font:400 13px/1.65 var(--sans)!important;white-space:normal!important}
+.item-dossier-kicker{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:12px;color:#75dce7;font:500 9px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.item-dossier-chip{padding:4px 7px;border:1px solid rgba(0,231,245,.3);background:rgba(0,75,86,.2);color:#9cebf0;font:9px var(--mono);letter-spacing:.08em}
+.item-dossier-chip.risk{border-color:rgba(210,91,115,.45);background:rgba(108,24,44,.2);color:#efa2b0}
+.item-dossier-heading{margin:0 0 12px;color:#fff;font:700 clamp(24px,3vw,36px)/1.08 var(--sans);letter-spacing:-.035em}
+.item-dossier-desc{padding:13px 15px;margin:0 0 16px;border-left:2px solid #00d9e8;background:linear-gradient(90deg,rgba(0,150,165,.12),rgba(0,150,165,.025));color:#c5d5dc;font:400 13px/1.7 var(--sans)}
+.item-dossier-section{margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,231,245,.16)}
+.item-dossier-section h3{margin:0 0 8px;color:#7fe5ed;font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.item-dossier-property{display:grid;grid-template-columns:minmax(90px,.42fr) minmax(0,1fr);gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.045);font-size:11px;line-height:1.45}
+.item-dossier-property span:first-child{color:#718b98;font:9px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.item-dossier-property span:last-child{color:#d0dce1}
+.item-dossier-recipe{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:7px 0;padding:9px 10px;border:1px solid rgba(0,231,245,.17);background:rgba(13,19,32,.72)}
+.item-dossier-recipe strong{display:block;color:#e5f5f7;font:600 11px var(--sans)}
+.item-dossier-recipe small{display:block;margin-top:3px;color:#829ba5;font:9px/1.5 var(--mono)}
+.item-dossier-recipe b{flex:none;color:#8deaf0;font:9px var(--mono);letter-spacing:.06em}
+.item-dossier-empty{color:#738995;font:10px/1.5 var(--mono)}
+#simModal.item-inspection-mode .smp-a{grid-area:actions!important;display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center!important;gap:8px!important;padding:14px clamp(18px,2.5vw,34px) 18px!important;border:0!important;border-top:1px solid rgba(0,231,245,.18)!important;background:rgba(10,9,19,.7)!important}
+#simModal.item-inspection-mode .smp-a:before{content:"ДЕЙСТВИЯ / ОБЪЕКТ";width:100%;margin:0 0 2px!important;color:#6c9aa5!important;font:9px var(--mono)!important;letter-spacing:.13em!important}
+#simModal.item-inspection-mode .smp-a button{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:36px!important;height:auto!important;padding:8px 12px!important;border:1px solid rgba(0,231,245,.3)!important;border-radius:2px!important;background:rgba(15,23,37,.9)!important;color:#a9eaf0!important;font:600 9px var(--mono)!important;letter-spacing:.07em!important}
+#simModal.item-inspection-mode .smp-a button:before{display:none!important}
+#simModal.item-inspection-mode .smp-a button:hover{border-color:#00e7f5!important;background:rgba(0,130,145,.22)!important;color:#fff!important}
+#simModal.item-inspection-mode .smp-a button.primary{border-color:#00dce9!important;background:linear-gradient(90deg,rgba(0,195,210,.26),rgba(0,195,210,.08))!important}
+#simModal.item-inspection-mode .smp-note{display:none!important}
+@media(max-width:760px){
+ #simModal.item-inspection-mode{padding:8px!important}
+ #simModal.item-inspection-mode .sim-modal-panel{width:100%!important;height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important}
+ #simModal.item-inspection-mode .smp-h{min-height:46px!important;padding:0 12px!important}
+ #simModal.item-inspection-mode .smp-body-row{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(190px,34dvh) minmax(0,1fr) auto!important;grid-template-areas:"visual" "body" "actions"!important;overflow-y:auto!important}
+ #simModal.item-inspection-mode .smp-visual{min-height:190px!important;border-right:0!important;border-bottom:1px solid rgba(0,231,245,.2)!important}
+ #simModal.item-inspection-mode .smp-visual img{width:min(48vw,230px)!important;height:min(48vw,230px)!important}
+ #simModal.item-inspection-mode .smp-visual:after{width:min(48vw,230px)}
+ #simModal.item-inspection-mode .smp-b{overflow:visible!important;padding:16px 14px 10px!important}
+ .item-dossier-heading{font-size:25px}
+ #simModal.item-inspection-mode .smp-a{padding:12px 14px!important}
+ #simModal.item-inspection-mode .smp-a button{flex:1 1 42%!important}
+}
+@media(prefers-reduced-motion:reduce){#simModal.item-inspection-mode .smp-visual img{transition:none!important}}
