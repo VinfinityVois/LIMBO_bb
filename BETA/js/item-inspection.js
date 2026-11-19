@@ -57,7 +57,8 @@
     const row = modal.querySelector('.smp-body-row');
     row?.classList.add('item-inspection-layout');
     const existing = body.querySelector('.item-dossier-content');
-    if (existing) return;
+    if (existing && modal.dataset.inspectionItem === id) return;
+    existing?.remove();
     body.textContent = '';
     const content = document.createElement('div');
     content.className = 'item-dossier-content';
@@ -71,6 +72,12 @@
     desc.className = 'item-dossier-desc';
     desc.textContent = description || 'В архиве нет дополнительного описания объекта.';
     content.append(kicker, heading, desc);
+    if (preservedControls.length) {
+      const interactions = document.createElement('div');
+      interactions.className = 'item-dossier-interactions';
+      preservedControls.forEach(control => interactions.appendChild(control));
+      content.appendChild(interactions);
+    }
     const props = document.createElement('section');
     props.className = 'item-dossier-section';
     props.innerHTML = '<h3>СВОЙСТВА И ПРИМЕНЕНИЕ</h3>';
@@ -154,6 +161,7 @@
     }
     content.appendChild(section);
     body.appendChild(content);
+    modal.dataset.inspectionItem = id;
     const note = modal.querySelector('#modalNote');
     if (note) { note.textContent = 'ДАННЫЕ СЕКТОРА · RK-01'; note.style.display = 'none'; }
     if (!actions.querySelector('[data-inspection-use]') && ['herbal_poultice','warding_charm','ember_lantern','stitched_mask'].includes(id)) {
@@ -183,13 +191,27 @@
   const start = () => {
     const modal = document.getElementById('simModal');
     if (!modal) return;
+    let enhanceQueued = false;
+    const queueEnhance = () => {
+      if (enhanceQueued || !modal.classList.contains('open')) return;
+      enhanceQueued = true;
+      requestAnimationFrame(() => {
+        enhanceQueued = false;
+        enhance(modal);
+      });
+    };
     const observer = new MutationObserver(() => {
-      if (modal.classList.contains('open')) requestAnimationFrame(() => enhance(modal));
-      else modal.classList.remove('item-inspection-mode');
+      if (modal.classList.contains('open')) queueEnhance();
+      else {
+        modal.classList.remove('item-inspection-mode');
+        delete modal.dataset.inspectionItem;
+      }
     });
-    observer.observe(modal, {attributes:true,attributeFilter:['class']});
+    // openModal() opens the container first and fills the item view later on a click.
+    // Watching only the `open` class missed that second step, so the old version never ran.
+    observer.observe(modal, {attributes:true,attributeFilter:['class','hidden'],childList:true,subtree:true});
     const close = modal.querySelector('#modalClose');
-    close?.addEventListener('click', () => modal.classList.remove('item-inspection-mode'));
+    close?.addEventListener('click', () => { modal.classList.remove('item-inspection-mode'); delete modal.dataset.inspectionItem; });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true});
   else start();
