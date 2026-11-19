@@ -127,6 +127,7 @@ function renderGrid(id,list,kind){$(id).innerHTML=list.map((x,i)=>tile(x,kind,i)
 $('sidebarCollapse').addEventListener('click',()=>{$('employeeLayout').classList.add('sidebar-collapsed');localStorage.setItem('limbo_employee_sidebar','closed')});
 $('sidebarTab').addEventListener('click',()=>{$('employeeLayout').classList.remove('sidebar-collapsed');localStorage.setItem('limbo_employee_sidebar','open')});
 if(localStorage.getItem('limbo_employee_sidebar')==='closed')$('employeeLayout').classList.add('sidebar-collapsed');
+if(window.matchMedia('(max-width:760px)').matches){$('employeeLayout').classList.add('sidebar-collapsed');}
 const modal=$('archiveModal');
 function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');$('modalBody').innerHTML='';}
 function renderModalEntry(x,kind,list,index,direction=0){
