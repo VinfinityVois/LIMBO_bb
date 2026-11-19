@@ -50,3 +50,6 @@
  #simModal.item-inspection-mode .smp-a button{flex:1 1 42%!important}
 }
 @media(prefers-reduced-motion:reduce){#simModal.item-inspection-mode .smp-visual img{transition:none!important}}
+
+.item-dossier-synthesize{flex:none;margin-left:auto;padding:6px 8px;border:1px solid rgba(0,231,245,.32);background:rgba(0,85,96,.2);color:#9cebf0;font:8px var(--mono);letter-spacing:.06em;cursor:pointer}
+.item-dossier-synthesize:hover{border-color:#00e7f5;background:rgba(0,155,170,.25);color:#fff}
