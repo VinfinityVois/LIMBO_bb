@@ -1113,6 +1113,8 @@ tailwind.config = {
   }
 
   function movePlayer(dx, dy) {
+    if (!gameStarted) return;
+
     if (state.dead || state.escaped) return;
     sfx.init();
     if (state.player.stealth) toggleStealth();
@@ -1150,6 +1152,8 @@ tailwind.config = {
   }
 
   function hackTerminal() {
+    if (!gameStarted) return;
+
     if (state.dead || state.escaped) return;
     sfx.init();
     const p = state.player;
@@ -1170,6 +1174,8 @@ tailwind.config = {
   }
 
   function toggleStealth() {
+    if (!gameStarted) return;
+
     if (state.dead || state.escaped) return;
     sfx.init();
     if (!state.player.stealth) missionStats.stealthUses++; // ═══ NEW
@@ -1190,6 +1196,8 @@ tailwind.config = {
   }
 
   function triggerSonar() {
+    if (!gameStarted) return;
+
     if (state.dead || state.escaped) return;
     sfx.init();
     if (state.power < 5) { showToast('Мало энергии'); return; }
