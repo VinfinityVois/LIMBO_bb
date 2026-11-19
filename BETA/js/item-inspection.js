@@ -97,6 +97,7 @@
         const other = recipe[0] === id ? recipe[1] : recipe[0];
         const card = document.createElement('div');
         card.className = 'item-dossier-recipe';
+        const partnerSlot = Array.from(document.querySelectorAll('.inv-slot')).find(slot => (slot.title || '').startsWith(names[other]));
         const parts = document.createElement('div');
         parts.className = 'item-recipe-parts';
         const addPart = (src, label) => {
@@ -122,7 +123,6 @@
         const small = document.createElement('small'); small.textContent = 'РЕЗУЛЬТАТ СИНТЕЗА';
         copy.append(strong,small);
         const status = document.createElement('b');
-        const partnerSlot = Array.from(document.querySelectorAll('.inv-slot')).find(slot => (slot.title || '').startsWith(names[other]));
         status.textContent = partnerSlot ? 'ГОТОВО' : 'НУЖЕН ПРЕДМЕТ';
         card.append(parts,copy,status);
         if (partnerSlot) {
