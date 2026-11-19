@@ -97,14 +97,34 @@
         const other = recipe[0] === id ? recipe[1] : recipe[0];
         const card = document.createElement('div');
         card.className = 'item-dossier-recipe';
+        const parts = document.createElement('div');
+        parts.className = 'item-recipe-parts';
+        const addPart = (src, label) => {
+          const part = document.createElement('span');
+          part.className = 'item-recipe-part';
+          if (src) {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.alt = '';
+            part.appendChild(thumb);
+          }
+          const caption = document.createElement('small');
+          caption.textContent = label;
+          part.appendChild(caption);
+          parts.appendChild(part);
+        };
+        addPart(image?.getAttribute('src'), names[id]);
+        const partnerImage = partnerSlot?.querySelector('img')?.getAttribute('src');
+        addPart(partnerImage, names[other]);
         const copy = document.createElement('div');
+        copy.className = 'item-recipe-copy';
         const strong = document.createElement('strong'); strong.textContent = names[recipe[2]];
-        const small = document.createElement('small'); small.textContent = names[id] + ' + ' + names[other];
+        const small = document.createElement('small'); small.textContent = 'РЕЗУЛЬТАТ СИНТЕЗА';
         copy.append(strong,small);
         const status = document.createElement('b');
         const partnerSlot = Array.from(document.querySelectorAll('.inv-slot')).find(slot => (slot.title || '').startsWith(names[other]));
         status.textContent = partnerSlot ? 'ГОТОВО' : 'НУЖЕН ПРЕДМЕТ';
-        card.append(copy,status);
+        card.append(parts,copy,status);
         if (partnerSlot) {
           const synth = document.createElement('button');
           synth.type = 'button';
